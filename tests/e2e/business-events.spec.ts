@@ -63,6 +63,8 @@ test.describe('a business runs its own event', () => {
     await page.waitForURL(/\/business\/events$/);
 
     await page.getByRole('listitem').filter({ hasText: title }).getByRole('link', { name: 'Edit' }).click();
+    // Wait for the editor: the table rows carry a Publish button of their own now.
+    await expect(page.getByRole('heading', { name: 'Edit event' })).toBeVisible();
     await page.getByRole('button', { name: /^publish$/i }).click();
     await page.waitForURL(/\/business\/events$/);
 
@@ -87,6 +89,7 @@ test.describe('a business runs its own event', () => {
     // Cancelling needs a reason.
     await page.goto('/business/events');
     await page.getByRole('listitem').filter({ hasText: title }).getByRole('link', { name: 'Edit' }).click();
+    await expect(page.getByRole('heading', { name: 'Edit event' })).toBeVisible();
     await page.getByRole('button', { name: /cancel event/i }).first().click();
     await page.getByLabel('Reason').fill('The kiln needs repairing');
     await page.getByRole('button', { name: /cancel event/i }).last().click();
@@ -95,6 +98,38 @@ test.describe('a business runs its own event', () => {
     await expect(
       page.getByRole('listitem').filter({ hasText: title }).getByText('Cancelled'),
     ).toBeVisible();
+  });
+
+  test('publishes and cancels straight from the events table', async ({ page }) => {
+    const title = unique();
+
+    // Spec section 7, Screen 5: the row itself offers edit, publish and cancel.
+    await page.goto('/business/events/new');
+    await page.getByLabel('Title').fill(title);
+    await page.getByLabel('Description').fill('Wheel time, then coffee.');
+    await page.getByLabel('Starts').fill(nextThursday(18));
+    await page.getByLabel('Ends').fill(nextThursday(20));
+    await page.getByLabel('Capacity').fill('6');
+    await page.getByRole('button', { name: /save as draft/i }).click();
+    await page.waitForURL(/\/business\/events$/);
+
+    const row = () => page.getByRole('listitem').filter({ hasText: title });
+    await expect(row().getByText('Draft')).toBeVisible();
+
+    await row().getByRole('button', { name: 'Publish' }).click();
+    await expect(row().getByText('Published')).toBeVisible();
+    // A published event can no longer be published again.
+    await expect(row().getByRole('button', { name: 'Publish' })).toHaveCount(0);
+
+    await row().getByRole('link', { name: 'Cancel' }).click();
+    // The row sends the owner to the editor with the reason panel already open.
+    await expect(page.getByRole('heading', { name: /cancel this event/i })).toBeVisible();
+    await page.getByLabel('Reason').fill('The kiln needs repairing');
+    await page.getByRole('button', { name: /cancel event/i }).last().click();
+    await page.waitForURL(/\/business\/events$/);
+
+    await expect(row().getByText('Cancelled')).toBeVisible();
+    await expect(row().getByRole('link', { name: 'Cancel' })).toHaveCount(0);
   });
 
   test('refuses an event the venue cannot host and says why', async ({ page }) => {
