@@ -85,6 +85,24 @@ Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from m
 8. 01 ships a placeholder `src/app/(auth)/onboarding/page.tsx` ("owned by workstream 02") and an `AgentAside` rail stub: on conflict keep ws02's onboarding page, and point `AgentAside` at the agent's suggestions.
 - 2026-10-24: RLS is tested on PGlite (Postgres in WASM) with a stubbed `auth` schema (`auth.users`, `auth.uid()` from `request.jwt.claim.sub`, `authenticated` role). The test uses main's `0100_core.sql` when present, else a stand-in that follows 01's spec.
 
+## Integration findings (2026-10-24, tested with Docker)
+Tested in a throwaway local merge of `origin/ws/02-agent` @ da4321e with `origin/ws/01-core` @ 67e4f12. Nothing was merged or pushed to main.
+Results after the fixes below: 0100 + 0200 migrations apply on a fresh reset; 206/206 unit; 22/22 integration on Node 22 (including ws02's 5 DB tests); seed gives 14 `user_preferences`, 13 opted in to demand, 6 in the Scene 3 cluster (creative + thu_eve, Mission/Castro/Noe Valley). Scene 1 E2E was not run on the merged tree.
+
+Owner: 01 / main integrator
+1. **Node 22 needed.** 01's resolved `@supabase/supabase-js` needs native WebSocket; on Node 20 the seed and every integration test fail ("native WebSocket not found"). Bump README §1, `engines` and CI to Node 22.
+2. **`server-only` alias missing from 01's `vitest.config.ts`.** Without it 9 ws02 unit files fail to load. Add `'server-only': path.resolve(__dirname, 'tests/support/server-only.ts')` to `alias`. That fix alone took unit tests to 206/206.
+4. **Preferences seed not wired.** 01's `runSeedWith` never calls `loadAgentPreferences(ctx)` (`supabase/seed/agent.ts`), so no preferences are seeded and 04's Scene 3 finds no demand. Call it right after `loadUsers(ctx)`; verified to work.
+
+Owner: ws02 (after 01 lands on main)
+3. **23 type errors under 01's `noUncheckedIndexedAccess`.** Most in `tests/unit/agent/*.test.ts` (chat, consent-boundary, fixtures, group-schedule, repo); source in `server/extraction.ts:118` and `server/follow-up.ts:39`. Fix them in the sync merge.
+
+ws02 sync procedure once 01 is on main (tested approach):
+- Run `sync-main.sh`. 14 add/add conflicts: take main for `.gitignore`, `eslint.config.mjs`, `next.config.ts`, `package.json`, `playwright.config.ts`, `pnpm-lock.yaml`, `src/app/layout.tsx`, `src/shared/enums.ts`, `src/shared/types.ts`, `src/styles/tokens.css`, `tsconfig.json`, `vitest.config.ts`; keep ws02 for `src/app/(auth)/onboarding/page.tsx` and `src/app/(consumer)/agent/page.tsx`.
+- Re-add dev deps `@testing-library/react@16.1.0` and `jsdom@25.0.1`.
+- Fix item 3, then the merge plan above (stubs → 01 imports).
+- Rerun on Node 22 from clean: `pnpm db:reset`, `pnpm db:seed`, `pnpm test`, `pnpm test:integration`, `pnpm typecheck`, `pnpm lint`, Scene 1 Playwright with `MOCK_AI=1`. Push to `ws/02-agent` only once all pass. Never push to main.
+
 ## Needs from others
 - 01: `src/shared/types.ts` on ws/01-core has a placeholder `ExplainInput = { userId, subject, signals }`. 02 owns this type; please replace it with the shape in specs/02 §5 (`{ viewer, target, breakdown }`), which 06 already codes against.
 - README: add `getAttendeeSharing(userIds)` and `getConsent(userId)` (requested by 06) to the 02 function contracts.
@@ -116,3 +134,4 @@ Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from m
 - 2026-10-24 17:30 · ws/01-core reviewed (read-only): re-keyed preferences seed to 01's 14 users (clusters preserved), loader takes SeedContext, fixtures readable by 01's mock loader, prompt defs in 01's registry shape; merge plan recorded. 131 unit + 10 E2E green. Next: wait for 01 on main.
 - 2026-10-24 17:50 · landed: PGlite migration/RLS suite (8 tests; also green on ws/01-core's real 0100). 131 unit + 8 PGlite + 10 E2E green. Next: wait for 01 on main, then run the merge plan.
 - 2026-10-24 18:05 · landed: getAttendeeSharing + getConsent for 06 (consent-gated, logged), spec §5 documents ExplainInput and all extra exports. 145 unit/integration + 10 E2E green. Next: wait for main.
+- 2026-10-24 16:35 · integration check (Docker, throwaway merge with ws/01-core, nothing pushed to main): findings 1-4 recorded above. Next: 01 integrator handles 1, 2, 4; ws02 fixes 3 during the main sync.
