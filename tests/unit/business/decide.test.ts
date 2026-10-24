@@ -151,6 +151,19 @@ describe('decideProposal', () => {
     expect(store.snapshotEvents()).toHaveLength(0);
   });
 
+  it('fails loudly if the transaction reports an approval with no event', async () => {
+    // A store that breaks its own contract must not leave the caller believing the event
+    // exists; the route turns this into INTERNAL rather than a half-published proposal.
+    // Shadow the one method on the instance; beforeEach builds a fresh store anyway.
+    store.decideProposal = async () => ({ proposalId, status: 'approved', eventId: null });
+
+    expect(
+      await codeOf(() =>
+        decideProposal(deps, businessId, venue, proposalId, { decision: 'approve', publish: false }),
+      ),
+    ).toBe('INTERNAL');
+  });
+
   it('does not notify anyone when the proposal has no cluster', async () => {
     const orphan = store.seedProposal(PENDING_PROPOSAL(businessId, null)).id;
     await decideProposal(deps, businessId, venue, orphan, { decision: 'approve', publish: true });

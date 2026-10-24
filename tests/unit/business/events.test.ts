@@ -160,6 +160,55 @@ describe('business events', () => {
       );
     });
 
+    it('does not ask anyone to reconfirm for a description or format edit', async () => {
+      const event = await createManualEvent(deps, businessId, venue, { ...MANUAL, publish: true });
+      store.seedRsvp(event.id, { user_id: 'user-a' });
+
+      const updated = await updateBusinessEvent(deps, businessId, event.id, venue, {
+        description: 'Now with better clay.',
+        format: 'Guided session',
+      });
+
+      expect(updated.description).toBe('Now with better clay.');
+      expect(updated.format).toBe('Guided session');
+      expect(deps.notifications).toEqual([]);
+    });
+
+    it('asks attendees to reconfirm for a price change', async () => {
+      const event = await createManualEvent(deps, businessId, venue, { ...MANUAL, publish: true });
+      store.seedRsvp(event.id, { user_id: 'user-a' });
+
+      await updateBusinessEvent(deps, businessId, event.id, venue, { priceCents: 2500 });
+      expect(deps.notifications[0]?.payload.changed).toEqual(['priceCents']);
+    });
+
+    it('lists every reconfirm-worthy field that changed at once', async () => {
+      const event = await createManualEvent(deps, businessId, venue, { ...MANUAL, publish: true });
+      store.seedRsvp(event.id, { user_id: 'user-a' });
+
+      await updateBusinessEvent(deps, businessId, event.id, venue, {
+        startsAt: '2026-10-29T17:00:00.000Z',
+        endsAt: '2026-10-29T19:00:00.000Z',
+        priceCents: null,
+        capacity: 9,
+      });
+
+      expect(deps.notifications[0]?.payload.changed).toEqual([
+        'startsAt',
+        'endsAt',
+        'priceCents',
+        'capacity',
+      ]);
+    });
+
+    it('does not notify when a published event has nobody confirmed yet', async () => {
+      const event = await createManualEvent(deps, businessId, venue, { ...MANUAL, publish: true });
+      await updateBusinessEvent(deps, businessId, event.id, venue, {
+        startsAt: '2026-10-29T17:00:00.000Z',
+      });
+      expect(deps.notifications).toEqual([]);
+    });
+
     it('is a no-op when the edit changes nothing', async () => {
       const event = await createManualEvent(deps, businessId, venue, MANUAL);
       const updated = await updateBusinessEvent(deps, businessId, event.id, venue, { title: MANUAL.title });

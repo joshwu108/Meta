@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ApiError } from '@/lib/api/errors';
 import type { BusinessCapabilities, ProposalDocument, WeeklyHours } from '@/shared/types';
 import {
+  applyEditsToEvent,
   assertCapacityNotBelowConfirmed,
   resolveEventFromProposal,
   validateEventAgainstCapabilities,
@@ -228,5 +229,56 @@ describe('assertCapacityNotBelowConfirmed', () => {
     } catch (err) {
       expect((err as Error).message).toMatch(/6/);
     }
+  });
+});
+
+describe('applyEditsToEvent', () => {
+  const current = {
+    title: 'Open Studio Evening',
+    description: 'Drop in and throw a pot.',
+    category: 'creative' as const,
+    format: 'Open studio',
+    startsAt: '2026-10-29T18:00:00.000Z',
+    endsAt: '2026-10-29T20:00:00.000Z',
+    capacity: 10,
+    priceCents: 1800,
+  };
+
+  it('returns the event unchanged for an empty edit', () => {
+    expect(applyEditsToEvent(current, {})).toEqual(current);
+  });
+
+  it('never mutates the event it was given', () => {
+    const snapshot = { ...current };
+    applyEditsToEvent(current, { title: 'Something else', capacity: 2 });
+    expect(current).toEqual(snapshot);
+  });
+
+  it('applies each field on its own and touches nothing else', () => {
+    const cases = [
+      { edit: { title: 'Pottery & Pour' }, field: 'title' },
+      { edit: { description: 'A new description.' }, field: 'description' },
+      { edit: { format: 'Guided session' }, field: 'format' },
+      { edit: { startsAt: '2026-10-29T17:00:00.000Z' }, field: 'startsAt' },
+      { edit: { endsAt: '2026-10-29T21:00:00.000Z' }, field: 'endsAt' },
+      { edit: { capacity: 6 }, field: 'capacity' },
+      { edit: { priceCents: 2500 }, field: 'priceCents' },
+    ] as const;
+
+    for (const { edit, field } of cases) {
+      const next = applyEditsToEvent(current, edit);
+      expect(next).toEqual({ ...current, ...edit });
+      expect(Object.keys(next)).toEqual(Object.keys(current));
+      expect(next[field]).not.toBe(current[field]);
+    }
+  });
+
+  it('distinguishes clearing the price from leaving it alone', () => {
+    expect(applyEditsToEvent(current, { priceCents: null }).priceCents).toBeNull();
+    expect(applyEditsToEvent(current, {}).priceCents).toBe(1800);
+  });
+
+  it('never changes the category, which the owner cannot edit', () => {
+    expect(applyEditsToEvent(current, { title: 'x' }).category).toBe('creative');
   });
 });

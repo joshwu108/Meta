@@ -214,6 +214,17 @@ describe('business onboarding', () => {
     expect(JSON.stringify(card)).not.toContain('Two staff on Thursdays');
   });
 
+  it('refuses to build an owner view when the capabilities row is missing', async () => {
+    // Only reachable if the capabilities insert was lost; the store deletes the business
+    // again when that happens, so a half-created venue must not render as a real one.
+    const bare = new MemoryBusinessStore();
+    const bareDeps = testDeps(bare);
+    bare.seedBusiness({ owner_id: 'owner-1' });
+    // @ts-expect-error reaching past the port on purpose to simulate the inconsistency
+    bare.capabilities = [];
+    expect(await codeOf(() => getOwnerBusiness(bareDeps, 'owner-1'))).toBe('NOT_FOUND');
+  });
+
   it('treats a deactivated business as absent for the public card', async () => {
     const created = await createBusinessForOwner(deps, 'owner-1', businessOnboardingSchema.parse(ONBOARDING));
     await updateOwnerBusiness(deps, created.id, { isActive: false });
