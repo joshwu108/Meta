@@ -1,0 +1,211 @@
+import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Consent, SharingPurpose, SuggestionCard, UserPreferencesWithSources } from "../schemas";
+import {
+  PREFERENCES_COLUMNS,
+  parseConsent,
+  patchToColumns,
+  rowToPreferences,
+  type PreferencesRow,
+} from "./rows";
+import type { SharableSource } from "./sharable";
+import { ApiError } from "./stubs";
+
+/**
+ * Data access for workstream 02 tables. User-scoped functions take the caller's
+ * RLS-bound client; the `admin*` functions are the only service-role reads and
+ * back `getSharablePreferences`.
+ */
+
+function check<T>(res: { data: T; error: { message: string; code?: string } | null }, what: string): T {
+  if (res.error) throw new ApiError("INTERNAL", `Failed to ${what}`, 500, { code: res.error.code });
+  return res.data;
+}
+
+export async function getPreferences(sb: SupabaseClient, userId: string): Promise<UserPreferencesWithSources> {
+  const res = await sb.from("user_preferences").select(PREFERENCES_COLUMNS).eq("user_id", userId).maybeSingle();
+  return rowToPreferences(check(res, "load preferences") as PreferencesRow | null);
+}
+
+export async function savePreferences(
+  sb: SupabaseClient,
+  userId: string,
+  prefs: UserPreferencesWithSources,
+): Promise<UserPreferencesWithSources> {
+  const { fieldSources, ...values } = prefs;
+  const row = { user_id: userId, ...patchToColumns(values), field_sources: fieldSources };
+  const res = await sb.from("user_preferences").upsert(row).select(PREFERENCES_COLUMNS).single();
+  return rowToPreferences(check(res, "save preferences") as PreferencesRow);
+}
+
+export type AgentProfile = { summary: string | null; consent: Consent };
+
+export async function getAgentProfile(sb: SupabaseClient, userId: string): Promise<AgentProfile> {
+  const res = await sb.from("agent_profiles").select("summary, consent").eq("user_id", userId).maybeSingle();
+  const row = check(res, "load agent profile") as { summary: string | null; consent: unknown } | null;
+  return { summary: row?.summary ?? null, consent: parseConsent(row?.consent) };
+}
+
+export async function saveAgentProfile(
+  sb: SupabaseClient,
+  userId: string,
+  patch: { summary?: string | null; consent?: Consent },
+): Promise<AgentProfile> {
+  const row = {
+    user_id: userId,
+    ...(patch.summary !== undefined ? { summary: patch.summary } : {}),
+    ...(patch.consent ? { consent: patch.consent, consent_updated_at: new Date().toISOString() } : {}),
+  };
+  const res = await sb.from("agent_profiles").upsert(row).select("summary, consent").single();
+  const saved = check(res, "save agent profile") as { summary: string | null; consent: unknown };
+  return { summary: saved.summary, consent: parseConsent(saved.consent) };
+}
+
+export type ConversationKind = "onboarding" | "chat";
+export type StoredMessage = { role: "user" | "assistant"; content: string; suggestions: SuggestionCard[] | null };
+
+/** Use the given conversation if the caller owns it (RLS), else the latest of that kind, else a new one. */
+export async function resolveConversation(
+  sb: SupabaseClient,
+  userId: string,
+  kind: ConversationKind,
+  conversationId?: string,
+): Promise<string> {
+  const base = sb.from("agent_conversations").select("id").eq("user_id", userId).eq("kind", kind);
+  const query = conversationId ? base.eq("id", conversationId) : base.order("created_at", { ascending: false });
+  const found = check(await query.limit(1).maybeSingle(), "load conversation") as { id: string } | null;
+  if (found) return found.id;
+  if (conversationId) throw new ApiError("NOT_FOUND", "Conversation not found");
+  const created = await sb.from("agent_conversations").insert({ user_id: userId, kind }).select("id").single();
+  return (check(created, "create conversation") as { id: string }).id;
+}
+
+export async function listMessages(sb: SupabaseClient, conversationId: string, limit = 20): Promise<StoredMessage[]> {
+  const res = await sb
+    .from("agent_messages")
+    .select("role, content, suggestions, created_at")
+    .eq("conversation_id", conversationId)
+    .in("role", ["user", "assistant"])
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  const rows = check(res, "load messages") as StoredMessage[];
+  return [...rows].reverse().map(({ role, content, suggestions }) => ({ role, content, suggestions }));
+}
+
+export async function addMessages(
+  sb: SupabaseClient,
+  conversationId: string,
+  messages: readonly StoredMessage[],
+): Promise<void> {
+  const base = Date.now();
+  // Explicit, increasing timestamps keep user → assistant order stable within one insert.
+  const rows = messages.map((m, i) => ({
+    conversation_id: conversationId,
+    role: m.role,
+    content: m.content,
+    suggestions: m.suggestions,
+    created_at: new Date(base + i).toISOString(),
+  }));
+  check(await sb.from("agent_messages").insert(rows), "save messages");
+}
+
+export async function updateProfile(
+  sb: SupabaseClient,
+  userId: string,
+  values: Record<string, string | number | boolean | null>,
+): Promise<void> {
+  check(await sb.from("profiles").update(values).eq("id", userId), "update profile");
+}
+
+export type AgentLogRow = {
+  id: string;
+  actor: string;
+  action: string;
+  permissions_used: string[];
+  result: string;
+  created_at: string;
+};
+
+export async function listAgentLog(sb: SupabaseClient, userId: string, limit: number): Promise<AgentLogRow[]> {
+  const res = await sb
+    .from("agent_action_log")
+    .select("id, actor, action, permissions_used, result, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return check(res, "load agent log") as AgentLogRow[];
+}
+
+// ---- service-role reads, used only by the coordination boundary ----
+
+type SourceRow = PreferencesRow & {
+  profiles: { is_discoverable: boolean; neighborhood: string | null; coarse_lat: number | null; coarse_lng: number | null } | null;
+};
+
+export async function adminLoadSources(admin: SupabaseClient, userIds: readonly string[]): Promise<SharableSource[]> {
+  const [prefs, agents] = await Promise.all([
+    admin
+      .from("user_preferences")
+      .select(`${PREFERENCES_COLUMNS}, profiles!inner(is_discoverable, neighborhood, coarse_lat, coarse_lng)`)
+      .in("user_id", [...userIds]),
+    admin.from("agent_profiles").select("user_id, consent").in("user_id", [...userIds]),
+  ]);
+  const consentById = new Map(
+    (check(agents, "load consent") as { user_id: string; consent: unknown }[]).map((a) => [a.user_id, a.consent]),
+  );
+  return (check(prefs, "load sharable preferences") as unknown as SourceRow[]).map((row) => {
+    const { fieldSources: _ignored, ...preferences } = rowToPreferences(row);
+    void _ignored;
+    return {
+      userId: row.user_id,
+      preferences,
+      consent: parseConsent(consentById.get(row.user_id)),
+      isDiscoverable: row.profiles?.is_discoverable ?? false,
+      neighborhood: row.profiles?.neighborhood ?? null,
+      coarseLat: row.profiles?.coarse_lat == null ? null : Number(row.profiles.coarse_lat),
+      coarseLng: row.profiles?.coarse_lng == null ? null : Number(row.profiles.coarse_lng),
+    };
+  });
+}
+
+export const SHARE_LOG_WINDOW_MS = 60 * 60 * 1000;
+
+export async function adminRecentShareLogs(
+  admin: SupabaseClient,
+  userIds: readonly string[],
+  purpose: SharingPurpose,
+): Promise<Set<string>> {
+  const since = new Date(Date.now() - SHARE_LOG_WINDOW_MS).toISOString();
+  const res = await admin
+    .from("agent_action_log")
+    .select("user_id")
+    .eq("actor", "coordination")
+    .eq("action", "share_preferences")
+    .contains("permissions_used", [purpose])
+    .gte("created_at", since)
+    .in("user_id", [...userIds]);
+  return new Set((check(res, "load share logs") as { user_id: string }[]).map((r) => r.user_id));
+}
+
+const PURPOSE_LABEL: Record<SharingPurpose, string> = {
+  matching: "people matching",
+  demand: "community event demand (counted anonymously)",
+  group_plan: "group activity planning",
+};
+
+export async function adminWriteShareLogs(
+  admin: SupabaseClient,
+  userIds: readonly string[],
+  purpose: SharingPurpose,
+): Promise<void> {
+  const rows = userIds.map((id) => ({
+    user_id: id,
+    actor: "coordination",
+    action: "share_preferences",
+    permissions_used: [purpose],
+    result: `Shared your interests and availability for ${PURPOSE_LABEL[purpose]}`,
+  }));
+  const { error } = await admin.from("agent_action_log").insert(rows);
+  // Logging must never break the caller's flow; failures are reported, not thrown.
+  if (error) console.error(JSON.stringify({ level: "error", msg: "share_log_failed", code: error.code }));
+}
