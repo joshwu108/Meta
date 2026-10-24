@@ -76,8 +76,15 @@ alter table reconnect_interest enable row level security;
 alter table follow_up_suggestions enable row level security;
 alter table bookmarks enable row level security;
 create policy rsvp_self on rsvps for select using (auth.uid() = user_id);
-create policy feedback_self on event_feedback for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create policy reconnect_self on reconnect_interest for all using (auth.uid() = from_user_id) with check (auth.uid() = from_user_id);
+-- Feedback only from a confirmed attendee of a completed event (the API checks the same, but
+-- PostgREST exposes the table directly, so the policy must too).
+create policy feedback_self on event_feedback for all using (auth.uid() = user_id) with check (
+  auth.uid() = user_id
+  and exists (select 1 from rsvps r join events e on e.id = r.event_id
+              where r.event_id = event_feedback.event_id and r.user_id = auth.uid()
+                and r.status = 'confirmed' and e.status = 'completed'));
+-- Read-only for users: interest is recorded only through add_reconnect_interest(), which checks attendance.
+create policy reconnect_self on reconnect_interest for select using (auth.uid() = from_user_id);
 create policy followup_parties on follow_up_suggestions for select using (auth.uid() in (user_a, user_b));
 create policy bookmarks_self on bookmarks for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 -- rsvp inserts/updates go through the functions below (security definer) so capacity is enforced atomically
