@@ -202,6 +202,18 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 16:19` — **route boundaries and a real audit for criterion 3, pushed.** The
+  business screens are server components with no `loading.tsx`, `error.tsx` or
+  `not-found.tsx`, so a slow query rendered nothing and a thrown `ApiError` fell through to
+  Next's default page; all three now exist, with a skeleton that mirrors the shell's
+  dimensions and an error state that tells an owner mid-decision that nothing was published.
+  Acceptance criterion 3 ("no route returns user ids, raw cohort counts, or non-consented
+  names") was only covered per-builder, so `tests/unit/business/privacy.test.ts` now seeds
+  sentinel owner/user/cluster ids, a private attendee name and a raw cohort count and
+  asserts none of them appear in what any route's read path actually returns — a leak added
+  later fails there whichever module adds it, and the last case poisons a payload on purpose
+  so the guard cannot silently stop working. **247 unit tests pass**, coverage 95.2% lines /
+  87.0% branches.
 - `2026-10-24 16:12` — **cleanup and error-path pass, pushed.** Removed the duplicate venue
   query path (`candidates.ts` was reaching for `supabaseAdmin()` directly alongside the
   store-port path in `index.ts`; the source is now always injected, so there is one
