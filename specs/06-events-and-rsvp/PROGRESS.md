@@ -100,6 +100,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: Tightened two spec policies in 0600 because PostgREST exposes the tables directly: `event_feedback` inserts require a confirmed RSVP on a completed event; `reconnect_interest` is select-only for users (rows come only from `add_reconnect_interest()`).
 - 2026-10-24: RLS is now tested on plain Postgres as a throwaway NOLOGIN role per run (`createRlsRole` in `tests/db/support/db.ts`, dropped after the run), standing in for Supabase's `authenticated` role.
 - 2026-10-24: Rehearsed the ws/01-core merge in a throwaway worktree (never pushed): 14 conflicts, all scaffold files plus 06's three pages; with 06's stand-ins swapped for 01's modules it typechecks, lints, builds, and passes 175 unit + 61 events-db tests. Exact steps in `MERGE_01.md`. Two branch fixes came out of it: a type-only import 01's eslint rejects, and DB-test client mocks centralized in `tests/db/support/setup.ts` (01's withAuth/notify create their own clients).
+- 2026-10-24: Cross-branch schema check (one-off, not committed): the real migrations from every branch (01 `0100`, 02 `0200`, 03 `0300`/`0301`, 04 `0400`, 05 `0500`/`0501`, 06 `0600`) apply in order on a fresh local Postgres with Supabase stand-ins (auth shim, Supabase-style default privileges, throwaway API roles, functions owned the way `postgres` owns them on Supabase). Smoke as a non-superuser: RSVP → event flips to `full` through 05's `transition_event_status`; RLS shows each user only their RSVP; a venue time change flags both RSVPs for reconfirm under 05's status guard; service-role completion; attendee feedback passes the tightened policy; reconnect becomes mutual on the second tap; 0600's deferred FKs land on 03's real tables; every public table across all workstreams has RLS.
 
 ## Needs from others
 
@@ -121,6 +122,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 18:40 PT: all six workstreams' migrations apply together and 06's flows pass on the combined schema (see Decisions). Cleaned up 8 stale test databases from an interrupted run and added a global setup that drops idle `cg06_test_*` databases. 157 tests.
 - 2026-10-24 18:20 PT: main unchanged. Rehearsed the 01 merge end to end (green); wrote `MERGE_01.md`; fixed the two issues it found. 157 tests on this branch.
 - 2026-10-24 18:02 PT: RLS review: tightened feedback/reconnect policies; new RLS suite runs as a temporary non-superuser role (157 tests).
 - 2026-10-24 17:56 PT: capped AI explanations at 10 per request (For you ranks 20). 151 tests.
