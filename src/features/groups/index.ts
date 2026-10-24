@@ -10,6 +10,7 @@ export {
   type PendingEventInvitation,
 } from './server/invitations';
 export { listMyGroups } from './server/summaries';
+export { getGroupVenueRequest, type GroupVenueRequest } from './server/venue-request';
 export type {
   GroupDetail,
   GroupEvent,
