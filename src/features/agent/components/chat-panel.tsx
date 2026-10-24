@@ -57,11 +57,13 @@ type Props = {
   initial?: ChatLine[];
   onResponse?: (res: ChatResponse) => void;
   onApply?: (card: SuggestionCard) => void;
+  /** Called with the envelope error code, e.g. AI_UNAVAILABLE, so the parent can offer a fallback. */
+  onError?: (code: string) => void;
   disabled?: boolean;
 };
 
 /** Chat with the personal agent. The log is an aria-live region. */
-export function ChatPanel({ kind, opener, initial = [], onResponse, onApply, disabled }: Props) {
+export function ChatPanel({ kind, opener, initial = [], onResponse, onApply, onError, disabled }: Props) {
   const [lines, setLines] = useState<ChatLine[]>(initial);
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [draft, setDraft] = useState("");
@@ -84,6 +86,7 @@ export function ChatPanel({ kind, opener, initial = [], onResponse, onApply, dis
       onResponse?.(res);
     } catch (err) {
       setError(err instanceof ApiCallError ? err.message : "Something went wrong. Try again.");
+      onError?.(err instanceof ApiCallError ? err.code : "INTERNAL");
       setLines((l) => l.slice(0, -1));
       setDraft(message);
     } finally {

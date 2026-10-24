@@ -80,17 +80,23 @@ function Heard({ extracted }: { extracted: ChatResponse["extracted"] }) {
 function Talk({ onDone }: { onDone: () => void }) {
   const [extracted, setExtracted] = useState<ChatResponse["extracted"]>();
   const [done, setDone] = useState(false);
+  const [aiDown, setAiDown] = useState(false);
   const onResponse = (res: ChatResponse) => {
     if (res.extracted) setExtracted(res.extracted);
     if (res.done) setDone(true);
   };
   return (
     <div className={s.split}>
-      <ChatPanel kind="onboarding" opener="Tell me a bit about what you'd like more of in your week." onResponse={onResponse} />
+      <ChatPanel kind="onboarding" opener="Tell me a bit about what you'd like more of in your week."
+        onResponse={onResponse} onError={(code) => setAiDown(code === "AI_UNAVAILABLE")} />
       <aside className={`${s.card} ${s.stack}`}>
-        <Heard extracted={extracted} />
-        <Button size="lg" variant={done ? "primary" : "secondary"} onClick={onDone} disabled={!extracted}>
-          {done ? "Review my profile" : "Skip to review"}
+        {aiDown ? (
+          <p className={s.muted} role="status">Your agent is unavailable right now. You can fill in your preferences yourself.</p>
+        ) : (
+          <Heard extracted={extracted} />
+        )}
+        <Button size="lg" variant={done || aiDown ? "primary" : "secondary"} onClick={onDone} disabled={!extracted && !aiDown}>
+          {aiDown ? "Fill in a form instead" : done ? "Review my profile" : "Skip to review"}
         </Button>
       </aside>
     </div>
