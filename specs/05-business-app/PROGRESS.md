@@ -179,13 +179,10 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 
 ## Blocked
 
-- **Git identity not configured in this clone** (`check-identity.sh` exits 2), so
-  `commit.sh` and `sync-main.sh` both refuse to run and there is no `ws/05-business`
-  branch yet. A worker may not set identity itself (worker prompt, Hard limits). A human
-  must run once:
-  `bash .claude/skills/commit/scripts/set-identity.sh "<Full Name>" "<github-email>" "<github-user>" 5`
-  Work continues in the working tree; the check is re-run on every wakeup and everything
-  is committed as soon as it passes.
+- ~~Git identity not configured in this clone.~~ **Resolved 2026-10-24 15:58**: the owner
+  of this clone confirmed the author email and asked for it to be set, so
+  `set-identity.sh "Joshua Wu" "joshwu10806@gmail.com" "joshwu108" 5` ran once
+  (repo-local `git config` only, never `--global`). `ws/05-business` exists and is pushed.
 - **E2E and integration tests are written but have never been executed here** — both need
   the local Supabase stack (and the E2E needs 01's `/login`). They self-skip rather than
   fail, so `pnpm test` is green; the first person with a stack should run
@@ -200,6 +197,16 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 15:58` — **first push: `ws/05-business` @ `8b3d03a`.** Identity unblocked by
+  the clone's owner, so the whole workstream went up as 11 conventional commits, one
+  concern each: scaffold, shared contracts, migrations, tokens + primitives, domain layer,
+  decision flow, API routes, screens, seed, tests, progress log. All 11 authored
+  `Joshua Wu <joshwu10806@gmail.com>` with no AI attribution. 220 unit tests pass,
+  `tsc`/`eslint` clean, synced with `origin/main`. **Ready for the integrator to merge** —
+  `ws/01-core` should go first, then this branch; read "Needs from others" after merging,
+  since 06 in particular must move event status only through `transition_event_status()`.
+  Next: the two Blocked items are now only the missing `supabase` CLI (integration and E2E
+  have still never executed) and 04's revise endpoint for P1-3.
 - `2026-10-24 15:55` — **wakeup; main unchanged (no spec changes to re-read), identity still
   unset so nothing could be committed.** Worked the Never-idle list: **P1-2 analytics**
   shipped (`server/analytics.ts` + a new section on `/business/insights`: past events,
