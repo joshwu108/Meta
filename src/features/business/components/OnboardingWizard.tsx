@@ -1,10 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button, Card, CardFooter } from '@/features/core/components/ui';
-import { ApiClientError, apiPost, fieldErrors } from '@/lib/api/client';
+import { apiPost } from '@/lib/api/client';
 import { cn } from '@/lib/util/cn';
 import { CapabilitiesStep } from './onboarding/CapabilitiesStep';
 import { LocationStep } from './onboarding/LocationStep';
@@ -17,39 +16,25 @@ import {
   toOnboardingBody,
   type OnboardingDraft,
 } from './onboarding/draft';
+import { useSubmit } from './use-submit';
 
 /**
  * Business Screen 1 (spec section 7): Profile -> Location & hours -> What you can host ->
  * Review. This component owns the state machine; each step renders its own fields.
  */
 export function OnboardingWizard() {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { busy: pending, message, errors, submit: run, navigate } = useSubmit();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<OnboardingDraft>(EMPTY_DRAFT);
-  const [message, setMessage] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const set = <K extends keyof OnboardingDraft>(key: K, value: OnboardingDraft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
 
-  const submit = () => {
-    setMessage(null);
-    setErrors({});
-    startTransition(async () => {
-      try {
-        await apiPost('/api/business', toOnboardingBody(draft));
-        router.push('/business');
-      } catch (err) {
-        if (err instanceof ApiClientError) {
-          setMessage(err.message);
-          setErrors(fieldErrors(err.details));
-          return;
-        }
-        setMessage('Something went wrong. Please try again.');
-      }
-    });
-  };
+  const submit = () =>
+    run(
+      () => apiPost('/api/business', toOnboardingBody(draft)),
+      () => navigate('/business'),
+    );
 
   const stepProps = { draft, set, errors };
   const isLast = step === ONBOARDING_STEPS.length - 1;

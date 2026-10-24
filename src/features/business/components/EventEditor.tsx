@@ -1,10 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button, Card, CardFooter, CardHeader, Field, Textarea } from '@/features/core/components/ui';
-import { ApiClientError, apiPatch, apiPost, fieldErrors } from '@/lib/api/client';
+import { apiPatch, apiPost } from '@/lib/api/client';
 import type { BusinessEvent } from '@/shared/types';
 import type { EventCategory } from '@/shared/enums';
 import { fromDateTimeLocalValue, toDateTimeLocalValue } from '../format';
@@ -14,6 +13,7 @@ import {
   priceToCents,
   type EventDraft,
 } from './EventFieldset';
+import { useSubmit } from './use-submit';
 
 /**
  * Business Screen 4 (spec section 7): the event editor, used both for a new event and for
@@ -52,37 +52,17 @@ export function EventEditor({
   defaultCategory: EventCategory;
   capacityCeiling: number;
 }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { busy: pending, message, errors, submit: run, navigate } = useSubmit();
   const [draft, setDraft] = useState<EventDraft>(event ? draftOf(event) : emptyDraft(defaultCategory));
   const [publishNow, setPublishNow] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showCancel, setShowCancel] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const warnsAboutReconfirm =
     event !== undefined &&
     event.confirmedCount > 0 &&
     (event.status === 'published' || event.status === 'full');
 
-  const run = (action: () => Promise<unknown>, after: () => void) => {
-    setMessage(null);
-    setErrors({});
-    startTransition(async () => {
-      try {
-        await action();
-        after();
-      } catch (err) {
-        if (err instanceof ApiClientError) {
-          setMessage(err.message);
-          setErrors(fieldErrors(err.details));
-          return;
-        }
-        setMessage('Something went wrong. Please try again.');
-      }
-    });
-  };
 
   const body = () => ({
     title: draft.title,
@@ -97,25 +77,25 @@ export function EventEditor({
   const create = () =>
     run(
       () => apiPost('/api/business/events', { ...body(), category: draft.category, publish: publishNow }),
-      () => router.push('/business/events'),
+      () => navigate('/business/events'),
     );
 
   const save = () =>
     run(
       () => apiPatch(`/api/business/events/${event?.id}`, body()),
-      () => router.push('/business/events'),
+      () => navigate('/business/events'),
     );
 
   const publish = () =>
     run(
       () => apiPost(`/api/business/events/${event?.id}/publish`),
-      () => router.push('/business/events'),
+      () => navigate('/business/events'),
     );
 
   const cancel = () =>
     run(
       () => apiPost(`/api/business/events/${event?.id}/cancel`, { reason: cancelReason }),
-      () => router.push('/business/events'),
+      () => navigate('/business/events'),
     );
 
   return (

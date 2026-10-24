@@ -1,9 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Button, Card, CardHeader, Field, Select, Textarea } from '@/features/core/components/ui';
-import { ApiClientError, apiPatch, fieldErrors } from '@/lib/api/client';
+import { apiPatch } from '@/lib/api/client';
 import type { BusinessEvent, ProposalDetail } from '@/shared/types';
 import { REJECTION_REASONS, type RejectionReason } from '../schemas';
 import { EventFieldset, type EventDraft } from './EventFieldset';
@@ -15,6 +15,7 @@ import {
   rejectBody,
   type DecisionMode,
 } from './decision/decision';
+import { useSubmit } from './use-submit';
 
 /**
  * Business Screen 3, decision panel (spec section 7): Approve as-is, Edit & approve, or
@@ -32,13 +33,11 @@ export function DecisionPanel({
   suggestedStartsAt: string;
 }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { busy: pending, message, errors, submit: run, navigate } = useSubmit();
   const [mode, setMode] = useState<DecisionMode>('idle');
   const [publishNow, setPublishNow] = useState(true);
   const [reason, setReason] = useState<RejectionReason>('wrong_time');
   const [note, setNote] = useState('');
-  const [message, setMessage] = useState<string | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [draft, setDraft] = useState<EventDraft>(() =>
     initialEventDraft(proposal.proposal, suggestedStartsAt),
@@ -47,28 +46,19 @@ export function DecisionPanel({
   const decided = proposal.status !== 'pending';
 
   const submit = (body: Record<string, unknown>) => {
-    setMessage(null);
-    setErrors({});
-    startTransition(async () => {
-      try {
+    let published = false;
+    return run(
+      async () => {
         const result = await apiPatch<{ proposal: ProposalDetail; event: BusinessEvent | null }>(
           `/api/business/proposals/${proposal.id}`,
           body,
         );
-        if (result.event && result.event.status === 'published') {
-          router.push('/business/events');
-          return;
-        }
-        router.refresh();
-      } catch (err) {
-        if (err instanceof ApiClientError) {
-          setMessage(err.message);
-          setErrors(fieldErrors(err.details));
-          return;
-        }
-        setMessage('Something went wrong. Please try again.');
-      }
-    });
+        published = result.event?.status === 'published';
+      },
+      // A published event is live, so show it in the events list; a draft or a rejection
+      // stays here and the page re-reads the decided proposal.
+      () => (published ? navigate('/business/events') : router.refresh()),
+    );
   };
 
   const approveAsIs = () => submit(approveBody(publishNow));
