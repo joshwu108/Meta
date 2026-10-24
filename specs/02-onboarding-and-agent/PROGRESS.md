@@ -78,7 +78,7 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 2026-10-24 (main sync): agent E2E is now full stack (real login via 01's helpers, real API + DB, MOCK_AI); only the AI-down test intercepts `/api/agent/chat`.
 
 ## Merge plan for when ws/01-core lands on main
-(Status 2026-10-24: steps 1–6 and 8 done in the main sync; step 7 primitives swap still open.)
+(Status 2026-10-24: all steps done. Step 7: Button, AiTag, AiRing now come from `@/features/core/components/ui`; Chip, ToggleChip, Switch stay local, see Needs from others. Agent pages render inside 01's consumer AppShell via the `(consumer)` layout.)
 Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from main only):
 1. Take main's root config (package.json, tsconfig, vitest, eslint, next.config, playwright.config, layout.tsx, tokens.css, shared/enums.ts, shared/types.ts); re-add ws02 dev deps (`zod-to-json-schema` only if 01 lacks it, `@playwright/test`).
 2. Delete `src/features/agent/server/stubs.ts`; import `ok/fail/parseBody/withAuth/ApiError` from `@/lib/api`, `generateStructured` from `@/lib/ai`, `logAgentAction` from `@/features/core`, `createAdminClient` from `@/lib/supabase/admin`.
@@ -113,6 +113,7 @@ ws02 sync procedure once 01 is on main (tested approach):
 - 01 / integrator: `vitest.config.ts` on main stubs `server-only` only in the `db` project. ws02 added the same alias to `unit` and `integration` (one `serverAlias` const) so 9 agent test files load; please keep it when merging ws02 (integration finding 2).
 - 01 / integrator: `tests/e2e/auth.spec.ts` "a user without onboarding…" clicked 01's placeholder "Continue to Discover" button, which spec 02's onboarding replaces. ws02 changed that one test to assert the agent onboarding heading; finishing onboarding is covered by `agent-scene1.spec.ts`.
 - 01: Playwright wrote Windows baselines for `theme.spec.ts` on first run here (`gallery-*-win32.png`); left uncommitted on this machine since 01 owns those baselines.
+- 01: `ui/Chip` labels every remove button "Remove"; please use `Remove ${label}` (pass a `label` prop) so a row of chips has distinct accessible names, as spec 02 §7 and the Scene 1 E2E need. Then ws02 can drop its local Chip. Same for `ui/Switch`: accept `labelledBy`/`describedBy` for rows that render their own text.
 - 01: the `integration` vitest project sets no `MOCK_AI`; ws02's DB tests pin it in-file. Consider `env: { MOCK_AI: '1' }` on that project so no integration test can reach the live model.
 - README: add `getAttendeeSharing(userIds)` and `getConsent(userId)` (requested by 06) to the 02 function contracts.
 - 06: `getAttendeeSharing` and `getConsent` now exist on ws/02-agent with the exact shape of your stub; swap `stubs/agent.ts` for `@/features/agent` after both land on main.
@@ -121,7 +122,7 @@ ws02 sync procedure once 01 is on main (tested approach):
 - 03: the group planner can call `resolveGroupSchedule(members)` from `@/features/agent` with members fetched via `getSharablePreferencesBatch(ids, 'group_plan')`.
 - ~~01: call `loadAgentPreferences(ctx)` from `supabase/seed/agent.ts` in `runSeedWith` right after `loadUsers(ctx)`.~~ Done: ws02 registered it in 01's `supabase/seed/loaders/registry.ts` `AFTER_USERS` (c23982b).
 - ~~01: add `'agent.follow_up_suggestion'` to `PROMPT_IDS` and spread ws02's prompt definitions into `PROMPTS`.~~ Done on main; ws02 filled the `agent.ts` slot (aba1bb7).
-- ~~01: until the app shell lands, ws02 ships tokens, a bare layout and local primitives; replace them with 01's versions on merge.~~ Tokens and layout now come from main; `primitives.tsx` swap to `@/features/core/components/ui` still open (merge plan step 7).
+- ~~01: until the app shell lands, ws02 ships tokens, a bare layout and local primitives; replace them with 01's versions on merge.~~ Tokens and layout now come from main; `primitives.tsx` now wraps 01's Button/AiTag/AiRing; Chip/ToggleChip/Switch stay local (see the ui/Chip ask above).
 - ~~README/01: make `SharablePreferences.groupSizePref` nullable.~~ Done on main; ws02 now shares `null` instead of `'small'` (db7b82e).
 - ~~01: `profiles`, `agent_action_log`, `set_updated_at()`, `src/lib/api`, `src/lib/ai`, `logAgentAction`, `getCurrentUser`.~~ Landed on main; ws02 stubs removed (aba1bb7).
 
@@ -147,3 +148,4 @@ ws02 sync procedure once 01 is on main (tested approach):
 - 2026-10-24 16:32 · ws02 worker moved to the Docker machine (option 2). Ticked integration rows + AC2/AC5 from the verified DB run. Next: wait for 01 on main, then run the sync procedure.
 - 2026-10-24 17:40 · Lenovo resumed as the ws02 worker. Full check on Node 22: typecheck + lint clean, 145 unit/integration green (5 Supabase-stack tests skip until 01's 0100 is on main), 10/10 Playwright green. Nothing unblocked left: AC3 waits on 03/04; DB variant and stub swap wait on 01 landing on main.
 - 2026-10-24 18:40 · 01 landed on main: merged main (15 conflicts resolved per plan), adopted nullable groupSizePref + interestCategories, fixed strict-indexing errors, removed 01 stubs for real exports, registered preferences seed, full-stack agent E2E, fixed 320px overflow inside the shell. Clean state on Node 22: db reset + seed (14 prefs), 217 unit + 30 integration + 26 E2E green, typecheck + lint clean. Next: primitives swap (merge plan 7), AC3 waits on 03/04.
+- 2026-10-24 18:55 · landed: merge plan step 7 (01's Button/AiTag/AiRing). 217 unit + 10 agent E2E green; typecheck + lint clean. Next: AC3 waits on 03/04; Never-idle list.
