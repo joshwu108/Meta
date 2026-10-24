@@ -53,7 +53,7 @@ vi.mock("@/features/events/server/post-event", () => ({ canComplete: async () =>
 const { getAttendeeList } = await import("@/features/events/server/attendees");
 const { getEventDetail } = await import("@/features/events/server/detail");
 const { getEventPublic, getUpcomingEventsForUser } = await import("@/features/events/index");
-const { getRecommendedEvents } = await import("@/features/events/server/recommended");
+const { getRecommendedEvents } = await import("@/features/events/index");
 
 const EVENT = eventRow().id;
 const confirmedMine = (): MyRsvp => ({
@@ -154,6 +154,7 @@ describe("getRecommendedEvents", () => {
     await getRecommendedEvents(VIEWER, 10);
 
     expect(first!.score).toBeGreaterThan(90);
+    expect(first!.event).toMatchObject({ title: "Beginner Pottery & Coffee Night", description: "Learn the wheel with coffee." });
     expect(first!.explanation).toBe("Pottery fits your interests on a Thursday evening.");
     expect(state.explanations).toBe(1);
   });

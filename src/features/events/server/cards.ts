@@ -9,6 +9,7 @@ import { getBlockEdges, getConnectionIds } from "./stubs";
 import { isBlockedEitherWay } from "./visibility";
 
 export type EventCard = EventSummary & {
+  description: string;
   endsAt: string;
   category: EventCategory;
   capacity: number;
@@ -55,6 +56,7 @@ export function toEventCard(row: EventRow, ctx: CardContext): EventCard {
   const confirmedCount = ctx.counts.get(row.id) ?? 0;
   return {
     ...toEventSummary(row, rsvp?.status ?? null),
+    description: row.description,
     endsAt: row.ends_at,
     category: row.category,
     capacity: row.capacity,
