@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
-import { createBusiness, createEvent, createUser, rsvpAs } from "../support/factories";
+import { createBusiness, createEvent, createUser, rsvpAs, setEventStatus } from "../support/factories";
 
 const holder = vi.hoisted(() => ({ pool: null as unknown, userId: undefined as string | undefined }));
 vi.mock("@/features/events/server/stubs/clients", async () => {
@@ -102,7 +102,7 @@ describe.skipIf(!available)("06 route handlers", () => {
     const [maya, jordan] = await Promise.all([createUser(db.pool, "Maya"), createUser(db.pool, "Jordan")]);
     await rsvpAs(db, maya, eventId);
     await rsvpAs(db, jordan, eventId);
-    await db.pool.query("update events set status = 'completed' where id = $1", [eventId]);
+    await setEventStatus(db.pool, eventId, "completed");
     const path = `/api/events/${eventId}/reconnect`;
 
     holder.userId = maya;

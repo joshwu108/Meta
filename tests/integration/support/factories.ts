@@ -32,9 +32,10 @@ export type EventInput = {
 export async function createEvent(db: Queryable, input: EventInput): Promise<string> {
   const startsInHours = input.startsInHours ?? 48;
   const { rows } = await db.query<{ id: string }>(
-    `insert into events (business_id, source, title, description, category, format, starts_at, ends_at, capacity, price_cents, status)
+    `insert into events (business_id, source, title, description, category, format, starts_at, ends_at, capacity, price_cents, status, cancel_reason)
      values ($1, 'business_manual', $2, 'A test event', 'creative', 'workshop',
-             now() + make_interval(hours => $3), now() + make_interval(hours => $3 + 2), $4, 2500, $5)
+             now() + make_interval(hours => $3), now() + make_interval(hours => $3 + 2), $4, 2500, $5,
+             case when $5 = 'cancelled' then 'Venue closed' end)
      returning id`,
     [input.businessId, input.title ?? "Beginner Pottery Night", startsInHours, input.capacity ?? 10, input.status ?? "published"],
   );
@@ -103,4 +104,20 @@ export async function createGroup(db: Queryable, creator: string, members: Array
 
 export async function rsvpAs(db: { asUser: <T>(u: string, fn: (c: pg.PoolClient) => Promise<T>) => Promise<T> }, userId: string, eventId: string, share = true) {
   await db.asUser(userId, (c) => c.query("select * from rsvp_event($1, $2, false)", [eventId, share]));
+}
+
+/** Test-only status change that passes 05's guard the way its status RPCs do. */
+export async function setEventStatus(db: Pick<pg.Pool, "connect">, eventId: string, status: string): Promise<void> {
+  const client = await db.connect();
+  try {
+    await client.query("begin");
+    await client.query("select set_config('commonground.status_rpc', 'on', true)");
+    await client.query("update events set status = $2 where id = $1", [eventId, status]);
+    await client.query("commit");
+  } catch (err) {
+    await client.query("rollback");
+    throw err;
+  } finally {
+    client.release();
+  }
 }

@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
 import { fakeSupabase } from "../support/fake-supabase";
 import {
-  block, connect, createBusiness, createEvent, createGroup, createUser, rsvpAs, setConsent,
+  block, connect, createBusiness, createEvent, createGroup, createUser, rsvpAs, setConsent, setEventStatus,
 } from "../support/factories";
 
 const holder = vi.hoisted(() => ({ pool: null as unknown }));
@@ -65,7 +65,7 @@ describe.skipIf(!available)("06 services against Postgres", () => {
       const eventId = await createEvent(db.pool, { businessId });
       const [maya, jordan, other] = await Promise.all([createUser(db.pool, "Maya"), createUser(db.pool, "Jordan"), createUser(db.pool)]);
       for (const u of [maya, jordan, other]) await rsvpAs(db, u, eventId);
-      await db.pool.query("update events set status = 'completed' where id = $1", [eventId]);
+      await setEventStatus(db.pool, eventId, "completed");
 
       const first = await expressReconnectInterest(asUser(maya), maya, eventId, jordan);
       const second = await expressReconnectInterest(asUser(jordan), jordan, eventId, maya);
@@ -87,7 +87,7 @@ describe.skipIf(!available)("06 services against Postgres", () => {
       const [a, b, outsider] = await Promise.all([createUser(db.pool), createUser(db.pool), createUser(db.pool)]);
       await rsvpAs(db, a, eventId);
       await rsvpAs(db, b, eventId);
-      await db.pool.query("update events set status = 'completed' where id = $1", [eventId]);
+      await setEventStatus(db.pool, eventId, "completed");
       await block(db.pool, b, a);
 
       await expect(expressReconnectInterest(asUser(a), a, eventId, outsider)).rejects.toMatchObject({ code: "FORBIDDEN" });

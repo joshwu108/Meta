@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
-import { createBusiness, createEvent, createUser } from "../support/factories";
+import { createBusiness, createEvent, createUser, setEventStatus } from "../support/factories";
 
 const available = await isDbAvailable();
 
@@ -33,7 +33,7 @@ describe.skipIf(!available)("reconfirm and reconnect functions", () => {
   async function completedEventWith(...users: string[]): Promise<string> {
     const eventId = await createEvent(db.pool, { businessId });
     for (const u of users) await rsvp(u, eventId);
-    await db.pool.query("update events set status = 'completed' where id = $1", [eventId]);
+    await setEventStatus(db.pool, eventId, "completed");
     return eventId;
   }
 
@@ -58,7 +58,8 @@ describe.skipIf(!available)("reconfirm and reconnect functions", () => {
     const user = await createUser(db.pool);
     await rsvp(user, eventId);
 
-    await db.pool.query("update events set status = 'full', capacity = 1 where id = $1", [eventId]);
+    await setEventStatus(db.pool, eventId, "full");
+    await db.pool.query("update events set capacity = 1 where id = $1", [eventId]);
 
     expect(await needsReconfirm(eventId, user)).toBe(false);
   });

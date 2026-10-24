@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
 import { fakeSupabase } from "../support/fake-supabase";
-import { createBusiness, createEvent, createGroup, createUser, rsvpAs } from "../support/factories";
+import { createBusiness, createEvent, createGroup, createUser, rsvpAs, setEventStatus } from "../support/factories";
 
 const holder = vi.hoisted(() => ({ pool: null as unknown }));
 vi.mock("@/features/events/server/stubs/clients", async () => {
@@ -35,7 +35,7 @@ describe.skipIf(!available)("06 edge cases against Postgres", () => {
     const [a, b] = await Promise.all([createUser(db.pool, "A"), createUser(db.pool, "B")]);
     await rsvpAs(db, a, eventId);
     await rsvpAs(db, b, eventId);
-    await db.pool.query("update events set status = 'completed' where id = $1", [eventId]);
+    await setEventStatus(db.pool, eventId, "completed");
     return { eventId, a, b };
   }
 

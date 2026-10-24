@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
 import { fakeSupabase } from "../support/fake-supabase";
 import {
-  createBusiness, createEvent, createGroup, createUser, rsvpAs, setConsent, setLocation, setPreferences,
+  createBusiness, createEvent, createGroup, createUser, rsvpAs, setConsent, setLocation, setPreferences, setEventStatus,
 } from "../support/factories";
 
 const holder = vi.hoisted(() => ({ pool: null as unknown }));
@@ -50,7 +50,7 @@ describe.skipIf(!available)("06 flows against Postgres", () => {
     const pottery = await createEvent(db.pool, { businessId, title: "Beginner Pottery & Coffee Night", status: "approved_draft" });
 
     const before = await getRecommendedEvents(viewer, 10);
-    await db.pool.query("update events set status = 'published' where id = $1", [pottery]);
+    await setEventStatus(db.pool, pottery, "published");
     const after = await getRecommendedEvents(viewer, 10);
 
     expect(before.map((r) => r.event.id)).not.toContain(pottery);
@@ -125,7 +125,7 @@ describe.skipIf(!available)("06 flows against Postgres", () => {
     await rsvpAs(db, attendee, eventId);
 
     await expect(submitFeedback(asUser(attendee), attendee, eventId, { rating: 5 })).rejects.toMatchObject({ code: "CONFLICT" });
-    await db.pool.query("update events set status = 'completed' where id = $1", [eventId]);
+    await setEventStatus(db.pool, eventId, "completed");
     await expect(submitFeedback(asUser(outsider), outsider, eventId, { rating: 4 })).rejects.toMatchObject({ code: "FORBIDDEN" });
     await submitFeedback(asUser(attendee), attendee, eventId, { rating: 5, metSomeone: true, comment: "Great" });
     await submitFeedback(asUser(attendee), attendee, eventId, { rating: 4 });
@@ -141,7 +141,7 @@ describe.skipIf(!available)("06 flows against Postgres", () => {
     const invited = await createEvent(db.pool, { businessId, title: "Invited Mixer" });
     await rsvpAs(db, me, soon);
     await rsvpAs(db, me, done);
-    await db.pool.query("update events set status = 'completed' where id = $1", [done]);
+    await setEventStatus(db.pool, done, "completed");
     const groupId = await createGroup(db.pool, friend, [[friend, "active"], [me, "active"]]);
     await inviteGroupToEvent(friend, invited, groupId);
 

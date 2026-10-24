@@ -3,7 +3,8 @@ import type pg from "pg";
 // Test-only stand-in for the slice of the supabase-js query builder that workstream 06 uses,
 // executed as SQL against the throwaway Postgres database. Results go through row_to_json, so
 // timestamps and numerics come back in the same JSON shapes PostgREST returns.
-// RLS is not enforced (tests connect as the database owner); auth.uid() is set when a userId is given.
+// RLS is not enforced (tests connect as the database owner); auth.uid() is set when a userId is given,
+// otherwise the call carries the service-role claim like a Supabase service-key client.
 
 type Result = { data: unknown; error: { message: string } | null; count?: number | null };
 type Filter = { sql: string; values: unknown[] };
@@ -225,11 +226,11 @@ async function rpc(run: Runner, fn: string, args: Record<string, unknown>): Prom
 /** A client bound to the test pool; with `userId`, every statement runs with auth.uid() = userId. */
 export function fakeSupabase(pool: pg.Pool, userId?: string) {
   const run: Runner = async (sql, values) => {
-    if (!userId) return pool.query(sql, values);
     const client = await pool.connect();
     try {
       await client.query("begin");
-      await client.query("select set_config('request.jwt.claim.sub', $1, true)", [userId]);
+      if (userId) await client.query("select set_config('request.jwt.claim.sub', $1, true)", [userId]);
+      else await client.query("select set_config('request.jwt.claim.role', 'service_role', true)");
       const result = await client.query(sql, values);
       await client.query("commit");
       return result;

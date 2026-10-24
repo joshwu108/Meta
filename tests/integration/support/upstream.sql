@@ -122,21 +122,111 @@ create table businesses (
 create table events (
   id uuid primary key default gen_random_uuid(),
   business_id uuid not null references businesses(id) on delete cascade,
-  proposal_id uuid,
+  proposal_id uuid,                             -- references event_proposals(id); FK added below if 04 landed first
   source text not null check (source in ('ai_proposal','business_manual','group_request')),
-  title text not null,
-  description text not null,
+  title text not null check (char_length(title) between 4 and 80),
+  description text not null check (char_length(description) <= 1500),
   category text not null,
   format text,
   starts_at timestamptz not null,
   ends_at timestamptz not null,
   capacity int not null check (capacity between 1 and 500),
-  price_cents int,
+  price_cents int check (price_cents >= 0),     -- null = free / pay at venue
   status text not null default 'approved_draft'
     check (status in ('proposed','awaiting_approval','approved_draft','published','full','completed','cancelled')),
   published_at timestamptz,
+  cancelled_at timestamptz,
+  cancel_reason text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint events_time check (ends_at > starts_at)
+  constraint events_time check (ends_at > starts_at),
+  constraint events_cancel_reason check (status <> 'cancelled' or cancel_reason is not null)
 );
 create trigger events_updated before update on events for each row execute function set_updated_at();
+
+-- 05 event status machine, copied verbatim from ws/05-business (0500_business.sql, 0501_business_rpc.sql)
+-- so 06's tests fail the same way production would on a direct status UPDATE.
+-- Only deviation: is_trusted_server() also trusts the database owner, because this local
+-- cluster has no `postgres` role and the test database's functions are owned by the test user.
+create or replace function is_trusted_server() returns boolean
+language sql stable as $$
+  select coalesce(
+           nullif(current_setting('request.jwt.claim.role', true), ''),
+           nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role',
+           ''
+         ) = 'service_role'
+      or current_user in ('postgres', 'supabase_admin', 'service_role')
+      or current_user = (select pg_get_userbyid(datdba) from pg_database where datname = current_database());
+$$;
+
+create or replace function events_guard_status() returns trigger
+language plpgsql as $$
+begin
+  if new.status is distinct from old.status
+     and coalesce(current_setting('commonground.status_rpc', true), '') <> 'on' then
+    raise exception
+      'event status changes must go through a status RPC (attempted % -> %)', old.status, new.status
+      using errcode = 'check_violation';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger events_status_guard before update on events
+  for each row execute function events_guard_status();
+
+create or replace function event_transition_allowed(p_from text, p_to text)
+returns boolean language sql immutable as $$
+  select case p_from
+    when 'proposed'           then p_to = 'awaiting_approval'
+    when 'awaiting_approval'  then p_to in ('approved_draft','cancelled')
+    when 'approved_draft'     then p_to in ('published','cancelled')
+    when 'published'          then p_to in ('full','completed','cancelled')
+    when 'full'               then p_to in ('published','completed','cancelled')
+    else false
+  end;
+$$;
+
+create or replace function can_act_on_business(p_business_id uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select is_trusted_server()
+      or exists (
+           select 1 from businesses b
+            where b.id = p_business_id and b.owner_id = auth.uid()
+         );
+$$;
+
+create or replace function transition_event_status(p_event_id uuid, p_to text)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_event record;
+begin
+  select * into v_event from events where id = p_event_id for update;
+  if not found then
+    raise exception 'NOT_FOUND: event does not exist' using errcode = 'no_data_found';
+  end if;
+  -- An owner who does not own this event is told the same thing as a stranger.
+  if not can_act_on_business(v_event.business_id) then
+    raise exception 'NOT_FOUND: event does not exist' using errcode = 'no_data_found';
+  end if;
+  if v_event.status = p_to then
+    raise exception 'CONFLICT: event is already %', p_to using errcode = 'unique_violation';
+  end if;
+  if not event_transition_allowed(v_event.status, p_to) then
+    raise exception 'CONFLICT: % -> % is not a legal event transition', v_event.status, p_to
+      using errcode = 'check_violation';
+  end if;
+
+  perform set_config('commonground.status_rpc', 'on', true);
+  update events
+     set status       = p_to,
+         published_at = case when p_to = 'published' and published_at is null then now() else published_at end,
+         cancelled_at = case when p_to = 'cancelled' then now() else cancelled_at end
+   where id = p_event_id;
+  perform set_config('commonground.status_rpc', '', true);
+
+  return jsonb_build_object('eventId', p_event_id, 'from', v_event.status, 'to', p_to);
+end;
+$$;
+
