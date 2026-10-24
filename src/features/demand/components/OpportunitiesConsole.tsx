@@ -30,7 +30,7 @@ function ResultsTable({ view }: { view: RunView }) {
               </td>
               <td className="py-3 pr-3">{p.businessName}</td>
               <td className="py-3 pr-3">
-                <a className="font-semibold text-brand hover:underline" href={`/business/proposals?focus=${p.id}`}>{p.title}</a>
+                <a className="font-semibold text-brand hover:underline" href={`/business/proposals/${p.id}`}>{p.title}</a>
                 <AiTag className="ml-2 align-middle" />
               </td>
               <td className="py-3"><StatusPill status={p.status} /></td>
@@ -42,18 +42,19 @@ function ResultsTable({ view }: { view: RunView }) {
   );
 }
 
-function Suppressed({ count }: { count: number }) {
+function Suppressed({ count, minCohortSize }: { count: number; minCohortSize: number }) {
+  const why = `Below the minimum cohort size of ${minCohortSize}, not shown to businesses`;
   return (
-    <p className="mt-3 flex items-center gap-1.5 text-[length:var(--text-sm)] text-text-2" title="Below the minimum cohort size of 4, not shown to businesses">
+    <p className="mt-3 flex items-center gap-1.5 text-[length:var(--text-sm)] text-text-2" title={why}>
       <Info size={14} aria-hidden />
       <span>{count} small {count === 1 ? 'cohort' : 'cohorts'} suppressed</span>
-      <span className="sr-only">Below the minimum cohort size of 4, not shown to businesses</span>
+      <span className="sr-only">{why}</span>
     </p>
   );
 }
 
 /** Scene 3 presenter control panel: one lead card with Generate and the tracker, then results. */
-export function OpportunitiesConsole() {
+export function OpportunitiesConsole({ minCohortSize }: { minCohortSize: number }) {
   const run = useOpportunityRun();
   const view = run.view;
   return (
@@ -67,7 +68,7 @@ export function OpportunitiesConsole() {
           Generate Opportunities
         </Button>
         {(run.runId || run.isStarting) && <StageTracker stage={view?.stage ?? 'collecting'} status={view?.status ?? 'running'} />}
-        {view && view.stats.clustersSuppressed !== undefined && <Suppressed count={view.stats.clustersSuppressed} />}
+        {view && view.stats.clustersSuppressed !== undefined && <Suppressed count={view.stats.clustersSuppressed} minCohortSize={minCohortSize} />}
         {run.error && <p role="alert" className="mt-3 text-[length:var(--text-sm)] text-danger">{run.error}</p>}
         {view?.status === 'failed' && <p role="alert" className="mt-3 text-[length:var(--text-sm)] text-danger">The run failed. Try again.</p>}
       </Card>
