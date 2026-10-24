@@ -85,6 +85,9 @@ Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from m
 - 2026-10-24: RLS is tested on PGlite (Postgres in WASM) with a stubbed `auth` schema (`auth.users`, `auth.uid()` from `request.jwt.claim.sub`, `authenticated` role). The test uses main's `0100_core.sql` when present, else a stand-in that follows 01's spec.
 
 ## Needs from others
+- 01: `src/shared/types.ts` on ws/01-core has a placeholder `ExplainInput = { userId, subject, signals }`. 02 owns this type; please replace it with the shape in specs/02 §5 (`{ viewer, target, breakdown }`), which 06 already codes against.
+- README: add `getAttendeeSharing(userIds)` and `getConsent(userId)` (requested by 06) to the 02 function contracts.
+- 06: `getAttendeeSharing` and `getConsent` now exist on ws/02-agent with the exact shape of your stub; swap `stubs/agent.ts` for `@/features/agent` after both land on main.
 - 03 and 04: import `DEMAND_OPT_OUT_EMAILS` / `MATCHING_OPT_OUT_EMAILS` from `tests/fixtures/consent-cases.ts` and assert those users never appear in matches / cohort counts (closes AC3).
 - README: add `POST /api/agent/feedback` (P1) to the 02 row of the routes table, and `resolveGroupSchedule(members)` / `getSharablePreferencesBatch(ids, purpose)` to the 02 function contracts.
 - 03: the group planner can call `resolveGroupSchedule(members)` from `@/features/agent` with members fetched via `getSharablePreferencesBatch(ids, 'group_plan')`.
@@ -111,3 +114,4 @@ Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from m
 - 2026-10-24 17:10 · landed: privacy guard test (no agent-table reads outside features/agent), AI_UNAVAILABLE → form fallback with E2E; 128 unit + 10 E2E green. Next: keep syncing for 01; component edge cases.
 - 2026-10-24 17:30 · ws/01-core reviewed (read-only): re-keyed preferences seed to 01's 14 users (clusters preserved), loader takes SeedContext, fixtures readable by 01's mock loader, prompt defs in 01's registry shape; merge plan recorded. 131 unit + 10 E2E green. Next: wait for 01 on main.
 - 2026-10-24 17:50 · landed: PGlite migration/RLS suite (8 tests; also green on ws/01-core's real 0100). 131 unit + 8 PGlite + 10 E2E green. Next: wait for 01 on main, then run the merge plan.
+- 2026-10-24 18:05 · landed: getAttendeeSharing + getConsent for 06 (consent-gated, logged), spec §5 documents ExplainInput and all extra exports. 145 unit/integration + 10 E2E green. Next: wait for main.
