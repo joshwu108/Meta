@@ -2,7 +2,8 @@
 import { Send } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { Button, Sheet, cn } from '@/features/core/components/ui';
-import { fetchJson } from '@/lib/api/fetch-json';
+import { apiGet, apiPost } from '@/lib/api/client';
+import { errorMessage } from '@/lib/api/use-api-action';
 import type { DirectMessage } from '../server/messages';
 
 const POLL_MS = 5000;
@@ -26,11 +27,14 @@ function useConversation(connectionId: string | null) {
     setError(null);
     const load = async () => {
       const query = last ? `?after=${encodeURIComponent(last)}` : '';
-      const res = await fetchJson<DirectMessage[]>(`/api/connections/${connectionId}/messages${query}`);
-      if (cancelled) return;
-      if (!res.ok) return setError(res.error.message);
-      if (res.data.length > 0) last = res.data[res.data.length - 1]!.createdAt;
-      setMessages((current) => mergeMessages(current, res.data));
+      try {
+        const batch = await apiGet<DirectMessage[]>(`/api/connections/${connectionId}/messages${query}`);
+        if (cancelled) return;
+        if (batch.length > 0) last = batch[batch.length - 1]!.createdAt;
+        setMessages((current) => mergeMessages(current, batch));
+      } catch (cause) {
+        if (!cancelled) setError(errorMessage(cause));
+      }
     };
     void load();
     const timer = setInterval(load, POLL_MS);
@@ -56,11 +60,14 @@ export function ChatSheet({ connection, onClose }: Props) {
     const body = draft.trim();
     if (!body) return;
     setIsSending(true);
-    const res = await fetchJson<DirectMessage>(`/api/connections/${connection.id}/messages`, { method: 'POST', body: { body } });
-    setIsSending(false);
-    if (!res.ok) return setError(res.error.message);
-    append(res.data);
-    setDraft('');
+    try {
+      append(await apiPost<DirectMessage>(`/api/connections/${connection.id}/messages`, { body }));
+      setDraft('');
+    } catch (cause) {
+      setError(errorMessage(cause));
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
