@@ -20,6 +20,8 @@ export type GenerateInput = {
   brief: DemandBrief;
   business: Venue['card'];
   capabilities: CapabilitySummary;
+  /** Set for group-originated proposals: the idea the group voted for (03's suggestion). */
+  groupIdea?: { title: string; description: string };
   feedback?: string;
 };
 

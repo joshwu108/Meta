@@ -14,6 +14,8 @@ Rules:
 - Keep the title plain and specific (for example "Beginner Pottery & Coffee Night").
 - Design the format so strangers can easily talk to each other; prefer the brief's groupSizeMode.
 - demand.band and demand.neighborhoodLabel copy the brief. topInterests are tags from the brief.
+- If groupIdea is present, an existing group voted for this idea and wants a venue for it. Base the proposal
+  on groupIdea; demand.band then describes the group's size.
 - If feedback is present, it lists checks your previous draft failed; fix exactly those.`;
 
 const REVISE_PROPOSAL = `You revise one event proposal for the local business that received it.
