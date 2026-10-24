@@ -6,6 +6,7 @@ import { log } from '@/lib/log';
 import { GenerateOpportunitiesRequest } from '../schemas';
 import type { PipelineDeps } from './deps';
 import { executeRun, PipelineBusyError, runPipeline, startRun } from './pipeline';
+import { ReviseRequest } from './revise';
 import type { RunView } from './store-supabase';
 
 /** Route handler logic, separated from Next's route files so it is testable without a server. */
@@ -76,6 +77,13 @@ export async function handleCron(req: Request, deps: RouteDeps): Promise<Respons
     if (error instanceof PipelineBusyError) throw busy();
     throw error;
   }
+}
+
+/** POST /api/ai/proposals/:id/revise (P1). Business owner only; RLS scopes the proposal read. */
+export async function handleRevise(id: string | undefined, req: Request, revise: (id: string, request: ReviseRequest) => Promise<unknown>): Promise<Response> {
+  if (!id || !RUN_ID.test(id)) throw new ApiError('VALIDATION', 'id must be a uuid', 400);
+  const request = await parseBody(ReviseRequest, req);
+  return ok(await revise(id, request));
 }
 
 export function defaultRouteDeps(overrides: Partial<RouteDeps> & Pick<RouteDeps, 'pipeline' | 'schedule' | 'getRunView'>): RouteDeps {

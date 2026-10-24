@@ -117,6 +117,22 @@ describe('ws04 pipeline against local Supabase (MOCK_AI, Scene 3)', () => {
     }
   });
 
+  it('lets the owner revise their proposal into business_edits, and hides it from other owners (P1)', async () => {
+    const { reviseProposal } = await import('@/features/demand/server/revise');
+    const { reviseDeps } = await import('@/features/demand/server/revise-wiring');
+    const kilnOwner = world.owners.get('Kiln & Cup')!;
+    const [p] = (await proposalsFor('Kiln & Cup')).filter((x) => x.proposal.category === 'creative');
+    const out = await reviseProposal(p!.id, { priceCents: 2500, note: 'Owner wants $25' }, reviseDeps(db(kilnOwner.client), admin));
+    expect(out.revision.suggestedPriceCents).toBe(2500);
+    const { data } = await admin.from('event_proposals').select('proposal, business_edits').eq('id', p!.id).single();
+    expect((data?.proposal as { suggestedPriceCents: number }).suggestedPriceCents).toBe(2000);
+    expect((data?.business_edits as { revisions: unknown[] }).revisions).toHaveLength(1);
+
+    const meeple = world.owners.get('Meeple House')!;
+    const denied = await reviseProposal(p!.id, { note: 'not mine' }, reviseDeps(db(meeple.client), admin)).catch((e: { code?: string }) => e);
+    expect((denied as { code?: string }).code).toBe('NOT_FOUND');
+  });
+
   it('keeps the proposal document immutable', async () => {
     const [p] = await proposalsFor('Kiln & Cup');
     const { error } = await admin.from('event_proposals').update({ proposal: { title: 'changed' } }).eq('id', p!.id);

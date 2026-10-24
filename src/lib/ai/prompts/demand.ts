@@ -14,7 +14,10 @@ Rules:
 - Keep the title plain and specific (for example "Beginner Pottery & Coffee Night").
 - Design the format so strangers can easily talk to each other; prefer the brief's groupSizeMode.
 - demand.band and demand.neighborhoodLabel copy the brief. topInterests are tags from the brief.
-- If feedback is present, it lists checks your previous draft failed; fix exactly those.`;
+- If feedback is present, it lists checks your previous draft failed; fix exactly those.
+- If revision is present, the business owner asked to change revision.current: apply revision.request
+  (priceCents, capacity, slot, note) and rewrite the description and format to match the new numbers.
+  Keep everything the owner did not ask to change. The same rules above still apply.`;
 
 export const DEMAND_PROMPTS = {
   'demand.generate_proposal': { system: GENERATE_PROPOSAL, model: 'smart' },
