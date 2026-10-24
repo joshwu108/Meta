@@ -74,3 +74,6 @@ export type EventRow = z.infer<typeof EventRow>;
 export const EVENT_SELECT =
   "id, business_id, source, title, description, category, format, starts_at, ends_at, capacity, price_cents, status, updated_at, " +
   "businesses!inner(id, name, category, neighborhood, address, description, image_url, lat, lng)";
+
+export const FollowUpIdParams = z.object({ id });
+export const FollowUpActionBody = z.object({ action: z.enum(["accept", "dismiss"]) });
