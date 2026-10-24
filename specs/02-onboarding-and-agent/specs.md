@@ -149,6 +149,7 @@ export async function getSharablePreferences(userId, purpose: 'matching' | 'dema
 | `POST /api/agent/preferences/confirm` | `{ discoverable: boolean, consent: Consent }` → marks onboarding complete, sets `profiles.onboarding_completed_at` and `is_discoverable` |
 | `GET /api/agent/permissions` / `PATCH` | `Consent` object |
 | `GET /api/agent/log?limit=50` | agent action log rows for the current user |
+| `POST /api/agent/feedback` (P1) | `{ about: 'event:<id>' \| 'person:<id>' \| 'group:<id>', signal: 'up' \| 'down', note? }` → `{ count }`; stored in `agent_profiles.feedback_notes` (newest per target, max 50), last 10 injected into `agent.chat` |
 
 All routes use `withAuth`. `POST /api/agent/chat` applies a per-user limit of 30 calls / 10 min and returns `RATE_LIMITED` beyond it.
 
