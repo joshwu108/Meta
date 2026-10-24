@@ -1,0 +1,56 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { z } from 'zod';
+import { fail, ok, parseBody, route, withBusinessOwner } from '@/lib/api/envelope';
+import { ApiError } from '@/lib/api/errors';
+import { businessDeps } from '@/features/business/server/context';
+import { toProposalDetail } from '@/features/business/server/proposals';
+
+/**
+ * Spec section 11: until workstream 04 lands its pipeline, this dev-only route inserts one
+ * fixture proposal for the caller's business so the inbox is not empty. Never available in
+ * production.
+ */
+
+const FIXTURES = ['pottery-night', 'coffee-tasting'] as const;
+
+const bodySchema = z.object({
+  fixture: z.enum(FIXTURES).default('pottery-night'),
+  clusterId: z.string().uuid().nullish(),
+});
+
+export const POST = route(
+  withBusinessOwner(async (ctx, req) => {
+    if (process.env.NODE_ENV === 'production') {
+      return fail('NOT_FOUND', 'not found');
+    }
+
+    const { fixture, clusterId } = await parseBody(bodySchema, req);
+    const file = path.join(process.cwd(), 'tests', 'fixtures', 'proposals', `${fixture}.json`);
+    const proposal = JSON.parse(await readFile(file, 'utf8')) as unknown;
+
+    const { data, error } = await ctx.supabase
+      .from('event_proposals')
+      .insert({
+        business_id: ctx.business.id,
+        cluster_id: clusterId ?? null,
+        source: 'demand',
+        status: 'pending',
+        proposal,
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      throw new ApiError(
+        'CONFLICT',
+        `could not insert a fixture proposal (${error.code}); workstream 04's event_proposals table may not be migrated yet`,
+      );
+    }
+
+    const deps = businessDeps(ctx.supabase);
+    const row = await deps.store.findProposal((data as { id: string }).id);
+    if (!row) throw new ApiError('INTERNAL', 'the fixture proposal disappeared');
+    return ok(toProposalDetail(row, deps), undefined, { status: 201 });
+  }),
+);
