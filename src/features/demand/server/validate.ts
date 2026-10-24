@@ -1,5 +1,5 @@
 import { FORBIDDEN_PHRASES, type ProposalDocument, type StoredProposal } from '../schemas';
-import type { AggregatedCluster } from './aggregate';
+import { attendanceEstimate, type AggregatedCluster } from './aggregate';
 import type { DemandConfig } from './config';
 import { nextSlotStart } from './time';
 import type { Venue } from './venue';
@@ -71,6 +71,7 @@ export function validateProposal(
       },
       disclaimers: ['demand_is_estimate'],
       suggestedStartsAt: startsAt.toISOString(),
+      attendanceEstimate: attendanceEstimate(cluster.band, doc.suggestedCapacity),
     },
   };
 }

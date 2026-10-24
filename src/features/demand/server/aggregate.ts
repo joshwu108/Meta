@@ -23,6 +23,27 @@ export function toBand(count: number): DemandBand {
   return '4-5';
 }
 
+const BAND_BOUNDS: Readonly<Record<DemandBand, { min: number; max: number }>> = {
+  '4-5': { min: 4, max: 5 },
+  '6-9': { min: 6, max: 9 },
+  '10+': { min: 10, max: 19 },
+  '20+': { min: 20, max: 30 },
+};
+
+/** Share of interested people expected to come; stated interest over-predicts turnout. */
+const TURNOUT = { low: 0.6, high: 0.9 } as const;
+
+/**
+ * P1 "likely N–M attendees", computed from the band bounds (never the raw count) and capped
+ * at the proposal capacity. Open-ended bands are marked low confidence.
+ */
+export function attendanceEstimate(band: DemandBand, capacity: number): { min: number; max: number; confidence: 'low' | 'medium' } {
+  const b = BAND_BOUNDS[band];
+  const max = Math.min(capacity, Math.max(2, Math.round(b.max * TURNOUT.high)));
+  const min = Math.min(max, Math.max(2, Math.floor(b.min * TURNOUT.low)));
+  return { min, max, confidence: band === '10+' || band === '20+' ? 'low' : 'medium' };
+}
+
 /** Tally values, most frequent first, ties broken alphabetically for determinism. */
 function tally(values: readonly string[]): { tag: string; count: number }[] {
   const counts = values.reduce((m, v) => m.set(v, (m.get(v) ?? 0) + 1), new Map<string, number>());

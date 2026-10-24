@@ -43,7 +43,7 @@ export type ReviseOutcome =
   | { kind: 'rejected'; issues: ValidationIssue[] };
 
 function withoutStart(proposal: StoredProposal): ProposalDocument {
-  const { suggestedStartsAt: _startsAt, ...doc } = proposal;
+  const { suggestedStartsAt: _startsAt, attendanceEstimate: _estimate, ...doc } = proposal;
   return doc;
 }
 

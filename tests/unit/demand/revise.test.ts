@@ -13,7 +13,7 @@ const { handleRevise } = await import('@/features/demand/server/revise-route');
 const { ApiError } = await import('@/lib/api');
 
 const KILN = VENUES[0]!;
-const STORED: StoredProposal = { ...(fixture as ProposalDocument), disclaimers: ['demand_is_estimate'], suggestedStartsAt: '2026-11-06T02:00:00.000Z' };
+const STORED: StoredProposal = { ...(fixture as ProposalDocument), disclaimers: ['demand_is_estimate'], suggestedStartsAt: '2026-11-06T02:00:00.000Z', attendanceEstimate: { min: 3, max: 8, confidence: 'medium' } };
 const REVISED = { ...(revisedFixture as ProposalDocument), disclaimers: ['demand_is_estimate'] } as ProposalDocument;
 
 function row(overrides: Partial<RevisableProposal> = {}): RevisableProposal {
@@ -54,6 +54,8 @@ describe('reviseProposal', () => {
     expect(new Date(stored.suggestedStartsAt).getTime() - NOW.getTime()).toBeGreaterThanOrEqual(5 * 86_400_000);
     expect(inputs[0]).toMatchObject({ ownerNote: 'Smaller group please', changes: { capacity: 8, priceCents: null, slot: null } });
     expect(inputs[0]?.previous).not.toHaveProperty('suggestedStartsAt');
+    expect(inputs[0]?.previous).not.toHaveProperty('attendanceEstimate');
+    expect(stored.attendanceEstimate).toEqual({ min: 3, max: 8, confidence: 'medium' });
   });
 
   it('applies owner numbers even when the model ignores them', async () => {

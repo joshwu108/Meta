@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { thresholdAndRank, toBand, toBrief } from '@/features/demand/server/aggregate';
+import { attendanceEstimate, thresholdAndRank, toBand, toBrief } from '@/features/demand/server/aggregate';
 import { categoriesFor, type DemandUser } from '@/features/demand/server/categories';
 import { clusterUsers, filterUsers } from '@/features/demand/server/cluster';
 import { DEMAND_CONFIG } from '@/features/demand/server/config';
@@ -100,6 +100,20 @@ describe('thresholdAndRank', () => {
     const { kept } = thresholdAndRank(clusterUsers(filterUsers(consentingUsers()), cfg), cfg);
     const text = JSON.stringify(kept.map(toBrief));
     expect(text).not.toMatch(/userId|00000000-|37\.\d|122\.\d|@/);
+  });
+});
+
+describe('attendanceEstimate (P1)', () => {
+  it('derives a range from the band, not the raw count, capped at capacity', () => {
+    expect(attendanceEstimate('6-9', 10)).toEqual({ min: 3, max: 8, confidence: 'medium' });
+    expect(attendanceEstimate('4-5', 10)).toEqual({ min: 2, max: 5, confidence: 'medium' });
+    expect(attendanceEstimate('20+', 12)).toEqual({ min: 12, max: 12, confidence: 'low' });
+  });
+
+  it('is identical for every count inside a band', () => {
+    const { kept } = thresholdAndRank(clusterUsers(filterUsers(consentingUsers()), cfg), cfg);
+    const c = kept.find((k) => k.band === '6-9')!;
+    expect(attendanceEstimate(c.band, 10)).toEqual(attendanceEstimate('6-9', 10));
   });
 });
 
