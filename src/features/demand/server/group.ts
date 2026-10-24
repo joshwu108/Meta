@@ -2,7 +2,7 @@ import type { AvailabilitySlot, EventCategory, GroupSizePref } from '@/shared/en
 import type { StoredProposal } from '../schemas';
 import { toBand } from './aggregate';
 import type { PipelineDeps } from './deps';
-import { draft, pickVenue, type VenueNeed } from './process-cluster';
+import { draft, pickVenue, proposalNotice, type VenueNeed } from './process-cluster';
 import type { ValidationIssue, ValidationTarget } from './validate';
 import { capabilitySummary, type Venue } from './venue';
 
@@ -93,7 +93,7 @@ export async function proposeForGroup(req: GroupVenueRequest, deps: GroupDeps): 
   if (outcome.kind !== 'drafted') return outcome;
   const proposalId = await deps.saveGroupProposal({ key, businessId: venue.match.businessId, proposal: outcome.proposal });
   if (!proposalId) return { kind: 'duplicate' };
-  await deps.notify(venue.ownerId, 'proposal_received', { proposalId, title: outcome.proposal.title, demandBand: t.band });
+  await deps.notify(venue.ownerId, 'proposal_received', proposalNotice(proposalId, outcome.proposal.title, t.band));
   await deps.logActions([{ userId: null, actor: 'planning_agent', action: 'generate_proposal', permissionsUsed: ['group_plan'], result: outcome.proposal.title }]);
   return { kind: 'created', proposalId, venue, proposal: outcome.proposal };
 }

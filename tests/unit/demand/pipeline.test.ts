@@ -27,7 +27,7 @@ describe('runPipeline (Scene 3 data)', () => {
     expect(games?.venue.card.name).toBe('Meeple House');
     expect(saved.filter((s) => s.cluster.category === 'creative' && s.cluster.slot === 'thu_eve')).toHaveLength(1);
     expect(result.stats.proposalsCreated).toBe(saved.length);
-    expect(deps.notify).toHaveBeenCalledWith('owner-b-kiln', 'proposal_received', expect.objectContaining({ demandBand: '6-9' }));
+    expect(deps.notify).toHaveBeenCalledWith('owner-b-kiln', 'proposal_received', expect.objectContaining({ demandBand: '6-9', href: expect.stringMatching(/^\/business\/proposals\/p-\d+$/) }));
   });
 
   it('never counts the opted-out user', async () => {

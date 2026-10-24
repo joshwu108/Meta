@@ -47,7 +47,7 @@ describe('proposeForGroup', () => {
     const input = generate.mock.calls[0]?.[0] as GenerateInput;
     expect(input.groupIdea).toEqual({ title: 'Wheel-throwing night', description: 'Try the pottery wheel together' });
     expect(input.brief).toMatchObject({ demandBand: '6-9', budgetP50Cents: 2000, activityPrefs: ['hands-on'] });
-    expect(deps.notify).toHaveBeenCalledWith('owner-b-kiln', 'proposal_received', expect.objectContaining({ proposalId: 'p-group-1', demandBand: '6-9' }));
+    expect(deps.notify).toHaveBeenCalledWith('owner-b-kiln', 'proposal_received', expect.objectContaining({ proposalId: 'p-group-1', demandBand: '6-9', href: '/business/proposals/p-group-1' }));
     expect(deps.logActions).toHaveBeenCalledWith([expect.objectContaining({ action: 'generate_proposal', permissionsUsed: ['group_plan'] })]);
   });
 

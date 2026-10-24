@@ -14,6 +14,11 @@ export type ClusterOutcome =
 
 const DAY_MS = 86_400_000;
 
+/** `proposal_received` payload; 01's bell follows `href` to 05's proposal page. */
+export function proposalNotice(proposalId: string, title: string, demandBand: string): Record<string, unknown> {
+  return { proposalId, title, demandBand, href: `/business/proposals/${proposalId}` };
+}
+
 /** What venue matching needs: a demand cluster or a group's voted idea. */
 export type VenueNeed = Pick<AggregatedCluster, 'category' | 'memberCount' | 'slot' | 'center' | 'budgetP50Cents'>;
 
@@ -78,7 +83,7 @@ export async function processCluster(
   const outcome = await draft(base, cluster, venue, deps);
   if (outcome.kind !== 'drafted' || ctx.dryRun) return outcome;
   const proposalId = await deps.saveProposal({ runId: ctx.runId, cluster, venue, proposal: outcome.proposal });
-  await deps.notify(venue.ownerId, 'proposal_received', { proposalId, title: outcome.proposal.title, demandBand: cluster.band });
+  await deps.notify(venue.ownerId, 'proposal_received', proposalNotice(proposalId, outcome.proposal.title, cluster.band));
   await deps.logActions([{ userId: null, actor: 'planning_agent', action: 'generate_proposal', permissionsUsed: ['demand'], result: outcome.proposal.title }]);
   return { kind: 'created', proposalId, venue, proposal: outcome.proposal };
 }
