@@ -15,10 +15,13 @@ coverage/
 # OS
 .DS_Store
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# playwright
-test-results/
+# test output
 playwright-report/
+test-results/
+tests/e2e/__screenshots__/**/*-actual.png
+next-env.d.ts
+*.tsbuildinfo
+
+# supabase local
+supabase/.branches
+supabase/.temp
