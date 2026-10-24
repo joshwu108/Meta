@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { adminClient, cleanupTestUsers, createTestUser, type TestUser } from '../helpers';
-import { actAs, call, setProfile } from './support';
+import { adminClient, createTestUser, type TestUser } from '../helpers';
+import { actAs, call, cleanupSocialUsers, setProfile, setTestOrigin } from './support';
 
 vi.mock('server-only', () => ({}));
 vi.mock('@/lib/supabase/server', async () => {
@@ -15,6 +15,7 @@ const { DELETE: removeMember } = await import('@/app/api/groups/[id]/members/[us
 const { POST: leave } = await import('@/app/api/groups/[id]/leave/route');
 const { PATCH: answerInvitation } = await import('@/app/api/invitations/[id]/route');
 
+setTestOrigin('group-routes');
 const admin = adminClient();
 let owner: TestUser, adminUser: TestUser, member: TestUser, invitee: TestUser, outsider: TestUser, blocked: TestUser, hidden: TestUser;
 let groupId: string;
@@ -35,7 +36,7 @@ beforeAll(async () => {
 }, 60_000);
 
 afterAll(async () => {
-  await cleanupTestUsers(admin);
+  await cleanupSocialUsers(admin);
 });
 
 const memberStatus = async (userId: string) =>

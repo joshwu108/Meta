@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/database.types';
-import type { TestUser } from '../helpers';
+import { TEST_DOMAIN, type TestUser } from '../helpers';
 
 /**
  * Route-level integration helpers. Test files mock `@/lib/supabase/server` so `withAuth` gets the
@@ -48,6 +48,38 @@ export type ConsentInput = { matching?: boolean; groupPlan?: boolean; demand?: b
 /** Remote test location so seeded San Francisco users never enter a test's candidate set. */
 export const TEST_ORIGIN = { lat: 64.14, lng: -21.94, neighborhood: 'Test Harbor' };
 
+let origin = TEST_ORIGIN;
+
+/**
+ * Give this test file its own coarse location (deterministic from `name`), so users another file
+ * failed to clean up can never enter this file's candidate sets. Call once at the top of a file.
+ */
+export function setTestOrigin(name: string): void {
+  const hash = [...name].reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 7);
+  const lat = Math.round(((hash % 10_000) / 100 - 50) * 100) / 100;
+  const lng = Math.round((((hash >>> 10) % 32_000) / 100 - 160) * 100) / 100;
+  origin = { lat, lng, neighborhood: `Test ${name}` };
+}
+
+export function testOrigin(): typeof TEST_ORIGIN {
+  return origin;
+}
+
+/**
+ * Delete every integration-test user one at a time, retrying failures. Deleting users who share
+ * groups and connections in parallel can deadlock on the cascades and leave users behind.
+ */
+export async function cleanupSocialUsers(admin: SupabaseClient<Database>): Promise<void> {
+  const { data } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const targets = (data?.users ?? []).filter((user) => user.email?.endsWith(`@${TEST_DOMAIN}`));
+  for (const user of targets) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const { error } = await admin.auth.admin.deleteUser(user.id);
+      if (!error) break;
+    }
+  }
+}
+
 /** Give a test user preferences, consent and a discoverable coarse location (02's tables, service role). */
 export async function setProfile(
   admin: SupabaseClient<Database>,
@@ -59,9 +91,9 @@ export async function setProfile(
   const profileUpdate = await admin
     .from('profiles')
     .update({
-      coarse_lat: profile.lat ?? TEST_ORIGIN.lat,
-      coarse_lng: profile.lng ?? TEST_ORIGIN.lng,
-      neighborhood: profile.neighborhood ?? TEST_ORIGIN.neighborhood,
+      coarse_lat: profile.lat ?? origin.lat,
+      coarse_lng: profile.lng ?? origin.lng,
+      neighborhood: profile.neighborhood ?? origin.neighborhood,
       is_discoverable: profile.discoverable ?? true,
       is_adult_confirmed: profile.adult ?? true,
       onboarding_completed_at: new Date().toISOString(),

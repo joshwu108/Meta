@@ -2,8 +2,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import type * as Ai from '@/lib/ai';
 import type * as GroupStubs from '@/features/groups/server/stubs';
 import type { EventPublic, EventSummary } from '@/shared/types';
-import { adminClient, cleanupTestUsers, createTestUser, type TestUser } from '../helpers';
-import { actAs, call, setProfile } from './support';
+import { adminClient, createTestUser, type TestUser } from '../helpers';
+import { actAs, call, cleanupSocialUsers, setProfile, setTestOrigin } from './support';
 
 const captured = vi.hoisted(() => ({
   inputs: [] as unknown[],
@@ -44,6 +44,7 @@ const { POST: plan } = await import('@/app/api/groups/[id]/plan/route');
 const { POST: vote } = await import('@/app/api/groups/[id]/plans/[planId]/vote/route');
 const { aiRateLimiter } = await import('@/lib/api');
 
+setTestOrigin('planner-routes');
 const admin = adminClient();
 let owner: TestUser, maker: TestUser, quiet: TestUser, outsider: TestUser;
 let groupId: string;
@@ -87,7 +88,7 @@ beforeEach(() => {
 });
 
 afterAll(async () => {
-  await cleanupTestUsers(admin);
+  await cleanupSocialUsers(admin);
 });
 
 describe('POST /api/groups/:id/plan', () => {

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { adminClient, cleanupTestUsers, createTestUser, type TestUser } from '../helpers';
-import { actAs, call, setProfile } from './support';
+import { adminClient, createTestUser, type TestUser } from '../helpers';
+import { actAs, call, cleanupSocialUsers, setProfile, setTestOrigin } from './support';
 
 vi.mock('server-only', () => ({}));
 vi.mock('@/lib/supabase/server', async () => {
@@ -18,6 +18,7 @@ const { POST: vote } = await import('@/app/api/groups/[id]/plans/[planId]/vote/r
 const { PATCH: answer } = await import('@/app/api/invitations/[id]/route');
 const { aiRateLimiter } = await import('@/lib/api');
 
+setTestOrigin('group-edges');
 const admin = adminClient();
 let owner: TestUser, friend: TestUser, outsider: TestUser;
 
@@ -27,7 +28,7 @@ beforeAll(async () => {
 }, 60_000);
 
 afterAll(async () => {
-  await cleanupTestUsers(admin);
+  await cleanupSocialUsers(admin);
 });
 
 async function newGroup(visibility: 'public' | 'private', name: string): Promise<string> {

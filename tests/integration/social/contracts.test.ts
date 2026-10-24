@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { adminClient, cleanupTestUsers, createTestUser, type TestUser } from '../helpers';
-import { setProfile } from './support';
+import { adminClient, createTestUser, type TestUser } from '../helpers';
+import { cleanupSocialUsers, setProfile, testOrigin, setTestOrigin } from './support';
 
 vi.mock('server-only', () => ({}));
 
@@ -8,6 +8,7 @@ const groups = await import('@/features/groups');
 const matching = await import('@/features/matching');
 const sixStubs = await import('@/features/groups/server/stubs');
 
+setTestOrigin('contracts');
 const admin = adminClient();
 let alice: TestUser, bob: TestUser, carol: TestUser, dave: TestUser;
 let publicId: string, privateId: string, archivedId: string;
@@ -39,7 +40,7 @@ beforeAll(async () => {
 }, 60_000);
 
 afterAll(async () => {
-  await cleanupTestUsers(admin);
+  await cleanupSocialUsers(admin);
 });
 
 describe('getGroupMemberIds (README §4)', () => {
@@ -109,7 +110,7 @@ describe('getGroupVenueRequest for 04 (P1)', () => {
     expect(await groups.getGroupVenueRequest(privateId, plan!.id, 0)).toBeNull();
     await admin.from('group_plan_votes').insert({ plan_id: plan!.id, suggestion_index: 0, user_id: alice.id });
     const request = await groups.getGroupVenueRequest(privateId, plan!.id, 0);
-    expect(request).toMatchObject({ title: 'Wheel night', category: 'creative', slot: 'thu_eve', memberCount: 2, votes: 1, budgetMaxCents: 2500, neighborhoodLabel: 'Test Harbor', groupSizeMode: 'small', activityPrefs: ['beginner-friendly'], centerLat: 64.14, centerLng: -21.94 });
+    expect(request).toMatchObject({ title: 'Wheel night', category: 'creative', slot: 'thu_eve', memberCount: 2, votes: 1, budgetMaxCents: 2500, neighborhoodLabel: testOrigin().neighborhood, groupSizeMode: 'small', activityPrefs: ['beginner-friendly'], centerLat: testOrigin().lat, centerLng: testOrigin().lng });
     expect(JSON.stringify(request)).not.toContain(alice.id);
     expect(await groups.getGroupVenueRequest(privateId, plan!.id, 1)).toBeNull();
     expect(await groups.getGroupVenueRequest(privateId, plan!.id, 7)).toBeNull();

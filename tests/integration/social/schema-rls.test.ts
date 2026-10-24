@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { adminClient, cleanupTestUsers, createTestUser, type TestUser } from '../helpers';
+import { adminClient, createTestUser, type TestUser } from '../helpers';
+import { cleanupSocialUsers } from './support';
 
 const admin = adminClient();
 let alice: TestUser;
@@ -14,10 +15,12 @@ beforeAll(async () => {
     createTestUser(admin, 'rls-carol'),
     createTestUser(admin, 'rls-dave'),
   ]);
+  // Connection requests need a reachable (discoverable) recipient since 0303.
+  await admin.from('profiles').update({ is_discoverable: true }).in('id', [alice.id, bob.id, carol.id, dave.id]);
 });
 
 afterAll(async () => {
-  await cleanupTestUsers(admin);
+  await cleanupSocialUsers(admin);
 });
 
 async function createGroup(owner: TestUser, visibility: 'public' | 'private', name = 'Test group') {
@@ -44,6 +47,13 @@ describe('connections', () => {
     expect(data?.status).toBe('pending');
     const reverse = await bob.client.from('connections').insert({ requester_id: bob.id, recipient_id: alice.id });
     expect(reverse.error?.code).toBe('23505');
+  });
+
+  it('rejects direct inserts to people the requester cannot reach', async () => {
+    await admin.from('profiles').update({ is_discoverable: false }).eq('id', dave.id);
+    const unreachable = await carol.client.from('connections').insert({ requester_id: carol.id, recipient_id: dave.id });
+    expect(unreachable.error).not.toBeNull();
+    await admin.from('profiles').update({ is_discoverable: true }).eq('id', dave.id);
   });
 
   it('rejects inserts on behalf of someone else or pre-accepted', async () => {

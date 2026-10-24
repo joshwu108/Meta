@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { adminClient, cleanupTestUsers, createTestUser, type TestUser } from '../helpers';
-import { actAs, call, setProfile } from './support';
+import { adminClient, createTestUser, type TestUser } from '../helpers';
+import { actAs, call, cleanupSocialUsers, setProfile, setTestOrigin } from './support';
 
 vi.mock('server-only', () => ({}));
 vi.mock('@/lib/supabase/server', async () => {
@@ -10,6 +10,7 @@ vi.mock('@/lib/supabase/server', async () => {
 
 const { GET: list, POST: send } = await import('@/app/api/connections/[id]/messages/route');
 
+setTestOrigin('messages');
 const admin = adminClient();
 let alice: TestUser, bob: TestUser, carol: TestUser, dave: TestUser;
 let acceptedId: string, pendingId: string;
@@ -29,7 +30,7 @@ beforeAll(async () => {
 }, 60_000);
 
 afterAll(async () => {
-  await cleanupTestUsers(admin);
+  await cleanupSocialUsers(admin);
 });
 
 describe('direct messages between accepted connections (P1)', () => {

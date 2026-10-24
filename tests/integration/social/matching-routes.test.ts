@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { adminClient, cleanupTestUsers, createTestUser, type TestUser } from '../helpers';
-import { actAs, call, setProfile } from './support';
+import { adminClient, createTestUser, type TestUser } from '../helpers';
+import { actAs, call, cleanupSocialUsers, setProfile, testOrigin, setTestOrigin } from './support';
 
 vi.mock('server-only', () => ({}));
 vi.mock('@/lib/supabase/server', async () => {
@@ -15,6 +15,7 @@ const { POST: block } = await import('@/app/api/users/[id]/block/route');
 const { POST: report } = await import('@/app/api/users/[id]/report/route');
 const { invalidateMatches } = await import('@/features/matching/server/matches');
 
+setTestOrigin('matching-routes');
 const admin = adminClient();
 const users: Record<string, TestUser> = {};
 const NAMES = ['viewer', 'good', 'second', 'hidden', 'noConsent', 'blockedByViewer', 'blockerOfViewer', 'pending', 'far', 'minor', 'loner'] as const;
@@ -32,7 +33,7 @@ beforeAll(async () => {
     setProfile(admin, u('blockedByViewer')),
     setProfile(admin, u('blockerOfViewer')),
     setProfile(admin, u('pending')),
-    setProfile(admin, u('far'), {}, { matching: true }, { lat: 65.5 }),
+    setProfile(admin, u('far'), {}, { matching: true }, { lat: testOrigin().lat + 1.5 }),
     setProfile(admin, u('minor'), {}, { matching: true }, { adult: false }),
     setProfile(admin, u('loner'), {}, { matching: false }, { discoverable: false }),
   ]);
@@ -44,7 +45,7 @@ beforeAll(async () => {
 }, 60_000);
 
 afterAll(async () => {
-  await cleanupTestUsers(admin);
+  await cleanupSocialUsers(admin);
 });
 
 const ids = (cards: Array<{ user: { id: string } }>) => cards.map((card) => card.user.id);
