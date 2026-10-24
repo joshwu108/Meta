@@ -139,6 +139,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 ## Log
 
+- 2026-10-24 18:20 CDT · wakeup: main unchanged, no new asks for 03. Checked the conflict-planning UI in the browser ("2 of 3 free", venue-size hint) and ran all 19 Playwright specs green. Next: watch main.
 - 2026-10-24 18:02 CDT · wakeup: main unchanged. Answered 02 (planner uses resolveGroupSchedule for conflicts) and 04 (cohort-size gating, venue name in toast). 146 unit, 100 integration green; planner/Scene 2 E2E green. Next: watch main.
 - 2026-10-24 17:58 CDT · wakeup: main unchanged. Split MatchScreen, InvitePicker and ReportSheet so every function is under 50 lines (UI E2E green); cross-branch schema check with 04/05/06 migrations passes. Next: watch main.
 - 2026-10-24 17:50 CDT · landed: `getPendingConnectionRequests` export for 06's Activity hub, `/match?focus=` deep links for 02's agent cards, spec §4/§6 aligned with the build. 143 unit, 98 integration, 19 E2E. Next: watch main.
