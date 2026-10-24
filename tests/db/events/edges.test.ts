@@ -1,16 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
+import { clientState } from "../support/state";
 import { fakeSupabase } from "../support/fake-supabase";
 import { createBusiness, createEvent, createGroup, createUser, rsvpAs, setEventStatus } from "../support/factories";
 
 vi.mock("server-only", () => ({}));
 
-const holder = vi.hoisted(() => ({ pool: null as unknown }));
-vi.mock("@/features/events/server/stubs/clients", async () => {
-  const { fakeSupabase: fake } = await import("../support/fake-supabase");
-  return { createAdminClient: () => fake(holder.pool as never), createUserClient: async () => fake(holder.pool as never) };
-});
 
 const available = await isDbAvailable();
 const { getNearbyBusinesses } = await import("@/features/events/server/nearby");
@@ -27,7 +23,7 @@ describe.skipIf(!available)("06 edge cases against Postgres", () => {
 
   beforeAll(async () => {
     db = await createTestDb();
-    holder.pool = db.pool;
+    clientState.pool = db.pool;
     businessId = await createBusiness(db.pool);
   });
   afterAll(async () => db?.drop());
@@ -147,7 +143,7 @@ describe.skipIf(!available)("P1 bookmarks against Postgres", () => {
 
   beforeAll(async () => {
     db = await createTestDb();
-    holder.pool = db.pool;
+    clientState.pool = db.pool;
     businessId = await createBusiness(db.pool);
   });
   afterAll(async () => db?.drop());

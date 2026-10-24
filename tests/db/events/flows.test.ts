@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
+import { clientState } from "../support/state";
 import { fakeSupabase } from "../support/fake-supabase";
 import {
   createBusiness, createEvent, createGroup, createUser, rsvpAs, setConsent, setLocation, setPreferences, setEventStatus,
@@ -8,16 +9,6 @@ import {
 
 vi.mock("server-only", () => ({}));
 
-const holder = vi.hoisted(() => ({ pool: null as unknown }));
-vi.mock("@/features/events/server/stubs/clients", async () => {
-  const { fakeSupabase: fake } = await import("../support/fake-supabase");
-  return {
-    createAdminClient: () => fake(holder.pool as never),
-    createUserClient: async () => {
-      throw new Error("tests pass user clients explicitly");
-    },
-  };
-});
 
 const available = await isDbAvailable();
 const { getRecommendedEvents } = await import("@/features/events/server/recommended");
@@ -37,7 +28,7 @@ describe.skipIf(!available)("06 flows against Postgres", () => {
 
   beforeAll(async () => {
     db = await createTestDb();
-    holder.pool = db.pool;
+    clientState.pool = db.pool;
     businessId = await createBusiness(db.pool);
   });
   afterAll(async () => db?.drop());

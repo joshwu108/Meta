@@ -1,17 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
+import { clientState } from "../support/state";
 import { createBusiness, createEvent, createUser, rsvpAs, setEventStatus } from "../support/factories";
 
 vi.mock("server-only", () => ({}));
 
-const holder = vi.hoisted(() => ({ pool: null as unknown, userId: undefined as string | undefined }));
-vi.mock("@/features/events/server/stubs/clients", async () => {
-  const { fakeSupabase: fake } = await import("../support/fake-supabase");
-  return {
-    createAdminClient: () => fake(holder.pool as never),
-    createUserClient: async () => fake(holder.pool as never, holder.userId),
-  };
-});
 
 const available = await isDbAvailable();
 const eventsRoute = await import("@/app/api/events/route");
@@ -40,12 +33,12 @@ describe.skipIf(!available)("06 route handlers", () => {
 
   beforeAll(async () => {
     db = await createTestDb();
-    holder.pool = db.pool;
+    clientState.pool = db.pool;
     businessId = await createBusiness(db.pool);
   });
   afterAll(async () => db?.drop());
   beforeEach(() => {
-    holder.userId = undefined;
+    clientState.userId = undefined;
   });
 
   it("answers 401 in the shared envelope without a session", async () => {
@@ -54,7 +47,7 @@ describe.skipIf(!available)("06 route handlers", () => {
   });
 
   it("validates ids, bodies and query strings", async () => {
-    holder.userId = await createUser(db.pool);
+    clientState.userId = await createUser(db.pool);
     expect((await call(detailRoute.GET, "GET", "/api/events/nope", { id: "nope" })).status).toBe(400);
     const eventId = await createEvent(db.pool, { businessId });
     const bad = await call(rsvpRoute.POST, "POST", `/api/events/${eventId}/rsvp`, { id: eventId }, { shareWithAttendees: "yes" });
@@ -64,7 +57,7 @@ describe.skipIf(!available)("06 route handlers", () => {
   });
 
   it("paginates the feed with meta", async () => {
-    holder.userId = await createUser(db.pool);
+    clientState.userId = await createUser(db.pool);
     await createEvent(db.pool, { businessId });
     const res = await call(eventsRoute.GET, "GET", "/api/events?page=1&limit=2");
     expect(res.status).toBe(200);
@@ -78,12 +71,12 @@ describe.skipIf(!available)("06 route handlers", () => {
     const [first, second] = await Promise.all([createUser(db.pool), createUser(db.pool)]);
     const path = `/api/events/${eventId}/rsvp`;
 
-    holder.userId = first;
+    clientState.userId = first;
     const created = await call(rsvpRoute.POST, "POST", path, { id: eventId }, { shareWithAttendees: true });
     const duplicate = await call(rsvpRoute.POST, "POST", path, { id: eventId }, {});
-    holder.userId = second;
+    clientState.userId = second;
     const full = await call(rsvpRoute.POST, "POST", path, { id: eventId }, {});
-    holder.userId = first;
+    clientState.userId = first;
     const cancelled = await call(rsvpRoute.DELETE, "DELETE", path, { id: eventId });
 
     expect(created).toEqual({ status: 201, json: { ok: true, data: { status: "confirmed", eventStatus: "full" } } });
@@ -94,7 +87,7 @@ describe.skipIf(!available)("06 route handlers", () => {
 
   it("forbids the attendee list without an RSVP", async () => {
     const eventId = await createEvent(db.pool, { businessId });
-    holder.userId = await createUser(db.pool);
+    clientState.userId = await createUser(db.pool);
     const res = await call(attendeesRoute.GET, "GET", `/api/events/${eventId}/attendees`, { id: eventId });
     expect([res.status, res.json.error.code]).toEqual([403, "FORBIDDEN"]);
   });
@@ -107,13 +100,13 @@ describe.skipIf(!available)("06 route handlers", () => {
     await setEventStatus(db.pool, eventId, "completed");
     const path = `/api/events/${eventId}/reconnect`;
 
-    holder.userId = maya;
+    clientState.userId = maya;
     await call(reconnectRoute.POST, "POST", path, { id: eventId }, { toUserId: jordan });
-    holder.userId = jordan;
+    clientState.userId = jordan;
     const mutual = await call(reconnectRoute.POST, "POST", path, { id: eventId }, { toUserId: maya });
     const suggestionId = mutual.json.data.suggestionId as string;
     const accept = (user: string) => {
-      holder.userId = user;
+      clientState.userId = user;
       return call(followUpRoute.PATCH, "PATCH", `/api/follow-ups/${suggestionId}`, { id: suggestionId }, { action: "accept" });
     };
     const firstAccept = await accept(jordan);
