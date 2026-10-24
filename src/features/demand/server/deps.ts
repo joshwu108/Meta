@@ -29,8 +29,8 @@ export type RunUpdate = { status?: 'running' | 'completed' | 'failed'; stage?: R
 export type PipelineDeps = {
   config: DemandConfig;
   now: () => Date;
-  /** Runs `fn` under the pipeline advisory lock; resolves to null when another run holds it. */
-  withLock: <T>(fn: () => Promise<T>) => Promise<T | null>;
+  /** Creates a running run and takes the pipeline lock; null when another run is in progress. */
+  startRun: (triggeredBy: TriggeredBy) => Promise<string | null>;
   listEligibleUserIds: () => Promise<string[]>;
   getSharableBatch: (userIds: readonly string[]) => Promise<ReadonlyMap<string, DemandUser>>;
   logActions: (entries: readonly ActionLogEntry[]) => Promise<void>;
@@ -38,7 +38,6 @@ export type PipelineDeps = {
   loadVenue: (match: BusinessMatch) => Promise<Venue | null>;
   hasRecentPendingProposal: (signature: string, since: Date) => Promise<boolean>;
   generate: (input: GenerateInput) => Promise<ProposalDocument>;
-  createRun: (triggeredBy: TriggeredBy) => Promise<string>;
   updateRun: (runId: string, update: RunUpdate) => Promise<void>;
   saveProposal: (input: { runId: string; cluster: AggregatedCluster; venue: Venue; proposal: StoredProposal }) => Promise<string>;
   notify: (userId: string, type: NotificationType, payload: Record<string, unknown>) => Promise<void>;

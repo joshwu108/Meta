@@ -69,35 +69,48 @@ export class PipelineBusyError extends Error {
   }
 }
 
+/** Takes the run lock; throws PipelineBusyError when another run is in progress. */
+export async function startRun(deps: PipelineDeps, triggeredBy: TriggeredBy): Promise<string> {
+  const runId = await deps.startRun(triggeredBy);
+  if (!runId) throw new PipelineBusyError();
+  return runId;
+}
+
+/** Executes an already-started run to completion, recording failure on the run row. */
+export async function executeRun(
+  deps: PipelineDeps,
+  runId: string,
+  opts: { triggeredBy: TriggeredBy; dryRun?: boolean; startedAt?: string },
+): Promise<PipelineResult> {
+  const dryRun = opts.dryRun ?? false;
+  const startedAt = opts.startedAt ?? deps.now().toISOString();
+  try {
+    const { stats, outcomes } = await execute(deps, runId, dryRun);
+    await deps.updateRun(runId, { status: 'completed', stage: 'done', stats, finished: true });
+    return {
+      runId,
+      triggeredBy: opts.triggeredBy === 'group' ? 'manual' : opts.triggeredBy,
+      dryRun,
+      clustersDetected: stats.clustersFound,
+      proposalsCreated: stats.proposalsCreated,
+      startedAt,
+      finishedAt: deps.now().toISOString(),
+      stats,
+      outcomes,
+    };
+  } catch (error) {
+    await deps.updateRun(runId, { status: 'failed', error: error instanceof Error ? error.message : 'unknown', finished: true });
+    throw error;
+  }
+}
+
 /**
  * README §4 contract. Runs collect → filter → cluster → threshold → match → generate → validate
- * → store → notify under an advisory lock. A failure in one cluster is recorded and skipped;
+ * → store → notify while holding the run lock. A failure in one cluster is recorded and skipped;
  * anything else marks the run failed and rethrows.
  */
 export async function runPipeline(deps: PipelineDeps, opts: { triggeredBy: TriggeredBy; dryRun?: boolean }): Promise<PipelineResult> {
-  const dryRun = opts.dryRun ?? false;
-  const result = await deps.withLock(async () => {
-    const startedAt = deps.now().toISOString();
-    const runId = await deps.createRun(opts.triggeredBy);
-    try {
-      const { stats, outcomes } = await execute(deps, runId, dryRun);
-      await deps.updateRun(runId, { status: 'completed', stage: 'done', stats, finished: true });
-      return { runId, startedAt, stats, outcomes };
-    } catch (error) {
-      await deps.updateRun(runId, { status: 'failed', error: error instanceof Error ? error.message : 'unknown', finished: true });
-      throw error;
-    }
-  });
-  if (!result) throw new PipelineBusyError();
-  return {
-    runId: result.runId,
-    triggeredBy: opts.triggeredBy === 'group' ? 'manual' : opts.triggeredBy,
-    dryRun,
-    clustersDetected: result.stats.clustersFound,
-    proposalsCreated: result.stats.proposalsCreated,
-    startedAt: result.startedAt,
-    finishedAt: deps.now().toISOString(),
-    stats: result.stats,
-    outcomes: result.outcomes,
-  };
+  const startedAt = deps.now().toISOString();
+  const runId = await startRun(deps, opts.triggeredBy);
+  return executeRun(deps, runId, { ...opts, startedAt });
 }

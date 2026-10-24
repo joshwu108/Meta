@@ -88,7 +88,7 @@ describe('runPipeline (Scene 3 data)', () => {
   });
 
   it('refuses to run while another run holds the lock', async () => {
-    const { deps } = makeDeps({ withLock: async () => null });
+    const { deps } = makeDeps({ startRun: async () => null });
     await expect(runPipeline(deps, { triggeredBy: 'cron' })).rejects.toBeInstanceOf(PipelineBusyError);
   });
 

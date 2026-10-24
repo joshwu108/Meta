@@ -48,7 +48,7 @@ export function makeDeps(overrides: Partial<PipelineDeps> = {}) {
   const deps: PipelineDeps = {
     config: DEMAND_CONFIG,
     now: () => NOW,
-    withLock: (fn) => fn(),
+    startRun: async () => 'run-1',
     listEligibleUserIds: async () => scene3Users().map((u) => u.userId),
     getSharableBatch: async (ids) => new Map(consentingUsers().filter((u) => ids.includes(u.userId)).map((u) => [u.userId, u])),
     logActions: vi.fn(async () => undefined),
@@ -56,7 +56,6 @@ export function makeDeps(overrides: Partial<PipelineDeps> = {}) {
     loadVenue: async (m) => VENUES.find((v) => v.match.businessId === m.businessId) ?? null,
     hasRecentPendingProposal: async (sig, since) => (pending.get(sig)?.getTime() ?? 0) >= since.getTime(),
     generate: async (input) => (await import('@/features/demand/server/generate')).templateProposal(input),
-    createRun: async () => 'run-1',
     updateRun: vi.fn(async () => undefined),
     saveProposal: async (input) => {
       saved.push(input);
