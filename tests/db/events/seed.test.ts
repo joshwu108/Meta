@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { planRsvps, rsvpCandidates, seedEventsAndRsvps } from "../../../supabase/seed/06-events";
+import { loadRsvps, planRsvps, rsvpCandidates, seedEventsAndRsvps } from "../../../supabase/seed/loaders/rsvps";
 import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
 import { fakeSupabase } from "../support/fake-supabase";
 import { createBusiness, createEvent, createUser } from "../support/factories";
@@ -60,5 +60,15 @@ describe.skipIf(!available)("seedEventsAndRsvps against Postgres", () => {
       [users["demo@commonground.test"], users["demo.new@commonground.test"]],
     ]);
     expect(demo[0].n).toBe(0);
+  });
+
+  it("runs as a loader with 01's seed context and logs a summary", async () => {
+    const lines: string[] = [];
+    const admin = fakeSupabase(db.pool) as unknown as SupabaseClient;
+
+    const inserted = await loadRsvps({ admin, usersByEmail: new Map(Object.entries(users)), log: (m) => lines.push(m) });
+
+    expect(inserted).toBe(0);
+    expect(lines).toEqual(["rsvps=0 full=1 completed=1"]);
   });
 });

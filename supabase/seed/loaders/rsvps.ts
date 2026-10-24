@@ -1,8 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import fixture from "./fixtures/events-06.json";
+import fixture from "../fixtures/events-06.json";
 
-// Workstream 06 seed contribution (spec §8). Called by 01's seed runner after users, businesses
-// and events are loaded, with the runner's email → user id map (`ctx.usersByEmail`).
+// Workstream 06 seed loader (spec §8). 01's runner calls `loadRsvps(ctx)` after `loadEvents`.
 // Idempotent: re-running adds nothing.
 
 export type SeedSummary = { rsvps: number; fullEventId: string | null; completedEventId: string | null };
@@ -93,4 +92,18 @@ export async function seedEventsAndRsvps(
 
   const completedEventId = await seedCompletedEvent(admin, usersByEmail, now);
   return { rsvps: inserted.length, fullEventId: full?.eventId ?? null, completedEventId };
+}
+
+/** The slice of 01's SeedContext this loader uses. */
+export type RsvpSeedContext = {
+  admin: SupabaseClient;
+  usersByEmail: ReadonlyMap<string, string>;
+  log: (message: string) => void;
+};
+
+/** Loader entry point in the shape of 01's `supabase/seed/loaders/*`: returns the RSVPs inserted. */
+export async function loadRsvps(ctx: RsvpSeedContext, now = new Date()): Promise<number> {
+  const summary = await seedEventsAndRsvps(ctx.admin, ctx.usersByEmail, now);
+  ctx.log(`rsvps=${summary.rsvps} full=${summary.fullEventId ? 1 : 0} completed=${summary.completedEventId ? 1 : 0}`);
+  return summary.rsvps;
 }
