@@ -57,8 +57,8 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 
 ### P1
 - [x] `POST /api/ai/proposals/:id/revise`: body `{ note?, priceCents?, capacity?, slot? }` (≥ 1), owner-only via RLS, returns `{ proposalId, revision, revisionCount }`; versions in `business_edits.revisions[]`
-- [ ] Group-originated proposals (`source: 'group'`)
-- [ ] Demand confidence band ("6 people, likely 4-8 attendees")
+- [ ] Group-originated proposals (`source: 'group'`) — waiting on 03 to confirm the export shape below
+- [x] Demand estimate: `proposal.attendanceEstimate { min, max, confidence }` from the band only (no raw count, AC2)
 
 ## Decisions
 - 2026-10-24: 01 has not merged to main. Copied 01's tooling, `src/lib/**`, `src/shared/**`, `supabase/config.toml`, `0100_core.sql` and integration helpers byte-for-byte from `origin/ws/01-core` @ 00799fd so this branch builds and tests. No history merged from another ws branch; main wins on conflict.
@@ -84,10 +84,12 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - 02: export `getSharablePreferencesBatch(ids, 'demand')` from `@/features/agent` on main (exists on ws/02-agent).
 - 05: `findCandidateBusinesses` returns `BusinessMatch` only; 04 also needs capacity, hosting slots, price range, equipment tags and owner id to draft and validate. 04 reads them from `businesses` + `business_capabilities` with the service role until 05 exports a `getVenueForProposal(businessId)` (or similar).
 - 01: `vitest.config.ts` coverage `include` lists only `features/core/server` and `lib`; add `src/features/*/server/**` so each workstream's 80% bar is measured. ws04 measures it with `--coverage.include` (92% lines, unit + integration).
+- 03 (P1 group proposals, answering 03's ask): please export `getGroupVenueRequest(groupId, planId, suggestionIndex): Promise<GroupVenueRequest | null>` from `@/features/groups`, returning null unless the suggestion has ≥ 50% of active members' votes. Shape: `{ groupId, planId, title, category: EventCategory, slot: AvailabilitySlot, neighborhoodLabel, centerLat, centerLng, memberCount, groupSizeMode: GroupSizePref | null, budgetMaxCents: number | null, activityPrefs: string[] }` with coarse (2 dp) coordinates and no member ids. 04 then accepts `{ source: 'group', groupId, planId, suggestionIndex }` on `POST /api/ai/generate-opportunities`, stores `source = 'group'`, `source_group_id`, no `demand_cluster_members`, and dedups per (group, plan, suggestion).
 - README §4 + 05: add `POST /ai/proposals/:id/revise` to the 04 routes row. Shape for 05's "Ask AI to revise": body `{ note?: string, priceCents?: int, capacity?: int, slot?: AvailabilitySlot }` (at least one), response `{ proposalId, revision: StoredProposal, revisionCount }`; latest version is `business_edits.revisions.at(-1).proposal`. 409 once the proposal is decided.
 - 01: keep `...DEMAND_PROMPTS` in `PROMPTS` when merging (prompt lives in `src/lib/ai/prompts/demand.ts`).
 
 ## Blocked
+- P1 group-originated proposals wait on 03 agreeing the `getGroupVenueRequest` export (see Needs from others).
 - Prompt eval (spec §9) needs a live `ANTHROPIC_API_KEY`; never run here (no secrets on this machine).
 
 ## Log
@@ -96,3 +98,4 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - 2026-10-24 18:05 · landed: operator flag (0402), generate/status/cron routes, /admin/opportunities page; 56 unit + 10 integration green, build green. Next: Playwright Scene 3, then P1 revise endpoint for 05.
 - 2026-10-24 18:20 · landed: Playwright Scene 3 (green). Clean-state check on Node 22: db reset, 56 unit + 10 integration + 1 E2E green, typecheck + lint clean, 92% line coverage on features/demand/server. Next: prompt eval set, P1 revise endpoint for 05.
 - 2026-10-24 18:45 · landed: prompt eval set + live runner, P1 revise endpoint (unit + integration). 68 unit + 11 integration + 1 E2E green, build green. Next: P1 demand confidence band; wait for 01/02/05 on main to swap stubs.
+- 2026-10-24 19:00 · landed: P1 attendance estimate. 70 unit + 11 integration + 1 E2E green on Node 22; typecheck, lint, build clean. Remaining: live prompt eval (needs key), P1 group proposals (needs 03), swap stubs when 01/02/05 reach main.
