@@ -13,7 +13,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 ## Build items (P0)
 
 - [x] Migration `0600_events_rsvp.sql` (rsvps, event_feedback, reconnect_interest, follow_up_suggestions, bookmarks, deferred FKs, RLS, `rsvp_event`, `cancel_rsvp`)
-- [x] Exported contracts in `src/features/events/index.ts`: `getUpcomingEventsForUser`, `getEventPublic`
+- [x] Exported contracts in `src/features/events/index.ts`: `getUpcomingEventsForUser`, `getEventPublic`, plus `getRecommendedEvents` for 02's chat
 - [ ] Recommendation scoring (`server/recommend.ts`) with explanations via 02's `explainRecommendation`
 - [x] Attendee visibility function (single function used by every attendee-facing DTO)
 - [x] Invite-group filtering (skip RSVP'd and blocked members, never RSVP anyone)
@@ -99,6 +99,8 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Needs from others
 
+- 02: `suggest_events` in `src/features/agent/server/suggestion-stubs.ts` can now call `getRecommendedEvents(userId, limit)` from `@/features/events`. Map each item to 02's `EventCandidate` as `{ id: r.event.id, title: r.event.title, startsAt: r.event.startsAt, venue: r.event.business.name, category: r.event.category, description: r.event.description }`; `r.explanation` is the grounded "why" if the card wants it.
+- 01/02/03/04: three workstreams (03 `matching/server/categories.ts`, 04 `demand/server/categories.ts`, 06 `events/server/categories.ts`) each map interest tags to `EVENT_CATEGORY` because `SharablePreferences` has no `interestCategories`. Adding `interestCategories` to the shared type (02 already stores it), or one shared mapping in `src/shared/`, would keep recommendations, matches and demand clusters consistent.
 - 02: `src/lib/ai/fixtures/agent.explain_recommendation.json` (ws/02-agent) matches any input containing "pottery", and 06's event input always includes the viewer's interests, so under `MOCK_AI` every event for the Scene 1 user reads "You both love pottery and are free Thursday evenings." (person phrasing, and wrong for a Catan night). Please add cases ahead of it: `{ "match": "Beginner Pottery & Coffee Night", "output": { "explanation": "Pottery night on a Thursday evening, small group, close to you.", "highlights": ["pottery", "Thursday evening"] } }` and a generic event case `{ "match": "\"kind\":\"event\"", "output": { "explanation": "Fits the interests and times you shared with your agent.", "highlights": [] } }`. 06 sends `target: { kind: 'event', event: { title, category, slot, capacity, priceCents } }`.
 - 01: add a `events-db` vitest project for `tests/db/**/*.test.ts` (plain local Postgres via `TEST_DATABASE_URL`, no Supabase setup file), or let 06 add it in the merge commit.
 - 01: call `loadRsvps(ctx)` from `supabase/seed/loaders/rsvps.ts` in `runSeedWith` after `loadEvents` (06 can add the call in its merge commit). It needs the "Ritual Grounds" business and users `maya@`, `jordan@`, `sam@`, `priya@`, `theo@`, `nina@commonground.test`.
@@ -106,7 +108,6 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 01: app shell `(consumer)/layout.tsx` with nav and the 680/320 frame; 06's pages render only their content column (Discover adds its own right rail).
 - 01/02: `src/shared/types.ts` on ws/01-core defines `ExplainInput` as `{ userId, subject, signals }`, but ws/02-agent's `explainRecommendation` takes `{ viewer, target, breakdown }`. 06 follows 02's actual export; the shared type should be reconciled on main.
 - 03: `EventSummary` has no `category`; if the planner needs to filter by category, call `getEventPublic` or ask the integrator to add `category` to `EventSummary`.
-- 01/02: `SharablePreferences` in `src/shared/types.ts` has no `interestCategories`, but 06 §5 scores on it. Please add `interestCategories: EventCategory[]` (02 already stores `interest_categories`). Until then 06 derives categories from interest tags.
 
 ## Blocked
 
@@ -116,6 +117,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 17:45 PT: main unchanged, PR #2 open. ws/04-demand appeared (no 06 touchpoints). Exported `getRecommendedEvents` for 02's chat (02 stubs it) and added `description` to event cards. 149 tests.
 - 2026-10-24 17:35 PT: main unchanged, PR #2 open. ws/03-matching now exports every social helper 06 stubs (same signatures); stub types aligned. Seed moved to `supabase/seed/loaders/rsvps.ts` (`loadRsvps(ctx)`) per 01's ask. 149 tests.
 - 2026-10-24 17:22 PT: main unchanged, PR #2 open. Read ws/03-matching (0300/0301 compatible with 06's event invitations and deferred FKs; it lists 06's helper asks), ws/02-agent (getAttendeeSharing + getConsent exported; stubs aligned), ws/05-business (service-role RSVP reads, so 0601 dropped). 148 tests.
 - 2026-10-24 17:08 PT: opened PR #2 (ws/06-events → main) for the integrator, marked merge-after-01 because this branch carries interim copies of 01's scaffold files. Not merged.
