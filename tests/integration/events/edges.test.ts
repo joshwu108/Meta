@@ -115,3 +115,33 @@ describe.skipIf(!available)("06 edge cases against Postgres", () => {
     await expect(getEventDetail(viewer, draft)).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });
+
+describe.skipIf(!available)("P1 bookmarks against Postgres", () => {
+  let db: TestDb;
+  let businessId: string;
+
+  beforeAll(async () => {
+    db = await createTestDb();
+    holder.pool = db.pool;
+    businessId = await createBusiness(db.pool);
+  });
+  afterAll(async () => db?.drop());
+
+  it("saves idempotently, unsaves, and lists saved events not already RSVP'd in Activity", async () => {
+    const { setEventBookmark } = await import("@/features/events/server/bookmarks");
+    const { getActivity } = await import("@/features/events/server/activity");
+    const user = await createUser(db.pool);
+    const client = fakeSupabase(db.pool, user) as unknown as SupabaseClient;
+    const [saved, going, dropped] = await Promise.all([1, 2, 3].map(() => createEvent(db.pool, { businessId })));
+
+    for (const id of [saved, going, dropped, saved]) await setEventBookmark(client, user, id!, true);
+    await setEventBookmark(client, user, dropped!, false);
+    await rsvpAs(db, user, going!);
+
+    const activity = await getActivity(user);
+    expect(activity.saved.map((e) => e.id)).toEqual([saved]);
+    expect((await getEventDetail(user, saved!)).bookmarked).toBe(true);
+    expect((await getEventDetail(user, dropped!)).bookmarked).toBe(false);
+    await expect(setEventBookmark(client, user, crypto.randomUUID(), true)).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});

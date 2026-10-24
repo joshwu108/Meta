@@ -41,6 +41,13 @@ export default async function ActivityPage() {
         )}
       </section>
 
+      {activity.saved.length > 0 ? (
+        <section className={s.section} aria-labelledby="saved-title">
+          <h2 id="saved-title" className={s.sectionTitle}>Saved</h2>
+          <ul className={s.list}>{activity.saved.map((e) => <li key={e.id}><EventCard event={e} /></li>)}</ul>
+        </section>
+      ) : null}
+
       {activity.followUps.length > 0 ? (
         <section className={s.section} aria-labelledby="followups-title">
           <h2 id="followups-title" className={s.sectionTitle}>Follow-up suggestions</h2>

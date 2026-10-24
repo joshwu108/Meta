@@ -1,5 +1,6 @@
 import { MapPin } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
+import { BookmarkButton } from "@/features/events/components/BookmarkButton";
 import { EventCover } from "@/features/events/components/EventCover";
 import { EventStatusSection } from "@/features/events/components/EventStatusSection";
 import { formatPrice, formatTime, formatWhen } from "@/features/events/components/format";
@@ -41,7 +42,10 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         <p className={s.meta}>
           {formatWhen(event.startsAt)} – {formatTime(event.endsAt)} · {formatPrice(event.priceCents)}{event.format ? ` · ${event.format}` : ""}
         </p>
-        <CapacityMeter confirmed={event.confirmedCount} capacity={event.capacity} />
+        <div className={s.spread}>
+          <div style={{ flex: 1 }}><CapacityMeter confirmed={event.confirmedCount} capacity={event.capacity} /></div>
+          <BookmarkButton eventId={event.id} initial={event.bookmarked} />
+        </div>
         <EventStatusSection event={event} attendees={attendees?.attendees ?? null} feedbackGiven={event.feedbackGiven} />
       </article>
 

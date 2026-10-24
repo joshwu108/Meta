@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { EventSummary } from "@/shared/types";
+import { savedUpcomingEvents } from "./bookmarks";
 import { loadCardContext, toEventCard, type EventCard } from "./cards";
 import { listFollowUps, type FollowUpView } from "./follow-ups";
 import { toEventSummary } from "./mappers";
@@ -18,6 +19,7 @@ export type PastEventCard = EventCard & { feedbackGiven: boolean };
 
 export type Activity = {
   upcoming: EventCard[];
+  saved: EventCard[];
   past: PastEventCard[];
   invitations: Array<{ id: string; groupId: string | null; sender: ProfilePreview | null; event: EventSummary }>;
   connectionRequests: Array<{ id: string; requester: ProfilePreview | null; message: string | null; createdAt: string }>;
@@ -48,8 +50,9 @@ async function myEvents(admin: SupabaseClient, userId: string): Promise<Pick<Act
 /** GET /activity: the My Activity hub (Screen 8). */
 export async function getActivity(userId: string): Promise<Activity> {
   const admin = createAdminClient();
-  const [events, invites, requests, followUps, notifications] = await Promise.all([
+  const [events, saved, invites, requests, followUps, notifications] = await Promise.all([
     myEvents(admin, userId),
+    savedUpcomingEvents(userId),
     getPendingEventInvitations(userId),
     getPendingConnectionRequests(userId),
     listFollowUps(userId),
@@ -60,8 +63,10 @@ export async function getActivity(userId: string): Promise<Activity> {
     profilePreviews(admin, [...invites.map((i) => i.senderId), ...requests.map((r) => r.requesterId)]),
   ]);
   const eventsById = new Map(inviteEvents.map((e) => [e.id, e]));
+  const going = new Set(events.upcoming.map((e) => e.id));
   return {
     ...events,
+    saved: saved.filter((e) => !going.has(e.id)),
     invitations: invites.flatMap((i) => {
       const row = eventsById.get(i.eventId);
       if (!row || (row.status !== "published" && row.status !== "full")) return [];

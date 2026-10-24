@@ -1,6 +1,7 @@
 import "server-only";
 import type { BusinessPublicCard, EventPublic } from "@/shared/types";
 import { loadAttendeeData } from "./attendees";
+import { bookmarkedEventIds } from "./bookmarks";
 import { toBusinessCard, toEventPublic } from "./mappers";
 import { confirmedCounts, getVisibleEvent, hasFeedback, myRsvps, type MyRsvp } from "./repo";
 import { waitlistEnabled } from "./rsvp";
@@ -17,6 +18,7 @@ export type EventDetail = EventPublic & {
   consentDefaults: { shareWithAttendees: boolean; shareWithBusiness: boolean };
   feedbackGiven: boolean;
   waitlistEnabled: boolean;
+  bookmarked: boolean;
 };
 
 /**
@@ -28,12 +30,13 @@ export async function getEventDetail(viewerId: string, eventId: string): Promise
   const row = await getVisibleEvent(admin, eventId);
   if (!row) throw new ApiError("NOT_FOUND", "Event not found");
 
-  const [counts, mine, attendeeData, consentDefaults, feedbackGiven] = await Promise.all([
+  const [counts, mine, attendeeData, consentDefaults, feedbackGiven, bookmarks] = await Promise.all([
     confirmedCounts(admin, [eventId]),
     myRsvps(admin, viewerId, [eventId]),
     loadAttendeeData(admin, viewerId, eventId),
     getRsvpConsentDefaults(viewerId),
     row.status === "completed" ? hasFeedback(admin, viewerId, eventId) : Promise.resolve(false),
+    bookmarkedEventIds(admin, viewerId),
   ]);
   const rsvp = mine.get(eventId) ?? null;
   const confirmed = rsvp?.status === "confirmed";
@@ -54,5 +57,6 @@ export async function getEventDetail(viewerId: string, eventId: string): Promise
     consentDefaults,
     feedbackGiven,
     waitlistEnabled: waitlistEnabled(),
+    bookmarked: bookmarks.has(eventId),
   };
 }
