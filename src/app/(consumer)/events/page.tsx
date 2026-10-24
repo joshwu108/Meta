@@ -55,7 +55,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
           ))}
         </nav>
         {items.length === 0 ? (
-          <div className={s.card}><EmptyState icon={<CalendarX size={20} aria-hidden />} text="Nothing scheduled here yet." /></div>
+          <div className={s.card}><EmptyState icon={<CalendarX size={20} aria-hidden />} title="Nothing scheduled here yet." /></div>
         ) : (
           <ul className={s.list}>
             {items.map(({ event, explanation }) => <li key={event.id}><EventCard event={event} explanation={explanation} /></li>)}

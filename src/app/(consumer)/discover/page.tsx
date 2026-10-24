@@ -31,7 +31,7 @@ export default async function DiscoverPage() {
           <LeadEventCard item={lead} />
         ) : (
           <div className={s.card}>
-            <EmptyState icon={<CalendarSearch size={20} aria-hidden />} text="No events in the next three weeks yet." action={<Link href="/events">Browse all events</Link>} />
+            <EmptyState icon={<CalendarSearch size={20} aria-hidden />} title="No events in the next three weeks yet." action={<Link href="/events">Browse all events</Link>} />
           </div>
         )}
         <PeopleRail people={people} />

@@ -31,7 +31,7 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
         ))}
       </nav>
       {places.length === 0 ? (
-        <div className={s.card}><EmptyState icon={<Store size={20} aria-hidden />} text={`No venues within ${radiusKm} km.`} action={<Link href="/places?radiusKm=10">Look further</Link>} /></div>
+        <div className={s.card}><EmptyState icon={<Store size={20} aria-hidden />} title={`No venues within ${radiusKm} km.`} action={<Link href="/places?radiusKm=10">Look further</Link>} /></div>
       ) : (
         <ul className={s.list}>
           {places.map((p) => (

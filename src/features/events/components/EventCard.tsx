@@ -35,7 +35,7 @@ export function EventCard({ event, explanation }: Props) {
         <CapacityMeter confirmed={event.confirmedCount} capacity={event.capacity} />
         {friends ? (
           <div className={s.row}>
-            <AvatarStack people={event.friendsGoing} />
+            <AvatarStack people={event.friendsGoing.map((f) => ({ name: f.displayName, src: f.avatarUrl }))} />
             <span className={s.meta}>{friends}</span>
           </div>
         ) : null}

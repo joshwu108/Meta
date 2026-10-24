@@ -33,7 +33,7 @@ export function UpcomingSection({ events }: { events: Activity["upcoming"] }) {
   return (
     <Section id="upcoming" title="Upcoming">
       {events.length === 0 ? (
-        <div className={s.card}><EmptyState icon={<CalendarCheck size={20} aria-hidden />} text="No plans yet." action={<Link href="/events">Find an event</Link>} /></div>
+        <div className={s.card}><EmptyState icon={<CalendarCheck size={20} aria-hidden />} title="No plans yet." action={<Link href="/events">Find an event</Link>} /></div>
       ) : (
         <ul className={s.list}>{events.map((e) => <li key={e.id}><EventCard event={e} /></li>)}</ul>
       )}
@@ -114,7 +114,7 @@ export function NotificationsSection({ notifications }: { notifications: Activit
   return (
     <Section id="notifications" title="Notifications">
       {notifications.length === 0 ? (
-        <div className={s.card}><EmptyState icon={<Bell size={20} aria-hidden />} text="You're all caught up." /></div>
+        <div className={s.card}><EmptyState icon={<Bell size={20} aria-hidden />} title="You're all caught up." /></div>
       ) : (
         <ul className={`${s.list} ${s.card}`}>
           {notifications.map((n) => (

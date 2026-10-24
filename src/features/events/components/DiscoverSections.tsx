@@ -13,7 +13,7 @@ export function PeopleRail({ people }: { people: SuggestedPerson[] }) {
       <h2 id="people-title" className={s.sectionTitle}>People you might click with</h2>
       {people.length === 0 ? (
         <div className={s.card}>
-          <EmptyState icon={<Users size={20} aria-hidden />} text="Your matches show up here." action={<Link href="/match">Find people</Link>} />
+          <EmptyState icon={<Users size={20} aria-hidden />} title="Your matches show up here." action={<Link href="/match">Find people</Link>} />
         </div>
       ) : (
         <div className={s.rail3}>

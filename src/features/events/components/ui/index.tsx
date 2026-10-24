@@ -18,11 +18,11 @@ export function Button({ variant = "primary", size = "md", className, ...rest }:
   return <button type="button" className={`${buttonClass(variant, size)} ${className ?? ""}`.trim()} {...rest} />;
 }
 
-export function AiTag({ children = "AI suggestion" }: { children?: ReactNode }) {
+export function AiTag({ label = "AI suggestion" }: { label?: "AI suggestion" | "AI inferred" | "Estimate" }) {
   return (
     <span className={s.aiTag}>
       <Sparkles size={12} strokeWidth={1.75} aria-hidden />
-      {children}
+      {label}
     </span>
   );
 }
@@ -40,10 +40,10 @@ export function Avatar({ name, src, size = 32 }: { name: string; src?: string | 
   );
 }
 
-export function AvatarStack({ people, size = 24 }: { people: Array<{ userId: string; displayName: string; avatarUrl: string | null }>; size?: 24 | 32 }) {
+export function AvatarStack({ people, max = 3, size = 24 }: { people: Array<{ name: string; src?: string | null }>; max?: number; size?: 24 | 32 | 40 | 56 }) {
   return (
     <span className={s.stack}>
-      {people.slice(0, 4).map((p) => <Avatar key={p.userId} name={p.displayName} src={p.avatarUrl} size={size} />)}
+      {people.slice(0, max).map((p, i) => <Avatar key={`${p.name}-${i}`} name={p.name} src={p.src} size={size} />)}
     </span>
   );
 }
@@ -72,11 +72,11 @@ export function StatusPill({ status }: { status: string }) {
   return <span className={`${s.pill} ${s[PILL_TONE[status] ?? "pillGray"]}`}>{label}</span>;
 }
 
-export function EmptyState({ icon, text, action }: { icon: ReactNode; text: string; action?: ReactNode }) {
+export function EmptyState({ icon, title, action }: { icon: ReactNode; title: string; action?: ReactNode }) {
   return (
     <div className={s.empty}>
       {icon}
-      <p style={{ margin: 0 }}>{text}</p>
+      <p style={{ margin: 0 }}>{title}</p>
       {action}
     </div>
   );

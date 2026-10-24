@@ -21,7 +21,7 @@ export function LeadEventCard({ item }: { item: RecommendedEvent }) {
         <span>{item.explanation}</span>
       </div>
       <CapacityMeter confirmed={event.confirmedCount} capacity={event.capacity} />
-      {event.friendsGoing.length > 0 ? <AvatarStack people={event.friendsGoing} size={32} /> : null}
+      {event.friendsGoing.length > 0 ? <AvatarStack people={event.friendsGoing.map((f) => ({ name: f.displayName, src: f.avatarUrl }))} size={32} /> : null}
     </Link>
   );
 }
