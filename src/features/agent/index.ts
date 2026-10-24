@@ -9,6 +9,7 @@ import { getAdminClient } from "./server/stubs";
 
 export { explainRecommendation, explainDetailed, type ExplainInput, type ExplainTarget } from "./server/explain";
 export { suggestFollowUp } from "./server/follow-up";
+export { resolveGroupSchedule, type GroupSchedule, type SlotOption } from "./server/group-schedule";
 export type { Consent, SharingPurpose, SuggestionCard, FollowUpSuggestion } from "./schemas";
 
 function adminDeps(): SharingDeps {
