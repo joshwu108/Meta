@@ -96,6 +96,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: ~~0601 owner-only RSVP functions~~ dropped: ws/05-business now reads `rsvps` with the service role and masks names itself (05's `buildAttendeeList`), so no owner policy or function on `rsvps` is needed. `rsvps` RLS stays self-only.
 - 2026-10-24: ws/02-agent added a privacy guard (no `.from('user_preferences' | 'agent_profiles' | ...)` outside features/agent). 06 now complies: the RSVP consent sheet prefills from 02's `GET /api/agent/permissions` in the browser (`share_interests_with_attendees` → attendees switch, `share_name_with_business` → venue switch); an API caller that omits a choice shares nothing; attendee shared-interest chips are off (no interests shared) until 02 exports a consent-gated reader. The only remaining read is the `getSharablePreferences` stand-in, swapped for 02's export on merge; `tests/unit/events/privacy-guard.test.ts` enforces this.
 - 2026-10-24: ws/02-agent now exports `getAttendeeSharing(userIds)` and `getConsent(userId)`; 06's stubs have the identical signatures (sharing empty, consent all off until 02 merges). `POST /events/:id/rsvp` again defaults omitted choices from consent (`share_interests_with_attendees`, `share_name_with_business`), and the sheet still prefills from 02's permissions route.
+- 2026-10-24: Interests are loaded (via 02's `getAttendeeSharing`, which logs each release) only for `GET /events/:id/attendees`, i.e. for confirmed attendees. The event page preview carries names/avatars only, so a connected viewer who has not RSVP'd never receives attendees' interests.
 
 ## Needs from others
 
@@ -117,6 +118,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 17:52 PT: self-review found the event preview leaking sharedInterests to non-attendee connections (and triggering 02 share logs on every view); fixed with a regression test. Clean build + 150 tests, 97% lines / 83% branches.
 - 2026-10-24 17:45 PT: main unchanged, PR #2 open. ws/04-demand appeared (no 06 touchpoints). Exported `getRecommendedEvents` for 02's chat (02 stubs it) and added `description` to event cards. 149 tests.
 - 2026-10-24 17:35 PT: main unchanged, PR #2 open. ws/03-matching now exports every social helper 06 stubs (same signatures); stub types aligned. Seed moved to `supabase/seed/loaders/rsvps.ts` (`loadRsvps(ctx)`) per 01's ask. 149 tests.
 - 2026-10-24 17:22 PT: main unchanged, PR #2 open. Read ws/03-matching (0300/0301 compatible with 06's event invitations and deferred FKs; it lists 06's helper asks), ws/02-agent (getAttendeeSharing + getConsent exported; stubs aligned), ws/05-business (service-role RSVP reads, so 0601 dropped). 148 tests.
