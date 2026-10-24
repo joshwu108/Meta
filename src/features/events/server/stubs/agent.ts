@@ -13,8 +13,6 @@ const CONSENT_FLAG: Record<Purpose, string> = {
   group_plan: "allow_group_planning",
 };
 
-type Consent = Record<string, boolean | undefined>;
-
 export async function getSharablePreferences(
   userId: string,
   purpose: Purpose,
@@ -25,7 +23,7 @@ export async function getSharablePreferences(
     db.from("agent_profiles").select("consent").eq("user_id", userId).maybeSingle(),
     db.from("profiles").select("is_discoverable, coarse_lat, coarse_lng, neighborhood").eq("id", userId).maybeSingle(),
   ]);
-  const consent = (agent?.consent ?? {}) as Consent;
+  const consent = (agent?.consent ?? {}) as Partial<Record<string, boolean>>;
   if (!prefs || !profile || consent[CONSENT_FLAG[purpose]] !== true) return null;
   if (purpose === "matching" && !profile.is_discoverable) return null;
   return {
@@ -75,12 +73,31 @@ export async function explainRecommendation(input: ExplainInput): Promise<string
 export type AttendeeSharing = { interests: string[]; shareInterestsWithAttendees: boolean };
 
 /**
- * Consent + interests for shared-interest chips on the attendee list. Only 02 may read its
- * tables (ws/02-agent's privacy guard), and 02 exports no consent-gated reader for this yet, so
- * nobody's interests are shared until it does (see PROGRESS.md "Needs from others").
+ * 02's getAttendeeSharing (ws/02-agent, same signature). Only 02 may read its tables, so until
+ * it merges nobody's interests are shared.
  */
 export async function getAttendeeSharing(_userIds: readonly string[]): Promise<Map<string, AttendeeSharing>> {
   return new Map();
+}
+
+/** 02's Consent flags. */
+export type Consent = {
+  allow_matching: boolean;
+  allow_demand_aggregation: boolean;
+  allow_group_planning: boolean;
+  share_interests_with_attendees: boolean;
+  share_name_with_business: boolean;
+};
+
+/** 02's getConsent (ws/02-agent, same signature). Until it merges every flag is off, so nothing is shared by default. */
+export async function getConsent(_userId: string): Promise<Consent> {
+  return {
+    allow_matching: false,
+    allow_demand_aggregation: false,
+    allow_group_planning: false,
+    share_interests_with_attendees: false,
+    share_name_with_business: false,
+  };
 }
 
 const SLOT_PHRASE: Record<string, string> = {

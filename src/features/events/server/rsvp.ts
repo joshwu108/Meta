@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { RsvpBody } from "../schemas";
 import { fromRpcError } from "./rpc-errors";
-import { ApiError, notify } from "./stubs";
+import { ApiError, getConsent, notify } from "./stubs";
 
 const RsvpResult = z.array(z.object({ rsvp_status: z.enum(["confirmed", "waitlisted"]), event_status: z.string() })).length(1);
 const CancelResult = z.array(z.object({
@@ -15,17 +15,16 @@ export const waitlistEnabled = () => process.env.WAITLIST_ENABLED === "1";
 
 export type RsvpOutcome = { status: "confirmed" | "waitlisted"; eventStatus: string };
 
-/**
- * RSVP through the capacity-safe function. The consent sheet prefills from the agent's
- * permissions in the browser; a caller that omits a choice shares nothing.
- */
+/** RSVP through the capacity-safe function. Omitted sharing choices default to the agent's consent (02). */
 export async function rsvpToEvent(
   supabase: SupabaseClient, userId: string, eventId: string, body: z.infer<typeof RsvpBody>,
 ): Promise<RsvpOutcome> {
+  const complete = body.shareWithAttendees !== undefined && body.shareWithBusiness !== undefined;
+  const consent = complete ? null : await getConsent(userId);
   const { data, error } = await supabase.rpc("rsvp_event", {
     p_event_id: eventId,
-    p_share_attendees: body.shareWithAttendees ?? false,
-    p_share_business: body.shareWithBusiness ?? false,
+    p_share_attendees: body.shareWithAttendees ?? consent?.share_interests_with_attendees ?? false,
+    p_share_business: body.shareWithBusiness ?? consent?.share_name_with_business ?? false,
     p_allow_waitlist: waitlistEnabled(),
   });
   if (error) throw fromRpcError(error);
