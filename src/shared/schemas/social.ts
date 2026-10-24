@@ -164,3 +164,7 @@ export const groupInviteSchema = z.object({ userIds: z.array(uuidSchema).min(1).
 export const invitationRespondSchema = z.object({ status: z.enum(['accepted', 'declined']) }).strict();
 export const planRequestSchema = z.object({ request: z.string().trim().min(1).max(500) }).strict();
 export const planVoteSchema = z.object({ suggestionIndex: z.number().int().min(0).max(3) }).strict();
+
+// P1 direct messages between accepted connections
+export const messageCreateSchema = z.object({ body: z.string().trim().min(1).max(1000) }).strict();
+export const messageListQuerySchema = z.object({ after: isoTimestampSchema.optional() });

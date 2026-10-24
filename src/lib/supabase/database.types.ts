@@ -179,6 +179,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"direct_messages": {
+                  Row: {
+                    "body": string,"connection_id": string,"created_at": string,"id": string,"sender_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"connection_id": string,"created_at"?: string,"id"?: string,"sender_id": string
+                  }
+                  Update: {
+                    "body"?: string,"connection_id"?: string,"created_at"?: string,"id"?: string,"sender_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "direct_messages_connection_id_fkey"
+      columns: ["connection_id"]
+isOneToOne: false
+      referencedRelation: "connections"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "direct_messages_sender_id_fkey"
+      columns: ["sender_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "direct_messages_sender_id_fkey"
+      columns: ["sender_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"group_members": {
                   Row: {
                     "created_at": string,"group_id": string,"joined_at": string | null,"role": string,"status": string,"updated_at": string,"user_id": string
