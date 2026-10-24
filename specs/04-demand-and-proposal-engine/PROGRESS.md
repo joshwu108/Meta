@@ -57,7 +57,7 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 
 ### P1
 - [x] `POST /api/ai/proposals/:id/revise` (05 asked for `{ note }`): 0403 migration, `demand.revise_proposal` prompt + fixture, 12 unit tests; RPC verified in PGlite; supabase-js integration test written (`tests/integration/demand/revise.test.ts`), not yet run (no Docker here)
-- [ ] Group-originated proposals (`source: 'group'`) — waiting on 03 to confirm the export shape below
+- [x] Group-originated proposals (`source: 'group'`): 0404 migration, `proposeForGroup`, route branch, 11 unit tests, PGlite check; runs against 03's `getGroupVenueRequest` shape with a fail-closed stub until 03 reaches main
 - [x] Demand estimate: `proposal.attendanceEstimate { min, max, confidence }` from the band only (no raw count, AC2)
 
 ## Decisions
@@ -81,6 +81,11 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - Revise: owner `priceCents` / `slot` win even outside the venue's listed range or hosting slots (the owner is the business); `capacity` must stay ≤ venue capacity (400). Owner numbers overwrite the model's output. The note is treated as a request, not instructions; the forbidden-phrase check still runs, with one regeneration.
 - Revise: ownership is the existing `proposals_business_read` RLS policy (the row is read with the caller's own client), so "not yours" is a 404. The shared AI rate limiter applies.
 - 2026-10-24 (merge): the previous ws04 machine pushed its own revise endpoint (`business_edits.revisions[]`, `revise-wiring.ts`) at the same time. On merge the supersede design (0403) was kept for the reasons above and that version, its prompt clause and its integration case were removed; its eval set and attendance estimate were kept unchanged. Revisions recompute `attendanceEstimate` from the band and new capacity.
+- Group proposals (P1): no `opportunity_runs` row. A group request is one proposal, and the one-running-run lock would make it fail whenever a demand run is active. `run_id` and `cluster_id` stay null; `source_plan_id` + `source_suggestion_index` (0404) identify it, and a partial unique index keeps one pending proposal per suggestion (insert race → 409).
+- Group proposals: any active member may send (03's button), not only operators; membership is read with the caller's client under 03's RLS and fails closed. The shared AI rate limit applies.
+- Group proposals keep AC3: a group below `MIN_COHORT_SIZE` active members is refused (400) before any venue lookup. No shared location → 400, since a venue cannot be matched.
+- Group proposals: 03 gives a budget ceiling, not a median, so `budgetP50Cents = budgetMaxCents / 1.5` and the validator's upper bound equals the group's ceiling. `demand.topInterests` is empty (no tag counts from 03); activity tags come from 03 already floored at two members. The model also gets `groupIdea { title, description }`.
+- The 03 stub (`stubGetGroupVenueRequest`) throws 503 instead of rebuilding 03's aggregate, because that would read members' preferences without 02's consent boundary.
 - 2026-10-24: this clone (Tanish Patro) moved from ws02 to ws04 (`commonground.workstream=4`; name and email unchanged). It has no Docker, so integration and E2E rows cannot be rerun here; migrations are checked with PGlite from the scratchpad, as 02 did.
 - Copied 01's UI primitives, styles, ThemeScript, root layout, health route and Playwright config byte-for-byte (same rule as the tooling copy).
 
@@ -89,13 +94,13 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - 02: export `getSharablePreferencesBatch(ids, 'demand')` from `@/features/agent` on main (exists on ws/02-agent).
 - 05: `findCandidateBusinesses` returns `BusinessMatch` only; 04 also needs capacity, hosting slots, price range, equipment tags and owner id to draft and validate. 04 reads them from `businesses` + `business_capabilities` with the service role until 05 exports a `getVenueForProposal(businessId)` (or similar).
 - 01: `vitest.config.ts` coverage `include` lists only `features/core/server` and `lib`; add `src/features/*/server/**` so each workstream's 80% bar is measured. ws04 measures it with `--coverage.include` (92% lines, unit + integration).
-- 03 (P1 group proposals, answering 03's ask): please export `getGroupVenueRequest(groupId, planId, suggestionIndex): Promise<GroupVenueRequest | null>` from `@/features/groups`, returning null unless the suggestion has ≥ 50% of active members' votes. Shape: `{ groupId, planId, title, category: EventCategory, slot: AvailabilitySlot, neighborhoodLabel, centerLat, centerLng, memberCount, groupSizeMode: GroupSizePref | null, budgetMaxCents: number | null, activityPrefs: string[] }` with coarse (2 dp) coordinates and no member ids. 04 then accepts `{ source: 'group', groupId, planId, suggestionIndex }` on `POST /api/ai/generate-opportunities`, stores `source = 'group'`, `source_group_id`, no `demand_cluster_members`, and dedups per (group, plan, suggestion).
+- 03: thanks for `getGroupVenueRequest`. 04 now accepts `{ source: 'group', groupId, planId, suggestionIndex }` (201 `{ proposalId, businessName }`). Your toast should also handle 404 "No nearby venue can host this idea yet", 409 "already sent" and 400 (group under 4 members / no shared neighborhood). 04 swaps its stub for your export when 03 reaches main.
 - 05: revise is live on this branch. `POST /api/ai/proposals/:id/revise` with `{ note?, priceCents?, capacity?, slot? }` → `201 { data: { proposalId, supersedes, revision, proposal } }`; errors 404 (not yours), 409 (not pending / 3 revisions), 400 (capacity over venue), 503 (AI). The old row turns `expired`; the inbox should list `pending` rows only and can show "Revised" when `revision > 0`. README §4 needs the route added.
 - 01: `PROMPT_IDS` gains `'demand.revise_proposal'` (one line after `'demand.generate_proposal'`); keep it when merging.
 - 01: keep `...DEMAND_PROMPTS` in `PROMPTS` when merging (prompt lives in `src/lib/ai/prompts/demand.ts`).
 
 ## Blocked
-- P1 group-originated proposals wait on 03 agreeing the `getGroupVenueRequest` export (see Needs from others).
+- Live group proposals need 03's `getGroupVenueRequest` on main; until then the route answers 503 from the stub.
 - No Docker on this machine: `pnpm test:integration` and the Scene 3 Playwright run cannot run here. They passed on the previous ws04 machine at 5f841ee; the new `tests/integration/demand/revise.test.ts` needs a run on a Docker host (or Docker Desktop installed here).
 - Prompt eval (spec §9) needs a live `ANTHROPIC_API_KEY`; never run here (no secrets on this machine).
 
@@ -108,3 +113,4 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - 2026-10-24 19:00 · landed: P1 attendance estimate. 70 unit + 11 integration + 1 E2E green on Node 22; typecheck, lint, build clean. Remaining: live prompt eval (needs key), P1 group proposals (needs 03), swap stubs when 01/02/05 reach main.
 - 2026-10-24 17:25 · worker moved to this machine. Landed: P1 revise endpoint (0403 migration, prompt, route, 12 unit tests, PGlite check of the RPC). 68 unit green, typecheck + lint clean on Node 22. Next: group-originated proposals (P1) behind a 03 stub, then the confidence band.
 - 2026-10-24 17:35 · merged the other ws04 machine's pushes (eval set, attendance estimate, its revise). Revise kept on the supersede design (0403); its `business_edits.revisions[]` version removed. 76 unit green, typecheck + lint clean. This machine is now the only ws04 worker. Next: group proposals behind a 03 stub.
+- 2026-10-24 17:55 · landed: P1 group-originated proposals (0404, `proposeForGroup`, route branch, 11 unit tests, PGlite check). 87 unit green, typecheck + lint clean. Next: coverage and edge cases on server code; swap stubs when 01/02/03/05 reach main.
