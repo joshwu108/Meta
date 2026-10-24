@@ -34,7 +34,10 @@ export function NearbyBand({ businesses }: { businesses: NearbyBusiness[] }) {
   if (businesses.length === 0) return null;
   return (
     <section className={s.section} aria-labelledby="nearby-title">
-      <h2 id="nearby-title" className={s.sectionTitle}>Nearby places</h2>
+      <div className={s.spread}>
+        <h2 id="nearby-title" className={s.sectionTitle}>Nearby places</h2>
+        <Link href="/places">See all</Link>
+      </div>
       <ul className={s.list}>
         {businesses.slice(0, 4).map((b) => (
           <li key={b.id} className={s.card}>
