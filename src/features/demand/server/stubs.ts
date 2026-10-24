@@ -1,10 +1,8 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { log } from '@/lib/log';
-import type { AvailabilitySlot, EventCategory, NotificationType } from '@/shared/enums';
+import type { AvailabilitySlot, EventCategory } from '@/shared/enums';
 import type { BusinessMatch, VenueCriteria } from '@/shared/types';
 import type { DemandUser } from './categories';
-import type { ActionLogEntry } from './deps';
 import { haversineKm } from './geo';
 import type { Venue } from './venue';
 
@@ -14,7 +12,6 @@ import type { Venue } from './venue';
  * - getSharableBatch      → 02 `getSharablePreferencesBatch(ids, 'demand')` from '@/features/agent'
  * - findCandidates        → 05 `findCandidateBusinesses(criteria)` from '@/features/business'
  * - loadVenue             → 05 venue/capabilities export (requested in PROGRESS "Needs from others")
- * - notify, logActions    → 01 `notify` / `logAgentAction` from '@/features/core'
  * These read other workstreams' tables with the service role only because their contracts
  * have not landed; they apply the same consent rule 02 does.
  */
@@ -35,7 +32,7 @@ function toDemandUser(p: PrefRow, profile: ProfileRow): DemandUser {
     interestCategories: p.interest_categories as EventCategory[],
     availabilitySlots: p.availability_slots as AvailabilitySlot[],
     socialGoals: p.social_goals as DemandUser['socialGoals'],
-    groupSizePref: (p.group_size_pref ?? 'small') as DemandUser['groupSizePref'],
+    groupSizePref: p.group_size_pref as DemandUser['groupSizePref'],
     budgetMin: p.budget_min_cents,
     budgetMax: p.budget_max_cents,
     travelRadiusKm: Number(p.travel_radius_km),
@@ -122,16 +119,4 @@ export async function stubFindCandidates(admin: SupabaseClient, criteria: VenueC
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, 5);
-}
-
-export async function stubNotify(admin: SupabaseClient, userId: string, type: NotificationType, payload: Record<string, unknown>): Promise<void> {
-  const { error } = await admin.from('notifications').insert({ user_id: userId, type, payload });
-  if (error) log.error('demand.notify_failed', { type, code: error.code });
-}
-
-export async function stubLogActions(admin: SupabaseClient, entries: readonly ActionLogEntry[]): Promise<void> {
-  if (entries.length === 0) return;
-  const rows = entries.map((e) => ({ user_id: e.userId, actor: e.actor, action: e.action, permissions_used: e.permissionsUsed, result: e.result }));
-  const { error } = await admin.from('agent_action_log').insert(rows);
-  if (error) log.error('demand.log_failed', { count: rows.length, code: error.code });
 }

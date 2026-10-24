@@ -11,7 +11,8 @@ import { defaultRouteDeps, type RouteDeps } from './routes';
 import { getRunView } from './store-supabase';
 import { loadRevisable, revisionSaver } from './store-revise';
 import { groupProposalSaver, hasPendingGroupProposal, isActiveGroupMember, stubGetGroupVenueRequest } from './store-group';
-import { stubFindCandidates, stubLoadVenue, stubLogActions, stubNotify } from './stubs';
+import { logActions, notifyOwner } from './core-adapters';
+import { stubFindCandidates, stubLoadVenue } from './stubs';
 import { supabaseDeps } from './wiring';
 
 const admin = () => createAdminClient() as unknown as SupabaseClient;
@@ -39,8 +40,8 @@ function groupRouteDeps(): GroupRouteDeps {
         findCandidates: (criteria) => stubFindCandidates(client, criteria),
         loadVenue: (match) => stubLoadVenue(client, match),
         generate: generateProposal,
-        notify: (userId, type, payload) => stubNotify(client, userId, type, payload),
-        logActions: (entries) => stubLogActions(client, entries),
+        notify: notifyOwner,
+        logActions,
         hasPendingGroupProposal: (key) => hasPendingGroupProposal(client, key),
         saveGroupProposal: groupProposalSaver(client),
       };
@@ -61,7 +62,7 @@ export function reviseRouteDeps(): ReviseRouteDeps {
         loadVenue: (businessId) => stubLoadVenue(client, { businessId, name: '', score: 0, reasons: [] }),
         generate: generateRevision,
         saveRevision: revisionSaver(client),
-        logActions: (entries) => stubLogActions(client, entries),
+        logActions,
       };
     },
   };
