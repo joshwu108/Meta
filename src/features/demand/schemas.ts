@@ -43,8 +43,11 @@ export const ProposalDocument = z.object({
 });
 export type ProposalDocument = z.infer<typeof ProposalDocument>;
 
-/** Stored form: the validated document plus the concrete start computed in code (spec §5.8). */
-export type StoredProposal = ProposalDocument & { suggestedStartsAt: string };
+/** P1 attendance estimate derived from the band only, so no raw count reaches a business (AC2). */
+export type AttendanceEstimate = { min: number; max: number; confidence: 'low' | 'medium' };
+
+/** Stored form: the validated document plus fields computed in code (spec §5.8, P1 estimate). */
+export type StoredProposal = ProposalDocument & { suggestedStartsAt: string; attendanceEstimate: AttendanceEstimate };
 
 export const GenerateOpportunitiesRequest = z
   .object({
