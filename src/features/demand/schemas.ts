@@ -49,12 +49,25 @@ export type AttendanceEstimate = { min: number; max: number; confidence: 'low' |
 /** Stored form: the validated document plus fields computed in code (spec §5.8, P1 estimate). */
 export type StoredProposal = ProposalDocument & { suggestedStartsAt: string; attendanceEstimate: AttendanceEstimate };
 
-export const GenerateOpportunitiesRequest = z
+const DemandRunRequest = z
   .object({
     dryRun: z.boolean().optional(),
     source: z.literal('demand').optional(),
   })
   .strict();
+
+/** P1 (spec §6): 03's "Request venue" for one voted suggestion. */
+export const GroupProposalRequest = z
+  .object({
+    source: z.literal('group'),
+    groupId: z.string().uuid(),
+    planId: z.string().uuid(),
+    suggestionIndex: z.number().int().min(0).max(20),
+  })
+  .strict();
+export type GroupProposalRequest = z.infer<typeof GroupProposalRequest>;
+
+export const GenerateOpportunitiesRequest = z.union([GroupProposalRequest, DemandRunRequest]);
 export type GenerateOpportunitiesRequest = z.infer<typeof GenerateOpportunitiesRequest>;
 
 export const RunStats = z.object({

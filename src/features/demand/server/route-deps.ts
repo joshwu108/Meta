@@ -4,12 +4,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { aiRateLimiter } from '@/lib/api';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { DEMAND_CONFIG } from './config';
-import { generateRevision } from './generate';
+import { generateProposal, generateRevision } from './generate';
+import type { GroupRouteDeps } from './group-route';
 import type { ReviseRouteDeps } from './revise-route';
 import { defaultRouteDeps, type RouteDeps } from './routes';
 import { getRunView } from './store-supabase';
 import { loadRevisable, revisionSaver } from './store-revise';
-import { stubLoadVenue, stubLogActions } from './stubs';
+import { groupProposalSaver, hasPendingGroupProposal, isActiveGroupMember, stubGetGroupVenueRequest } from './store-group';
+import { stubFindCandidates, stubLoadVenue, stubLogActions, stubNotify } from './stubs';
 import { supabaseDeps } from './wiring';
 
 const admin = () => createAdminClient() as unknown as SupabaseClient;
@@ -20,7 +22,30 @@ export function routeDeps(): RouteDeps {
     pipeline: () => supabaseDeps(admin()),
     schedule: (task) => after(task),
     getRunView: (runId) => getRunView(admin(), runId),
+    group: groupRouteDeps(),
   });
+}
+
+function groupRouteDeps(): GroupRouteDeps {
+  return {
+    isActiveMember: isActiveGroupMember,
+    getRequest: stubGetGroupVenueRequest,
+    limit: (userId) => aiRateLimiter.assert(userId),
+    propose: () => {
+      const client = admin();
+      return {
+        config: DEMAND_CONFIG,
+        now: () => new Date(),
+        findCandidates: (criteria) => stubFindCandidates(client, criteria),
+        loadVenue: (match) => stubLoadVenue(client, match),
+        generate: generateProposal,
+        notify: (userId, type, payload) => stubNotify(client, userId, type, payload),
+        logActions: (entries) => stubLogActions(client, entries),
+        hasPendingGroupProposal: (key) => hasPendingGroupProposal(client, key),
+        saveGroupProposal: groupProposalSaver(client),
+      };
+    },
+  };
 }
 
 /** Production wiring for `POST /api/ai/proposals/:id/revise`. */

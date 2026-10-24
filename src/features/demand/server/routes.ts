@@ -5,6 +5,7 @@ import { serverEnv } from '@/lib/env';
 import { log } from '@/lib/log';
 import { GenerateOpportunitiesRequest } from '../schemas';
 import type { PipelineDeps } from './deps';
+import { handleGroupRequest, type GroupRouteDeps } from './group-route';
 import { executeRun, PipelineBusyError, runPipeline, startRun } from './pipeline';
 import type { RunView } from './store-supabase';
 
@@ -16,6 +17,8 @@ export type RouteDeps = {
   schedule: (task: () => Promise<unknown>) => void;
   getRunView: (runId: string) => Promise<RunView | null>;
   cronSecret: () => string | undefined;
+  /** P1 group-originated proposals; production wiring always sets it. */
+  group?: GroupRouteDeps;
 };
 
 type Ctx = { user: { id: string }; supabase: SupabaseClient };
@@ -32,10 +35,14 @@ export async function assertOperator(ctx: Ctx, deps: Pick<RouteDeps, 'isDemoMode
 
 const busy = () => new ApiError('CONFLICT', 'An opportunity run is already in progress', 409);
 
-/** POST /api/ai/generate-opportunities → `{ runId }` at once; the run finishes after the response. */
+/**
+ * POST /api/ai/generate-opportunities → `{ runId }` at once; the run finishes after the response.
+ * `{ source: 'group' }` bodies go to the group path, which members (not operators) may call.
+ */
 export async function handleGenerate(ctx: Ctx, req: Request, deps: RouteDeps): Promise<Response> {
-  await assertOperator(ctx, deps);
   const body = await parseBody(GenerateOpportunitiesRequest, req);
+  if (body.source === 'group') return handleGroupRequest(ctx, body, deps.group);
+  await assertOperator(ctx, deps);
   const pipeline = deps.pipeline();
   let runId: string;
   try {
