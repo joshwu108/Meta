@@ -13,6 +13,8 @@ This directory splits the hackathon MVP into **six workstreams that can be built
 | [05](./05-business-app/specs.md) | Business Application | Business onboarding, dashboard, proposal inbox (approve/edit/reject), event editor, event management, attendee lists, insights | Scene 4 |
 | [06](./06-events-and-rsvp/specs.md) | Events, Discovery, RSVP & Follow-ups | Event feed, personalized recommendations with explanations, event details, transactional RSVP, attendee visibility, group invites, My Activity, post-event reconnection | Scene 5, Scene 6 |
 
+The shared visual theme (Meta-aligned: Facebook light/dark surfaces, Meta blue for actions, the Meta AI gradient reserved for AI-generated content) is specified in [`design-system.md`](./design-system.md) and is binding for every screen.
+
 The end-to-end flow and the system architecture are drawn in [`commonground-flow.drawio`](./commonground-flow.drawio) (open at https://app.diagrams.net or with the VS Code Draw.io extension).
 
 ---
@@ -30,6 +32,7 @@ The end-to-end flow and the system architecture are drawn in [`commonground-flow
 | Testing | Vitest for unit/integration, Playwright for E2E, `supabase start` local stack for integration tests |
 | Deployment | Vercel (web) + hosted Supabase project. One `.env.example` kept current by workstream 01 |
 | Style | Immutable data (no in-place mutation), small files (<400 lines), early returns, explicit error handling, no secrets in code |
+| Visual theme | Meta-aligned design system in [`design-system.md`](./design-system.md): tokens in `src/styles/tokens.css`, primitives in `src/features/core/components/ui/`, light + dark, `AiTag` as the only AI marker |
 
 ### Repo layout
 

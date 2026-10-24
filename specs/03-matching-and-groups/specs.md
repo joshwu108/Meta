@@ -221,7 +221,7 @@ Score is 0–100, rounded. Weights live in `src/features/matching/server/weights
 ## 7. UI
 
 ### `/match` (Screen 3)
-- Card stack/grid of `MatchCard`s: avatar, name, neighborhood, score as a ring, shared-interest chips, one-line explanation, "Why this match?" disclosure with breakdown bars, **Connect** (opens optional message) and overflow menu (Block, Report)
+- Card stack/grid of `MatchCard`s in the shared Meta-aligned system ([`../design-system.md`](../design-system.md)): white card, avatar, name, neighborhood, compatibility score as a blue ring, shared-interest chips, one-line explanation under an `AiTag`, "Why this match?" disclosure with blue breakdown bars, primary blue **Connect** (opens optional message) and overflow menu (Block, Report)
 - Tabs: Recommended · Requests (incoming with Accept/Decline, outgoing with Pending)
 - Empty states: not discoverable → CTA to permissions; no candidates → suggest widening radius
 - Clear copy under the heading: "Scores reflect shared preferences, not a guarantee you'll click."

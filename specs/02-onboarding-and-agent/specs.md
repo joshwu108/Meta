@@ -156,7 +156,7 @@ All routes use `withAuth`. `POST /api/agent/chat` applies a per-user limit of 30
 
 ### `/onboarding` (Screen 1)
 1. **Basics** — neighborhood picker (typeahead over a static SF neighborhood list with coarse centroids), travel radius slider (1–25 km), continue.
-2. **Talk to your agent** — chat panel with a warm opener: "Tell me a bit about what you'd like more of in your week." Streaming reply; extracted fields appear live in a side panel ("I heard: pottery, coffee, Thursday evenings, small groups") with a subtle "AI inferred" badge.
+2. **Talk to your agent** — chat panel with a warm opener: "Tell me a bit about what you'd like more of in your week." Streaming reply; extracted fields appear live in a side panel ("I heard: pottery, coffee, Thursday evenings, small groups") as chips carrying the gradient `AiTag` ("AI inferred"). The agent avatar in the chat header uses `AiRing`; the user's bubbles are Meta blue, the agent's are `--color-surface-2`, following [`../design-system.md`](../design-system.md).
 3. **Review** — editable chips per field, group size radio, budget slider, availability grid (9 slots), social goals. Below: discoverability toggle and five consent toggles with one-line plain-English descriptions of what each enables and who sees what. Confirm → `/discover`.
 
 ### `/agent` (Screen 7)

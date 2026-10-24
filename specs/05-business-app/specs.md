@@ -157,7 +157,7 @@ All routes use `withBusinessOwner` except `POST /api/business` (which uses `with
 
 ## 7. UI
 
-Design: same token set as the consumer app but a denser, more utilitarian rhythm; the accent marks AI suggestions consistently with a small "AI suggestion" tag and sparkle glyph so the owner always knows what is a proposal versus a confirmed event.
+Design: the shared Meta-aligned system ([`../design-system.md`](../design-system.md)) at a denser rhythm: 960px center column, white cards on the gray canvas, tables with 56px rows, Meta blue for Approve/Publish, green `StatusPill` for published, amber for pending. Every proposal card and estimate carries the gradient `AiTag` ("AI suggestion" / "Estimate") so the owner always knows what is a proposal versus a confirmed event; the Proposals nav item shows a blue badge with the pending count.
 
 ### `/business/onboarding` (Business Screen 1)
 Four short steps: **Profile** (name, description, category, image URL) → **Location & hours** (address, neighborhood picker, weekly hours grid) → **What you can host** (categories multi-select, capacity, price range, hosting slots grid, equipment/format chips, free-text notes, "Accept AI event proposals" toggle, on by default) → **Review**.
