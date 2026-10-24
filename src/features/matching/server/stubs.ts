@@ -2,7 +2,7 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AVAILABILITY_SLOT, EVENT_CATEGORY, GROUP_SIZE_PREF, SOCIAL_GOAL } from '@/shared/enums';
-import { SLOT_PHRASES } from '@/shared/slot-labels';
+import { SLOT_PHRASES } from '@/shared/labels';
 import type { AvailabilitySlot, EventCategory, GroupSizePref, SharablePreferences, SocialGoal } from '@/shared/types';
 import type { MatchingPreferences } from './score';
 

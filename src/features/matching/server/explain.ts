@@ -1,8 +1,8 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import { log } from '@/lib/log';
-import { SLOT_PHRASES, interestLabel } from '@/shared/slot-labels';
-import { CATEGORY_PHRASES, SOCIAL_GOAL_LABELS, isCategory } from '../labels';
+import { CATEGORY_PHRASES, SLOT_PHRASES, interestLabel, isCategory } from '@/shared/labels';
+import { SOCIAL_GOAL_LABELS } from '../labels';
 import type { CompatibilityResult } from '@/shared/types';
 import { createTtlCache } from './cache';
 import type { MatchingPreferences } from './score';

@@ -1,5 +1,4 @@
-import { EVENT_CATEGORY, type EventCategory, type GroupSizePref, type SocialGoal } from '@/shared/enums';
-import { interestLabel } from '@/shared/slot-labels';
+import type { GroupSizePref, SocialGoal } from '@/shared/enums';
 import type { CompatibilityResult } from '@/shared/types';
 
 /** Display labels for matching UI and explanations. Safe to import from client components. */
@@ -34,36 +33,3 @@ export const REPORT_REASON_LABELS = {
   safety: 'Safety concern',
   other: 'Something else',
 } as const;
-
-/** Short chip label per event category. */
-export const CATEGORY_LABELS: Readonly<Record<EventCategory, string>> = {
-  creative: 'Creative',
-  food_drink: 'Food & drink',
-  games: 'Games',
-  outdoors: 'Outdoors',
-  fitness: 'Fitness',
-  learning: 'Learning',
-  music: 'Music',
-  community: 'Community',
-};
-
-/** Phrase per category for sentences ("You both like creative projects"). */
-export const CATEGORY_PHRASES: Readonly<Record<EventCategory, string>> = {
-  creative: 'creative projects',
-  food_drink: 'food and drink',
-  games: 'games',
-  outdoors: 'the outdoors',
-  fitness: 'staying active',
-  learning: 'learning new things',
-  music: 'music',
-  community: 'community events',
-};
-
-export function isCategory(value: string): value is EventCategory {
-  return (EVENT_CATEGORY as readonly string[]).includes(value);
-}
-
-/** Chip text for a shared interest: categories get their label, tags lose their dashes. */
-export function sharedInterestLabel(value: string): string {
-  return isCategory(value) ? CATEGORY_LABELS[value] : interestLabel(value);
-}
