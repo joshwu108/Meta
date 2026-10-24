@@ -88,6 +88,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: Event filters are a plain GET form (category, distance) applied to the All and This week tabs; "This week" is the date filter. For you stays ranked and unfiltered.
 - 2026-10-24: Bookmarks get `POST/DELETE /api/events/:id/bookmark` (not in the spec's route table). Saved upcoming events appear in Activity under "Saved", minus any the user already RSVP'd to.
 - 2026-10-24: List/map toggle deferred: static map tiles need a tile provider (and likely a key) plus a CSP `img-src` entry from 01. Recorded under Blocked.
+- 2026-10-24: Event detail exposes `canComplete` (venue owner, or anyone while `DEMO_MODE=1`) and shows "Mark event completed" for live events so Scene 6 can be run from the consumer app; 05 may also call `PATCH /api/events/:id/complete` from the business screens.
 
 ## Needs from others
 
@@ -109,6 +110,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 16:03 PT: theme checklist pass (no raw colors; AI gradient only in AiTag/AiRing), all functions under 50 lines, Activity in spec order, demo/venue "Mark event completed" control. Next: wait for 01–05 to land on main, swap stubs, then run Supabase + Playwright scenes.
 - 2026-10-24 15:59 PT: P1 filters, bookmarks (save/unsave + Activity "Saved"), standalone /places (138 tests). Next: theme checklist review, size limits, never-idle pass.
 - 2026-10-24 15:55 PT: coverage 97% lines / 83% branches on features/events/server (137 tests); P1 waitlist UI + promotion notification. Next: P1 filters, bookmarks, /places.
 - 2026-10-24 15:52 PT: seed contribution with idempotent re-runs (110 tests). Next: never-idle list (coverage, edge cases, theme review).
