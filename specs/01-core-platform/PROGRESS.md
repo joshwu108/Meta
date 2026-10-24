@@ -82,6 +82,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 16:45 — Wakeup: main unchanged. Seeded owners carry signup_as=business so / routes them to the business side; owner e2e tightened; supabase config deprecation fixed. All suites green. Next: keep syncing for other workstreams' migrations.
 - 2026-10-24 16:40 — Code + security review pass: fixed backslash open redirect (shared safeNext), business signup with email confirmation landing in consumer onboarding, middleware dropping query strings, mark-read overwriting read_at, seed deletion skipping pages. 77 unit + 15 integration + 14 e2e green. Next: idle list; watch main for other workstreams' migrations.
 - 2026-10-24 16:25 — Production build passes (103 kB first load, all files < 220 lines). Design-system pass: warning ink token, feed stagger, capacity meter mount animation, no color literals outside tokens.css. Seed route production guard tested. README now has a per-workstream module guide. 72 unit + 15 integration + 14 e2e green. Next: idle list (periodic sync for other workstreams' tables; adjust seed loaders when they land).
 - 2026-10-24 16:05 — Clean-state check green (db reset → seed → 62 vitest → 14 e2e). Added `aiRateLimiter` (20/min per user) exported from `src/lib/api`, plus unit tests for auth actions, getCurrentUser, withBusinessOwner, seed wrapper and integration tests for profile helpers: 86 tests, core/server at 90% statements. Next: design-system checklist pass (warning ink token, feed stagger), then idle list.
