@@ -1,16 +1,12 @@
-# per-developer Claude Code overrides (identity lives in .git/config, not here)
-.claude/settings.local.json
-
-# secrets
-.env
-.env.*
-!.env.example
-
-# dependencies and build output
 node_modules/
 .next/
-dist/
 coverage/
-
-# OS
+playwright-report/
+test-results/
+*.tsbuildinfo
+next-env.d.ts
+.env
+.env.local
+.env.*.local
 .DS_Store
+.claude/settings.local.json
