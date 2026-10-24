@@ -10,7 +10,7 @@ function isPublic(pathname: string): boolean {
 /** Refreshes the Supabase session on every request and sends signed-out users to /login. */
 export async function middleware(request: NextRequest) {
   const { response, user } = await updateSession(request);
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
   if (!user && !isPublic(pathname) && pathname !== '/') {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json(
@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
       );
     }
     const login = new URL('/login', request.url);
-    login.searchParams.set('next', pathname);
+    login.searchParams.set('next', `${pathname}${search}`);
     return NextResponse.redirect(login);
   }
   return response;
