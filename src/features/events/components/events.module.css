@@ -48,7 +48,7 @@ a.card:hover { box-shadow: var(--shadow-2); text-decoration: none; }
 .tab:hover { text-decoration: none; color: var(--color-text); }
 .tabActive { color: var(--color-brand); border-bottom-color: var(--color-brand); }
 
-.sheetBackdrop { position: fixed; inset: 0; display: grid; place-items: end center; background: rgba(0, 0, 0, .6); z-index: 20; }
+.sheetBackdrop { position: fixed; inset: 0; display: grid; place-items: end center; background: color-mix(in srgb, var(--color-surface) 80%, transparent); z-index: 20; }
 @media (min-width: 768px) { .sheetBackdrop { place-items: center; } }
 .sheet {
   display: grid; gap: var(--space-4); width: min(480px, 100%); padding: var(--space-6); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
