@@ -139,6 +139,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 ## Log
 
+- 2026-10-24 19:00 CDT · wakeup: main unchanged. GitHub CI on ws/03-matching (01's workflow, now merged in) is green on all three jobs: lint/typecheck/unit, migrations + generated-types check + integration on a fresh Supabase, Playwright. 01's `@aside` right-rail slot is still on ws/01-core; 03 can add `@aside/match` once it reaches main. Next: watch main.
 - 2026-10-24 18:40 CDT · wakeup: 01 landed on main. Merged main (27 conflicts resolved per plan), adopted 01's prompt and seed registries, shared types and API client. 153 unit, 100 integration, 21 E2E green on the merged tree. Next: watch main for 02/04/05/06; swap stubs as they land.
 - 2026-10-24 18:20 CDT · wakeup: main unchanged, no new asks for 03. Checked the conflict-planning UI in the browser ("2 of 3 free", venue-size hint) and ran all 19 Playwright specs green. Next: watch main.
 - 2026-10-24 18:02 CDT · wakeup: main unchanged. Answered 02 (planner uses resolveGroupSchedule for conflicts) and 04 (cohort-size gating, venue name in toast). 146 unit, 100 integration green; planner/Scene 2 E2E green. Next: watch main.
