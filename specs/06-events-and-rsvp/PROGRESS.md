@@ -72,7 +72,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: `getUpcomingEventsForUser(userId)` returns every live event in the next 21 days plus the user's own upcoming RSVP'd events, each with the user's `rsvpStatus` (null if none), soonest first. 03's planner filters it; a group page can filter `rsvpStatus !== null` per member.
 - 2026-10-24: Event detail `attendeePreview.avatars` shows consented attendees only to viewers with a confirmed RSVP; before RSVPing a viewer sees only their own connections (plus the count). "Share my name with other attendees" is not consent to be shown to browsers.
 - 2026-10-24: Feed cards return `friendsGoing` as `{ userId, displayName, avatarUrl }[]` (accepted connections, consented, confirmed, not blocked either way) so the UI can render avatars.
-- 2026-10-24: Explanations are cached in-process for 24h keyed by `(viewer, event, prefsHash)`; failures fall back to "Coming up soon near you." rather than failing the feed.
+- 2026-10-24: Explanations are cached in-process for 24h keyed by `(viewer, event, prefsHash)`; failures fall back to "Coming up soon near you." rather than failing the feed. At most `MAX_AI_EXPLANATIONS` (10) cards per request get an AI explanation; lower-ranked cards get the generic line.
 - 2026-10-24: Routes and services read cross-user data (counts, attendees, friends) with the service-role client and filter it in `visibility.ts`; the user's own RSVP writes go through the RLS-bound client and the security-definer functions.
 - 2026-10-24: Services are integration-tested against Postgres through `tests/integration/support/fake-supabase.ts`, a test-only shim that runs the subset of supabase-js calls 06 uses as SQL (`row_to_json`, so JSON shapes match PostgREST). It does not enforce RLS; RLS and PostgREST behavior still need a `supabase start` run (see Blocked).
 - 2026-10-24: All event-time comparisons parse to instants (`server/time.ts`); ISO strings carry the session's UTC offset and are never compared as text.
@@ -118,6 +118,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 17:56 PT: capped AI explanations at 10 per request (For you ranks 20). 151 tests.
 - 2026-10-24 17:52 PT: self-review found the event preview leaking sharedInterests to non-attendee connections (and triggering 02 share logs on every view); fixed with a regression test. Clean build + 150 tests, 97% lines / 83% branches.
 - 2026-10-24 17:45 PT: main unchanged, PR #2 open. ws/04-demand appeared (no 06 touchpoints). Exported `getRecommendedEvents` for 02's chat (02 stubs it) and added `description` to event cards. 149 tests.
 - 2026-10-24 17:35 PT: main unchanged, PR #2 open. ws/03-matching now exports every social helper 06 stubs (same signatures); stub types aligned. Seed moved to `supabase/seed/loaders/rsvps.ts` (`loadRsvps(ctx)`) per 01's ask. 149 tests.
