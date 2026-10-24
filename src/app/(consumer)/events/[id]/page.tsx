@@ -1,10 +1,10 @@
-import { MapPin } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { BookmarkButton } from "@/features/events/components/BookmarkButton";
 import { EventCover } from "@/features/events/components/EventCover";
+import { AboutCard, VenueCard, WhoIsGoing } from "@/features/events/components/EventInfoCards";
 import { EventStatusSection } from "@/features/events/components/EventStatusSection";
 import { formatPrice, formatTime, formatWhen } from "@/features/events/components/format";
-import { Avatar, CapacityMeter, StatusPill } from "@/features/events/components/ui";
+import { CapacityMeter, StatusPill } from "@/features/events/components/ui";
 import s from "@/features/events/components/events.module.css";
 import { EventIdParams } from "@/features/events/schemas";
 import { getAttendeeList } from "@/features/events/server/attendees";
@@ -49,28 +49,9 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         <EventStatusSection event={event} attendees={attendees?.attendees ?? null} feedbackGiven={event.feedbackGiven} />
       </article>
 
-      <section className={s.card} aria-labelledby="venue-title">
-        <h2 id="venue-title" className={s.cardTitle}>{event.venue.name}</h2>
-        <p className={s.meta}><MapPin size={14} aria-hidden /> {event.venue.address}, {event.venue.neighborhood}</p>
-        {event.venue.description ? <p style={{ margin: 0 }}>{event.venue.description}</p> : null}
-      </section>
-
-      <section className={s.card} aria-labelledby="about-title">
-        <h2 id="about-title" className={s.cardTitle}>About</h2>
-        <p style={{ margin: 0, whiteSpace: "pre-line", lineHeight: "var(--leading-relaxed)" }}>{event.description}</p>
-      </section>
-
-      <section className={s.card} aria-labelledby="going-title">
-        <h2 id="going-title" className={s.cardTitle}>Who&apos;s going</h2>
-        <p className={s.meta}>{event.attendeePreview.count} going</p>
-        {event.attendeePreview.avatars.length > 0 ? (
-          <div className={s.row}>
-            {event.attendeePreview.avatars.map((a) => <Avatar key={a.userId} name={a.displayName ?? ""} src={a.avatarUrl} size={40} />)}
-          </div>
-        ) : (
-          <p className={s.meta}>{event.rsvpStatus === "confirmed" ? "Nobody has shared their name yet." : "RSVP to see who else is going."}</p>
-        )}
-      </section>
+      <VenueCard venue={event.venue} />
+      <AboutCard description={event.description} />
+      <WhoIsGoing event={event} />
     </main>
   );
 }
