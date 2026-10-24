@@ -89,4 +89,4 @@ vi.mock("@/lib/supabase/server", async () => {
 
 - Swap `src/features/events/components/ui` for `@/features/core/components/ui` (props already match; keep `buttonClass` or style links with 01's classes) and `components/api.ts` for `@/lib/api/client`.
 - Discover: 01's consumer layout already renders a right-rail `AgentAside`; drop Discover's own rail or move the agent strip into it.
-- Replace `stubs/social.ts` with `@/features/matching` + `@/features/groups` and `stubs/agent.ts` with `@/features/agent` when 03 and 02 merge (signatures identical; Activity's connection requests come from 03's `listConnections(actor, 'pending')`).
+- Replace `stubs/social.ts` with `@/features/matching` + `@/features/groups` and `stubs/agent.ts` with `@/features/agent` when 03 and 02 merge (signatures identical; 03 exports `getPendingConnectionRequests(userId)` for Activity).
