@@ -97,6 +97,8 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: ws/02-agent added a privacy guard (no `.from('user_preferences' | 'agent_profiles' | ...)` outside features/agent). 06 now complies: the RSVP consent sheet prefills from 02's `GET /api/agent/permissions` in the browser (`share_interests_with_attendees` → attendees switch, `share_name_with_business` → venue switch); an API caller that omits a choice shares nothing; attendee shared-interest chips are off (no interests shared) until 02 exports a consent-gated reader. The only remaining read is the `getSharablePreferences` stand-in, swapped for 02's export on merge; `tests/unit/events/privacy-guard.test.ts` enforces this.
 - 2026-10-24: ws/02-agent now exports `getAttendeeSharing(userIds)` and `getConsent(userId)`; 06's stubs have the identical signatures (sharing empty, consent all off until 02 merges). `POST /events/:id/rsvp` again defaults omitted choices from consent (`share_interests_with_attendees`, `share_name_with_business`), and the sheet still prefills from 02's permissions route.
 - 2026-10-24: Interests are loaded (via 02's `getAttendeeSharing`, which logs each release) only for `GET /events/:id/attendees`, i.e. for confirmed attendees. The event page preview carries names/avatars only, so a connected viewer who has not RSVP'd never receives attendees' interests.
+- 2026-10-24: Tightened two spec policies in 0600 because PostgREST exposes the tables directly: `event_feedback` inserts require a confirmed RSVP on a completed event; `reconnect_interest` is select-only for users (rows come only from `add_reconnect_interest()`).
+- 2026-10-24: RLS is now tested on plain Postgres as a throwaway NOLOGIN role per run (`createRlsRole` in `tests/db/support/db.ts`, dropped after the run), standing in for Supabase's `authenticated` role.
 
 ## Needs from others
 
@@ -114,10 +116,11 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 - E2E scenes 5 and 6 are written (`tests/e2e/`) but need 01's `/login` page and seed runner plus a running Supabase stack. Scene 5 runs as `demo.new@commonground.test`, the Scene 1 user (override with `E2E_DEMO_EMAIL`) and that Scene 4 published "Beginner Pottery & Coffee Night".
 - P1 list/map toggle: needs a static map tile provider decision (OpenStreetMap static tiles, Mapbox with a key, etc.) and 01's CSP to allow its `img-src`. Everything else on the page works without it.
-- Supabase CLI and Docker are not available here, so `pnpm db:reset`, `pnpm db:seed`, route-level integration tests through PostgREST, and Playwright scenes cannot run on this machine. SQL is covered on plain Postgres; services are covered with mocked repo/stubs. Needs a machine with `supabase start` (or Docker running) to finish the Supabase-stack checks.
+- Supabase CLI and Docker are not available here, so `pnpm db:reset`, `pnpm db:seed`, requests through real PostgREST/GoTrue, and Playwright scenes cannot run on this machine. SQL, RLS (as a non-superuser role), services and routes are covered on plain Postgres. Needs a machine with `supabase start` to finish the stack checks.
 
 ## Log
 
+- 2026-10-24 18:02 PT: RLS review: tightened feedback/reconnect policies; new RLS suite runs as a temporary non-superuser role (157 tests).
 - 2026-10-24 17:56 PT: capped AI explanations at 10 per request (For you ranks 20). 151 tests.
 - 2026-10-24 17:52 PT: self-review found the event preview leaking sharedInterests to non-attendee connections (and triggering 02 share logs on every view); fixed with a regression test. Clean build + 150 tests, 97% lines / 83% branches.
 - 2026-10-24 17:45 PT: main unchanged, PR #2 open. ws/04-demand appeared (no 06 touchpoints). Exported `getRecommendedEvents` for 02's chat (02 stubs it) and added `description` to event cards. 149 tests.
