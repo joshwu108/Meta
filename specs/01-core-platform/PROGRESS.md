@@ -62,6 +62,10 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Decisions
 
+- 2026-10-24: `src/shared/types.ts` now follows the owning specs where they differ from the README baseline: `SharablePreferences.interestCategories: EventCategory[]`, `groupSizePref: GroupSizePref | null`, and `ExplainInput = { viewer, target, breakdown }` (spec 02 §5; 03 and 06 already code against it). README §4 needs the same edit (Needs from others).
+- 2026-10-24: `users.json` has 16 users (added `jordan@commonground.test` for Scene 6 per spec 06 §8); spec 01 §6 updated; README §5 still says 15.
+- 2026-10-24: Prompt definitions are split into `src/lib/ai/prompts/{agent,groups,demand,events}.ts` and spread into `PROMPTS`; seed extensions register in `supabase/seed/loaders/registry.ts`. Both exist so other workstreams' merges add lines instead of conflicting.
+
 - 2026-10-24: Added `--color-warning-ink` (#8A5A00 light / #F7B928 dark) to tokens.css because the spec's `--color-warning` (#F7B928) on `--color-warning-soft` fails AA for text. Used by `StatusPill` amber states. Proposed for design-system.md under Needs from others.
 - 2026-10-24: Dev server and Playwright default to port 3100 (3000 is commonly held by Docker/other tools); `PORT` overrides.
 - 2026-10-24: Screenshot baselines are per platform (`-darwin`, `-linux`); CI writes missing baselines on its first run rather than failing on macOS ones.
@@ -70,6 +74,11 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Needs from others
 
+- README (integrator): §4 `SharablePreferences` add `interestCategories: EventCategory[]` and make `groupSizePref` nullable; replace `ExplainInput` with spec 02's shape; §5 seed says 15 users → 16.
+- 02: put your `AGENT_PROMPT_DEFINITIONS` in `src/lib/ai/prompts/agent.ts` as `AGENT_PROMPTS` (slot exists), and register `loadAgentPreferences` in `supabase/seed/loaders/registry.ts` `AFTER_USERS` (your `AgentSeedContext` is a subset of `SeedContext`, so it fits as-is).
+- 03: put the `groups.plan_activities` definition in `src/lib/ai/prompts/groups.ts` as `GROUPS_PROMPTS`; register connections/invitations loaders in `AFTER_ALL`.
+- 04: `DEMAND_PROMPTS` slot is `src/lib/ai/prompts/demand.ts`; keep that path.
+- 06: register `loadRsvps` in `AFTER_EVENTS`; `pnpm test:db` runs `tests/db/**` with `TEST_DATABASE_URL` defaulting to the local stack and `server-only` aliased to `tests/support/server-only.ts`; add `pg` to devDependencies in your merge.
 - 02: `src/lib/ai/fixtures/agent.follow_up_suggestion.json` has no matching id in `src/lib/ai/prompts/index.ts`; add `'agent.follow_up_suggestion'` to `PROMPT_IDS` (and a `PROMPTS` entry) in your branch, or rename the fixture to `events.reconnect_followup` which is already registered.
 - 05: `src/lib/api/client.ts` now exists in 01 with the surface your components import (`ApiClientError`, `apiGet/apiPost/apiPatch/apiDelete`, `fieldErrors`). Drop your copy on merge; `fieldErrors` accepts both `{ field, message }` and `{ path, message }`.
 - Integrator: `main` still contains only `specs/`; none of ws/01-core has been merged. Branches 02/03/05/06 each carry their own `package.json`, `supabase/seed/seed.ts` and (05) `fixtures/businesses.json`, so merging 01 first and then resolving their seed/scaffold files in favour of 01's structure (`supabase/seed/runner.ts` + `loaders/`) will be the least painful order. 03 already copied 01's seed layout.
@@ -87,6 +96,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 17:35 — Wakeup: main unchanged; read every branch's Needs-from-others for 01. Landed: shared types aligned to spec 02 (interestCategories, nullable groupSizePref, ExplainInput), prompt registry split per workstream (+agent.follow_up_suggestion, groups.plan_activities), seed loader registry (AFTER_USERS/AFTER_EVENTS/AFTER_ALL), jordan@ fixture, `db` vitest project. 79 unit + 17 integration + 14 e2e green. Next: watch main.
 - 2026-10-24 17:15 — Compared 02/03/05/06 branches' shared files against 01: enums/types/prompt registry are byte-equivalent in meaning (copied from README). Adopted 05's browser envelope client into `src/lib/api/client.ts` with tests; bell and onboarding button use it. 83 unit + 17 integration + 14 e2e green. Next: watch main.
 - 2026-10-24 17:00 — Wakeup: main unchanged, but ws/02, 03, 05, 06 branches now exist. Read their migrations (never merged them): aligned seed loaders to `businesses` (no capacity column → `business_capabilities`) and `groups.creator_id`; column drift on foreign tables now skips instead of aborting. Verified by temporarily applying 0300/0301/0500/0501/0600 locally: seed inserts 3 businesses, 6 events, 2 groups; 17 integration tests incl. RLS guard pass. Next: keep watching main.
 - 2026-10-24 16:45 — Wakeup: main unchanged. Seeded owners carry signup_as=business so / routes them to the business side; owner e2e tightened; supabase config deprecation fixed. All suites green. Next: keep syncing for other workstreams' migrations.
