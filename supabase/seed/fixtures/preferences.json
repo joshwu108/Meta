@@ -1,8 +1,7 @@
 [
   {
     "email": "maya@commonground.test",
-    "displayName": "Maya",
-    "neighborhood": "Mission",
+    "neighborhood": "Mission District",
     "coarseLat": 37.76,
     "coarseLng": -122.42,
     "preferences": {
@@ -41,11 +40,10 @@
     "summary": "Loves pottery and a good coffee. Free Thursday evenings and Saturday daytime; prefers small groups."
   },
   {
-    "email": "jordan@commonground.test",
-    "displayName": "Jordan",
-    "neighborhood": "Castro",
-    "coarseLat": 37.76,
-    "coarseLng": -122.43,
+    "email": "leo@commonground.test",
+    "neighborhood": "Mission District",
+    "coarseLat": 37.75,
+    "coarseLng": -122.42,
     "preferences": {
       "interests": [
         "ceramics",
@@ -81,51 +79,10 @@
     "summary": "Ceramics hobbyist who wants to keep learning. Usually free Thursday evenings."
   },
   {
-    "email": "priya@commonground.test",
-    "displayName": "Priya",
-    "neighborhood": "Noe Valley",
-    "coarseLat": 37.75,
-    "coarseLng": -122.43,
-    "preferences": {
-      "interests": [
-        "painting",
-        "live-music"
-      ],
-      "interestCategories": [
-        "creative",
-        "music"
-      ],
-      "availabilitySlots": [
-        "thu_eve",
-        "sun_day"
-      ],
-      "socialGoals": [
-        "make_friends"
-      ],
-      "groupSizePref": "small",
-      "budgetMinCents": null,
-      "budgetMaxCents": 2000,
-      "travelRadiusKm": 5,
-      "activityPrefs": [
-        "quiet"
-      ],
-      "dealbreakers": []
-    },
-    "consent": {
-      "allow_matching": true,
-      "allow_demand_aggregation": true,
-      "allow_group_planning": true,
-      "share_interests_with_attendees": true,
-      "share_name_with_business": false
-    },
-    "summary": "Paints on weekends and enjoys live music. Thursday evenings work well."
-  },
-  {
     "email": "sam@commonground.test",
-    "displayName": "Sam",
-    "neighborhood": "Mission",
+    "neighborhood": "Mission District",
     "coarseLat": 37.76,
-    "coarseLng": -122.42,
+    "coarseLng": -122.41,
     "preferences": {
       "interests": [
         "pottery",
@@ -158,14 +115,13 @@
       "share_interests_with_attendees": true,
       "share_name_with_business": false
     },
-    "summary": "New to pottery and always up for a board game. Free Thursday and Friday evenings."
+    "summary": "New to pottery and up for a board game. Free Thursday and Friday evenings."
   },
   {
-    "email": "lena@commonground.test",
-    "displayName": "Lena",
-    "neighborhood": "Mission",
-    "coarseLat": 37.76,
-    "coarseLng": -122.42,
+    "email": "ana@commonground.test",
+    "neighborhood": "Noe Valley",
+    "coarseLat": 37.75,
+    "coarseLng": -122.43,
     "preferences": {
       "interests": [
         "painting",
@@ -198,11 +154,10 @@
       "share_interests_with_attendees": true,
       "share_name_with_business": false
     },
-    "summary": "Recently moved to the Mission; paints and explores caf\u00e9s. Thursday evenings free."
+    "summary": "Recently moved to Noe Valley; paints and explores caf\u00e9s. Thursday evenings free."
   },
   {
-    "email": "diego@commonground.test",
-    "displayName": "Diego",
+    "email": "kai@commonground.test",
     "neighborhood": "Castro",
     "coarseLat": 37.76,
     "coarseLng": -122.43,
@@ -241,8 +196,46 @@
     "summary": "Wants to get better at ceramics and hikes on Saturdays."
   },
   {
-    "email": "alex@commonground.test",
-    "displayName": "Alex",
+    "email": "elena@commonground.test",
+    "neighborhood": "Castro",
+    "coarseLat": 37.76,
+    "coarseLng": -122.44,
+    "preferences": {
+      "interests": [
+        "painting",
+        "live-music"
+      ],
+      "interestCategories": [
+        "creative",
+        "music"
+      ],
+      "availabilitySlots": [
+        "thu_eve",
+        "sun_day"
+      ],
+      "socialGoals": [
+        "make_friends"
+      ],
+      "groupSizePref": "small",
+      "budgetMinCents": null,
+      "budgetMaxCents": 2000,
+      "travelRadiusKm": 5,
+      "activityPrefs": [
+        "quiet"
+      ],
+      "dealbreakers": []
+    },
+    "consent": {
+      "allow_matching": true,
+      "allow_demand_aggregation": true,
+      "allow_group_planning": true,
+      "share_interests_with_attendees": true,
+      "share_name_with_business": false
+    },
+    "summary": "Paints and enjoys live music. Thursday evenings work well."
+  },
+  {
+    "email": "nina@commonground.test",
     "neighborhood": "SoMa",
     "coarseLat": 37.78,
     "coarseLng": -122.4,
@@ -278,11 +271,10 @@
     "summary": "Board game fan looking for a regular Friday night crew."
   },
   {
-    "email": "riley@commonground.test",
-    "displayName": "Riley",
+    "email": "omar@commonground.test",
     "neighborhood": "SoMa",
     "coarseLat": 37.78,
-    "coarseLng": -122.4,
+    "coarseLng": -122.41,
     "preferences": {
       "interests": [
         "board-games"
@@ -314,11 +306,10 @@
     "summary": "Plays strategy board games; free Friday and Saturday evenings."
   },
   {
-    "email": "noah@commonground.test",
-    "displayName": "Noah",
-    "neighborhood": "Mission",
-    "coarseLat": 37.76,
-    "coarseLng": -122.42,
+    "email": "dev@commonground.test",
+    "neighborhood": "SoMa",
+    "coarseLat": 37.78,
+    "coarseLng": -122.4,
     "preferences": {
       "interests": [
         "board-games",
@@ -351,11 +342,10 @@
     "summary": "Into board games and trivia nights. Fridays work best."
   },
   {
-    "email": "tess@commonground.test",
-    "displayName": "Tess",
-    "neighborhood": "SoMa",
-    "coarseLat": 37.78,
-    "coarseLng": -122.4,
+    "email": "yuki@commonground.test",
+    "neighborhood": "Mission District",
+    "coarseLat": 37.76,
+    "coarseLng": -122.42,
     "preferences": {
       "interests": [
         "board-games",
@@ -388,8 +378,7 @@
     "summary": "Casual board gamer who also loves live shows. Friday evenings."
   },
   {
-    "email": "omar@commonground.test",
-    "displayName": "Omar",
+    "email": "priya@commonground.test",
     "neighborhood": "Hayes Valley",
     "coarseLat": 37.78,
     "coarseLng": -122.42,
@@ -428,11 +417,10 @@
     "summary": "Weekend hiker and coffee lover exploring the city."
   },
   {
-    "email": "kim@commonground.test",
-    "displayName": "Kim",
+    "email": "theo@commonground.test",
     "neighborhood": "Hayes Valley",
     "coarseLat": 37.78,
-    "coarseLng": -122.42,
+    "coarseLng": -122.43,
     "preferences": {
       "interests": [
         "coffee",
@@ -466,8 +454,44 @@
     "summary": "Enjoys coffee shops and live music; free Wednesday and Saturday evenings."
   },
   {
-    "email": "ben@commonground.test",
-    "displayName": "Ben",
+    "email": "harper@commonground.test",
+    "neighborhood": "Hayes Valley",
+    "coarseLat": 37.78,
+    "coarseLng": -122.42,
+    "preferences": {
+      "interests": [
+        "live-music",
+        "coffee"
+      ],
+      "interestCategories": [
+        "music",
+        "food_drink"
+      ],
+      "availabilitySlots": [
+        "thu_eve",
+        "fri_eve"
+      ],
+      "socialGoals": [
+        "make_friends"
+      ],
+      "groupSizePref": "large",
+      "budgetMinCents": null,
+      "budgetMaxCents": 2000,
+      "travelRadiusKm": 5,
+      "activityPrefs": [],
+      "dealbreakers": []
+    },
+    "consent": {
+      "allow_matching": true,
+      "allow_demand_aggregation": true,
+      "allow_group_planning": true,
+      "share_interests_with_attendees": true,
+      "share_name_with_business": false
+    },
+    "summary": "Goes to live music and loves bigger social events."
+  },
+  {
+    "email": "marcus@commonground.test",
     "neighborhood": "Noe Valley",
     "coarseLat": 37.75,
     "coarseLng": -122.43,
@@ -503,43 +527,5 @@
       "share_name_with_business": false
     },
     "summary": "Looking for Sunday hiking partners; likes live music too."
-  },
-  {
-    "email": "ana@commonground.test",
-    "displayName": "Ana",
-    "neighborhood": "Mission",
-    "coarseLat": 37.76,
-    "coarseLng": -122.42,
-    "preferences": {
-      "interests": [
-        "live-music",
-        "coffee"
-      ],
-      "interestCategories": [
-        "music",
-        "food_drink"
-      ],
-      "availabilitySlots": [
-        "thu_eve",
-        "fri_eve"
-      ],
-      "socialGoals": [
-        "make_friends"
-      ],
-      "groupSizePref": "large",
-      "budgetMinCents": null,
-      "budgetMaxCents": 2000,
-      "travelRadiusKm": 5,
-      "activityPrefs": [],
-      "dealbreakers": []
-    },
-    "consent": {
-      "allow_matching": true,
-      "allow_demand_aggregation": true,
-      "allow_group_planning": true,
-      "share_interests_with_attendees": true,
-      "share_name_with_business": false
-    },
-    "summary": "Goes to live music and loves bigger social events."
   }
 ]

@@ -7,7 +7,8 @@ import extract from "../../src/lib/ai/fixtures/agent.extract_preferences.json";
  * DB) runs once 01's shell and the local stack exist.
  */
 const SCENE_1 = "I just moved here, I like pottery and coffee shops, free Thursday evenings, small groups.";
-const scene = extract.cases[0].output;
+const { cases: _cases, ...scene } = extract;
+void _cases;
 
 async function mockApi(page: Page) {
   const prefs = {
@@ -48,7 +49,7 @@ test("Scene 1: canonical sentence → review shows pottery, coffee, Thursday eve
   const calls = await mockApi(page);
   await page.goto("/onboarding");
 
-  await page.getByPlaceholder(/start typing/i).fill("Mission");
+  await page.getByPlaceholder(/start typing/i).fill("Mission District");
   await page.getByRole("button", { name: "Continue" }).click();
 
   await page.getByPlaceholder("Message your agent").fill(SCENE_1);

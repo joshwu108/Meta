@@ -40,7 +40,7 @@ describe("AC3 consent boundary on the seed data", () => {
     const shared = [...(await shareBatch(deps, everyone, "demand")).values()];
     const cohort = shared.filter((p) => p.availabilitySlots.includes("thu_eve") &&
       p.interests.some((i) => ["pottery", "ceramics", "painting"].includes(i)) &&
-      ["Mission", "Castro", "Noe Valley"].includes(p.neighborhood ?? ""));
+      ["Mission District", "Castro", "Noe Valley"].includes(p.neighborhood ?? ""));
     expect(cohort).toHaveLength(6);
   });
 });

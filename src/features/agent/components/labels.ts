@@ -53,7 +53,7 @@ export const CONSENT_COPY: Record<ConsentKey, { title: string; body: string }> =
 };
 
 export const SF_NEIGHBORHOODS: ReadonlyArray<{ name: string; lat: number; lng: number }> = [
-  { name: "Mission", lat: 37.76, lng: -122.42 },
+  { name: "Mission District", lat: 37.76, lng: -122.42 },
   { name: "Castro", lat: 37.76, lng: -122.43 },
   { name: "Noe Valley", lat: 37.75, lng: -122.43 },
   { name: "SoMa", lat: 37.78, lng: -122.4 },
