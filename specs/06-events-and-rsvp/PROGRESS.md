@@ -123,6 +123,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 19:50 PT: main unchanged; draft PR #3 (`integration/ws01`) will fast-forward main to ws/01-core plus a Node 22.20 pin. Rehearsed merging that head: green (176 unit + 61 db, build). 01 now seats placeholder `tests/db/support/*` files, which resolve to 06's.
 - 2026-10-24 19:35 PT: main unchanged. Added `href` deep links to 06's notifications (01's bell follows them); 03 now exports `getPendingConnectionRequests` with 06's stub signature. 158 tests.
 - 2026-10-24 19:20 PT: main unchanged. 01 seated 06's db setup files; all 13 branch migrations (incl. 03's 0302/0303, 04's 0403/0404) apply together and the 06 smoke passes. 158 tests.
 - 2026-10-24 19:05 PT: main unchanged. 05's trust fix broke attendee capacity flips; fixed with `sync_event_capacity_status`, verified on all six workstreams' migrations together. Adopted 01's aligned shared types. Second 01 merge rehearsal green (176 unit + 61 db). 01 already seeds jordan@ and added the seed registry and `db` project. 158 tests.

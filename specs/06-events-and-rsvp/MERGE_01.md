@@ -1,15 +1,16 @@
 # Merging ws/01-core into ws/06-events
 
-Rehearsed twice on 2026-10-24 in throwaway worktrees; latest against ws/01-core `663b7ed` from ws/06-events `505752b`. After the steps below: typecheck 0 errors, lint 0 errors (2 `<img>` warnings), 176 unit + 61 db tests green, `next build` compiles. Whoever merges (06's worker on its next sync, or the integrator) can follow it as written.
+Rehearsed three times on 2026-10-24 in throwaway worktrees; latest against `integration/ws01` `67c7e8a` (draft PR #3, what main will be fast-forwarded to) from ws/06-events `197c962`. After the steps below: typecheck 0 errors, lint 0 errors (2 `<img>` warnings), 176 unit + 61 db tests green, `next build` compiles. pnpm runs scripts on Node 22.20 there (`.npmrc`). Whoever merges (06's worker on its next sync, or the integrator) can follow it as written.
 
-## 1. Conflicts (12 files)
+## 1. Conflicts (14 files)
 
 | File | Take |
 |---|---|
 | `.gitignore`, `next.config.ts`, `package.json`, `pnpm-lock.yaml`, `playwright.config.ts`, `tsconfig.json`, `vitest.config.ts`, `src/app/layout.tsx`, `src/styles/tokens.css` | 01's (`git checkout --theirs`) |
 | `src/app/(consumer)/activity/page.tsx`, `discover/page.tsx`, `events/page.tsx` | 06's (`git checkout --ours`); 01's are placeholders for 06's screens |
+| `tests/db/support/setup.ts`, `tests/db/support/global-setup.ts` | 06's (`git checkout --ours`); 01 seated empty placeholders for its `db` project |
 
-Then delete 06's interim `eslint.config.js` (01 ships `eslint.config.mjs`).
+Then delete 06's interim `eslint.config.js` (01 ships `eslint.config.mjs`). Check no staged file still has conflict markers before committing.
 
 ## 2. Additions to 01's files
 
