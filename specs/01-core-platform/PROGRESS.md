@@ -51,7 +51,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 - [x] AC1 fresh clone → `pnpm i && pnpm db:start && pnpm db:reset && pnpm db:seed && pnpm dev` works
 - [x] AC2 seeded consumer and business owner log in and see their shells
 - [x] AC3 shared helpers/types exported with TSDoc
-- [ ] AC4 CI green with §9 guards
+- [ ] AC4 CI green with §9 guards (workflow now runs on main; result needs a human to read)
 - [ ] AC5 preview deployment with `MOCK_AI=1` `DEMO_MODE=1`
 
 ## P1
@@ -75,17 +75,17 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 ## Needs from others
 
 - All: notification `payload.href` (in-app path) is now honoured by the bell; `payload.title` and `payload.body` override the default copy.
-- README (integrator): §4 `SharablePreferences` add `interestCategories: EventCategory[]` and make `groupSizePref` nullable; replace `ExplainInput` with spec 02's shape; §5 seed says 15 users → 16.
+- ~~README (integrator): §4 `SharablePreferences` / `ExplainInput`, §5 16 users~~ applied on main (67c7e8a).
 - 02: put your `AGENT_PROMPT_DEFINITIONS` in `src/lib/ai/prompts/agent.ts` as `AGENT_PROMPTS` (slot exists), and register `loadAgentPreferences` in `supabase/seed/loaders/registry.ts` `AFTER_USERS` (your `AgentSeedContext` is a subset of `SeedContext`, so it fits as-is).
 - 03: put the `groups.plan_activities` definition in `src/lib/ai/prompts/groups.ts` as `GROUPS_PROMPTS`; register connections/invitations loaders in `AFTER_ALL`.
 - 04: `DEMAND_PROMPTS` slot is `src/lib/ai/prompts/demand.ts`; keep that path.
 - 06: register `loadRsvps` in `AFTER_EVENTS` yourself in the merge commit (your loader file is not on 01); `tests/db/support/{setup,global-setup}.ts` exist as placeholders for you to overwrite; `pnpm test:db` runs `tests/db/**` with `TEST_DATABASE_URL` defaulting to the local stack and `server-only` aliased to `tests/support/server-only.ts`; add `pg` to devDependencies in your merge.
 - 02: `src/lib/ai/fixtures/agent.follow_up_suggestion.json` has no matching id in `src/lib/ai/prompts/index.ts`; add `'agent.follow_up_suggestion'` to `PROMPT_IDS` (and a `PROMPTS` entry) in your branch, or rename the fixture to `events.reconnect_followup` which is already registered.
 - 05: `src/lib/api/client.ts` now exists in 01 with the surface your components import (`ApiClientError`, `apiGet/apiPost/apiPatch/apiDelete`, `fieldErrors`). Drop your copy on merge; `fieldErrors` accepts both `{ field, message }` and `{ path, message }`.
-- Integrator: `main` still contains only `specs/`; none of ws/01-core has been merged. Branches 02/03/05/06 each carry their own `package.json`, `supabase/seed/seed.ts` and (05) `fixtures/businesses.json`, so merging 01 first and then resolving their seed/scaffold files in favour of 01's structure (`supabase/seed/runner.ts` + `loaders/`) will be the least painful order. 03 already copied 01's seed layout.
+- ~~Integrator: `main` still contains only `specs/`~~ ws/01-core is on main as of 67c7e8a (fast-forward requested by the integrator). Remaining advice still applies: Branches 02/03/05/06 each carry their own `package.json`, `supabase/seed/seed.ts` and (05) `fixtures/businesses.json`, so merging 01 first and then resolving their seed/scaffold files in favour of 01's structure (`supabase/seed/runner.ts` + `loaders/`) will be the least painful order. 03 already copied 01's seed layout.
 - 05: `supabase/seed/fixtures/businesses.json` on your branch has a different shape from the base fixture; keep the base fields (`slug, name, category, neighborhood, address, description, lat, lng, capacity, owner`) and extend `loaders/domain.ts` for hours/capabilities rather than replacing the runner.
 - 06: your `supabase/seed/06-events.ts` should become a loader under `supabase/seed/loaders/` called from `runner.ts` after `loadEvents`.
-- README/design-system (integrator): add `--color-warning-ink` to design-system.md §1 (see Decisions) so other workstreams use it for text on `--color-warning-soft`.
+- ~~README/design-system (integrator): add `--color-warning-ink`~~ applied on main (67c7e8a).
 - 03/05/06: `supabase/seed/loaders/domain.ts` inserts `businesses`, `events`, `groups`, `group_members` with the column names from your specs and skips while the table is missing. When your migration lands, run `pnpm db:seed` and adjust the loader for any column it gets wrong.
 - 05: `withBusinessOwner` looks up `businesses` by `owner_id = auth.uid()`. Keep that column name (or tell me the real one).
 
@@ -97,6 +97,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 18:50 — Integrator asked for ws/01-core on main: fast-forwarded main to 5766791, then to integration/ws01 (67c7e8a: Node 22 `.npmrc` + README/design-system contract edits applying this file's requests). Branch synced to main. Scripts verified on the pinned Node 22.20.0: typecheck clean, 79 unit green. Next: other workstreams merge onto this; keep syncing and reconcile their changes to shared files.
 - 2026-10-24 18:20 — Wakeup: main unchanged. Bell rows now follow `payload.href` (03's request): safeNext-validated, mark read first, then navigate; seed notifications carry hrefs. 79 unit + 17 integration + 16 e2e green. Next: watch main.
 - 2026-10-24 18:05 — Check: main unchanged; all five branches moved. Added `demand.revise_proposal` (04). Re-verified all 13 branch migrations (0100–0600 incl. 0302/0303/0402–0404) apply together locally; seed + 17 integration tests pass. 03 and 06 have written merge plans against 01's registries. Next: watch main.
 - 2026-10-24 17:55 — Wakeup: main unchanged. Verified all six workstreams' real migrations (0100–0600) apply together locally; seed and 17 integration tests pass (not committed). Fixed the 320px TopBar overflow 03 reported (+ shell e2e), widened coverage include to src/features/*/server (04), seated 06's db setup/global-setup files. 79 unit + 17 integration + 16 e2e green. Next: watch main.
