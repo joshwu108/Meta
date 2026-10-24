@@ -26,7 +26,7 @@ This workstream contains no product-specific AI logic. Its success is measured b
 - `src/shared/enums.ts`, `src/shared/types.ts`, `src/shared/schemas/*` baseline
 - `src/lib/api` envelope and `withAuth` / `withBusinessOwner` / `parseBody`
 - `src/lib/ai` Claude wrapper with `generateStructured()` and `MOCK_AI` fixtures
-- Seed runner and the base fixture set (15 users, 3 businesses, 6 events, 2 groups)
+- Seed runner and the base fixture set (16 users, 3 businesses, 6 events, 2 groups)
 - App shell: responsive layout, consumer nav (Discover, Match, Groups, Events, Agent, Activity), business nav (Dashboard, Proposals, Events, Insights), auth pages
 - `.env.example`, Vercel project, hosted Supabase project, `README` quick start
 - Observability: structured server logging (`src/lib/log.ts`) that redacts PII fields
@@ -160,7 +160,7 @@ export function NotificationBell()
 Landed on day one with the cross-workstream types (full definitions in owning specs, baseline shapes here so everything compiles):
 
 ```ts
-export type SharablePreferences = { userId: string; interests: string[]; availabilitySlots: AvailabilitySlot[]; socialGoals: SocialGoal[]; groupSizePref: GroupSizePref; budgetMin: number | null; budgetMax: number | null; travelRadiusKm: number; activityPrefs: string[]; coarseLat: number | null; coarseLng: number | null; neighborhood: string | null };
+export type SharablePreferences = { userId: string; interests: string[]; interestCategories: EventCategory[]; availabilitySlots: AvailabilitySlot[]; socialGoals: SocialGoal[]; groupSizePref: GroupSizePref | null; budgetMin: number | null; budgetMax: number | null; travelRadiusKm: number; activityPrefs: string[]; coarseLat: number | null; coarseLng: number | null; neighborhood: string | null };
 export type CompatibilityResult = { score: number; breakdown: { interests: number; availability: number; social: number; location: number; budget: number }; sharedInterests: string[]; sharedSlots: AvailabilitySlot[]; hardFilterFailed: null | 'distance' | 'blocked' | 'not_discoverable' };
 export type VenueCriteria = { category: EventCategory; cohortSize: number; slot: AvailabilitySlot; centerLat: number; centerLng: number; radiusKm: number; budgetMax: number | null };
 export type BusinessMatch = { businessId: string; name: string; score: number; reasons: string[] };
@@ -185,7 +185,7 @@ Design direction (binding for every screen, see [`../design-system.md`](../desig
 
 `pnpm db:seed` runs `seed.ts` with the admin client and loads fixtures in dependency order. Base fixtures delivered here:
 
-- `users.json` — 15 users with display names, neighborhoods (Mission, Hayes Valley, Castro, SoMa, Noe Valley), coarse coordinates, `is_discoverable: true` for 13. Password for every seeded user is `demo-pass-1234`. User `demo.new@commonground.test` has **no** preferences so Scene 1 can be run live.
+- `users.json` — 16 users with display names, neighborhoods (Mission, Hayes Valley, Castro, SoMa, Noe Valley), coarse coordinates, `is_discoverable: true` for 14. (The 16th, `jordan@commonground.test`, is the Scene 6 reconnect partner named in spec 06 §8; `demo.new@` stays the Scene 1 user.) Password for every seeded user is `demo-pass-1234`. User `demo.new@commonground.test` has **no** preferences so Scene 1 can be run live.
 - `businesses.json` — Kiln & Cup (pottery studio, Mission), Ritual Grounds (café, Hayes Valley), Meeple House (board-game venue, SoMa), each with an owner account `owner.<slug>@commonground.test`.
 - `events.json` — 6 published events across the three venues over the next 14 days.
 - `groups.json` — 2 groups ("Mission Makers", public, 4 members; "Thursday Night Crew", private, 3 members).

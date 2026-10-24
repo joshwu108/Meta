@@ -28,13 +28,18 @@ export type {
   Visibility,
 } from './enums';
 
-/** Owned by 02. Only the fields the user consented to share for a given purpose. */
+/**
+ * Owned by 02. Only the fields the user consented to share for a given purpose.
+ * `interestCategories` is the EVENT_CATEGORY projection of `interests` (02 stores it; 03, 04 and
+ * 06 score on it). `groupSizePref` is null until the user states one.
+ */
 export type SharablePreferences = {
   userId: string;
   interests: string[];
+  interestCategories: EventCategory[];
   availabilitySlots: AvailabilitySlot[];
   socialGoals: SocialGoal[];
-  groupSizePref: GroupSizePref;
+  groupSizePref: GroupSizePref | null;
   budgetMin: number | null;
   budgetMax: number | null;
   travelRadiusKm: number;
@@ -111,9 +116,17 @@ export type OpportunityRunSummary = {
   finishedAt: string;
 };
 
-/** Owned by 02. Input for `explainRecommendation`. */
+/** Owned by 02. What `explainRecommendation` is explaining: a person, an event or a group. */
+export type ExplainTarget =
+  | { kind: 'person'; preferences: SharablePreferences; displayName?: string }
+  | { kind: 'event'; event: Record<string, unknown> }
+  | { kind: 'group'; group: Record<string, unknown> };
+
+/** Owned by 02. Input for `explainRecommendation` (spec 02 §5). */
 export type ExplainInput = {
-  userId: string;
-  subject: { kind: 'event' | 'person' | 'group'; id: string; title: string };
-  signals: string[];
+  /** The viewing user's sharable preferences. */
+  viewer: SharablePreferences;
+  target: ExplainTarget;
+  /** Deterministic score breakdown from the caller (03 or 06). */
+  breakdown: Record<string, unknown>;
 };

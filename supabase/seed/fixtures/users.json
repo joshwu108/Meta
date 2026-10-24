@@ -1,0 +1,18 @@
+[
+  { "email": "demo.new@commonground.test", "display_name": "Jordan Lee", "neighborhood": "Mission District", "coarse_lat": 37.76, "coarse_lng": -122.42, "is_discoverable": true, "bio": "Just moved here. Pottery, coffee, small groups.", "onboarding_completed": false },
+  { "email": "maya@commonground.test", "display_name": "Maya Chen", "neighborhood": "Mission District", "coarse_lat": 37.76, "coarse_lng": -122.42, "is_discoverable": true, "bio": "Ceramics hobbyist and latte enthusiast." },
+  { "email": "leo@commonground.test", "display_name": "Leo Park", "neighborhood": "Mission District", "coarse_lat": 37.75, "coarse_lng": -122.42, "is_discoverable": true, "bio": "Sketchbooks, zines, Thursday nights." },
+  { "email": "sam@commonground.test", "display_name": "Sam Rivera", "neighborhood": "Mission District", "coarse_lat": 37.76, "coarse_lng": -122.41, "is_discoverable": true, "bio": "Board games and bad puns." },
+  { "email": "ana@commonground.test", "display_name": "Ana Souza", "neighborhood": "Noe Valley", "coarse_lat": 37.75, "coarse_lng": -122.43, "is_discoverable": true, "bio": "Watercolor on weekends, pottery when I can." },
+  { "email": "kai@commonground.test", "display_name": "Kai Ito", "neighborhood": "Castro", "coarse_lat": 37.76, "coarse_lng": -122.43, "is_discoverable": true, "bio": "Learning to throw clay. Also: hiking." },
+  { "email": "priya@commonground.test", "display_name": "Priya Nair", "neighborhood": "Hayes Valley", "coarse_lat": 37.78, "coarse_lng": -122.42, "is_discoverable": true, "bio": "Coffee crawls and lo-fi playlists." },
+  { "email": "theo@commonground.test", "display_name": "Theo Brandt", "neighborhood": "Hayes Valley", "coarse_lat": 37.78, "coarse_lng": -122.43, "is_discoverable": true, "bio": "Catan strategist, trivia regular." },
+  { "email": "nina@commonground.test", "display_name": "Nina Okafor", "neighborhood": "SoMa", "coarse_lat": 37.78, "coarse_lng": -122.40, "is_discoverable": true, "bio": "New to SF, into live music and running." },
+  { "email": "omar@commonground.test", "display_name": "Omar Haddad", "neighborhood": "SoMa", "coarse_lat": 37.78, "coarse_lng": -122.41, "is_discoverable": true, "bio": "Tabletop host, aspiring barista." },
+  { "email": "elena@commonground.test", "display_name": "Elena Petrova", "neighborhood": "Castro", "coarse_lat": 37.76, "coarse_lng": -122.44, "is_discoverable": true, "bio": "Film photography and fermented things." },
+  { "email": "marcus@commonground.test", "display_name": "Marcus Hill", "neighborhood": "Noe Valley", "coarse_lat": 37.75, "coarse_lng": -122.43, "is_discoverable": true, "bio": "Dad of two, weekend woodworking." },
+  { "email": "yuki@commonground.test", "display_name": "Yuki Tanaka", "neighborhood": "Mission District", "coarse_lat": 37.76, "coarse_lng": -122.42, "is_discoverable": true, "bio": "Illustrator. Will trade drawings for espresso." },
+  { "email": "dev@commonground.test", "display_name": "Devon Price", "neighborhood": "SoMa", "coarse_lat": 37.78, "coarse_lng": -122.40, "is_discoverable": false, "bio": "Lurking for now." },
+  { "email": "jordan@commonground.test", "display_name": "Jordan Alvarez", "neighborhood": "Hayes Valley", "coarse_lat": 37.78, "coarse_lng": -122.42, "is_discoverable": true, "bio": "Pottery on Sundays, coffee the rest of the week. Scene 6 reconnect partner." },
+  { "email": "harper@commonground.test", "display_name": "Harper Quinn", "neighborhood": "Hayes Valley", "coarse_lat": 37.78, "coarse_lng": -122.42, "is_discoverable": false, "bio": "Here for the events, not the feed." }
+]
