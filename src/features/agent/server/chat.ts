@@ -10,6 +10,7 @@ import {
   type UserPreferences,
 } from "../schemas";
 import { explainDetailed, type ExplainTarget } from "./explain";
+import { feedbackForPrompt } from "./feedback";
 import { CHAT_SYSTEM } from "./prompts";
 import * as repo from "./repo";
 import { toSharable } from "./sharable";
@@ -102,10 +103,11 @@ export async function handleChatMessage(
   conversationId?: string,
 ): Promise<ChatResponse> {
   const convId = await repo.resolveConversation(sb, userId, "chat", conversationId);
-  const [history, prefs, profile] = await Promise.all([
+  const [history, prefs, profile, feedback] = await Promise.all([
     repo.listMessages(sb, convId, 20),
     repo.getPreferences(sb, userId),
     repo.getAgentProfile(sb, userId),
+    repo.getFeedbackNotes(sb, userId),
   ]);
   const { fieldSources: _sources, ...preferences } = prefs;
   void _sources;
@@ -114,6 +116,7 @@ export async function handleChatMessage(
     input: {
       summary: profile.summary,
       preferences,
+      feedback: feedbackForPrompt(feedback),
       messages: [...history.map(({ role, content }) => ({ role, content })), { role: "user", content: message }],
     },
     schema: ChatModelOutputSchema,

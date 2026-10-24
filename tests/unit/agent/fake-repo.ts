@@ -16,6 +16,7 @@ export function createFakeRepo() {
     convs: new Map<string, { userId: string; kind: string; messages: StoredMessage[] }>(),
     profiles: new Map<string, Record<string, unknown>>(),
     log: [] as Record<string, unknown>[],
+    feedback: new Map<string, unknown[]>(),
   };
   let seq = 0;
   const repo = {
@@ -53,6 +54,10 @@ export function createFakeRepo() {
       state.profiles.set(userId, { ...(state.profiles.get(userId) ?? {}), ...values });
     }),
     listAgentLog: vi.fn(async () => []),
+    getFeedbackNotes: vi.fn(async (_sb: unknown, userId: string) => state.feedback.get(userId) ?? []),
+    saveFeedbackNotes: vi.fn(async (_sb: unknown, userId: string, notes: unknown[]) => {
+      state.feedback.set(userId, [...notes]);
+    }),
   };
   return { state, repo };
 }

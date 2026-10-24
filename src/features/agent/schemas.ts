@@ -209,3 +209,13 @@ export type FollowUpSuggestion = z.infer<typeof FollowUpSuggestionSchema>;
 export const AgentLogQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
+
+export const FeedbackNoteSchema = z.object({
+  at: z.string(),
+  about: z.string().regex(/^(event|person|group):[\w-]{1,64}$/),
+  signal: z.enum(["up", "down"]),
+  note: z.string().trim().max(200).optional(),
+});
+export type FeedbackNote = z.infer<typeof FeedbackNoteSchema>;
+export const FeedbackRequestSchema = FeedbackNoteSchema.omit({ at: true });
+export type FeedbackRequest = z.infer<typeof FeedbackRequestSchema>;

@@ -30,7 +30,24 @@ export function SuggestionCardView({ card, onApply }: { card: SuggestionCard; on
           <Button onClick={() => onApply(card)}>Apply</Button>
         </div>
       ) : null}
+      {card.kind !== "preference_update" ? <FeedbackButtons about={`${card.kind}:${card.targetId}`} /> : null}
     </article>
+  );
+}
+
+/** Thumbs up/down remembered by the agent and used in later suggestions. */
+function FeedbackButtons({ about }: { about: string }) {
+  const [sent, setSent] = useState<"up" | "down" | null>(null);
+  const send = (signal: "up" | "down") => {
+    setSent(signal);
+    api("/api/agent/feedback", { method: "POST", body: { about, signal } }).catch(() => setSent(null));
+  };
+  return (
+    <div className={s.row} role="group" aria-label="Was this useful?">
+      <Button variant="ghost" aria-pressed={sent === "up"} aria-label="More like this" onClick={() => send("up")}>👍</Button>
+      <Button variant="ghost" aria-pressed={sent === "down"} aria-label="Less like this" onClick={() => send("down")}>👎</Button>
+      {sent ? <span className={s.muted} role="status">Thanks, your agent will remember.</span> : null}
+    </div>
   );
 }
 

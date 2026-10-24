@@ -1,9 +1,10 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Consent, SharingPurpose, SuggestionCard, UserPreferencesWithSources } from "../schemas";
+import type { Consent, FeedbackNote, SharingPurpose, SuggestionCard, UserPreferencesWithSources } from "../schemas";
 import {
   PREFERENCES_COLUMNS,
   parseConsent,
+  parseFeedbackNotes,
   patchToColumns,
   rowToPreferences,
   type PreferencesRow,
@@ -59,6 +60,16 @@ export async function saveAgentProfile(
   const res = await sb.from("agent_profiles").upsert(row).select("summary, consent").single();
   const saved = check(res, "save agent profile") as { summary: string | null; consent: unknown };
   return { summary: saved.summary, consent: parseConsent(saved.consent) };
+}
+
+export async function getFeedbackNotes(sb: SupabaseClient, userId: string): Promise<FeedbackNote[]> {
+  const res = await sb.from("agent_profiles").select("feedback_notes").eq("user_id", userId).maybeSingle();
+  const row = check(res, "load feedback") as { feedback_notes: unknown } | null;
+  return parseFeedbackNotes(row?.feedback_notes);
+}
+
+export async function saveFeedbackNotes(sb: SupabaseClient, userId: string, notes: readonly FeedbackNote[]): Promise<void> {
+  check(await sb.from("agent_profiles").upsert({ user_id: userId, feedback_notes: notes }), "save feedback");
 }
 
 export type ConversationKind = "onboarding" | "chat";

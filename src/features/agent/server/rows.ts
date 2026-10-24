@@ -1,10 +1,12 @@
 import {
   ConsentSchema,
   DEFAULT_CONSENT,
+  FeedbackNoteSchema,
   EMPTY_PREFERENCES,
   FieldSourcesSchema,
   UserPreferencesSchema,
   type Consent,
+  type FeedbackNote,
   type FieldSources,
   type UserPreferences,
   type UserPreferencesPatch,
@@ -101,4 +103,13 @@ export function parseConsent(raw: unknown): Consent {
   const merged = { ...DEFAULT_CONSENT, ...(typeof raw === "object" && raw ? raw : {}) };
   const parsed = ConsentSchema.safeParse(merged);
   return parsed.success ? parsed.data : DEFAULT_CONSENT;
+}
+
+/** Parse `agent_profiles.feedback_notes`, dropping malformed entries. */
+export function parseFeedbackNotes(raw: unknown): FeedbackNote[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((n) => {
+    const parsed = FeedbackNoteSchema.safeParse(n);
+    return parsed.success ? [parsed.data] : [];
+  });
 }

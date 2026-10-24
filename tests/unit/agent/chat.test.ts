@@ -76,3 +76,25 @@ describe("handleChatMessage (MOCK_AI)", () => {
     expect(res.suggestions?.every((s) => s.kind === "event")).toBe(true);
   });
 });
+
+describe("chat prompt context", () => {
+  it("includes the last feedback notes in the model input", async () => {
+    vi.resetModules();
+    const seen: unknown[] = [];
+    vi.doMock("@/features/agent/server/stubs", async (orig) => ({
+      ...(await orig<typeof import("@/features/agent/server/stubs")>()),
+      logAgentAction: async () => undefined,
+      generateStructured: async (o: { input: unknown; prompt: string }) => {
+        if (o.prompt === "agent.chat") seen.push(o.input);
+        return o.prompt === "agent.chat"
+          ? { reply: "ok", capabilities: [] }
+          : { explanation: "x", highlights: [] };
+      },
+    }));
+    fake.state.feedback.set("u9", [{ at: "t", about: "event:42", signal: "down", note: "too loud" }]);
+    const chat = await import("@/features/agent/server/chat");
+    await chat.handleChatMessage(SB, "u9", "hi");
+    expect(seen[0]).toMatchObject({ feedback: [{ about: "event:42", signal: "down", note: "too loud" }] });
+    vi.doUnmock("@/features/agent/server/stubs");
+  });
+});
