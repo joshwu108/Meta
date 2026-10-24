@@ -11,6 +11,8 @@ export type CurrentUser = {
   profile: ProfileRow;
   /** Set when the auth user owns a business (table owned by workstream 05). */
   businessId: string | null;
+  /** What the account signed up as; routes owners without a business to business onboarding. */
+  signupAs: 'consumer' | 'business';
 };
 
 async function findOwnedBusinessId(supabase: SupabaseClient<Database>, userId: string): Promise<string | null> {
@@ -36,5 +38,6 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     email: auth.user.email ?? null,
     profile: profile as ProfileRow,
     businessId,
+    signupAs: auth.user.user_metadata?.['signup_as'] === 'business' ? 'business' : 'consumer',
   };
 });

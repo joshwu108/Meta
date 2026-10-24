@@ -45,17 +45,18 @@ describe('getCurrentUser', () => {
     from.mockImplementation((name: string) =>
       name === 'profiles' ? table({ data: { id: 'u1', display_name: 'A' }, error: null }) : table({ data: { id: 'biz-1' }, error: null }),
     );
-    await expect(getCurrentUser()).resolves.toEqual({ id: 'u1', email: 'a@b.c', profile: { id: 'u1', display_name: 'A' }, businessId: 'biz-1' });
+    await expect(getCurrentUser()).resolves.toEqual({ id: 'u1', email: 'a@b.c', profile: { id: 'u1', display_name: 'A' }, businessId: 'biz-1', signupAs: 'consumer' });
   });
 
   it('businessId is null when the businesses table is missing or empty', async () => {
-    getUser.mockResolvedValue({ data: { user: { id: 'u1' } } });
+    getUser.mockResolvedValue({ data: { user: { id: 'u1', user_metadata: { signup_as: 'business' } } } });
     from.mockImplementation((name: string) =>
       name === 'profiles' ? table({ data: { id: 'u1' }, error: null }) : table({ data: null, error: { code: '42P01', message: 'missing' } }),
     );
     const user = await getCurrentUser();
     expect(user?.businessId).toBeNull();
     expect(user?.email).toBeNull();
+    expect(user?.signupAs).toBe('business');
   });
 });
 

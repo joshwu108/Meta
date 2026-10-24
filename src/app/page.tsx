@@ -5,6 +5,8 @@ import { getCurrentUser } from '@/features/core/server/current-user';
 export default async function RootPage() {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
-  if (!user.profile.onboarding_completed_at) redirect(user.businessId ? '/business' : '/onboarding');
+  if (user.businessId) redirect('/business');
+  if (user.signupAs === 'business') redirect('/business/onboarding');
+  if (!user.profile.onboarding_completed_at) redirect('/onboarding');
   redirect('/discover');
 }
