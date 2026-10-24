@@ -3,7 +3,7 @@ import { capacityRatio } from '@/features/core/components/ui/CapacityMeter';
 import { statusLabel, statusTone } from '@/features/core/components/ui/StatusPill';
 import { cn } from '@/features/core/components/ui/cn';
 import { isNavActive } from '@/features/core/components/app-shell/nav';
-import { notificationBody, notificationTitle, relativeTime } from '@/features/core/components/notifications/NotificationList';
+import { notificationBody, notificationHref, notificationTitle, relativeTime } from '@/features/core/components/notifications/NotificationList';
 
 describe('ui helpers', () => {
   it('cn joins truthy classes', () => {
@@ -36,6 +36,11 @@ describe('ui helpers', () => {
     expect(notificationTitle({ ...base, type: 'rsvp_confirmed', payload: { title: 'Custom' } })).toBe('Custom');
     expect(notificationBody({ ...base, type: 'rsvp_confirmed', payload: { body: 'b' } })).toBe('b');
     expect(notificationBody({ ...base, type: 'rsvp_confirmed', payload: {} })).toBeNull();
+    expect(notificationHref({ ...base, type: 'group_invite', payload: { href: '/groups/abc' } })).toBe('/groups/abc');
+    expect(notificationHref({ ...base, type: 'group_invite', payload: { href: '/match?tab=requests' } })).toBe('/match?tab=requests');
+    expect(notificationHref({ ...base, type: 'group_invite', payload: {} })).toBeNull();
+    expect(notificationHref({ ...base, type: 'group_invite', payload: { href: 'https://evil.com' } })).toBeNull();
+    expect(notificationHref({ ...base, type: 'group_invite', payload: { href: '//evil.com' } })).toBeNull();
     const now = Date.now();
     expect(relativeTime(new Date(now).toISOString(), now)).toBe('just now');
     expect(relativeTime(new Date(now - 5 * 60_000).toISOString(), now)).toBe('5m');

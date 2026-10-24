@@ -88,7 +88,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
           ) : items.length === 0 ? (
             <EmptyState icon={<BellOff size={20} />} title="You're all caught up" />
           ) : (
-            <NotificationList items={items} onMarkRead={markRead} />
+            <NotificationList items={items} onMarkRead={markRead} onNavigate={() => setIsOpen(false)} />
           )}
         </div>
       )}

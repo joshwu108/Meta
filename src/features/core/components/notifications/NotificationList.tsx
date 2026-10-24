@@ -1,4 +1,7 @@
 'use client';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { safeNext } from '@/lib/safe-next';
 import type { NotificationRow } from '@/shared/schemas/notification';
 import type { NotificationType } from '@/shared/enums';
 import { cn } from '../ui/cn';
@@ -28,6 +31,12 @@ export function notificationBody(item: NotificationRow): string | null {
   return typeof body === 'string' ? body : null;
 }
 
+/** In-app deep link from `payload.href`, or null when absent or not a safe app path. */
+export function notificationHref(item: NotificationRow): string | null {
+  const href = safeNext(item.payload['href'], '');
+  return href === '' ? null : href;
+}
+
 export function relativeTime(iso: string, now = Date.now()): string {
   const diff = Math.max(0, now - new Date(iso).getTime());
   const minutes = Math.floor(diff / 60_000);
@@ -38,26 +47,62 @@ export function relativeTime(iso: string, now = Date.now()): string {
   return `${Math.floor(hours / 24)}d`;
 }
 
-export function NotificationList({ items, onMarkRead }: { items: NotificationRow[]; onMarkRead: (id: string) => void }) {
+export type NotificationListProps = {
+  items: NotificationRow[];
+  onMarkRead: (id: string) => void | Promise<void>;
+  /** Called when a row with a deep link is followed (the bell closes its popover). */
+  onNavigate?: () => void;
+};
+
+const rowClass = 'flex w-full items-start gap-3 rounded-md px-2 py-2.5 text-left no-underline transition-colors duration-[var(--duration-fast)] hover:bg-hover hover:no-underline';
+
+function RowContent({ item, isUnread }: { item: NotificationRow; isUnread: boolean }) {
+  const body = notificationBody(item);
+  return (
+    <>
+      <span aria-hidden className={cn('mt-2 h-2 w-2 shrink-0 rounded-pill', isUnread ? 'bg-brand' : 'bg-transparent')} />
+      <span className="min-w-0 flex-1 text-text">
+        <span className={cn('block truncate', isUnread ? 'font-semibold' : 'font-medium')}>{notificationTitle(item)}</span>
+        {body && <span className="block truncate text-[length:var(--text-sm)] text-text-2">{body}</span>}
+      </span>
+      <span className="shrink-0 text-[length:var(--text-xs)] text-text-3">{relativeTime(item.created_at)}</span>
+    </>
+  );
+}
+
+/** Rows with `payload.href` navigate there (and mark read); others only mark read. */
+export function NotificationList({ items, onMarkRead, onNavigate }: NotificationListProps) {
+  const router = useRouter();
   return (
     <ul className="flex max-h-[60dvh] flex-col overflow-y-auto">
       {items.map((item) => {
         const isUnread = item.read_at === null;
-        const body = notificationBody(item);
+        const href = notificationHref(item);
+        const markRead = async () => {
+          if (isUnread) await onMarkRead(item.id);
+        };
         return (
           <li key={item.id}>
-            <button
-              type="button"
-              onClick={() => isUnread && onMarkRead(item.id)}
-              className={cn('flex w-full items-start gap-3 rounded-md px-2 py-2.5 text-left transition-colors duration-[var(--duration-fast)] hover:bg-hover', isUnread && 'bg-brand-soft/40')}
-            >
-              <span aria-hidden className={cn('mt-2 h-2 w-2 shrink-0 rounded-pill', isUnread ? 'bg-brand' : 'bg-transparent')} />
-              <span className="min-w-0 flex-1">
-                <span className={cn('block truncate', isUnread ? 'font-semibold' : 'font-medium')}>{notificationTitle(item)}</span>
-                {body && <span className="block truncate text-[length:var(--text-sm)] text-text-2">{body}</span>}
-              </span>
-              <span className="shrink-0 text-[length:var(--text-xs)] text-text-3">{relativeTime(item.created_at)}</span>
-            </button>
+            {href ? (
+              <Link
+                href={href}
+                onClick={(event) => {
+                  // Mark read before navigating so the next page's server-rendered count is right.
+                  event.preventDefault();
+                  void markRead().finally(() => {
+                    onNavigate?.();
+                    router.push(href);
+                  });
+                }}
+                className={cn(rowClass, isUnread && 'bg-brand-soft/40')}
+              >
+                <RowContent item={item} isUnread={isUnread} />
+              </Link>
+            ) : (
+              <button type="button" onClick={() => void markRead()} className={cn(rowClass, isUnread && 'bg-brand-soft/40')}>
+                <RowContent item={item} isUnread={isUnread} />
+              </button>
+            )}
           </li>
         );
       })}
