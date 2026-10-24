@@ -12,7 +12,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       onClick={toggle}
       aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
       aria-pressed={isDark}
-      className={`inline-flex h-9 w-9 items-center justify-center rounded-pill bg-surface-2 text-text-2 transition-colors duration-[var(--duration-fast)] hover:bg-hover active:bg-pressed ${className}`}
+      className={`h-9 w-9 items-center justify-center rounded-pill bg-surface-2 text-text-2 transition-colors duration-[var(--duration-fast)] hover:bg-hover active:bg-pressed ${className.includes('hidden') ? '' : 'inline-flex'} ${className}`}
     >
       {isDark ? <Sun size={20} strokeWidth={1.75} /> : <Moon size={20} strokeWidth={1.75} />}
     </button>

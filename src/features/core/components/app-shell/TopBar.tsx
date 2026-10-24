@@ -17,9 +17,9 @@ export type TopBarProps = {
 /** 56px top bar: wordmark (text only, no logo), search, bell, theme, avatar. */
 export function TopBar({ homeHref, user, initialUnread, switchLink, trailing }: TopBarProps) {
   return (
-    <header className="sticky top-0 z-40 h-[var(--topbar-height)] bg-surface shadow-[var(--shadow-1)]">
-      <div className="mx-auto flex h-full max-w-[1400px] items-center gap-3 px-4">
-        <Link href={homeHref} className="text-[length:var(--text-lg)] font-bold text-text no-underline hover:no-underline">
+    <header className="sticky top-0 z-40 h-[var(--topbar-height)] overflow-hidden bg-surface shadow-[var(--shadow-1)]">
+      <div className="mx-auto flex h-full max-w-[1400px] min-w-0 items-center gap-2 px-4 sm:gap-3">
+        <Link href={homeHref} className="shrink-0 text-[length:var(--text-md)] font-bold text-text no-underline hover:no-underline sm:text-[length:var(--text-lg)]">
           CommonGround
         </Link>
         <label className="relative ml-2 hidden h-10 flex-1 max-w-xs items-center md:flex">
@@ -31,14 +31,14 @@ export function TopBar({ homeHref, user, initialUnread, switchLink, trailing }: 
             className="h-10 w-full rounded-pill bg-surface-2 pl-10 pr-4 text-text placeholder:text-text-3 focus:outline-none focus-visible:outline-2 focus-visible:outline-brand"
           />
         </label>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
           {switchLink && (
             <Link href={switchLink.href} className="hidden rounded-pill bg-surface-2 px-3 py-2 text-[length:var(--text-sm)] font-semibold text-text no-underline hover:bg-hover hover:no-underline sm:inline-flex">
               {switchLink.label}
             </Link>
           )}
           {trailing}
-          <ThemeToggle />
+          <ThemeToggle className="hidden sm:inline-flex" />
           {user && <NotificationBell initialUnread={initialUnread} />}
           {user ? (
             <div className="flex items-center gap-2">
