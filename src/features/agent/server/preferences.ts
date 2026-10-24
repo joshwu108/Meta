@@ -1,15 +1,16 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
+import type {
   ConsentPatchSchema,
-  type Consent,
-  type FieldSources,
-  type PreferenceField,
-  type UserPreferencesPatch,
-  type UserPreferencesWithSources,
+  Consent,
+  FieldSources,
+  PreferenceField,
+  UserPreferencesPatch,
+  UserPreferencesWithSources,
 } from "../schemas";
 import * as repo from "./repo";
-import { ApiError, logAgentAction } from "./stubs";
+import { logAgentAction } from "@/features/core";
+import { ApiError } from "@/lib/api";
 import type { z } from "zod";
 
 /**

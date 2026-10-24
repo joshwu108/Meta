@@ -4,12 +4,12 @@ import { createFakeRepo } from "./fake-repo";
 const fake = createFakeRepo();
 const logs: Record<string, unknown>[] = [];
 vi.mock("@/features/agent/server/repo", () => fake.repo);
-vi.mock("@/features/agent/server/stubs", async (orig) => ({
-  ...(await orig<typeof import("@/features/agent/server/stubs")>()),
+vi.mock("@/features/core", () => ({
   logAgentAction: async (input: Record<string, unknown>) => {
     logs.push(input);
   },
 }));
+vi.mock("@/lib/ai", async () => (await import("./mock-ai")).mockAi);
 
 const { applyPatch, patchPreferences, patchPermissions, getPermissions } = await import(
   "@/features/agent/server/preferences"

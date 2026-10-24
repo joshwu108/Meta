@@ -1,6 +1,6 @@
 import { FeedbackRequestSchema } from "@/features/agent/schemas";
 import { recordFeedback } from "@/features/agent/server/feedback";
-import { ok, parseBody, withAuth } from "@/features/agent/server/stubs";
+import { ok, parseBody, withAuth } from "@/lib/api";
 
 export const POST = withAuth(async ({ user, supabase }, req) => {
   const body = await parseBody(FeedbackRequestSchema, req);

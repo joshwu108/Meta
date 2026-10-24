@@ -11,10 +11,10 @@ import {
 } from "../schemas";
 import { explainDetailed, type ExplainTarget } from "./explain";
 import { feedbackForPrompt } from "./feedback";
-import { CHAT_SYSTEM } from "./prompts";
 import * as repo from "./repo";
 import { toSharable } from "./sharable";
-import { generateStructured, logAgentAction } from "./stubs";
+import { logAgentAction } from "@/features/core";
+import { generateStructured } from "@/lib/ai";
 import { suggestEvents, suggestGroups, suggestPeople } from "./suggestion-stubs";
 
 const ALL_CONSENT = { ...DEFAULT_CONSENT, allow_matching: true, allow_demand_aggregation: true, allow_group_planning: true };
@@ -120,7 +120,6 @@ export async function handleChatMessage(
       messages: [...history.map(({ role, content }) => ({ role, content })), { role: "user", content: message }],
     },
     schema: ChatModelOutputSchema,
-    system: CHAT_SYSTEM,
     model: "smart",
   });
   const suggestions = await runCapabilities(userId, selfView(userId, preferences), out.capabilities);

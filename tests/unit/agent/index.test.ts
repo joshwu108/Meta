@@ -2,10 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createFakeSupabase, op } from "./fake-supabase";
 
 let fake = createFakeSupabase();
-vi.mock("@/features/agent/server/stubs", async (orig) => ({
-  ...(await orig<typeof import("@/features/agent/server/stubs")>()),
-  getAdminClient: () => fake.client,
-}));
+vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => fake.client }));
+vi.mock("@/features/core", () => ({ logAgentAction: async () => undefined }));
 const agent = await import("@/features/agent");
 
 const consent = (over: Record<string, boolean> = {}) => ({
@@ -41,7 +39,7 @@ describe("getAttendeeSharing", () => {
     const insert = fake.calls.find((c) => c.table === "agent_action_log" && op(c, "insert"));
     const [rows] = op(insert!, "insert") as [{ user_id: string; permissions_used: string[]; result: string }[]];
     expect(rows).toEqual([expect.objectContaining({ user_id: "a", permissions_used: ["attendees"] })]);
-    expect(rows[0].result).toMatch(/fellow attendees/);
+    expect(rows[0]!.result).toMatch(/fellow attendees/);
   });
 
   it("does not query anything for an empty list", async () => {

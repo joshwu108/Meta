@@ -8,9 +8,12 @@ vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => [], set: 
 vi.mock("@supabase/ssr", () => ({
   createServerClient: () => ({ auth: { getUser: async () => ({ data: { user: currentUser } }) } }),
 }));
-vi.mock("@/features/agent/server/stubs", async (orig) => ({
-  ...(await orig<typeof import("@/features/agent/server/stubs")>()),
+vi.mock("@/features/core", () => ({
   logAgentAction: async () => undefined,
+}));
+vi.mock("@/lib/ai", async () => (await import("./mock-ai")).mockAi);
+vi.mock("@/lib/supabase/server", () => ({
+  createServerClient: async () => ({ auth: { getUser: async () => ({ data: { user: currentUser }, error: null }) } }),
 }));
 
 process.env.NEXT_PUBLIC_SUPABASE_URL = "http://localhost:54321";

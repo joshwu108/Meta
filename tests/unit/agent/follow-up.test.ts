@@ -2,16 +2,16 @@ import { describe, expect, it, vi } from "vitest";
 import type { SharablePreferences } from "@/shared/types";
 
 const logs: Record<string, unknown>[] = [];
-vi.mock("@/features/agent/server/stubs", async (orig) => ({
-  ...(await orig<typeof import("@/features/agent/server/stubs")>()),
+vi.mock("@/features/core", () => ({
   logAgentAction: async (input: Record<string, unknown>) => {
     logs.push(input);
   },
 }));
+vi.mock("@/lib/ai", async () => (await import("./mock-ai")).mockAi);
 const { suggestFollowUp } = await import("@/features/agent/server/follow-up");
 
 const p = (userId: string, slots: SharablePreferences["availabilitySlots"]): SharablePreferences => ({
-  userId, interests: ["pottery", "coffee"], availabilitySlots: slots, socialGoals: [], groupSizePref: "small",
+  userId, interests: ["pottery", "coffee"], interestCategories: ["creative", "food_drink"], availabilitySlots: slots, socialGoals: [], groupSizePref: "small",
   budgetMin: null, budgetMax: null, travelRadiusKm: 5, activityPrefs: [], coarseLat: null, coarseLng: null, neighborhood: null,
 });
 const event = { title: "Beginner Pottery & Coffee Night", category: "creative" as const, startsAt: "2026-10-29T19:00:00-07:00" };

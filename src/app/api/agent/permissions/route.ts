@@ -1,6 +1,6 @@
 import { ConsentPatchSchema } from "@/features/agent/schemas";
 import { getPermissions, patchPermissions } from "@/features/agent/server/preferences";
-import { ok, parseBody, withAuth } from "@/features/agent/server/stubs";
+import { ok, parseBody, withAuth } from "@/lib/api";
 
 export const GET = withAuth(async ({ user, supabase }) => ok(await getPermissions(supabase, user.id)));
 

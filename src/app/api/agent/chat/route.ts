@@ -2,7 +2,7 @@ import { ChatRequestSchema } from "@/features/agent/schemas";
 import { handleChatMessage } from "@/features/agent/server/chat";
 import { handleOnboardingMessage } from "@/features/agent/server/onboarding";
 import { chatLimiter } from "@/features/agent/server/rate-limit";
-import { fail, ok, parseBody, withAuth } from "@/features/agent/server/stubs";
+import { fail, ok, parseBody, withAuth } from "@/lib/api";
 
 export const POST = withAuth(async ({ user, supabase }, req) => {
   if (!chatLimiter.take(user.id)) {

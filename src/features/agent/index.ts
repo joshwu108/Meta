@@ -1,9 +1,13 @@
 import "server-only";
 import type { SharablePreferences } from "@/shared/types";
-import type { Consent, SharingPurpose } from "./schemas";
+import { DEFAULT_CONSENT, type Consent, type SharingPurpose } from "./schemas";
 import { adminLoadConsent, adminLoadSources, adminRecentShareLogs, adminWriteShareLogs } from "./server/repo";
 import { shareBatch, toAttendeeSharing, type AttendeeSharing, type SharingDeps } from "./server/sharable";
-import { getAdminClient } from "./server/stubs";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+/** Service-role client, untyped: 01's generated types do not include ws02 tables until `pnpm db:types` runs. */
+const getAdminClient = (): SupabaseClient => createAdminClient() as unknown as SupabaseClient;
 
 /** Public surface of workstream 02. Other features import only from here. */
 
@@ -67,5 +71,5 @@ export async function getAttendeeSharing(userIds: readonly string[]): Promise<Ma
 /** A user's consent flags, for server-side defaults (e.g. 06's RSVP sharing choices). */
 export async function getConsent(userId: string): Promise<Consent> {
   const [row] = await adminLoadConsent(getAdminClient(), [userId]);
-  return row.consent;
+  return row?.consent ?? DEFAULT_CONSENT;
 }

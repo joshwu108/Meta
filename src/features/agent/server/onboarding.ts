@@ -9,9 +9,9 @@ import {
   type UserPreferencesWithSources,
 } from "../schemas";
 import { groundExtraction, mergeExtraction, nextOnboardingStep, recap } from "./extraction";
-import { EXTRACT_SYSTEM } from "./prompts";
 import * as repo from "./repo";
-import { generateStructured, logAgentAction } from "./stubs";
+import { logAgentAction } from "@/features/core";
+import { generateStructured } from "@/lib/ai";
 
 /** Step 1: neighborhood, coarse location (rounded to 2 dp), travel radius. */
 export async function saveBasics(sb: SupabaseClient, userId: string, basics: OnboardBasics): Promise<void> {
@@ -50,7 +50,6 @@ export async function handleOnboardingMessage(
     prompt: "agent.extract_preferences",
     input: { transcript, currentPreferences },
     schema: ExtractedPreferencesSchema,
-    system: EXTRACT_SYSTEM,
     model: "smart",
   });
   const extracted = groundExtraction(raw, userText);

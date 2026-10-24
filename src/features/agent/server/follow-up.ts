@@ -1,8 +1,8 @@
 import "server-only";
 import type { EventPublic, SharablePreferences } from "@/shared/types";
 import { FollowUpSuggestionSchema, type FollowUpSuggestion } from "../schemas";
-import { FOLLOW_UP_SYSTEM } from "./prompts";
-import { generateStructured, logAgentAction } from "./stubs";
+import { logAgentAction } from "@/features/core";
+import { generateStructured } from "@/lib/ai";
 
 /**
  * P1, invoked by 06 after it has verified mutual reconnect interest. Both inputs
@@ -19,11 +19,11 @@ export async function suggestFollowUp(input: {
     prompt: "agent.follow_up_suggestion",
     input: { event: input.event, sharedInterests, sharedSlots },
     schema: FollowUpSuggestionSchema,
-    system: FOLLOW_UP_SYSTEM,
     model: "smart",
   });
-  const suggestion = sharedSlots.length > 0 && !sharedSlots.includes(out.suggestedSlot)
-    ? { ...out, suggestedSlot: sharedSlots[0] }
+  const firstShared = sharedSlots[0];
+  const suggestion = firstShared !== undefined && !sharedSlots.includes(out.suggestedSlot)
+    ? { ...out, suggestedSlot: firstShared }
     : out;
   await Promise.all(
     [input.a.userId, input.b.userId].map((userId) =>

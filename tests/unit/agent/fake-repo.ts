@@ -6,7 +6,7 @@ import {
   type UserPreferencesWithSources,
 } from "@/features/agent/schemas";
 import type { StoredMessage } from "@/features/agent/server/repo";
-import { ApiError } from "@/features/agent/server/stubs";
+import { ApiError } from "@/lib/api/errors";
 
 /** In-memory stand-in for server/repo.ts so services run without Postgres. */
 export function createFakeRepo() {

@@ -3,7 +3,7 @@ import type { SharablePreferences } from "@/shared/types";
 
 let aiImpl: (opts: unknown) => Promise<unknown> = async () => undefined;
 const aiCalls: unknown[] = [];
-vi.mock("@/features/agent/server/stubs", () => ({
+vi.mock("@/lib/ai", () => ({
   generateStructured: (o: unknown) => {
     aiCalls.push(o);
     return aiImpl(o);
@@ -17,6 +17,7 @@ const { groundHighlights, explainDetailed, explainRecommendation, fallbackExplan
 const prefs = (interests: string[]): SharablePreferences => ({
   userId: "u",
   interests,
+  interestCategories: [],
   availabilitySlots: ["thu_eve"],
   socialGoals: ["make_friends"],
   groupSizePref: "small",

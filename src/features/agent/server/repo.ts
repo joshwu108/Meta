@@ -10,7 +10,7 @@ import {
   type PreferencesRow,
 } from "./rows";
 import type { SharableSource } from "./sharable";
-import { ApiError } from "./stubs";
+import { ApiError } from "@/lib/api";
 
 /**
  * Data access for workstream 02 tables. User-scoped functions take the caller's

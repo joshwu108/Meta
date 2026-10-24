@@ -8,10 +8,14 @@ import {
   ExtractedPreferencesSchema,
   FollowUpSuggestionSchema,
 } from "@/features/agent/schemas";
-import { AGENT_PROMPTS } from "@/features/agent/server/prompts";
-import { generateStructured } from "@/features/agent/server/stubs";
+import { AGENT_PROMPT_DEFINITIONS } from "@/features/agent/server/prompts";
+import { generateStructured } from "./mock-ai";
 
-const SCHEMAS: Record<(typeof AGENT_PROMPTS)[number], ZodSchema> = {
+const AGENT_PROMPTS = Object.keys(AGENT_PROMPT_DEFINITIONS) as AgentPrompt[];
+
+type AgentPrompt = "agent.extract_preferences" | "agent.chat" | "agent.explain_recommendation" | "agent.follow_up_suggestion";
+
+const SCHEMAS: Record<AgentPrompt, ZodSchema> = {
   "agent.extract_preferences": ExtractedPreferencesSchema,
   "agent.chat": ChatModelOutputSchema,
   "agent.explain_recommendation": ExplainOutputSchema,
@@ -35,7 +39,7 @@ describe("MOCK_AI fixtures", () => {
       input: { transcript: [{ role: "user", content: "I love Board Games" }] },
       schema: ExtractedPreferencesSchema,
     });
-    expect(out.interests[0].tag).toBe("board-games");
+    expect(out.interests[0]!.tag).toBe("board-games");
   });
 
   it("returns the top-level default (Scene 1) when no case matches", async () => {

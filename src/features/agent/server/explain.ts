@@ -1,8 +1,7 @@
 import "server-only";
 import { ExplainOutputSchema, type ExplainOutput } from "../schemas";
 import type { SharablePreferences } from "@/shared/types";
-import { AGENT_PROMPT_DEFINITIONS } from "./prompts";
-import { generateStructured } from "./stubs";
+import { generateStructured } from "@/lib/ai";
 
 export type ExplainTarget =
   | { kind: "person"; preferences: SharablePreferences; displayName?: string }
@@ -57,7 +56,6 @@ export async function explainDetailed(input: ExplainInput): Promise<ExplainOutpu
       prompt: "agent.explain_recommendation",
       input,
       schema: ExplainOutputSchema,
-      system: AGENT_PROMPT_DEFINITIONS["agent.explain_recommendation"].system,
       model: "fast",
     });
     return {
