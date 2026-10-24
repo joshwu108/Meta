@@ -147,12 +147,6 @@ export function nextSlotOccurrence(
   throw new Error(`no ${wanted} occurrence found within eight days of ${from.toISOString()}`);
 }
 
-/** `18:30` in the venue's timezone, for display next to a proposal. */
-export function localTimeLabel(timezone: string, at: Date): string {
-  const wall = wallTimeInZone(timezone, at);
-  return `${String(wall.hour).padStart(2, '0')}:${String(wall.minute).padStart(2, '0')}`;
-}
-
 export const minutesSinceMidnight = (timezone: string, at: Date): number => {
   const wall = wallTimeInZone(timezone, at);
   return wall.hour * 60 + wall.minute;

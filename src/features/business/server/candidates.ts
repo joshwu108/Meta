@@ -1,6 +1,5 @@
 import 'server-only';
 import type { BusinessMatch, VenueCriteria, WeeklyHours } from '@/shared/types';
-import { supabaseAdmin } from '@/lib/supabase/admin';
 import { CATEGORY_LABEL, SLOT_LABEL } from '../labels';
 
 /**
@@ -135,26 +134,14 @@ export function rankCandidates(
 
 export type CandidateSource = (criteria: VenueCriteria) => Promise<CandidateRow[]>;
 
-/** Reads the SQL prefilter. Service role: 04 runs the pipeline as a worker, not as a user. */
-export const fetchCandidateRows: CandidateSource = async (criteria) => {
-  const { data, error } = await supabaseAdmin().rpc('business_candidates', {
-    p_category: criteria.category,
-    p_cohort_size: criteria.cohortSize,
-    p_lat: criteria.centerLat,
-    p_lng: criteria.centerLng,
-    p_radius_km: criteria.radiusKm,
-  });
-  if (error) throw new Error(`business_candidates failed: ${error.message}`);
-  return (data ?? []) as CandidateRow[];
-};
-
 /**
- * The exported contract. `source` is injected in tests and by 04's stub; production passes
- * nothing and reads the database.
+ * Prefilter rows in, ranked matches out. `source` is always injected — the one database
+ * path is in `src/features/business/index.ts`, which reads `business_candidates` through
+ * the store port, so nothing here reaches for a Supabase client of its own.
  */
 export async function findCandidateBusinesses(
   criteria: VenueCriteria,
-  source: CandidateSource = fetchCandidateRows,
+  source: CandidateSource,
 ): Promise<BusinessMatch[]> {
   return rankCandidates(await source(criteria), criteria);
 }

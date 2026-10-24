@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { BusinessMatch, BusinessPublicCard, VenueCriteria } from '@/shared/types';
 import { getBusinessPublicCardFor } from './server/businesses';
-import { rankCandidates } from './server/candidates';
+import { findCandidateBusinesses as rank } from './server/candidates';
 import { businessDeps } from './server/context';
 
 /**
@@ -31,14 +31,16 @@ export async function findCandidateBusinesses(
   criteria: VenueCriteria,
   db: SupabaseClient = supabaseAdmin(),
 ): Promise<BusinessMatch[]> {
-  const rows = await businessDeps(db).store.candidateRows({
-    category: criteria.category,
-    cohortSize: criteria.cohortSize,
-    lat: criteria.centerLat,
-    lng: criteria.centerLng,
-    radiusKm: criteria.radiusKm,
-  });
-  return rankCandidates(rows, criteria);
+  const { store } = businessDeps(db);
+  return rank(criteria, (c) =>
+    store.candidateRows({
+      category: c.category,
+      cohortSize: c.cohortSize,
+      lat: c.centerLat,
+      lng: c.centerLng,
+      radiusKm: c.radiusKm,
+    }),
+  );
 }
 
 export { CANDIDATE_WEIGHTS, MAX_CANDIDATES } from './server/candidates';
