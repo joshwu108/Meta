@@ -16,3 +16,4 @@ export {
   type Params,
   type RouteContext,
 } from './with-auth';
+export { createRateLimiter, aiRateLimiter, type RateLimiter, type RateLimitResult } from './rate-limit';
