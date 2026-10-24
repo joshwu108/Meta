@@ -95,6 +95,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: Plan for the 01 merge (main wins on shared files): take 01's package.json/lockfile/tsconfig/eslint/vitest/next config, add `pg` + `@types/pg` dev deps and an `events-db` vitest project for `tests/db/**`; delete 06's interim `eslint.config.js`, `src/app/layout.tsx`, `src/styles/tokens.css`, `src/shared/*`; replace `stubs/core.ts` + `stubs/clients.ts` with `@/lib/api`, `@/lib/supabase/*`, `@/features/core`; switch `./ui` imports to `@/features/core/components/ui`; keep 06's pages over 01's placeholders (06 owns those screens) and drop Discover's own right rail in favor of the shell's aside.
 - 2026-10-24: ~~0601 owner-only RSVP functions~~ dropped: ws/05-business now reads `rsvps` with the service role and masks names itself (05's `buildAttendeeList`), so no owner policy or function on `rsvps` is needed. `rsvps` RLS stays self-only.
 - 2026-10-24: ws/02-agent added a privacy guard (no `.from('user_preferences' | 'agent_profiles' | ...)` outside features/agent). 06 now complies: the RSVP consent sheet prefills from 02's `GET /api/agent/permissions` in the browser (`share_interests_with_attendees` → attendees switch, `share_name_with_business` → venue switch); an API caller that omits a choice shares nothing; attendee shared-interest chips are off (no interests shared) until 02 exports a consent-gated reader. The only remaining read is the `getSharablePreferences` stand-in, swapped for 02's export on merge; `tests/unit/events/privacy-guard.test.ts` enforces this.
+- 2026-10-24: ws/02-agent now exports `getAttendeeSharing(userIds)` and `getConsent(userId)`; 06's stubs have the identical signatures (sharing empty, consent all off until 02 merges). `POST /events/:id/rsvp` again defaults omitted choices from consent (`share_interests_with_attendees`, `share_name_with_business`), and the sheet still prefills from 02's permissions route.
 
 ## Needs from others
 
@@ -104,7 +105,6 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 01: add `jordan@commonground.test` to `users.json`. 06 §8 names maya@ and jordan@ for Scene 6, but ws/01-core's fixture has no jordan, so the seeded reconnect row (maya → jordan) is skipped until it exists.
 - 03: export a server function for Discover's people rail (top N matches with explanation); `getSuggestedPeople` is an empty stub, so the rail shows an empty state linking to /match.
 - 01: app shell `(consumer)/layout.tsx` with nav and the 680/320 frame; 06's pages render only their content column (Discover adds its own right rail).
-- 02: export a consent-gated `getAttendeeSharing(userIds)` → `{ interests, shareInterestsWithAttendees }` per user (interests only when `share_interests_with_attendees` is on). 06's attendee list shows shared-interest chips only with it; today the stub returns nothing because 02's privacy guard forbids 06 reading `agent_profiles` / `user_preferences`. Optional: `getConsent(userId)` so `POST /events/:id/rsvp` can default omitted choices from consent server-side.
 - 01/02: `src/shared/types.ts` on ws/01-core defines `ExplainInput` as `{ userId, subject, signals }`, but ws/02-agent's `explainRecommendation` takes `{ viewer, target, breakdown }`. 06 follows 02's actual export; the shared type should be reconciled on main.
 - 03: export `getConnectionIds(userId)` and `getBlockEdges(userId)`, plus helpers to create and read `invitations(kind='event')`. Stubbed in `src/features/events/server/stubs/social.ts`.
 - 03: `EventSummary` has no `category`; if the planner needs to filter by category, call `getEventPublic` or ask the integrator to add `category` to `EventSummary`.
@@ -118,6 +118,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 17:22 PT: main unchanged, PR #2 open. Read ws/03-matching (0300/0301 compatible with 06's event invitations and deferred FKs; it lists 06's helper asks), ws/02-agent (getAttendeeSharing + getConsent exported; stubs aligned), ws/05-business (service-role RSVP reads, so 0601 dropped). 148 tests.
 - 2026-10-24 17:08 PT: opened PR #2 (ws/06-events → main) for the integrator, marked merge-after-01 because this branch carries interim copies of 01's scaffold files. Not merged.
 - 2026-10-24 17:00 PT: asked 02 for event-specific MOCK_AI explanation cases (the current pottery case would label every event "You both love pottery").
 - 2026-10-24 16:58 PT: ws/02-agent added a privacy guard; 06 no longer reads 02's tables outside the getSharablePreferences stand-in (RSVP sheet prefills from 02's permissions route; shared-interest chips off pending 02's export). Own guard test added (150 tests).
