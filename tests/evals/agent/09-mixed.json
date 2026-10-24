@@ -1,0 +1,21 @@
+{
+  "id": "09-mixed",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Climbing on Monday nights, and I do pottery Saturday afternoons. Groups of 4-5 are perfect."
+    }
+  ],
+  "expected": {
+    "interests": [
+      "climbing",
+      "pottery"
+    ],
+    "availabilitySlots": [
+      "mon_eve",
+      "sat_day"
+    ],
+    "groupSizePref": "small",
+    "budgetMaxCents": null
+  }
+}
