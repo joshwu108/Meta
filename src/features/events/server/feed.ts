@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import type { z } from "zod";
 import type { EventsQuery } from "../schemas";
 import { buildEventCards, type EventCard } from "./cards";
 import { haversineKm } from "./geo";
