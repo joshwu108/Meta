@@ -89,6 +89,8 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: Bookmarks get `POST/DELETE /api/events/:id/bookmark` (not in the spec's route table). Saved upcoming events appear in Activity under "Saved", minus any the user already RSVP'd to.
 - 2026-10-24: List/map toggle deferred: static map tiles need a tile provider (and likely a key) plus a CSP `img-src` entry from 01. Recorded under Blocked.
 - 2026-10-24: Event detail exposes `canComplete` (venue owner, or anyone while `DEMO_MODE=1`) and shows "Mark event completed" for live events so Scene 6 can be run from the consumer app; 05 may also call `PATCH /api/events/:id/complete` from the business screens.
+- 2026-10-24: Read ws/05-business: its `events_status_guard` trigger rejects any status UPDATE outside its RPCs. 0600 now flips `published ⇄ full` with `transition_event_status()`, completion calls the same RPC with the service role, and the seeder does too. Test schema copies 05's events DDL and status machine verbatim (only `is_trusted_server()` also trusts the local DB owner, since this cluster has no `postgres` role).
+- 2026-10-24: Read ws/02-agent: stubs now use its exact contracts. `explainRecommendation({ viewer, target: { kind: 'event', event }, breakdown })`; `suggestFollowUp({ a, b, event: { title, category, startsAt } })` needs both people's matching-consented preferences and logs the agent action itself, so 06 no longer logs it. Without both consents, the follow-up is a fixed non-AI default (Saturday-morning coffee). 02's sharable preferences carry no `interestCategories`, so 06's tag→category fallback is the production path.
 
 ## Needs from others
 
@@ -96,11 +98,9 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 03: export a server function for Discover's people rail (top N matches with explanation); `getSuggestedPeople` is an empty stub, so the rail shows an empty state linking to /match.
 - 01: app shell `(consumer)/layout.tsx` with nav and the 680/320 frame; 06's pages render only their content column (Discover adds its own right rail).
 - 02: export `getAttendeeSharing(userIds)` → `{ interests, shareInterestsWithAttendees }` per user and `getRsvpConsentDefaults(userId)`. The RSVP sheet and shared-interest chips need them, and only 02 may read `agent_profiles` / `user_preferences`. Stubbed in `src/features/events/server/stubs/agent.ts`.
-- 02: add `ExplainInput` to `src/shared/types.ts`. 06 sends `{ viewer, target: { kind: 'event', title, category, slotLabel, capacity, priceCents }, breakdown }`.
-- 02: export `suggestFollowUp({ a, b, event })` wrapping the `agent.follow_up_suggestion` prompt (06 §6 reconnect).
+- 01/02: `src/shared/types.ts` on ws/01-core defines `ExplainInput` as `{ userId, subject, signals }`, but ws/02-agent's `explainRecommendation` takes `{ viewer, target, breakdown }`. 06 follows 02's actual export; the shared type should be reconciled on main.
 - 03: export `getConnectionIds(userId)` and `getBlockEdges(userId)`, plus helpers to create and read `invitations(kind='event')`. Stubbed in `src/features/events/server/stubs/social.ts`.
 - 03: `EventSummary` has no `category`; if the planner needs to filter by category, call `getEventPublic` or ask the integrator to add `category` to `EventSummary`.
-- 05: `events` needs the shared `set_updated_at` trigger (README says every table has one; 05 §4 does not list it). 06's reconfirm relies on `events.updated_at` moving on edits.
 - 01/02: `SharablePreferences` in `src/shared/types.ts` has no `interestCategories`, but 06 §5 scores on it. Please add `interestCategories: EventCategory[]` (02 already stores `interest_categories`). Until then 06 derives categories from interest tags.
 
 ## Blocked
@@ -111,6 +111,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 16:20 PT: main unchanged; read ws/01-core, ws/02-agent and ws/05-business ahead of their merges. Fixed 0600 for 05's status guard, aligned stubs with 02's contracts (139 tests). Next: prepare the 01 merge (vitest projects, app shell, ui primitives).
 - 2026-10-24 16:05 PT: Playwright specs for scenes 5 and 6 (not runnable here). All P0 build items, AC1–AC5, and P1 items except list/map are done; branch is synced with main. Next: on each wakeup, sync main and swap stubs as 01/02/03/05 land.
 - 2026-10-24 16:03 PT: theme checklist pass (no raw colors; AI gradient only in AiTag/AiRing), all functions under 50 lines, Activity in spec order, demo/venue "Mark event completed" control. Next: wait for 01–05 to land on main, swap stubs, then run Supabase + Playwright scenes.
 - 2026-10-24 15:59 PT: P1 filters, bookmarks (save/unsave + Activity "Saved"), standalone /places (138 tests). Next: theme checklist review, size limits, never-idle pass.
