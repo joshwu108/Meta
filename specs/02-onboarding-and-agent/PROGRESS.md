@@ -72,6 +72,9 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 2026-10-24: Service logic is unit-tested against an in-memory repo (`tests/unit/agent/fake-repo.ts`) while Docker is unavailable; the DB-backed integration rows stay open.
 - 2026-10-24: Node 20.18.1 and pnpm 9.15.0 installed under ~/.local (no Homebrew on this machine).
 
+## Decisions (later)
+- 2026-10-24: Onboarding replies are returned whole, not streamed. MOCK_AI and structured tool output make streaming moot for the demo; extracted chips still appear as soon as each reply lands. Revisit if live latency is a problem.
+
 ## Needs from others
 - 03 and 04: import `DEMAND_OPT_OUT_EMAILS` / `MATCHING_OPT_OUT_EMAILS` from `tests/fixtures/consent-cases.ts` and assert those users never appear in matches / cohort counts (closes AC3).
 - README: add `POST /api/agent/feedback` (P1) to the 02 row of the routes table, and `resolveGroupSchedule(members)` / `getSharablePreferencesBatch(ids, purpose)` to the 02 function contracts.
@@ -94,3 +97,4 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 2026-10-24 16:25 · landed: Supabase integration tests (auto-skip), Playwright Scene 1 (passing). Next: P1 feedback memory and group scheduling helper, UI component tests.
 - 2026-10-24 16:40 · landed: P1 group scheduling helper, P1 feedback memory (route, storage, prompt injection, thumbs UI); 123 unit tests + Scene 1 E2E green. Next: AC3 shared consent fixture for 03/04, UI polish, dark-mode screenshots.
 - 2026-10-24 16:55 · landed: shared AC3 consent fixture + boundary test, theme check (5 screens × light/dark × 320/768/1024/1440, no overflow); 126 unit + 9 E2E green. Next: wait for 01 scaffold on main and swap stubs; meanwhile UI component edge cases.
+- 2026-10-24 17:10 · landed: privacy guard test (no agent-table reads outside features/agent), AI_UNAVAILABLE → form fallback with E2E; 128 unit + 10 E2E green. Next: keep syncing for 01; component edge cases.
