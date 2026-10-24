@@ -30,6 +30,8 @@ describe('notify() and notifications RLS', () => {
     const target = before.items.find((item) => item.type === 'connection_request')!;
     const updated = await markNotificationRead(alice.client, target.id);
     expect(updated.read_at).not.toBeNull();
+    const again = await markNotificationRead(alice.client, target.id);
+    expect(again.read_at).toBe(updated.read_at);
     expect(await countUnread(alice.client)).toBe(1);
     const unreadOnly = await listNotifications(alice.client, { unreadOnly: true });
     expect(unreadOnly.items.map((item) => item.id)).toEqual([before.items.find((item) => item.type === 'event_recommended')!.id]);

@@ -32,15 +32,22 @@ export async function countUnread(supabase: Client): Promise<number> {
   return count ?? 0;
 }
 
-/** Mark one notification read. Returns the updated row or throws NOT_FOUND. */
+/**
+ * Mark one notification read. Idempotent: an already-read row keeps its original `read_at`.
+ * Returns the row or throws NOT_FOUND.
+ */
 export async function markNotificationRead(supabase: Client, id: string): Promise<NotificationRow> {
   const { data, error } = await supabase
     .from('notifications')
     .update({ read_at: new Date().toISOString() })
     .eq('id', id)
+    .is('read_at', null)
     .select('*')
     .maybeSingle();
   if (error) throw new ApiError('INTERNAL', 'Could not update notification', 500);
-  if (!data) throw new ApiError('NOT_FOUND', 'Notification not found', 404);
-  return data as NotificationRow;
+  if (data) return data as NotificationRow;
+  const existing = await supabase.from('notifications').select('*').eq('id', id).maybeSingle();
+  if (existing.error) throw new ApiError('INTERNAL', 'Could not load notification', 500);
+  if (!existing.data) throw new ApiError('NOT_FOUND', 'Notification not found', 404);
+  return existing.data as NotificationRow;
 }
