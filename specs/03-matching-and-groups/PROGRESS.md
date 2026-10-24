@@ -117,13 +117,13 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 - 2026-10-24: Scheduling conflicts (02 P1, answering 02's ask): when consenting members share no slot, the planner calls `resolveGroupSchedule(members)` (same-signature stand-in in `groups/server/stubs.ts` until 02 is on main) and plans for its best options that at least half of them (never fewer than two) can make. Each suggestion carries `freeCount`; the UI shows "3 of 4 free" and explains why; the model sees `everyoneFree: false` and per-slot counts, never the member ids the resolver returns. Still VALIDATION when no slot reaches that quorum.
 - 2026-10-24: "Request venue" is disabled below `MIN_COHORT_SIZE` members (04 rejects smaller groups) with a hint, and the success toast names the venue from 04's `{ proposalId, businessName }`; 04's 404/409/400 messages show as-is.
 
+- 2026-10-24: Merged main after 01 landed (27 add/add conflicts). Took main's version of the 19 copied 01 files this branch never edited; kept 03's `/match` and `/groups` pages over 01's placeholders, 03's `groups.json` and seed schemas, and `export { loadGroups } from './social'` in 01's new `domain.ts`; took main's `runner.ts` and registered `connections` and `blocks` in `loaders/registry.ts` `AFTER_ALL` (counts now in `summary.extra`); moved the planner system prompt into `src/lib/ai/prompts/groups.ts` (`GROUPS_PROMPTS`); regenerated `database.types.ts`. `MatchingPreferences` is now just `SharablePreferences` (which carries `interestCategories`), the 02 stand-in uses the shared `ExplainInput`, and client calls go through 01's `src/lib/api/client.ts` (local `fetch-json.ts` removed). 02's `0200_agent.sql` copy stays until 02 reaches main.
+
 ## Needs from others
 
-- Integrator: merge ws/01-core to main first. This branch carries byte-identical copies of 01's files and of 02's `0200_agent.sql`; after 01 lands, regenerate `src/lib/supabase/database.types.ts` on main (`pnpm db:types`) since every workstream regenerates it.
-- 01/02 (README §4 `SharablePreferences`): add `interestCategories: EventCategory[]`. 02 already stores `interest_categories`, and 03 §5 and 06 §5 both score on it. Until then 03 derives categories from tags.
+- 02: return `interestCategories` from `toSharable` (the shared type now requires it since 01 landed). Until then 03 derives categories from interest tags at runtime.
 - 02: `supabase/seed/fixtures/preferences.json` (02 §8). Scene 2 and AC1 need seeded preferences and consent; 03's tests apply an interim copy of the 02 §8 design.
 
-- 01: `src/lib/ai/prompts/index.ts` now lists `groups.plan_activities` (spec name) instead of the reserved `groups.plan_activity`, with its system prompt. `matching.explain_match` is unused: 03 explains matches through 02's `explainRecommendation`.
 - 06: swap your 03 stubs for the real exports, same signatures: `getConnectionIds`, `getBlockEdges`, `getSuggestedPeople`, `getPendingConnectionRequests` (adds the requester's public card) from `@/features/matching`; `getGroupMemberIds`, `createEventInvitations`, `getPendingEventInviteeIds`, `getPendingEventInvitations`, `getPublicGroups` from `@/features/groups`.
 - 06: `EventSummary` has no `category`, so the planner calls `getEventPublic` per candidate; adding `category` to `EventSummary` would remove those lookups. `getUpcomingEventsForUser` also does not say whether an RSVP is shared with attendees, so group pages show only a count of members going.
 
@@ -139,6 +139,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 ## Log
 
+- 2026-10-24 18:40 CDT · wakeup: 01 landed on main. Merged main (27 conflicts resolved per plan), adopted 01's prompt and seed registries, shared types and API client. 153 unit, 100 integration, 21 E2E green on the merged tree. Next: watch main for 02/04/05/06; swap stubs as they land.
 - 2026-10-24 18:20 CDT · wakeup: main unchanged, no new asks for 03. Checked the conflict-planning UI in the browser ("2 of 3 free", venue-size hint) and ran all 19 Playwright specs green. Next: watch main.
 - 2026-10-24 18:02 CDT · wakeup: main unchanged. Answered 02 (planner uses resolveGroupSchedule for conflicts) and 04 (cohort-size gating, venue name in toast). 146 unit, 100 integration green; planner/Scene 2 E2E green. Next: watch main.
 - 2026-10-24 17:58 CDT · wakeup: main unchanged. Split MatchScreen, InvitePicker and ReportSheet so every function is under 50 lines (UI E2E green); cross-branch schema check with 04/05/06 migrations passes. Next: watch main.
