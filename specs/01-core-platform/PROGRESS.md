@@ -57,8 +57,8 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 ## P1
 
 - [x] Dark-mode toggle UI
-- [ ] Per-user in-memory rate guard on AI routes
-- [ ] Coverage ≥ 80% on `src/features/core/server`
+- [x] Per-user in-memory rate guard on AI routes
+- [x] Coverage ≥ 80% on `src/features/core/server`
 
 ## Decisions
 
@@ -77,6 +77,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 16:05 — Clean-state check green (db reset → seed → 62 vitest → 14 e2e). Added `aiRateLimiter` (20/min per user) exported from `src/lib/api`, plus unit tests for auth actions, getCurrentUser, withBusinessOwner, seed wrapper and integration tests for profile helpers: 86 tests, core/server at 90% statements. Next: design-system checklist pass (warning ink token, feed stagger), then idle list.
 - 2026-10-24 15:50 — Integration tests (RLS, notify/logAgentAction, seed idempotency, RLS guard) and Playwright smoke (signup→onboarding, login→discover, bell unread, theme gallery 4 widths × 2 themes) green locally; CI workflow + README landed; nav icon serialization fix. Totals: 47 unit, 15 integration, 14 e2e. Next: clean-state check (db reset + seed + all suites), coverage on features/core/server, rate guard on AI routes.
 - 2026-10-24 15:35 — Scaffold, shared enums/types/schemas, API envelope + withAuth, logger, Claude wrapper with MOCK_AI, migration 0100 + RLS + generated types, notify/logAgentAction, tokens + 14 UI primitives, app shell, auth pages, /api/me + /api/notifications + /api/dev/seed, seed runner (15 users, 3 owners, 4 notifications; business/event/group tables skipped until their migrations land), 47 unit tests green, typecheck + lint green. Next: integration tests against local supabase, Playwright smoke + theme screenshots, CI workflow, README quick start.
 
