@@ -1,0 +1,78 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createFakeRepo } from "./fake-repo";
+
+const fake = createFakeRepo();
+const logs: Record<string, unknown>[] = [];
+vi.mock("@/features/agent/server/repo", () => fake.repo);
+vi.mock("@/features/agent/server/stubs", async (orig) => ({
+  ...(await orig<typeof import("@/features/agent/server/stubs")>()),
+  logAgentAction: async (input: Record<string, unknown>) => {
+    logs.push(input);
+  },
+}));
+
+const { handleChatMessage, runCapabilities, selfView } = await import("@/features/agent/server/chat");
+const { EMPTY_PREFERENCES } = await import("@/features/agent/schemas");
+
+const SB = {} as never;
+const viewer = selfView("u1", { ...EMPTY_PREFERENCES, interests: ["pottery", "coffee"], availabilitySlots: ["thu_eve"] });
+
+beforeEach(() => {
+  fake.state.convs.clear();
+  logs.length = 0;
+});
+
+describe("runCapabilities", () => {
+  it("builds person cards that deep-link to /match and explain why", async () => {
+    const cards = await runCapabilities("u1", viewer, [{ name: "suggest_people" }]);
+    expect(cards.length).toBeGreaterThan(0);
+    for (const c of cards) {
+      expect(c.kind).toBe("person");
+      expect(c.href).toBe(`/match?focus=${c.targetId}`);
+      expect(c.explanation.length).toBeGreaterThan(0);
+    }
+    expect(cards[0].highlights).toContain("pottery");
+  });
+
+  it("builds event and group cards with the right links", async () => {
+    const cards = await runCapabilities("u1", viewer, [{ name: "suggest_events" }, { name: "suggest_groups" }]);
+    expect(cards.filter((c) => c.kind === "event").every((c) => c.href === `/events/${c.targetId}`)).toBe(true);
+    expect(cards.filter((c) => c.kind === "group").every((c) => c.href === `/groups/${c.targetId}`)).toBe(true);
+    expect(cards.every((c) => c.explanation)).toBe(true);
+  });
+
+  it("turns update_preference into an Apply card and never saves it", async () => {
+    const cards = await runCapabilities("u1", viewer, [
+      { name: "update_preference", patch: { availabilitySlots: ["sat_day"] } },
+    ]);
+    expect(cards).toEqual([
+      expect.objectContaining({ kind: "preference_update", href: "/agent/preferences", patch: { availabilitySlots: ["sat_day"] } }),
+    ]);
+    expect(fake.repo.savePreferences).not.toHaveBeenCalled();
+  });
+
+  it("ignores an update_preference without a patch and caps at 6 cards", async () => {
+    expect(await runCapabilities("u1", viewer, [{ name: "update_preference" }])).toEqual([]);
+    const many = await runCapabilities("u1", viewer, [
+      { name: "suggest_people" }, { name: "suggest_events" }, { name: "suggest_groups" },
+    ]);
+    expect(many.length).toBeLessThanOrEqual(6);
+  });
+});
+
+describe("handleChatMessage (MOCK_AI)", () => {
+  it("replies, stores both messages with suggestions, and logs", async () => {
+    const res = await handleChatMessage(SB, "u1", "find me some people to hang out with");
+    expect(res.reply).toMatch(/people/);
+    expect(res.suggestions?.[0].kind).toBe("person");
+    const msgs = fake.state.convs.get(res.conversationId)!.messages;
+    expect(msgs.map((m) => m.role)).toEqual(["user", "assistant"]);
+    expect(msgs[1].suggestions).toHaveLength(res.suggestions!.length);
+    expect(logs).toContainEqual(expect.objectContaining({ action: "chat_suggestions" }));
+  });
+
+  it("defaults to event suggestions", async () => {
+    const res = await handleChatMessage(SB, "u1", "anything fun this week?");
+    expect(res.suggestions?.every((s) => s.kind === "event")).toBe(true);
+  });
+});
