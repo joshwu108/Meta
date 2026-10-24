@@ -65,3 +65,9 @@ export function isCategory(value: string): value is EventCategory {
 export function sharedInterestLabel(value: string): string {
   return isCategory(value) ? CATEGORY_LABELS[value] : interestLabel(value);
 }
+
+/** Capitalized chip text: "board-games" → "Board games", "food_drink" → "Food & drink". */
+export function chipLabel(value: string): string {
+  const label = sharedInterestLabel(value);
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}

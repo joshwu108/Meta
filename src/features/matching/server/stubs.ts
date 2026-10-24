@@ -111,6 +111,7 @@ export async function explainRecommendation(input: ExplainInput): Promise<string
   const shared = input.viewer.interests.filter((i) => theirs.has(i.toLowerCase())).slice(0, 2);
   const slots = new Set(input.target.preferences.availabilitySlots);
   const slot = input.viewer.availabilitySlots.find((s) => slots.has(s));
-  const likes = shared.length > 0 ? `You both like ${shared.join(' and ')}` : 'You have a lot in common';
+  if (shared.length === 0) return slot ? `You're both free ${SLOT_PHRASES[slot]}.` : 'You live close by and want to meet people.';
+  const likes = `You both like ${shared.join(' and ')}`;
   return slot ? `${likes} and are free ${SLOT_PHRASES[slot]}.` : `${likes}.`;
 }

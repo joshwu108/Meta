@@ -19,11 +19,11 @@ export const GROUP_SIZE_LABELS: Readonly<Record<GroupSizePref, string>> = {
 };
 
 export const BREAKDOWN_LABELS: Readonly<Record<keyof CompatibilityResult['breakdown'], string>> = {
-  interests: 'Shared interests',
-  availability: 'Free at the same times',
-  social: 'Social goals and group size',
-  location: 'Close by',
-  budget: 'Budget and activity style',
+  interests: 'Interests',
+  availability: 'Free times',
+  social: 'Goals & group size',
+  location: 'Nearby',
+  budget: 'Budget & style',
 };
 
 export const REPORT_REASON_LABELS = {
