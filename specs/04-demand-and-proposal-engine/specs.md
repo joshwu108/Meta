@@ -190,7 +190,7 @@ The run is resumable per cluster; an LLM failure on one cluster is recorded in `
 | `POST /api/ai/generate-opportunities` | Body `{ dryRun?: boolean, source?: 'demand' }` (P1: `{ source: 'group', groupId, planId, suggestionIndex }`). Auth: `DEMO_MODE=1` any authenticated user; otherwise requires `profiles.is_operator` (added in 0402). Returns `{ runId }` immediately; the pipeline runs in the same request with `maxDuration = 60` (Vercel) and writes status as it goes |
 | `GET /api/ai/opportunities/:runId` | `{ status, stats, proposals: [{ id, title, businessName, demandBand, status }] }` |
 | `GET /api/cron/opportunities` | Header `Authorization: Bearer ${OPPORTUNITY_CRON_SECRET}`; calls the pipeline with `triggeredBy: 'cron'` |
-| `POST /api/ai/proposals/:id/revise` (P1) | Business owner; `{ priceCents?, capacity?, slot?, note? }` → new `proposal` version stored in `business_edits.revisions[]` |
+| `POST /api/ai/proposals/:id/revise` (P1) | Business owner of a `pending` proposal; `{ note?, priceCents?, capacity?, slot? }` (at least one) → `201 { proposalId, supersedes, revision, proposal }`. The revision is a new `pending` row (`supersedes_id`, `revision` 1–3, `revision_request`, migration 0403); the old row becomes `expired` with `decision_note = 'superseded by revision'`. Owner numbers overwrite the model's; capacity ≤ venue capacity. `proposal` stays immutable and `business_edits` stays 05's `EventEdits` |
 
 ## 7. UI
 
