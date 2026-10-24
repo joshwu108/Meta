@@ -74,3 +74,45 @@ export async function createTestDb(): Promise<TestDb> {
     },
   };
 }
+
+export type RlsRole = {
+  /** Runs fn in a transaction as the non-superuser role, with auth.uid() = userId, so RLS applies. */
+  as<T>(userId: string, fn: (client: pg.PoolClient) => Promise<T>): Promise<T>;
+  drop(): Promise<void>;
+};
+
+/**
+ * Creates a throwaway NOLOGIN role (like Supabase's `authenticated`) with table and function
+ * grants on the test database. Call `drop()` after `TestDb.drop()`.
+ */
+export async function createRlsRole(db: TestDb): Promise<RlsRole> {
+  const role = `cg06_rls_${randomUUID().replaceAll("-", "").slice(0, 12)}`;
+  await db.pool.query(`create role ${role} nologin`);
+  await db.pool.query(`grant usage on schema public, auth to ${role}`);
+  await db.pool.query(`grant select, insert, update, delete on all tables in schema public to ${role}`);
+  await db.pool.query(`grant execute on all functions in schema public, auth to ${role}`);
+  return {
+    async as(userId, fn) {
+      const client = await db.pool.connect();
+      try {
+        await client.query("begin");
+        await client.query("select set_config('request.jwt.claim.sub', $1, true)", [userId]);
+        await client.query(`set local role ${role}`);
+        const result = await fn(client);
+        await client.query("commit");
+        return result;
+      } catch (err) {
+        await client.query("rollback");
+        throw err;
+      } finally {
+        client.release();
+      }
+    },
+    async drop() {
+      const admin = new pg.Client({ connectionString: ADMIN_URL });
+      await admin.connect();
+      await admin.query(`drop role if exists ${role}`);
+      await admin.end();
+    },
+  };
+}
