@@ -67,3 +67,26 @@ Vercel (web) + hosted Supabase. Required env vars: `NEXT_PUBLIC_SUPABASE_URL`,
 `DEMO_MODE`, `MIN_COHORT_SIZE`, `OPPORTUNITY_CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`. Apply migrations
 with `supabase db push` against the hosted project. The dev seed route is unreachable in
 production unless `DEMO_MODE=1`.
+
+## Adding a workstream module
+
+1. **Migration**: `supabase/migrations/0N00_<ws>_<name>.sql` in your number range (02 → 0200–0299,
+   03 → 0300–0399, …). Enable RLS on every table; the integration test `rls-guard` fails otherwise.
+   Reuse `public.set_updated_at()` for `updated_at`. Then `pnpm db:reset && pnpm db:types` and commit
+   the regenerated `database.types.ts`.
+2. **Feature folder**: `src/features/<name>/{server,components,hooks,schemas.ts,index.ts}`. Other
+   features import only from your `index.ts`. Until a dependency lands, build against
+   `src/shared/types.ts` with a stub in `src/features/<name>/server/stubs.ts`.
+3. **Routes**: `src/app/api/<resource>/route.ts`, wrapped in `withAuth` / `withBusinessOwner`
+   from `@/lib/api`; validate bodies with `parseBody(schema, req)` and queries with `parseQuery`.
+   Throw `ApiError(code, message)` for expected failures. Use `aiRateLimiter.assert(user.id)` on AI routes.
+4. **AI**: add your prompt ids to `src/lib/ai/prompts/index.ts` and a fixture at
+   `src/lib/ai/fixtures/<promptId>.json`; call `generateStructured({ prompt, input, schema })`.
+5. **Seed**: append fixtures under `supabase/seed/fixtures/` and extend the loader in
+   `supabase/seed/loaders/` for your tables (`domain.ts` already inserts businesses, events and
+   groups with the column names from the specs and skips while a table is missing).
+6. **Tests**: unit in `tests/unit/<area>/`, database tests in `tests/integration/` using
+   `createTestUser()` from `tests/integration/helpers.ts`, demo scenes in `tests/e2e/`.
+7. **Screens**: build on the primitives in `src/features/core/components/ui` and the tokens in
+   `src/styles/tokens.css`; mark AI output with `AiTag` only. Placeholders for your routes already
+   exist under `src/app/(consumer)` and `src/app/(business)`; replace the `PlaceholderPage` call.
