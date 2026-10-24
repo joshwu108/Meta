@@ -174,6 +174,23 @@ describe('proposals', () => {
 });
 
 describe('rsvps belong to workstream 06', () => {
+  /**
+   * Privacy invariant 1 in specs/README.md section 3: a business never reads `profiles`,
+   * and 06's RLS scopes `rsvps` to each attendee, so an owner session would read zero rows.
+   * 05 therefore reads both with the service role and masks the result before returning it.
+   */
+  it('reads rsvps and profiles with the service role, never as the owner', async () => {
+    const { store, dbCalls, adminCalls } = storeWith(() => ({ data: [], count: 0 }));
+
+    await store.listRsvps('evt-1');
+    await store.countConfirmed('evt-1');
+    await store.confirmedRsvpUserIds('evt-1');
+
+    expect(adminCalls.filter((c) => c.table === 'rsvps').length).toBeGreaterThan(0);
+    expect(dbCalls.filter((c) => c.table === 'rsvps')).toEqual([]);
+    expect(dbCalls.filter((c) => c.table === 'profiles')).toEqual([]);
+  });
+
   it('reads an empty list and a zero count until the table exists', async () => {
     const { store } = storeWith(() => ({ error: UNDEFINED_TABLE_ERROR }));
     expect(await store.listRsvps('evt-1')).toEqual([]);
@@ -199,10 +216,45 @@ describe('rsvps belong to workstream 06', () => {
   });
 
   it('counts with a head request so no row is transferred', async () => {
-    const { store, dbCalls } = storeWith(() => ({ count: 3 }));
+    const { store, adminCalls } = storeWith(() => ({ count: 3 }));
     expect(await store.countConfirmed('evt-1')).toBe(3);
-    const select = dbCalls.find((c) => c.op === 'select');
+    const select = adminCalls.find((c) => c.op === 'select');
     expect(select?.args[1]).toEqual({ count: 'exact', head: true });
+  });
+});
+
+describe('a missing service-role key degrades instead of failing', () => {
+  /**
+   * `supabaseAdmin()` throws when SUPABASE_SERVICE_ROLE_KEY is unset. An attendee count is
+   * not worth a 500 on the dashboard, so every service-role read falls back to its empty
+   * value and says so in the log.
+   */
+  const storeWithoutAdmin = () => {
+    const db = fakeSupabase(() => ({ data: [], count: 0 }));
+    return createSupabaseStore(db.client, () => {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
+    });
+  };
+
+  it('reports no attendees rather than throwing', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const store = storeWithoutAdmin();
+
+    expect(await store.listRsvps('evt-1')).toEqual([]);
+    expect(await store.countConfirmed('evt-1')).toBe(0);
+    expect(await store.confirmedRsvpUserIds('evt-1')).toEqual([]);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('reports no cohort and no insights rather than throwing', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const store = storeWithoutAdmin();
+
+    expect(await store.clusterMemberIds('cluster-1')).toEqual([]);
+    expect(await store.insightClusters({ lat: 0, lng: 0, radiusKm: 3, sinceDays: 30 })).toEqual([]);
+    expect(await store.countRepeatAttendees('biz-1')).toBe(0);
+    warn.mockRestore();
   });
 });
 

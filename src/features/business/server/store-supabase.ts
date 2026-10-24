@@ -24,8 +24,16 @@ import type {
  *
  * Reads and ordinary writes go through `db`, the request-scoped client, so RLS decides what
  * the caller may see. Status changes and proposal decisions go through the RPCs in
- * migration 0501. Only the two reads the spec marks service-role — cohort member ids and
- * the insights aggregate — use `admin`, and neither returns an id to its caller.
+ * migration 0501.
+ *
+ * `admin` is used for exactly the reads a business is not allowed to make itself, and in
+ * every one of them the ids are consumed server-side and never returned:
+ *   - `demand_cluster_members` and `demand_clusters` (privacy invariant 1, service-role only)
+ *   - `rsvps` and the `profiles` join behind the attendee list. A business must never read
+ *     `profiles` (invariant 1), and 06's RLS scopes `rsvps` to each attendee, so an owner
+ *     session would read zero rows and the counts the spec promises would always be 0.
+ *     `buildAttendeeList()` is what makes the result safe to hand back: counts always, a
+ *     name only where `share_with_business` is true.
  */
 
 const BUSINESS_COLUMNS =
@@ -63,9 +71,26 @@ function unwrap<T>(result: { data: T | null; error: PostgrestError | null }, fal
 }
 
 export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseClient): BusinessStore {
+  /**
+   * `admin()` throws when SUPABASE_SERVICE_ROLE_KEY is unset. An attendee count is not
+   * worth a 500 on the dashboard, so a service-role read that cannot be made falls back to
+   * its empty value, exactly like a table a workstream has not merged yet.
+   */
+  function serviceRole(purpose: string): SupabaseClient | null {
+    try {
+      return admin();
+    } catch (err) {
+      console.warn(`[ws05] no service-role client, skipping ${purpose}`, err);
+      return null;
+    }
+  }
+
   /** `rsvps` belongs to workstream 06; until it merges every read returns empty. */
   async function rsvpRows(eventId: string): Promise<(RsvpRow & { user_id: string })[]> {
-    const { data, error } = await db
+    const service = serviceRole('the attendee list');
+    if (!service) return [];
+
+    const { data, error } = await service
       .from('rsvps')
       .select('user_id, status, share_with_business, profiles(display_name)')
       .eq('event_id', eventId);
@@ -256,7 +281,10 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
     },
 
     async countConfirmed(eventId) {
-      const { count, error } = await db
+      const service = serviceRole('the confirmed count');
+      if (!service) return 0;
+
+      const { count, error } = await service
         .from('rsvps')
         .select('user_id', { count: 'exact', head: true })
         .eq('event_id', eventId)
@@ -280,7 +308,10 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
       const eventIds = (events.data ?? []).map((row) => (row as { id: string }).id);
       if (eventIds.length === 0) return 0;
 
-      const { data, error } = await admin()
+      const service = serviceRole('the repeat attendee count');
+      if (!service) return 0;
+
+      const { data, error } = await service
         .from('rsvps')
         .select('user_id')
         .in('event_id', eventIds)
@@ -302,7 +333,10 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
     async clusterMemberIds(clusterId) {
       // Service role: `demand_cluster_members` has no policy and these ids are only ever
       // passed to notify() (privacy invariant 1).
-      const { data, error } = await admin()
+      const service = serviceRole('the demand cohort');
+      if (!service) return [];
+
+      const { data, error } = await service
         .from('demand_cluster_members')
         .select('user_id')
         .eq('cluster_id', clusterId);
@@ -327,7 +361,10 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
 
     async insightClusters(args) {
       const since = new Date(Date.now() - args.sinceDays * 24 * 60 * 60 * 1000).toISOString();
-      const { data, error } = await admin()
+      const service = serviceRole('the local demand aggregate');
+      if (!service) return [];
+
+      const { data, error } = await service
         .from('demand_clusters')
         .select('category, slot, member_count, center_lat, center_lng, created_at')
         .gte('created_at', since);
