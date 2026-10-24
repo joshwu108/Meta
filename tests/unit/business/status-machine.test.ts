@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EVENT_STATUS, type EventStatus } from '@/shared/enums';
+import { isCancellable as isCancellableClient, isPublishable } from '@/features/business/status-machine-client';
 import {
   ALLOWED_EVENT_TRANSITIONS,
   assertEventTransition,
@@ -78,6 +79,18 @@ describe('event status machine', () => {
   it('allows cancelling only an approved draft, published or full event', () => {
     const cancellable = EVENT_STATUS.filter(isCancellable);
     expect(cancellable).toEqual(['approved_draft', 'published', 'full']);
+  });
+
+  it('keeps the client mirror in step with the server table', () => {
+    // status-machine-client.ts exists so a row action can decide what to offer without
+    // pulling a `server-only` module into the bundle. These must never disagree.
+    for (const status of EVENT_STATUS) {
+      expect(isCancellableClient(status), `isCancellable(${status})`).toBe(isCancellable(status));
+      expect(isPublishable(status), `isPublishable(${status})`).toBe(
+        canTransitionEvent(status, 'published') && status === 'approved_draft',
+      );
+    }
+    expect(EVENT_STATUS.filter(isPublishable)).toEqual(['approved_draft']);
   });
 
   it('allows editing details only before the event is over or cancelled', () => {

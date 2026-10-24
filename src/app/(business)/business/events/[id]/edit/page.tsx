@@ -9,9 +9,15 @@ import { requireBusinessPage } from '@/features/business/server/page-data';
 export const dynamic = 'force-dynamic';
 
 /** Business Screen 4 — edit. */
-export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditEventPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ cancel?: string }>;
+}) {
   const { deps, business } = await requireBusinessPage();
-  const { id } = await params;
+  const [{ id }, query] = await Promise.all([params, searchParams]);
 
   const event = await getBusinessEvent(deps, business.id, id).catch((err: unknown) => {
     if (err instanceof ApiError && err.code === 'NOT_FOUND') notFound();
@@ -25,6 +31,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
         event={event}
         defaultCategory={event.category}
         capacityCeiling={business.capabilities.capacity}
+        startCancelling={query.cancel === '1'}
       />
     </BusinessShell>
   );

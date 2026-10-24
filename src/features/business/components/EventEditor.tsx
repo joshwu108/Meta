@@ -47,16 +47,19 @@ export function EventEditor({
   event,
   defaultCategory,
   capacityCeiling,
+  startCancelling = false,
 }: {
   event?: BusinessEvent;
   defaultCategory: EventCategory;
   capacityCeiling: number;
+  /** The events table links here with ?cancel=1, since cancelling needs a reason. */
+  startCancelling?: boolean;
 }) {
   const { busy: pending, message, errors, submit: run, navigate } = useSubmit();
   const [draft, setDraft] = useState<EventDraft>(event ? draftOf(event) : emptyDraft(defaultCategory));
   const [publishNow, setPublishNow] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
-  const [showCancel, setShowCancel] = useState(false);
+  const [showCancel, setShowCancel] = useState(startCancelling);
 
   const warnsAboutReconfirm =
     event !== undefined &&
