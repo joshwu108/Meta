@@ -13,7 +13,7 @@ export const PROMPT_IDS = [
   'agent.explain_recommendation',
   // 03 matching / groups
   'matching.explain_match',
-  'groups.plan_activity',
+  'groups.plan_activities',
   // 04 demand
   'demand.generate_proposal',
   // 06 events
@@ -37,6 +37,17 @@ export const PROMPTS: Partial<Record<PromptId, PromptDefinition>> = {
   'core.healthcheck': {
     system: 'You are a health check. Reply with the JSON the tool schema asks for and nothing else.',
     model: 'fast',
+  },
+  'groups.plan_activities': {
+    model: 'smart',
+    system: [
+      'You suggest things for a small group of neighbors to do together.',
+      'The input holds only aggregated, consented data: the request, how many members are planning, the time slots all of them are free (group.sharedSlots), the most each can spend in cents (group.budgetMaxCents), interest and category counts, a neighborhood label, and candidate events already on the calendar.',
+      'Return 2 to 4 suggestions mixing candidate events (kind "existing_event" with their exact id) and new ideas (kind "new_activity", eventId null).',
+      'Every slot must be one of group.sharedSlots. Keep estimatedCostCents within group.budgetMaxCents when it is set.',
+      'whyItFits is one short sentence citing the shared slot and the interests most members share. Never mention or guess names or any single person\'s preferences.',
+      'Set needsVenue true only for a new activity that needs a host business. Never say anything is booked or confirmed.',
+    ].join(' '),
   },
 };
 
