@@ -22,12 +22,12 @@ export async function deleteSeedUsers(ctx: SeedContext): Promise<number> {
 
 type NewUser = { email: string; display_name: string };
 
-async function createAuthUser(ctx: SeedContext, user: NewUser): Promise<string> {
+async function createAuthUser(ctx: SeedContext, user: NewUser, signupAs: 'consumer' | 'business'): Promise<string> {
   const { data, error } = await ctx.admin.auth.admin.createUser({
     email: user.email,
     password: SEED_PASSWORD,
     email_confirm: true,
-    user_metadata: { display_name: user.display_name, is_adult_confirmed: true },
+    user_metadata: { display_name: user.display_name, is_adult_confirmed: true, signup_as: signupAs },
   });
   if (error || !data.user) throw new Error(`createUser(${user.email}) failed: ${error?.message}`);
   ctx.usersByEmail.set(user.email, data.user.id);
@@ -40,7 +40,7 @@ export async function loadUsers(ctx: SeedContext): Promise<{ consumers: number; 
   const businesses = await loadFixture('businesses', seedBusinessSchema);
 
   for (const user of users) {
-    const id = await createAuthUser(ctx, user);
+    const id = await createAuthUser(ctx, user, 'consumer');
     const { error } = await ctx.admin
       .from('profiles')
       .update({
@@ -57,7 +57,7 @@ export async function loadUsers(ctx: SeedContext): Promise<{ consumers: number; 
   }
 
   for (const business of businesses) {
-    const id = await createAuthUser(ctx, business.owner);
+    const id = await createAuthUser(ctx, business.owner, 'business');
     const { error } = await ctx.admin
       .from('profiles')
       .update({ neighborhood: business.neighborhood, is_adult_confirmed: true, onboarding_completed_at: new Date().toISOString() })

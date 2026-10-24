@@ -39,10 +39,10 @@ test('a user without onboarding is sent to /onboarding and can continue', async 
   await page.waitForURL('**/discover');
 });
 
-test('a seeded business owner sees the business shell', async ({ page }) => {
+test('a seeded business owner is routed to the business side', async ({ page }) => {
   await login(page, OWNER.email);
-  // Until workstream 05 lands the businesses table, owners are routed to business onboarding.
-  await expect(page).toHaveURL(/\/(business|business\/onboarding|onboarding|discover)/);
+  // /business once workstream 05's businesses table exists; /business/onboarding until then.
+  await expect(page).toHaveURL(/\/business(\/onboarding)?$/);
 });
 
 test('unauthenticated API calls get the UNAUTHENTICATED envelope', async ({ request }) => {
