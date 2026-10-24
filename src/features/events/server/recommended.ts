@@ -12,6 +12,8 @@ import { createAdminClient, explainRecommendation, getSharablePreferences } from
 const WINDOW_DAYS = 21;
 const EXPLANATION_TTL_MS = 24 * 60 * 60 * 1000;
 const FALLBACK_EXPLANATION = "Coming up soon near you.";
+/** AI explanations per request; lower-ranked cards get the generic line (cost and rate-limit guard). */
+export const MAX_AI_EXPLANATIONS = 10;
 
 export type RecommendedEvent = {
   event: EventCard;
@@ -80,12 +82,12 @@ export async function getRecommendedEvents(viewerId: string, limit: number): Pro
   const byId = new Map(rows.map((r) => [r.id, r]));
 
   return Promise.all(
-    ranked.map(async (r) => ({
+    ranked.map(async (r, index) => ({
       event: toEventCard(byId.get(r.event.id)!, ctx),
       slot: r.slot,
       score: r.score,
       breakdown: r.breakdown,
-      explanation: prefs ? await explain(prefs, r) : FALLBACK_EXPLANATION,
+      explanation: prefs && index < MAX_AI_EXPLANATIONS ? await explain(prefs, r) : FALLBACK_EXPLANATION,
     })),
   );
 }

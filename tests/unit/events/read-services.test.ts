@@ -147,6 +147,20 @@ describe("contracts", () => {
 });
 
 describe("getRecommendedEvents", () => {
+  it("asks the AI for at most MAX_AI_EXPLANATIONS explanations per request", async () => {
+    state.prefs = {
+      userId: VIEWER, interests: ["pottery"], availabilitySlots: ["thu_eve"], socialGoals: [], groupSizePref: "small",
+      budgetMin: null, budgetMax: null, travelRadiusKm: 50, activityPrefs: [], coarseLat: 37.76, coarseLng: -122.42, neighborhood: "Mission",
+    };
+    state.rows = Array.from({ length: 14 }, (_, i) => eventRow({ id: uid(200 + i), title: `Pottery Night ${i}` }));
+
+    const recs = await getRecommendedEvents(uid(500), 14);
+
+    expect(recs).toHaveLength(14);
+    expect(state.explanations).toBe(10);
+    expect(recs.slice(10).every((r) => r.explanation === "Coming up soon near you.")).toBe(true);
+  });
+
   it("falls back to a non-personalized order and generic copy without matching consent", async () => {
     const [first] = await getRecommendedEvents(VIEWER, 10);
     expect(first).toMatchObject({ score: null, breakdown: null, explanation: "Coming up soon near you." });
