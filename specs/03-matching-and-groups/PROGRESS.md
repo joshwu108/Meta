@@ -112,6 +112,8 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 2026-10-24: `/match?focus=<userId>` (02's agent suggestion cards deep-link there) moves that person to the lead card, labelled "Suggested by your agent"; an unknown or no-longer-matching id is ignored.
 
+- 2026-10-24: Cross-branch schema check (one-off, rolled back, nothing committed): 04's `0400`–`0404`, 05's `0500`/`0501` and 06's `0600` applied in fresh-reset order on top of 03's `0300`–`0303` inside one transaction on the local Supabase stack. All apply; 06's deferred FKs (`groups_event_fk`, `invitations_event_fk`) land on 03's tables; `tables_without_rls()` returns none. 04's `0404_group_proposals.sql` keys group proposals by (group, plan, suggestion), matching `getGroupVenueRequest`.
+
 ## Needs from others
 
 - Integrator: merge ws/01-core to main first. This branch carries byte-identical copies of 01's files and of 02's `0200_agent.sql`; after 01 lands, regenerate `src/lib/supabase/database.types.ts` on main (`pnpm db:types`) since every workstream regenerates it.
@@ -132,6 +134,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 ## Log
 
+- 2026-10-24 17:58 CDT · wakeup: main unchanged. Split MatchScreen, InvitePicker and ReportSheet so every function is under 50 lines (UI E2E green); cross-branch schema check with 04/05/06 migrations passes. Next: watch main.
 - 2026-10-24 17:50 CDT · landed: `getPendingConnectionRequests` export for 06's Activity hub, `/match?focus=` deep links for 02's agent cards, spec §4/§6 aligned with the build. 143 unit, 98 integration, 19 E2E. Next: watch main.
 - 2026-10-24 17:45 CDT · landed: stricter explanation grounding (no claims about unshared interests or days), planner + vote and block/report E2E tests, precise merge plan for 01. 143 unit, 97 integration, 18 E2E. Next: watch main.
 - 2026-10-24 17:35 CDT · landed: RLS reachability for connection requests (0303), best-effort notifications and bounded fan-out, bundle trim, production build green, flaky-test fix (location isolation + serial cleanup). 142 unit, 97 integration, 16 E2E. Next: watch main; adopt 01's layout when it lands.
