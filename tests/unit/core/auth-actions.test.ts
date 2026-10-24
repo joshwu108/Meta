@@ -43,6 +43,8 @@ describe('signInAction', () => {
     auth.signInWithPassword.mockResolvedValue({ error: null });
     await expect(signInAction({}, form({ email: 'a@b.co', password: 'right-pass', next: '/events' }))).rejects.toThrow('REDIRECT:/events');
     await expect(signInAction({}, form({ email: 'a@b.co', password: 'right-pass' }))).rejects.toThrow('REDIRECT:/');
+    await expect(signInAction({}, form({ email: 'a@b.co', password: 'right-pass', next: '/\\evil.com' }))).rejects.toThrow('REDIRECT:/');
+    await expect(signInAction({}, form({ email: 'a@b.co', password: 'right-pass', next: 'https://evil.com' }))).rejects.toThrow('REDIRECT:/');
   });
 });
 
@@ -59,6 +61,7 @@ describe('signUpAction', () => {
     await expect(signUpAction({}, form(valid))).rejects.toThrow('REDIRECT:/onboarding');
     expect(auth.signUp.mock.calls[0]![0].options.data).toMatchObject({ display_name: 'New', is_adult_confirmed: true, signup_as: 'consumer' });
     await expect(signUpAction({}, form({ ...valid, as: 'business' }))).rejects.toThrow('REDIRECT:/business/onboarding');
+    expect(auth.signUp.mock.calls[1]![0].options.emailRedirectTo).toContain('next=%2Fbusiness%2Fonboarding');
   });
 
   it('asks to confirm email when no session is returned', async () => {

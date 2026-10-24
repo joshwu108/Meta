@@ -4,6 +4,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
 import { loginSchema, signupSchema } from '@/shared/schemas/profile';
 import { zodIssues } from '@/lib/api/parse-body';
+import { safeNext } from '@/lib/safe-next';
 
 export type AuthFormState = { error?: string; fieldErrors?: Record<string, string>; message?: string };
 
@@ -25,7 +26,7 @@ export async function signInAction(_prev: AuthFormState, formData: FormData): Pr
     log.warn('auth.sign_in_failed', { code: error.code });
     return { error: 'Email or password is incorrect' };
   }
-  redirect((formData.get('next') as string | null) || '/');
+  redirect(safeNext(formData.get('next')));
 }
 
 /** Sign up with display name and adult confirmation. Businesses continue to business onboarding. */
@@ -43,7 +44,10 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { display_name, is_adult_confirmed: true, signup_as: as }, emailRedirectTo: `${siteUrl()}/auth/callback` },
+    options: {
+      data: { display_name, is_adult_confirmed: true, signup_as: as },
+      emailRedirectTo: `${siteUrl()}/auth/callback?next=${encodeURIComponent(as === 'business' ? '/business/onboarding' : '/onboarding')}`,
+    },
   });
   if (error) {
     log.warn('auth.sign_up_failed', { code: error.code });
