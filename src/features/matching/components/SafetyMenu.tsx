@@ -2,11 +2,14 @@
 import { Ban, Flag, MoreHorizontal } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Button, Sheet } from '@/features/core/components/ui';
-import { REPORT_REASON, type ReportReason } from '@/shared/schemas/social';
+import type { ReportReason } from '@/shared/schemas/social';
 import { REPORT_REASON_LABELS } from '../labels';
 import { textAreaClass } from './ConnectSheet';
 
 type Person = { id: string; displayName: string };
+
+// Keys of the label map, so the client bundle does not pull in Zod for one enum.
+const REPORT_REASONS = Object.keys(REPORT_REASON_LABELS) as ReportReason[];
 
 /** Overflow menu on a person card: Block and Report (spec §7, Section 12.3 social safety). */
 export function SafetyMenu({ person, onBlock, onReport }: { person: Person; onBlock: (p: Person) => void; onReport: (p: Person) => void }) {
@@ -117,7 +120,7 @@ export function ReportSheet({
     >
       <fieldset className="flex flex-col gap-1">
         <legend className="mb-2 text-[length:var(--text-sm)] font-medium text-text-2">What’s going on?</legend>
-        {REPORT_REASON.map((value) => (
+        {REPORT_REASONS.map((value) => (
           <label key={value} className="flex items-center gap-3 rounded-sm px-2 py-2 hover:bg-hover">
             <input type="radio" name="reason" value={value} checked={reason === value} onChange={() => setReason(value)} className="accent-[var(--color-brand)]" />
             {REPORT_REASON_LABELS[value]}
