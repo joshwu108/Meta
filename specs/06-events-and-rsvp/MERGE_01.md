@@ -1,26 +1,28 @@
 # Merging ws/01-core into ws/06-events
 
-Rehearsed on 2026-10-24 in a throwaway worktree (`git merge origin/ws/01-core` into ws/06-events at `371b603`). After the steps below: typecheck 0 errors, lint 0 errors (2 `<img>` warnings), 175 unit + 61 events-db tests green, `next build` compiles. Whoever merges (06's worker on its next sync, or the integrator) can follow it as written.
+Rehearsed twice on 2026-10-24 in throwaway worktrees; latest against ws/01-core `663b7ed` from ws/06-events `505752b`. After the steps below: typecheck 0 errors, lint 0 errors (2 `<img>` warnings), 176 unit + 61 db tests green, `next build` compiles. Whoever merges (06's worker on its next sync, or the integrator) can follow it as written.
 
-## 1. Conflicts (14 files)
+## 1. Conflicts (12 files)
 
 | File | Take |
 |---|---|
-| `.gitignore`, `next.config.ts`, `package.json`, `pnpm-lock.yaml`, `playwright.config.ts`, `tsconfig.json`, `vitest.config.ts`, `src/app/layout.tsx`, `src/shared/enums.ts`, `src/shared/types.ts`, `src/styles/tokens.css` | 01's (`git checkout --theirs`) |
+| `.gitignore`, `next.config.ts`, `package.json`, `pnpm-lock.yaml`, `playwright.config.ts`, `tsconfig.json`, `vitest.config.ts`, `src/app/layout.tsx`, `src/styles/tokens.css` | 01's (`git checkout --theirs`) |
 | `src/app/(consumer)/activity/page.tsx`, `discover/page.tsx`, `events/page.tsx` | 06's (`git checkout --ours`); 01's are placeholders for 06's screens |
 
 Then delete 06's interim `eslint.config.js` (01 ships `eslint.config.mjs`).
 
 ## 2. Additions to 01's files
 
-- `package.json`: devDependencies `pg` and `@types/pg` (`8.23.1`), script `"test:db": "vitest run --project events-db"`; then `pnpm install` (01 pins pnpm 10).
-- `vitest.config.ts`: a third project
+- `src/shared/*` merge cleanly: 06's interim copies already match 01's `663b7ed`.
+- `package.json`: devDependencies `pg` and `@types/pg` (`8.23.1`); then `pnpm install` (01 pins pnpm 10).
+- `vitest.config.ts`: 01's `db` project already includes `tests/db/**`; add
   ```ts
-  { resolve: { alias }, test: { name: 'events-db', include: ['tests/db/**/*.test.ts'], environment: 'node',
-    setupFiles: ['tests/db/support/setup.ts'], globalSetup: ['tests/db/support/global-setup.ts'],
-    testTimeout: 30_000, hookTimeout: 60_000 } },
+  setupFiles: ['tests/db/support/setup.ts'],
+  globalSetup: ['tests/db/support/global-setup.ts'],
   ```
-- `supabase/seed/runner.ts`: `await loadRsvps(ctx)` from `./loaders/rsvps` after `loadEvents(ctx)` (it logs its own summary). Typechecks against 01's `SeedContext`; not executed in the rehearsal because running the seed needs a Supabase stack.
+  Without Supabase running, point it at any local Postgres: `TEST_DATABASE_URL=postgres://localhost:5432/postgres pnpm test:db`.
+- `supabase/seed/loaders/registry.ts`: import `loadRsvps` from `./rsvps` and set
+  `AFTER_EVENTS = [{ name: 'rsvps', run: (ctx) => loadRsvps(ctx) }]`. Typechecks against 01's `SeedContext`; running the seed needs a Supabase stack.
 
 ## 3. Swap 06's stand-ins for 01's modules
 
