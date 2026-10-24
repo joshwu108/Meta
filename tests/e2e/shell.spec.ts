@@ -13,6 +13,17 @@ test('signed-in consumer shell never scrolls sideways (design-system §3)', asyn
   }
 });
 
+test('desktop shell renders the default agent rail from the @aside slot', async ({ page }) => {
+  await login(page, CONSUMER.email);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const aside = page.getByRole('complementary', { name: 'Contextual' });
+  await expect(aside).toBeVisible();
+  await expect(aside.getByText('Your agent', { exact: true })).toBeVisible();
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Events' }).click();
+  await page.waitForURL(/\/events$/);
+  await expect(aside.getByText('Your agent', { exact: true })).toBeVisible();
+});
+
 test('mobile shell shows the bottom tab bar and hides the rails', async ({ page }) => {
   await login(page, CONSUMER.email);
   await page.setViewportSize({ width: 375, height: 800 });
