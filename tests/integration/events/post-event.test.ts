@@ -98,6 +98,17 @@ describe.skipIf(!available)("reconfirm and reconnect functions", () => {
     expect(await reconnect(b!, eventId, a!)).toBe(true);
   });
 
+  it("detects mutual interest exactly once when both sides tap at the same time", async () => {
+    for (let round = 0; round < 10; round++) {
+      const [a, b] = await Promise.all([createUser(db.pool), createUser(db.pool)]);
+      const eventId = await completedEventWith(a!, b!);
+
+      const results = await Promise.all([reconnect(a!, eventId, b!), reconnect(b!, eventId, a!)]);
+
+      expect(results.filter(Boolean)).toHaveLength(1);
+    }
+  });
+
   it("rejects reconnecting with yourself", async () => {
     const a = await createUser(db.pool);
     const eventId = await completedEventWith(a);

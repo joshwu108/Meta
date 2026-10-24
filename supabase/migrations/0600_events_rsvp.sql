@@ -165,6 +165,9 @@ begin
         and user_id in (v_uid, p_to_user)) < 2 then
     raise exception 'NOT_ATTENDEES';
   end if;
+  -- Serialize the pair so two simultaneous taps cannot both miss each other's row.
+  perform pg_advisory_xact_lock(hashtextextended(
+    p_event_id::text || least(v_uid, p_to_user)::text || greatest(v_uid, p_to_user)::text, 0));
   insert into reconnect_interest (event_id, from_user_id, to_user_id) values (p_event_id, v_uid, p_to_user)
     on conflict do nothing;
   return exists (select 1 from reconnect_interest
