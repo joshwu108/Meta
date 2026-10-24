@@ -1,10 +1,11 @@
-import { isMissingTable, loadFixture, requireUser, type SeedContext } from '../context';
+import { loadFixture, requireUser, skipIfForeignSchema, type SeedContext } from '../context';
 import { seedBusinessSchema, seedEventSchema, seedGroupSchema } from '../types';
 
 /**
  * Businesses, events and groups live in tables owned by workstreams 05, 06 and 03. The loaders
- * below insert the baseline fixtures using the column names from those specs and skip cleanly
- * (returning 0) while a table has not been migrated yet. Owning workstreams extend them.
+ * below insert the baseline fixtures using the column names from those workstreams' migrations
+ * (0500_business.sql, 0300_social.sql) and skip cleanly (returning 0) while a table is missing
+ * or its columns differ. Owning workstreams extend them.
  */
 
 export async function loadBusinesses(ctx: SeedContext): Promise<number> {
@@ -23,21 +24,29 @@ export async function loadBusinesses(ctx: SeedContext): Promise<number> {
         description: business.description,
         lat: business.lat,
         lng: business.lng,
-        capacity: business.capacity,
       })
       .select('id')
       .single();
     if (error) {
-      if (isMissingTable(error)) {
-        ctx.log('businesses table not migrated yet (workstream 05); skipping businesses');
-        return 0;
-      }
+      if (skipIfForeignSchema(ctx, 'businesses', error)) return inserted;
       throw new Error(`businesses insert (${business.slug}) failed: ${error.message}`);
     }
-    ctx.businessesBySlug.set(business.slug, (data as { id: string }).id);
+    const businessId = (data as { id: string }).id;
+    ctx.businessesBySlug.set(business.slug, businessId);
+    await loadCapabilities(ctx, businessId, business.capacity, business.category);
     inserted += 1;
   }
   return inserted;
+}
+
+/** Capacity and hostable categories live in business_capabilities (workstream 05). */
+async function loadCapabilities(ctx: SeedContext, businessId: string, capacity: number, category: string): Promise<void> {
+  const { error } = await ctx.admin
+    .from('business_capabilities')
+    .insert({ business_id: businessId, capacity, event_categories: [category] });
+  if (error && !skipIfForeignSchema(ctx, 'business_capabilities', error)) {
+    throw new Error(`business_capabilities insert failed: ${error.message}`);
+  }
 }
 
 function eventTimes(daysFromNow: number, startHour: number, durationHours: number): { startsAt: string; endsAt: string } {
@@ -74,10 +83,7 @@ export async function loadEvents(ctx: SeedContext): Promise<number> {
   });
   const { error } = await ctx.admin.from('events').insert(rows);
   if (error) {
-    if (isMissingTable(error)) {
-      ctx.log('events table not migrated yet (workstream 05/06); skipping events');
-      return 0;
-    }
+    if (skipIfForeignSchema(ctx, 'events', error)) return 0;
     throw new Error(`events insert failed: ${error.message}`);
   }
   return rows.length;
@@ -90,23 +96,21 @@ export async function loadGroups(ctx: SeedContext): Promise<number> {
     const ownerId = requireUser(ctx, group.owner);
     const { data, error } = await ctx.admin
       .from('groups')
-      .insert({ name: group.name, description: group.description, visibility: group.visibility, owner_id: ownerId })
+      .insert({ name: group.name, description: group.description, visibility: group.visibility, creator_id: ownerId })
       .select('id')
       .single();
     if (error) {
-      if (isMissingTable(error)) {
-        ctx.log('groups table not migrated yet (workstream 03); skipping groups');
-        return 0;
-      }
+      if (skipIfForeignSchema(ctx, 'groups', error)) return inserted;
       throw new Error(`groups insert (${group.slug}) failed: ${error.message}`);
     }
     const groupId = (data as { id: string }).id;
+    const joinedAt = new Date().toISOString();
     const members = [
-      { group_id: groupId, user_id: ownerId, role: 'owner', status: 'active' },
-      ...group.members.map((email) => ({ group_id: groupId, user_id: requireUser(ctx, email), role: 'member', status: 'active' })),
+      { group_id: groupId, user_id: ownerId, role: 'owner', status: 'active', joined_at: joinedAt },
+      ...group.members.map((email) => ({ group_id: groupId, user_id: requireUser(ctx, email), role: 'member', status: 'active', joined_at: joinedAt })),
     ];
     const { error: memberError } = await ctx.admin.from('group_members').insert(members);
-    if (memberError && !isMissingTable(memberError)) {
+    if (memberError && !skipIfForeignSchema(ctx, 'group_members', memberError)) {
       throw new Error(`group_members insert (${group.slug}) failed: ${memberError.message}`);
     }
     inserted += 1;
