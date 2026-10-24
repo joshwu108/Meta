@@ -42,8 +42,8 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - [x] Reconfirm flow
 
 ### E2E
-- [ ] Scene 5: Discover leads with "Beginner Pottery & Coffee Night" + explanation → RSVP with sharing → Activity shows it → group page lists it
-- [ ] Scene 6: complete past event → maya adds reconnect to jordan → both see the follow-up suggestion
+- [ ] (written, not yet run) Scene 5: Discover leads with "Beginner Pottery & Coffee Night" + explanation → RSVP with sharing → Activity shows it → group page lists it
+- [ ] (written, not yet run) Scene 6: complete past event → maya adds reconnect to jordan → both see the follow-up suggestion
 
 ## P1
 
@@ -105,11 +105,13 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Blocked
 
+- E2E scenes 5 and 6 are written (`tests/e2e/`) but need 01's `/login` page and seed runner plus a running Supabase stack. Scene 5 assumes the demo consumer is `demo@commonground.test` (override with `E2E_DEMO_EMAIL`) and that Scene 4 published "Beginner Pottery & Coffee Night".
 - P1 list/map toggle: needs a static map tile provider decision (OpenStreetMap static tiles, Mapbox with a key, etc.) and 01's CSP to allow its `img-src`. Everything else on the page works without it.
 - Supabase CLI and Docker are not available here, so `pnpm db:reset`, `pnpm db:seed`, route-level integration tests through PostgREST, and Playwright scenes cannot run on this machine. SQL is covered on plain Postgres; services are covered with mocked repo/stubs. Needs a machine with `supabase start` (or Docker running) to finish the Supabase-stack checks.
 
 ## Log
 
+- 2026-10-24 16:05 PT: Playwright specs for scenes 5 and 6 (not runnable here). All P0 build items, AC1–AC5, and P1 items except list/map are done; branch is synced with main. Next: on each wakeup, sync main and swap stubs as 01/02/03/05 land.
 - 2026-10-24 16:03 PT: theme checklist pass (no raw colors; AI gradient only in AiTag/AiRing), all functions under 50 lines, Activity in spec order, demo/venue "Mark event completed" control. Next: wait for 01–05 to land on main, swap stubs, then run Supabase + Playwright scenes.
 - 2026-10-24 15:59 PT: P1 filters, bookmarks (save/unsave + Activity "Saved"), standalone /places (138 tests). Next: theme checklist review, size limits, never-idle pass.
 - 2026-10-24 15:55 PT: coverage 97% lines / 83% branches on features/events/server (137 tests); P1 waitlist UI + promotion notification. Next: P1 filters, bookmarks, /places.
