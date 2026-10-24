@@ -93,6 +93,9 @@ begin
   if not found then raise exception 'NOT_FOUND'; end if;
   if v_event.status not in ('published','full') then raise exception 'EVENT_NOT_OPEN'; end if;
   if v_event.starts_at < now() then raise exception 'EVENT_STARTED'; end if;
+  if exists (select 1 from rsvps where event_id = p_event_id and user_id = v_uid and status <> 'cancelled') then
+    raise exception 'ALREADY_RSVPED';
+  end if;
   select count(*) into v_confirmed from rsvps where event_id = p_event_id and status = 'confirmed';
   v_status := case when v_confirmed < v_event.capacity then 'confirmed' else 'waitlisted' end;
   if v_status = 'waitlisted' and not p_allow_waitlist then raise exception 'CAPACITY_FULL'; end if;

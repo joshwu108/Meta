@@ -72,6 +72,14 @@ describe.skipIf(!available)("rsvp_event / cancel_rsvp", () => {
     await expect(rsvp(user, eventId)).rejects.toThrow("ALREADY_RSVPED");
   });
 
+  it("reports ALREADY_RSVPED rather than CAPACITY_FULL to someone already on a full event", async () => {
+    const eventId = await createEvent(db.pool, { businessId, capacity: 1 });
+    const user = await createUser(db.pool);
+    await rsvp(user, eventId);
+
+    await expect(rsvp(user, eventId)).rejects.toThrow("ALREADY_RSVPED");
+  });
+
   it.each(["approved_draft", "cancelled", "completed"])("rejects RSVPs on %s events", async (status) => {
     const eventId = await createEvent(db.pool, { businessId, status });
     const user = await createUser(db.pool);
