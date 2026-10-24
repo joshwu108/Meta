@@ -10,6 +10,7 @@ test('notification bell shows the unread count and marks items read', async ({ p
   await bell.click();
   const dialog = page.getByRole('dialog', { name: 'Notifications' });
   await expect(dialog.getByText("You're invited to Thursday Night Crew")).toBeVisible();
-  await dialog.getByRole('button', { name: /Thursday Night Crew/ }).click();
+  await dialog.getByRole('link', { name: /Thursday Night Crew/ }).click();
+  await page.waitForURL(/\/groups$/);
   await expect(page.getByTestId('notification-unread')).toHaveCount(0);
 });

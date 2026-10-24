@@ -34,7 +34,7 @@ describe('workstream 03 seed contribution', () => {
   });
 
   it('loads six accepted connections, none for the live demo user', async () => {
-    expect(summary.connections).toBe(6);
+    expect(summary.extra.connections).toBe(6);
     const demo = ids.get('demo.new')!;
     const { count } = await admin.from('connections').select('id', { count: 'exact', head: true }).or(`requester_id.eq.${demo},recipient_id.eq.${demo}`);
     expect(count).toBe(0);
@@ -43,7 +43,7 @@ describe('workstream 03 seed contribution', () => {
   });
 
   it('loads one block pair', async () => {
-    expect(summary.blocks).toBe(1);
+    expect(summary.extra.blocks).toBe(1);
     const { data } = await admin.from('blocks').select('blocker_id, blocked_id');
     expect(data).toEqual([{ blocker_id: ids.get('kai'), blocked_id: ids.get('leo') }]);
   });

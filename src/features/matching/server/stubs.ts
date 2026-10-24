@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AVAILABILITY_SLOT, EVENT_CATEGORY, GROUP_SIZE_PREF, SOCIAL_GOAL } from '@/shared/enums';
 import { SLOT_PHRASES } from '@/shared/labels';
-import type { AvailabilitySlot, EventCategory, GroupSizePref, SharablePreferences, SocialGoal } from '@/shared/types';
+import type { AvailabilitySlot, EventCategory, ExplainInput, GroupSizePref, SocialGoal } from '@/shared/types';
 import { chunk } from './async';
 import type { MatchingPreferences } from './score';
 
@@ -109,14 +109,9 @@ export async function getSharablePreferences(userId: string, purpose: SharingPur
   return (await getSharablePreferencesBatch([userId], purpose)).get(userId) ?? null;
 }
 
-export type ExplainInput = {
-  viewer: SharablePreferences;
-  target: { kind: 'person'; preferences: SharablePreferences; displayName?: string };
-  breakdown: Record<string, unknown>;
-};
-
 /** Templated stand-in for 02's `agent.explain_recommendation`; cites only shared fields. */
 export async function explainRecommendation(input: ExplainInput): Promise<string> {
+  if (input.target.kind !== 'person') return 'Matches what you shared with your agent.';
   const theirs = new Set(input.target.preferences.interests.map((i) => i.toLowerCase()));
   const shared = input.viewer.interests.filter((i) => theirs.has(i.toLowerCase())).slice(0, 2);
   const slots = new Set(input.target.preferences.availabilitySlots);

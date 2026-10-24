@@ -8,6 +8,7 @@ function prefs(overrides: Partial<MatchingPreferences> = {}): MatchingPreference
   return {
     userId: 'u',
     interests: ['pottery'],
+    interestCategories: ['creative'],
     availabilitySlots: ['thu_eve'],
     socialGoals: ['make_friends'],
     groupSizePref: 'small',

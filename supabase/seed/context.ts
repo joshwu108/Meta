@@ -35,6 +35,28 @@ export function isMissingTable(error: { code?: string; message?: string } | null
   return error.code === '42P01' || error.code === 'PGRST205' || /does not exist|Could not find the table/i.test(error.message ?? '');
 }
 
+/** True when the table exists but a column we insert does not (another workstream changed its shape). */
+export function isSchemaMismatch(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === '42703' || error.code === 'PGRST204' || /column .* does not exist|Could not find the '.*' column/i.test(error.message ?? '');
+}
+
+/**
+ * Decide how a loader reacts to an insert error on a table owned by another workstream:
+ * missing table or column → log and skip (returns true); anything else → caller throws.
+ */
+export function skipIfForeignSchema(ctx: SeedContext, table: string, error: { code?: string; message?: string }): boolean {
+  if (isMissingTable(error)) {
+    ctx.log(`${table} table not migrated yet; skipping ${table}`);
+    return true;
+  }
+  if (isSchemaMismatch(error)) {
+    ctx.log(`${table} columns differ from the seed loader (${error.message}); skipping ${table}. The owning workstream should update supabase/seed/loaders/domain.ts`);
+    return true;
+  }
+  return false;
+}
+
 export function requireUser(ctx: SeedContext, email: string): string {
   const id = ctx.usersByEmail.get(email);
   if (!id) throw new Error(`seed references unknown user ${email}`);

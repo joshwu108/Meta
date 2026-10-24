@@ -13,5 +13,6 @@
   { "email": "marcus@commonground.test", "display_name": "Marcus Hill", "neighborhood": "Noe Valley", "coarse_lat": 37.75, "coarse_lng": -122.43, "is_discoverable": true, "bio": "Dad of two, weekend woodworking." },
   { "email": "yuki@commonground.test", "display_name": "Yuki Tanaka", "neighborhood": "Mission District", "coarse_lat": 37.76, "coarse_lng": -122.42, "is_discoverable": true, "bio": "Illustrator. Will trade drawings for espresso." },
   { "email": "dev@commonground.test", "display_name": "Devon Price", "neighborhood": "SoMa", "coarse_lat": 37.78, "coarse_lng": -122.40, "is_discoverable": false, "bio": "Lurking for now." },
+  { "email": "jordan@commonground.test", "display_name": "Jordan Alvarez", "neighborhood": "Hayes Valley", "coarse_lat": 37.78, "coarse_lng": -122.42, "is_discoverable": true, "bio": "Pottery on Sundays, coffee the rest of the week. Scene 6 reconnect partner." },
   { "email": "harper@commonground.test", "display_name": "Harper Quinn", "neighborhood": "Hayes Valley", "coarse_lat": 37.78, "coarse_lng": -122.42, "is_discoverable": false, "bio": "Here for the events, not the feed." }
 ]

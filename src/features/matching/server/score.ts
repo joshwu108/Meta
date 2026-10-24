@@ -1,4 +1,4 @@
-import { AVAILABILITY_SLOT, GROUP_SIZE_PREF, type AvailabilitySlot, type EventCategory, type GroupSizePref } from '@/shared/enums';
+import { AVAILABILITY_SLOT, GROUP_SIZE_PREF, type AvailabilitySlot, type GroupSizePref } from '@/shared/enums';
 import type { CompatibilityResult, SharablePreferences } from '@/shared/types';
 import { resolveCategories } from './categories';
 import { haversineKm, toLatLng } from './geo';
@@ -12,10 +12,10 @@ import {
 } from './weights';
 
 /**
- * `SharablePreferences` plus the interest categories 02 stores. The shared contract does not
- * carry categories yet; when they are absent they are derived from the interest tags.
+ * The preferences the scorer works on: the shared contract, which carries `interestCategories`
+ * (README §4). If a producer leaves them out at runtime they are derived from the interest tags.
  */
-export type MatchingPreferences = SharablePreferences & { interestCategories?: readonly EventCategory[] };
+export type MatchingPreferences = SharablePreferences;
 
 /** Context the pure scorer cannot know on its own. Both default to "fine". */
 export type ScoreContext = { blocked?: boolean; discoverable?: boolean };

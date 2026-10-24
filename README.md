@@ -8,7 +8,7 @@ Specs live in [`specs/`](./specs/README.md). This README covers getting the app 
 
 ## Quick start (under 10 minutes)
 
-Requirements: Node 20+, pnpm 10, Docker (for the local Supabase stack).
+Requirements: Node 22+ (pnpm runs scripts on the Node pinned in `.npmrc`), pnpm 10, Docker (for the local Supabase stack).
 
 ```bash
 pnpm install

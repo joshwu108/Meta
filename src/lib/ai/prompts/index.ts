@@ -1,3 +1,8 @@
+import { AGENT_PROMPTS } from './agent';
+import { DEMAND_PROMPTS } from './demand';
+import { EVENTS_PROMPTS } from './events';
+import { GROUPS_PROMPTS } from './groups';
+
 /**
  * Prompt registry. Every workstream appends its prompt ids here and ships a fixture at
  * `src/lib/ai/fixtures/<promptId>.json` so `MOCK_AI=1` works for it in CI.
@@ -11,11 +16,13 @@ export const PROMPT_IDS = [
   'agent.extract_preferences',
   'agent.chat',
   'agent.explain_recommendation',
+  'agent.follow_up_suggestion',
   // 03 matching / groups
   'matching.explain_match',
   'groups.plan_activities',
   // 04 demand
   'demand.generate_proposal',
+  'demand.revise_proposal',
   // 06 events
   'events.reconnect_followup',
 ] as const;
@@ -29,26 +36,22 @@ export type PromptDefinition = {
   model: 'fast' | 'smart';
 };
 
+export type PromptDefinitions = Partial<Record<PromptId, PromptDefinition>>;
+
 /**
- * System prompts by id. Other workstreams register theirs here; unregistered ids fall back to
- * a neutral system prompt so a missing entry never breaks the build.
+ * System prompts by id. Each workstream keeps its definitions in its own file under
+ * `src/lib/ai/prompts/` (agent.ts, groups.ts, demand.ts, events.ts) and they are spread here, so
+ * merges never collide on this file. Unregistered ids fall back to a neutral system prompt.
  */
 export const PROMPTS: Partial<Record<PromptId, PromptDefinition>> = {
   'core.healthcheck': {
     system: 'You are a health check. Reply with the JSON the tool schema asks for and nothing else.',
     model: 'fast',
   },
-  'groups.plan_activities': {
-    model: 'smart',
-    system: [
-      'You suggest things for a small group of neighbors to do together.',
-      'The input holds only aggregated, consented data: the request, how many members are planning, the time slots to plan for (group.sharedSlots; when group.everyoneFree is false not everyone can make them and group.freeCounts says how many can), the most each can spend in cents (group.budgetMaxCents), interest and category counts, a neighborhood label, and candidate events already on the calendar.',
-      'Return 2 to 4 suggestions mixing candidate events (kind "existing_event" with their exact id) and new ideas (kind "new_activity", eventId null).',
-      'Every slot must be one of group.sharedSlots. Keep estimatedCostCents within group.budgetMaxCents when it is set.',
-      'whyItFits is one short sentence citing the shared slot and the interests most members share. Never mention or guess names or any single person\'s preferences.',
-      'Set needsVenue true only for a new activity that needs a host business. Never say anything is booked or confirmed.',
-    ].join(' '),
-  },
+  ...AGENT_PROMPTS,
+  ...GROUPS_PROMPTS,
+  ...DEMAND_PROMPTS,
+  ...EVENTS_PROMPTS,
 };
 
 export function isPromptId(value: string): value is PromptId {
