@@ -109,7 +109,7 @@ describe('getGroupVenueRequest for 04 (P1)', () => {
     expect(await groups.getGroupVenueRequest(privateId, plan!.id, 0)).toBeNull();
     await admin.from('group_plan_votes').insert({ plan_id: plan!.id, suggestion_index: 0, user_id: alice.id });
     const request = await groups.getGroupVenueRequest(privateId, plan!.id, 0);
-    expect(request).toMatchObject({ title: 'Wheel night', category: 'creative', slot: 'thu_eve', activeMembers: 2, votes: 1, budgetMaxCents: 2500, neighborhood: 'Test Harbor' });
+    expect(request).toMatchObject({ title: 'Wheel night', category: 'creative', slot: 'thu_eve', memberCount: 2, votes: 1, budgetMaxCents: 2500, neighborhoodLabel: 'Test Harbor', groupSizeMode: 'small', activityPrefs: ['beginner-friendly'], centerLat: 64.14, centerLng: -21.94 });
     expect(JSON.stringify(request)).not.toContain(alice.id);
     expect(await groups.getGroupVenueRequest(privateId, plan!.id, 1)).toBeNull();
     expect(await groups.getGroupVenueRequest(privateId, plan!.id, 7)).toBeNull();

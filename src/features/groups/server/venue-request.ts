@@ -1,9 +1,8 @@
 import 'server-only';
-import type { LatLng } from '@/features/matching';
 import { ApiError } from '@/lib/api/errors';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { uuidSchema } from '@/shared/schemas/common';
-import type { AvailabilitySlot, EventCategory } from '@/shared/enums';
+import type { AvailabilitySlot, EventCategory, GroupSizePref } from '@/shared/enums';
 import { buildPrework } from './planner/prework';
 import { parseSuggestions, VENUE_VOTE_SHARE } from './plans';
 import { getSharablePreferencesBatch } from './stubs';
@@ -21,12 +20,22 @@ export type GroupVenueRequest = {
   category: EventCategory;
   slot: AvailabilitySlot;
   estimatedCostCents: number | null;
-  activeMembers: number;
+  /** Active members of the group (the expected party size). */
+  memberCount: number;
   votes: number;
+  /** Most common group-size preference among consenting members. */
+  groupSizeMode: GroupSizePref | null;
   budgetMaxCents: number | null;
-  neighborhood: string | null;
-  center: LatLng | null;
+  /** Activity tags at least two consenting members share. */
+  activityPrefs: string[];
+  /** Null when no consenting member shared a location. Coordinates are coarse (2 dp). */
+  neighborhoodLabel: string | null;
+  centerLat: number | null;
+  centerLng: number | null;
 };
+
+/** Same floor 04 uses for cluster tags, so a single member's tag never reaches a business. */
+const MIN_SHARED_TAG_COUNT = 2;
 
 async function activeMemberIds(groupId: string): Promise<string[]> {
   const { data, error } = await createAdminClient().from('group_members').select('user_id').eq('group_id', groupId).eq('status', 'active');
@@ -65,10 +74,13 @@ export async function getGroupVenueRequest(groupId: string, planId: string, sugg
     category: suggestion.category,
     slot: suggestion.slot,
     estimatedCostCents: suggestion.estimatedCostCents,
-    activeMembers: memberIds.length,
+    memberCount: memberIds.length,
     votes: voteCount,
+    groupSizeMode: prework.groupSizePref,
     budgetMaxCents: prework.budgetMaxCents,
-    neighborhood: prework.neighborhood,
-    center: prework.center,
+    activityPrefs: prework.activityPrefs.filter((p) => p.count >= MIN_SHARED_TAG_COUNT).map((p) => p.tag),
+    neighborhoodLabel: prework.neighborhood,
+    centerLat: prework.center?.lat ?? null,
+    centerLng: prework.center?.lng ?? null,
   };
 }
