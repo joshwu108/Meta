@@ -110,7 +110,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Needs from others
 
-- 01: a per-page right-rail slot in the consumer shell (e.g. a `@aside` parallel route in `(consumer)/layout.tsx`, defaulting to `AgentAside`). Spec 06 puts Discover's agent strip and Events' filters in the right rail at ≥1024px; today both render in the feed column.
+- 01: ~~per-page right-rail slot~~ done on ws/01-core (`bea24b5`, `@aside` parallel route); waiting for it on main. Then 06 adds `@aside/discover/page.tsx` (agent strip) and `@aside/events/page.tsx` (filters), keeps a <1024px copy in the feed, and dedupes the recommendation fetch with React `cache`.
 - 02: `suggest_events` in `src/features/agent/server/suggestion-stubs.ts` can now call `getRecommendedEvents(userId, limit)` from `@/features/events`. Map each item to 02's `EventCandidate` as `{ id: r.event.id, title: r.event.title, startsAt: r.event.startsAt, venue: r.event.business.name, category: r.event.category, description: r.event.description }`; `r.explanation` is the grounded "why" if the card wants it.
 - 02: ws/01-core's `SharablePreferences` now requires `interestCategories`; please return it from `toSharable` (02 already stores `interest_categories`). Until then 03, 04 and 06 each fall back to their own tag mapping.
 - 02: `src/lib/ai/fixtures/agent.explain_recommendation.json` (ws/02-agent) matches any input containing "pottery", and 06's event input always includes the viewer's interests, so under `MOCK_AI` every event for the Scene 1 user reads "You both love pottery and are free Thursday evenings." (person phrasing, and wrong for a Catan night). Please add cases ahead of it: `{ "match": "Beginner Pottery & Coffee Night", "output": { "explanation": "Pottery night on a Thursday evening, small group, close to you.", "highlights": ["pottery", "Thursday evening"] } }` and a generic event case `{ "match": "\"kind\":\"event\"", "output": { "explanation": "Fits the interests and times you shared with your agent.", "highlights": [] } }`. 06 sends `target: { kind: 'event', event: { title, category, slot, capacity, priceCents } }`.
@@ -128,6 +128,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 20:50 PT: main unchanged. 01 built the `@aside` slot 06 asked for (not on main yet; adding 06's rail pages before 01's `@aside/default.tsx` is on main would 404 hard loads). 03, 04, 05 have merged main; nothing in their changes touches 06.
 - 2026-10-24 20:35 PT: CI on PR #2: lint/typecheck/unit green; the Supabase jobs fail only at `supabase start` with `relation "events" does not exist` (0600 needs 05's 0500), as expected. Kept 0600's hard dependency rather than guarding it, so a main without 05 cannot silently lack 06's tables.
 - 2026-10-24 20:15 PT: ws/01-core is on main. Merged it (14 conflicts, resolved per the rehearsed plan), swapped every 01 stand-in for the real module, moved the screens onto 01's shell and primitives, switched e2e to 01's helpers. 176 unit + 61 db tests, typecheck, lint (1 `<img>` warning) and build green.
 - 2026-10-24 19:50 PT: main unchanged; draft PR #3 (`integration/ws01`) will fast-forward main to ws/01-core plus a Node 22.20 pin. Rehearsed merging that head: green (176 unit + 61 db, build). 01 now seats placeholder `tests/db/support/*` files, which resolve to 06's.
