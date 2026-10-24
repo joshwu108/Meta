@@ -136,3 +136,4 @@ ws02 sync procedure once 01 is on main (tested approach):
 - 2026-10-24 18:05 · landed: getAttendeeSharing + getConsent for 06 (consent-gated, logged), spec §5 documents ExplainInput and all extra exports. 145 unit/integration + 10 E2E green. Next: wait for main.
 - 2026-10-24 16:35 · integration check (Docker, throwaway merge with ws/01-core, nothing pushed to main): findings 1-4 recorded above. Next: 01 integrator handles 1, 2, 4; ws02 fixes 3 during the main sync.
 - 2026-10-24 16:32 · ws02 worker moved to the Docker machine (option 2). Ticked integration rows + AC2/AC5 from the verified DB run. Next: wait for 01 on main, then run the sync procedure.
+- 2026-10-24 17:40 · Lenovo resumed as the ws02 worker. Full check on Node 22: typecheck + lint clean, 145 unit/integration green (5 Supabase-stack tests skip until 01's 0100 is on main), 10/10 Playwright green. Nothing unblocked left: AC3 waits on 03/04; DB variant and stub swap wait on 01 landing on main.
