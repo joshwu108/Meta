@@ -11,12 +11,11 @@ type Props = {
   eventId: string;
   status: string;
   rsvpStatus: string | null;
-  defaults: { shareWithAttendees: boolean; shareWithBusiness: boolean };
   waitlistEnabled: boolean;
 };
 
 /** RSVP / waitlist / cancel, with the consent sheet before every RSVP. */
-export function RsvpPanel({ eventId, status, rsvpStatus, defaults, waitlistEnabled }: Props) {
+export function RsvpPanel({ eventId, status, rsvpStatus, waitlistEnabled }: Props) {
   const router = useRouter();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +50,6 @@ export function RsvpPanel({ eventId, status, rsvpStatus, defaults, waitlistEnabl
         <ConsentSheet
           title={joinWaitlist ? "Before you join the waitlist" : "Before you RSVP"}
           confirmLabel={joinWaitlist ? "Join waitlist" : "Confirm RSVP"}
-          defaults={defaults}
           pending={pending}
           error={error}
           onConfirm={(choices) => run(() => send(path, "POST", choices))}

@@ -33,7 +33,7 @@ export function EventStatusSection({ event, attendees, feedbackGiven }: Props) {
   return (
     <>
       {event.needsReconfirm ? <ReconfirmBanner eventId={event.id} startsAt={event.startsAt} /> : null}
-      <RsvpPanel eventId={event.id} status={event.status} rsvpStatus={event.rsvpStatus} defaults={event.consentDefaults} waitlistEnabled={event.waitlistEnabled} />
+      <RsvpPanel eventId={event.id} status={event.status} rsvpStatus={event.rsvpStatus} waitlistEnabled={event.waitlistEnabled} />
       <InviteGroupPicker eventId={event.id} />
       {event.canComplete ? <CompleteEventButton eventId={event.id} /> : null}
     </>

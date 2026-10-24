@@ -74,31 +74,13 @@ export async function explainRecommendation(input: ExplainInput): Promise<string
 
 export type AttendeeSharing = { interests: string[]; shareInterestsWithAttendees: boolean };
 
-/** Consent + interests needed for shared-interest chips on the attendee list. */
-export async function getAttendeeSharing(userIds: readonly string[]): Promise<Map<string, AttendeeSharing>> {
-  if (userIds.length === 0) return new Map();
-  const db = createAdminClient();
-  const [{ data: agents }, { data: prefs }] = await Promise.all([
-    db.from("agent_profiles").select("user_id, consent").in("user_id", userIds),
-    db.from("user_preferences").select("user_id, interests").in("user_id", userIds),
-  ]);
-  const interestsBy = new Map((prefs ?? []).map((p) => [p.user_id as string, (p.interests ?? []) as string[]]));
-  return new Map(
-    (agents ?? []).map((a) => {
-      const share = (a.consent as Consent)?.share_interests_with_attendees === true;
-      return [a.user_id as string, { interests: share ? interestsBy.get(a.user_id) ?? [] : [], shareInterestsWithAttendees: share }];
-    }),
-  );
-}
-
-/** Defaults for the RSVP consent sheet, prefilled from the user's agent permissions. */
-export async function getRsvpConsentDefaults(userId: string): Promise<{ shareWithAttendees: boolean; shareWithBusiness: boolean }> {
-  const { data } = await createAdminClient().from("agent_profiles").select("consent").eq("user_id", userId).maybeSingle();
-  const consent = (data?.consent ?? {}) as Consent;
-  return {
-    shareWithAttendees: consent.share_interests_with_attendees === true,
-    shareWithBusiness: consent.share_name_with_business === true,
-  };
+/**
+ * Consent + interests for shared-interest chips on the attendee list. Only 02 may read its
+ * tables (ws/02-agent's privacy guard), and 02 exports no consent-gated reader for this yet, so
+ * nobody's interests are shared until it does (see PROGRESS.md "Needs from others").
+ */
+export async function getAttendeeSharing(_userIds: readonly string[]): Promise<Map<string, AttendeeSharing>> {
+  return new Map();
 }
 
 const SLOT_PHRASE: Record<string, string> = {

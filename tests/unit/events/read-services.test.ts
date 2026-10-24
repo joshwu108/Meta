@@ -25,7 +25,6 @@ vi.mock("@/features/events/server/stubs", async (importOriginal) => ({
   getBlockEdges: async () => [{ blockerId: BLOCKER, blockedId: VIEWER }],
   getAttendeeSharing: async (ids: string[]) =>
     new Map(ids.map((id) => [id, { interests: ["pottery", "coffee"], shareInterestsWithAttendees: id !== STRANGER }])),
-  getRsvpConsentDefaults: async () => ({ shareWithAttendees: false, shareWithBusiness: true }),
   getSharablePreferences: async () => state.prefs,
   explainRecommendation: async () => {
     state.explanations += 1;
@@ -104,7 +103,6 @@ describe("getEventDetail", () => {
     expect(detail.myRsvp).toBeNull();
     expect(detail.needsReconfirm).toBe(false);
     expect(detail.attendeePreview).toEqual({ count: 5, avatars: [expect.objectContaining({ userId: FRIEND })] });
-    expect(detail.consentDefaults).toEqual({ shareWithAttendees: false, shareWithBusiness: true });
     expect(detail.venue).toMatchObject({ name: "Kiln & Cup", lat: 37.7599 });
   });
 

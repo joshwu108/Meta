@@ -6,7 +6,7 @@ import { toBusinessCard, toEventPublic } from "./mappers";
 import { canComplete } from "./post-event";
 import { confirmedCounts, getVisibleEvent, hasFeedback, myRsvps, type MyRsvp } from "./repo";
 import { waitlistEnabled } from "./rsvp";
-import { ApiError, createAdminClient, getRsvpConsentDefaults } from "./stubs";
+import { ApiError, createAdminClient } from "./stubs";
 import { buildAttendeeList, type AttendeeView } from "./visibility";
 
 const PREVIEW_SIZE = 5;
@@ -16,7 +16,6 @@ export type EventDetail = EventPublic & {
   needsReconfirm: boolean;
   venue: BusinessPublicCard & { lat: number; lng: number };
   attendeePreview: { count: number; avatars: AttendeeView[] };
-  consentDefaults: { shareWithAttendees: boolean; shareWithBusiness: boolean };
   feedbackGiven: boolean;
   waitlistEnabled: boolean;
   bookmarked: boolean;
@@ -34,11 +33,10 @@ export async function getEventDetail(viewerId: string, eventId: string): Promise
   if (!row) throw new ApiError("NOT_FOUND", "Event not found");
 
   const live = row.status === "published" || row.status === "full";
-  const [counts, mine, attendeeData, consentDefaults, feedbackGiven, bookmarks, completable] = await Promise.all([
+  const [counts, mine, attendeeData, feedbackGiven, bookmarks, completable] = await Promise.all([
     confirmedCounts(admin, [eventId]),
     myRsvps(admin, viewerId, [eventId]),
     loadAttendeeData(admin, viewerId, eventId),
-    getRsvpConsentDefaults(viewerId),
     row.status === "completed" ? hasFeedback(admin, viewerId, eventId) : Promise.resolve(false),
     bookmarkedEventIds(admin, viewerId),
     live ? canComplete(admin, viewerId, row.business_id) : Promise.resolve(false),
@@ -59,7 +57,6 @@ export async function getEventDetail(viewerId: string, eventId: string): Promise
     needsReconfirm: confirmed && rsvp.needsReconfirm,
     venue: { ...toBusinessCard(row.businesses), lat: row.businesses.lat, lng: row.businesses.lng },
     attendeePreview: { count: list.count, avatars },
-    consentDefaults,
     feedbackGiven,
     waitlistEnabled: waitlistEnabled(),
     bookmarked: bookmarks.has(eventId),

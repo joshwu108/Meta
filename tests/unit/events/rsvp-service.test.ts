@@ -7,7 +7,6 @@ const notify = vi.fn();
 vi.mock("@/features/events/server/stubs", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   notify: (...args: unknown[]) => notify(...args),
-  getRsvpConsentDefaults: async () => ({ shareWithAttendees: true, shareWithBusiness: false }),
 }));
 
 const { cancelRsvp, reconfirmRsvp, rsvpToEvent } = await import("@/features/events/server/rsvp");
@@ -20,13 +19,13 @@ function client(result: { data?: unknown; error?: { message: string } | null }) 
 describe("rsvpToEvent", () => {
   beforeEach(() => notify.mockReset());
 
-  it("fills missing sharing choices from the agent's consent and notifies on confirmation", async () => {
+  it("shares nothing the caller did not choose, and notifies on confirmation", async () => {
     const { rpc, db } = client({ data: [{ rsvp_status: "confirmed", event_status: "published" }] });
 
     const out = await rsvpToEvent(db, "u1", "e1", { shareWithBusiness: true });
 
     expect(rpc).toHaveBeenCalledWith("rsvp_event", {
-      p_event_id: "e1", p_share_attendees: true, p_share_business: true, p_allow_waitlist: false,
+      p_event_id: "e1", p_share_attendees: false, p_share_business: true, p_allow_waitlist: false,
     });
     expect(out).toEqual({ status: "confirmed", eventStatus: "published" });
     expect(notify).toHaveBeenCalledWith("u1", "rsvp_confirmed", { eventId: "e1" });
