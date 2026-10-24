@@ -1,0 +1,18 @@
+[
+  {
+    "slug": "mission-makers",
+    "name": "Mission Makers",
+    "description": "Creative neighbors who meet to make things.",
+    "visibility": "public",
+    "owner": "maya@commonground.test",
+    "members": ["leo@commonground.test", "yuki@commonground.test", "ana@commonground.test"]
+  },
+  {
+    "slug": "thursday-night-crew",
+    "name": "Thursday Night Crew",
+    "description": "Free on Thursdays. Up for anything.",
+    "visibility": "private",
+    "owner": "sam@commonground.test",
+    "members": ["theo@commonground.test", "omar@commonground.test"]
+  }
+]
