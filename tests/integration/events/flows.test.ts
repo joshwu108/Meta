@@ -88,6 +88,22 @@ describe.skipIf(!available)("06 flows against Postgres", () => {
     expect(notes.rows.map((r) => r.type)).toEqual(["rsvp_confirmed"]);
   });
 
+  it("P1 waitlist: joins when full, promotes on cancel and notifies the promoted user", async () => {
+    vi.stubEnv("WAITLIST_ENABLED", "1");
+    const eventId = await createEvent(db.pool, { businessId, capacity: 1 });
+    const [holderUser, waiting] = await Promise.all([createUser(db.pool), createUser(db.pool)]);
+    await rsvpToEvent(asUser(holderUser), holderUser, eventId, {});
+
+    await expect(rsvpToEvent(asUser(waiting), waiting, eventId, {})).resolves.toEqual({ status: "waitlisted", eventStatus: "full" });
+    expect((await getEventDetail(waiting, eventId)).waitlistEnabled).toBe(true);
+    await cancelRsvp(asUser(holderUser), eventId);
+
+    const { rows } = await db.pool.query("select status from rsvps where event_id = $1 and user_id = $2", [eventId, waiting]);
+    expect(rows[0].status).toBe("confirmed");
+    const notes = await db.pool.query("select payload from notifications where user_id = $1 and type = 'rsvp_confirmed'", [waiting]);
+    expect(notes.rows.map((r) => r.payload)).toEqual([{ eventId, promotedFromWaitlist: true }]);
+  });
+
   it("lets only the venue owner complete an event unless DEMO_MODE is on", async () => {
     const eventId = await createEvent(db.pool, { businessId });
     const stranger = await createUser(db.pool);

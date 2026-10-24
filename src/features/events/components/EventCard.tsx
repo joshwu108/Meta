@@ -16,7 +16,11 @@ function friendsLine(event: EventCardData): string | null {
 /** Supporting card: compact, so the lead card carries the page's hierarchy. */
 export function EventCard({ event, explanation }: Props) {
   const friends = friendsLine(event);
-  const status = event.needsReconfirm ? "reconfirm" : event.rsvpStatus === "confirmed" ? "confirmed" : event.isFull ? "full" : null;
+  const status = event.needsReconfirm
+    ? "reconfirm"
+    : event.rsvpStatus === "confirmed" || event.rsvpStatus === "waitlisted"
+      ? event.rsvpStatus
+      : event.isFull ? "full" : null;
   return (
     <Link href={`/events/${event.id}`} className={`${s.card} ${s.compact}`}>
       <EventCover imageUrl={event.business.imageUrl} category={event.category} />

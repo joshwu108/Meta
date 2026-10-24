@@ -3,6 +3,7 @@ import type { BusinessPublicCard, EventPublic } from "@/shared/types";
 import { loadAttendeeData } from "./attendees";
 import { toBusinessCard, toEventPublic } from "./mappers";
 import { confirmedCounts, getVisibleEvent, hasFeedback, myRsvps, type MyRsvp } from "./repo";
+import { waitlistEnabled } from "./rsvp";
 import { ApiError, createAdminClient, getRsvpConsentDefaults } from "./stubs";
 import { buildAttendeeList, type AttendeeView } from "./visibility";
 
@@ -15,6 +16,7 @@ export type EventDetail = EventPublic & {
   attendeePreview: { count: number; avatars: AttendeeView[] };
   consentDefaults: { shareWithAttendees: boolean; shareWithBusiness: boolean };
   feedbackGiven: boolean;
+  waitlistEnabled: boolean;
 };
 
 /**
@@ -51,5 +53,6 @@ export async function getEventDetail(viewerId: string, eventId: string): Promise
     attendeePreview: { count: list.count, avatars },
     consentDefaults,
     feedbackGiven,
+    waitlistEnabled: waitlistEnabled(),
   };
 }
