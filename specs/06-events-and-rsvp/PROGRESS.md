@@ -15,8 +15,8 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - [x] Migration `0600_events_rsvp.sql` (rsvps, event_feedback, reconnect_interest, follow_up_suggestions, bookmarks, deferred FKs, RLS, `rsvp_event`, `cancel_rsvp`)
 - [ ] Exported contracts in `src/features/events/index.ts`: `getUpcomingEventsForUser`, `getEventPublic`
 - [ ] Recommendation scoring (`server/recommend.ts`) with explanations via 02's `explainRecommendation`
-- [ ] Attendee visibility function (single function used by every attendee-facing DTO)
-- [ ] Invite-group filtering (skip RSVP'd and blocked members, never RSVP anyone)
+- [x] Attendee visibility function (single function used by every attendee-facing DTO)
+- [x] Invite-group filtering (skip RSVP'd and blocked members, never RSVP anyone)
 - [ ] Reconnect + follow-up suggestion flow
 - [ ] Route handlers: `GET /events`, `GET /events/recommended`, `GET /events/:id`, `POST|DELETE /events/:id/rsvp`, `POST /events/:id/reconfirm`, `GET /events/:id/attendees`, `POST /events/:id/invite-group`, `GET /activity`, `POST /events/:id/feedback`, `POST /events/:id/reconnect`, `PATCH /events/:id/complete`, `GET /businesses/nearby`
 - [ ] UI: `/discover`, `/events`, `/events/:id`, `/activity`
@@ -25,10 +25,10 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 ## Tests (spec §9)
 
 ### Unit
-- [ ] Recommendation score golden cases
-- [ ] Slot derivation from `starts_at` in America/Los_Angeles, including DST edges
-- [ ] Attendee visibility matrix (consent × connection × block)
-- [ ] Invite-group skips RSVP'd and blocked members
+- [x] Recommendation score golden cases
+- [x] Slot derivation from `starts_at` in America/Los_Angeles, including DST edges
+- [x] Attendee visibility matrix (consent × connection × block)
+- [x] Invite-group skips RSVP'd and blocked members
 
 ### Integration
 - [x] 20 parallel RSVPs against capacity 10 → exactly 10 confirmed, event `full`
@@ -66,6 +66,9 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: `follow_up_suggestions` stores pairs in canonical order (`check (user_a < user_b)`) so the unique key cannot be duplicated as (b, a).
 - 2026-10-24: Bookmarks get RLS + a self policy (spec omitted it; 01's CI guard requires RLS on every table).
 - 2026-10-24: Deferred FKs to 03's `groups` / `invitations` are guarded with `to_regclass` so 0600 applies even if 03 has not merged; on a fresh reset 0300 runs first and the FKs are created.
+- 2026-10-24: Scoring interprets the +0.5 tag bonus as `(categoryMatch + 0.5·tagMatch) / 1.5` so interest never exceeds its 40 points. Unknown budget or viewer location scores half credit; group size gets 0.7 for an exact capacity bucket and 0.35 for an adjacent one, plus 0.3 when friends are going (capped at 1).
+- 2026-10-24: Slots use local America/Los_Angeles time: 17:00+ is the evening slot of that day, Sat/Sun before 17:00 is `sat_day`/`sun_day`, 00:00–04:59 belongs to the previous evening, weekday daytime maps to no slot.
+- 2026-10-24: Attendee list `count` is every confirmed attendee (viewer included, same number as the capacity meter). Non-consenting attendees appear as anonymous `{ isConnection: false }` entries so a hidden connection cannot be inferred; blocked attendees are omitted from the list in both directions. Order: connections, named, anonymous.
 
 ## Needs from others
 
@@ -76,4 +79,5 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 15:27 PT: slot derivation, recommendation scorer, attendee visibility, invite selection (48 unit tests). Next: data access layer, exported contracts, route handlers.
 - 2026-10-24 15:23 PT: progress file, interim scaffold, 0600 migration with 18 passing integration tests. Next: domain logic (slots, scoring, visibility, invites) with unit tests.
