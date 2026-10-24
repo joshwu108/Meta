@@ -121,6 +121,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Blocked
 
+- CI's "migrations, types, integration" job on PR #2 cannot pass until ws/05-business is on main: 0600 references 05's `events`/`businesses`. After 05 lands, regenerate `src/lib/supabase/database.types.ts` (`pnpm db:types`, needs `supabase start`, i.e. Docker; Docker Desktop is installed here but not running) and push.
 - E2E scenes 5 and 6 are written (`tests/e2e/`) but need 01's `/login` page and seed runner plus a running Supabase stack. Scene 5 runs as `demo.new@commonground.test`, the Scene 1 user (override with `E2E_DEMO_EMAIL`) and that Scene 4 published "Beginner Pottery & Coffee Night".
 - P1 list/map toggle: needs a static map tile provider decision (OpenStreetMap static tiles, Mapbox with a key, etc.) and 01's CSP to allow its `img-src`. Everything else on the page works without it.
 - Supabase CLI and Docker are not available here, so `pnpm db:reset`, `pnpm db:seed`, requests through real PostgREST/GoTrue, and Playwright scenes cannot run on this machine. SQL, RLS (as a non-superuser role), services and routes are covered on plain Postgres. Needs a machine with `supabase start` to finish the stack checks.
