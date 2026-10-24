@@ -32,7 +32,7 @@ describe("rsvpToEvent", () => {
       p_event_id: "e1", p_share_attendees: true, p_share_business: true, p_allow_waitlist: false,
     });
     expect(out).toEqual({ status: "confirmed", eventStatus: "published" });
-    expect(notify).toHaveBeenCalledWith("u1", "rsvp_confirmed", { eventId: "e1" });
+    expect(notify).toHaveBeenCalledWith("u1", "rsvp_confirmed", { eventId: "e1", href: "/events/e1" });
   });
 
   it("does not send a confirmation for a waitlisted RSVP", async () => {
@@ -66,7 +66,7 @@ describe("cancelRsvp", () => {
     const { db } = client({ data: [{ cancelled: true, promoted_user_id: "u2", event_status: "full" }] });
 
     await expect(cancelRsvp(db, "e1")).resolves.toEqual({ eventStatus: "full" });
-    expect(notify).toHaveBeenCalledWith("u2", "rsvp_confirmed", { eventId: "e1", promotedFromWaitlist: true });
+    expect(notify).toHaveBeenCalledWith("u2", "rsvp_confirmed", { eventId: "e1", promotedFromWaitlist: true, href: "/events/e1" });
   });
 
   it("answers NOT_FOUND when there was nothing to cancel", async () => {

@@ -68,7 +68,7 @@ describe.skipIf(!available)("06 services against Postgres", () => {
       expect(second.mutual).toBe(true);
       expect(await count("select count(*) as n from follow_up_suggestions where event_id = $1", [eventId])).toBe(1);
       expect(await count(
-        "select count(*) as n from notifications where type = 'reconnect_suggestion' and payload->>'eventId' = $1", [eventId],
+        "select count(*) as n from notifications where type = 'reconnect_suggestion' and payload->>'eventId' = $1 and payload->>'href' = '/activity'", [eventId],
       )).toBe(2);
       expect((await listFollowUps(maya)).map((f) => f.otherUser?.displayName)).toEqual(["Jordan"]);
       expect((await listFollowUps(jordan)).map((f) => f.otherUser?.displayName)).toEqual(["Maya"]);

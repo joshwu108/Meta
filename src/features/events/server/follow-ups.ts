@@ -21,6 +21,9 @@ export function nextFollowUpStatus(current: FollowUpStatus, side: "a" | "b", act
   return current;
 }
 
+/** Follow-up suggestions are shown in My Activity. */
+const ACTIVITY_HREF = "/activity";
+
 const canonicalPair = (x: string, y: string): [string, string] => (x < y ? [x, y] : [y, x]);
 
 /** Used when either person has not consented to sharing preferences: no AI, no personal data. */
@@ -65,7 +68,7 @@ export async function createFollowUp(eventId: string, userX: string, userY: stri
   const created = data?.[0]?.id as string | undefined;
   if (!created) return createFollowUp(eventId, userA, userB);
 
-  await Promise.all([userA, userB].map((userId) => notify(userId, "reconnect_suggestion", { eventId, suggestionId: created })));
+  await Promise.all([userA, userB].map((userId) => notify(userId, "reconnect_suggestion", { eventId, suggestionId: created, href: ACTIVITY_HREF })));
   return created;
 }
 
@@ -128,7 +131,7 @@ export async function respondToFollowUp(userId: string, id: string, action: Foll
   if (error) throw new ApiError("INTERNAL", "Could not update the suggestion");
   if (!data?.length) throw new ApiError("CONFLICT", "The other person just responded; refresh and try again");
   if (next === "accepted_both") {
-    await notify((side === "a" ? row.user_b : row.user_a) as string, "reconnect_suggestion", { suggestionId: id, accepted: true });
+    await notify((side === "a" ? row.user_b : row.user_a) as string, "reconnect_suggestion", { suggestionId: id, accepted: true, href: ACTIVITY_HREF });
   }
   return { status: next };
 }

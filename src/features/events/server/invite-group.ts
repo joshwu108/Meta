@@ -1,6 +1,7 @@
 import "server-only";
 import { selectEventInvitees } from "./invite";
 import { activeRsvpUserIds, getVisibleEvent } from "./repo";
+import { eventHref } from "./rsvp";
 import {
   ApiError,
   createAdminClient,
@@ -40,7 +41,7 @@ export async function inviteGroupToEvent(callerId: string, eventId: string, grou
   await createEventInvitations({ senderId: callerId, groupId, eventId, recipientIds: selection.inviteeIds });
   await Promise.all(
     selection.inviteeIds.map((id) =>
-      notify(id, "group_invite", { kind: "event", eventId, groupId, title: event.title }),
+      notify(id, "group_invite", { kind: "event", eventId, groupId, title: event.title, href: eventHref(eventId) }),
     ),
   );
   return { invited: selection.inviteeIds.length, skipped: selection.skipped };

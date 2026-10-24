@@ -94,7 +94,7 @@ describe.skipIf(!available)("06 flows against Postgres", () => {
     const { rows } = await db.pool.query("select status from rsvps where event_id = $1 and user_id = $2", [eventId, waiting]);
     expect(rows[0].status).toBe("confirmed");
     const notes = await db.pool.query("select payload from notifications where user_id = $1 and type = 'rsvp_confirmed'", [waiting]);
-    expect(notes.rows.map((r) => r.payload)).toEqual([{ eventId, promotedFromWaitlist: true }]);
+    expect(notes.rows.map((r) => r.payload)).toEqual([{ eventId, promotedFromWaitlist: true, href: `/events/${eventId}` }]);
   });
 
   it("lets only the venue owner complete an event unless DEMO_MODE is on", async () => {

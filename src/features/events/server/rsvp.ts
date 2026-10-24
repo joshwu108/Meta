@@ -10,6 +10,9 @@ const CancelResult = z.array(z.object({
   cancelled: z.boolean(), promoted_user_id: z.string().nullable(), event_status: z.string(),
 })).length(1);
 
+/** In-app deep link 01's notification bell follows (`payload.href`). */
+export const eventHref = (eventId: string) => `/events/${eventId}`;
+
 /** P1 waitlist switch; off in P0, where a full event answers CAPACITY_FULL. */
 export const waitlistEnabled = () => process.env.WAITLIST_ENABLED === "1";
 
@@ -29,7 +32,7 @@ export async function rsvpToEvent(
   });
   if (error) throw fromRpcError(error);
   const [row] = RsvpResult.parse(data);
-  if (row!.rsvp_status === "confirmed") await notify(userId, "rsvp_confirmed", { eventId });
+  if (row!.rsvp_status === "confirmed") await notify(userId, "rsvp_confirmed", { eventId, href: eventHref(eventId) });
   return { status: row!.rsvp_status, eventStatus: row!.event_status };
 }
 
@@ -39,7 +42,7 @@ export async function cancelRsvp(supabase: SupabaseClient, eventId: string): Pro
   const [row] = CancelResult.parse(data);
   if (!row!.cancelled) throw new ApiError("NOT_FOUND", "You have no RSVP to cancel");
   if (row!.promoted_user_id) {
-    await notify(row!.promoted_user_id, "rsvp_confirmed", { eventId, promotedFromWaitlist: true });
+    await notify(row!.promoted_user_id, "rsvp_confirmed", { eventId, promotedFromWaitlist: true, href: eventHref(eventId) });
   }
   return { eventStatus: row!.event_status };
 }
