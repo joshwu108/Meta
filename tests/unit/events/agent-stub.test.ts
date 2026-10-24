@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SharablePreferences } from "@/shared/types";
 
+vi.mock("server-only", () => ({}));
+
 const logAgentAction = vi.fn();
 vi.mock("@/features/events/server/stubs/core", async (importOriginal) => ({
   ...(await importOriginal<object>()),

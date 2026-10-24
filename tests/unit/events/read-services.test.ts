@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ConfirmedAttendee, MyRsvp } from "@/features/events/server/repo";
 import { eventRow, uid } from "./fixtures";
 
+vi.mock("server-only", () => ({}));
+
 const VIEWER = uid(1);
 const FRIEND = uid(2);
 const STRANGER = uid(3);

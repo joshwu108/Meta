@@ -1,6 +1,8 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
 import { confirmedCount, createBusiness, createEvent, createUser, eventStatus } from "../support/factories";
+
+vi.mock("server-only", () => ({}));
 
 const available = await isDbAvailable();
 

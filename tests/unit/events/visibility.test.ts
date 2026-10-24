@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { buildAttendeeList, isBlockedEitherWay, type AttendeeRow, type ViewerContext } from "@/features/events/server/visibility";
+
+vi.mock("server-only", () => ({}));
 
 const row = (overrides: Partial<AttendeeRow> = {}): AttendeeRow => ({
   userId: "u1",

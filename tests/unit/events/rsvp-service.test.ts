@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+vi.mock("server-only", () => ({}));
+
 const notify = vi.fn();
 vi.mock("@/features/events/server/stubs", async (importOriginal) => ({
   ...(await importOriginal<object>()),

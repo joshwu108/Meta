@@ -1,9 +1,11 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { planRsvps, rsvpCandidates, seedEventsAndRsvps } from "../../../supabase/seed/06-events";
 import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
 import { fakeSupabase } from "../support/fake-supabase";
 import { createBusiness, createEvent, createUser } from "../support/factories";
+
+vi.mock("server-only", () => ({}));
 
 const available = await isDbAvailable();
 const NAMES = ["maya", "jordan", "alex", "sam", "priya", "lee", "rosa", "theo", "nina", "omar", "demo.new", "demo"];

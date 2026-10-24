@@ -4,6 +4,8 @@ import { createTestDb, isDbAvailable, type TestDb } from "../support/db";
 import { fakeSupabase } from "../support/fake-supabase";
 import { createBusiness, createEvent, createGroup, createUser, rsvpAs, setEventStatus } from "../support/factories";
 
+vi.mock("server-only", () => ({}));
+
 const holder = vi.hoisted(() => ({ pool: null as unknown }));
 vi.mock("@/features/events/server/stubs/clients", async () => {
   const { fakeSupabase: fake } = await import("../support/fake-supabase");

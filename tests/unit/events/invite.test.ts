@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { selectEventInvitees, type GroupMember } from "@/features/events/server/invite";
+
+vi.mock("server-only", () => ({}));
 
 const members: GroupMember[] = [
   { userId: "caller", status: "active" },

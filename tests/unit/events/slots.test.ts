@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { deriveSlot, localParts } from "@/features/events/server/slots";
+
+vi.mock("server-only", () => ({}));
 
 describe("deriveSlot (America/Los_Angeles)", () => {
   it.each([

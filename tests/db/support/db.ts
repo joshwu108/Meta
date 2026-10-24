@@ -43,7 +43,7 @@ export async function createTestDb(): Promise<TestDb> {
   const url = new URL(ADMIN_URL);
   url.pathname = `/${name}`;
   const pool = new pg.Pool({ connectionString: url.toString(), max: 25 });
-  await pool.query(await readFile(join(ROOT, "tests", "integration", "support", "upstream.sql"), "utf8"));
+  await pool.query(await readFile(join(ROOT, "tests", "db", "support", "upstream.sql"), "utf8"));
   for (const file of await migrationFiles()) {
     await pool.query(await readFile(file, "utf8"));
   }

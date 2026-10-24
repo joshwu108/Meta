@@ -6,6 +6,8 @@ import {
   createBusiness, createEvent, createGroup, createUser, rsvpAs, setConsent, setLocation, setPreferences, setEventStatus,
 } from "../support/factories";
 
+vi.mock("server-only", () => ({}));
+
 const holder = vi.hoisted(() => ({ pool: null as unknown }));
 vi.mock("@/features/events/server/stubs/clients", async () => {
   const { fakeSupabase: fake } = await import("../support/fake-supabase");

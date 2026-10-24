@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { nextFollowUpStatus, type FollowUpStatus } from "@/features/events/server/follow-ups";
+
+vi.mock("server-only", () => ({}));
 
 describe("nextFollowUpStatus", () => {
   it.each<[FollowUpStatus, "a" | "b", "accept" | "dismiss", FollowUpStatus | null]>([

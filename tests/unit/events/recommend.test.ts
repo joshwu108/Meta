@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   capacityBucket,
   rankEvents,
@@ -8,6 +8,8 @@ import {
 } from "@/features/events/server/recommend";
 import { haversineKm } from "@/features/events/server/geo";
 import { categoriesForInterests } from "@/features/events/server/categories";
+
+vi.mock("server-only", () => ({}));
 
 // Kiln & Cup in the Mission; viewer lives ~1 km away.
 const VENUE = { lat: 37.7599, lng: -122.4148 };
