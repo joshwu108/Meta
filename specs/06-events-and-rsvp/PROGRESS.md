@@ -4,7 +4,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Acceptance criteria (P0)
 
-- [ ] AC1. A newly published pottery event appears in the demo user's recommendations within one page load, with a grounded explanation
+- [x] AC1. A newly published pottery event appears in the demo user's recommendations within one page load, with a grounded explanation
 - [x] AC2. Capacity is never exceeded under concurrent RSVPs; the event flips to `full` and back correctly
 - [x] AC3. Attendee identities are shown only with consent and never across a block
 - [x] AC4. Group event invitations never create RSVPs; each invitee confirms individually
@@ -50,8 +50,8 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - [ ] Filters (category, date, distance)
 - [ ] List/map toggle (static tiles)
 - [ ] Bookmarks
-- [ ] Waitlist with auto-promotion on cancel (`WAITLIST_ENABLED`)
-- [ ] Public group discovery surfacing
+- [x] Waitlist with auto-promotion on cancel (`WAITLIST_ENABLED`)
+- [x] Public group discovery surfacing (Discover "Groups to join", via 03 stub)
 - [ ] Standalone `/places`
 
 ## Decisions
@@ -105,6 +105,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 15:55 PT: coverage 97% lines / 83% branches on features/events/server (137 tests); P1 waitlist UI + promotion notification. Next: P1 filters, bookmarks, /places.
 - 2026-10-24 15:52 PT: seed contribution with idempotent re-runs (110 tests). Next: never-idle list (coverage, edge cases, theme review).
 - 2026-10-24 15:50 PT: UI for Discover, Events (For you/All/This week), event detail (RSVP sheet, reconfirm, invite, feedback, reconnect) and Activity; `next build` passes. Next: seed contribution, then the never-idle list.
 - 2026-10-24 15:43 PT: all 13 route handlers plus PATCH /follow-ups/:id, route tests over Postgres (107 tests); fixed duplicate-vs-full RSVP error order. Next: UI for /discover, /events, /events/:id, /activity.
