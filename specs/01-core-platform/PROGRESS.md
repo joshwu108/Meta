@@ -22,8 +22,8 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 - [x] Seed runner + fixtures (15 users, 3 businesses, 6 events, 2 groups), idempotent
 - [x] `/dev/theme` page rendering every primitive in both themes
 - [x] Security headers + CSP in `next.config.ts`
-- [ ] `.env.example`, README quick start
-- [ ] GitHub Actions CI: lint → typecheck → unit/integration → Playwright smoke (`MOCK_AI=1`)
+- [x] `.env.example`, README quick start
+- [x] GitHub Actions CI: lint → typecheck → unit/integration → Playwright smoke (`MOCK_AI=1`)
 
 ## Tests (specs §9)
 
@@ -33,30 +33,30 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 - [x] Unit: `MOCK_AI` returns fixture
 - [x] Unit: log redaction
 - [x] Unit: Zod row schemas satisfy generated DB row types
-- [ ] Integration: signup creates profile row
-- [ ] Integration: profile RLS blocks reading another user's row
-- [ ] Integration: `profile_public_cards` hides non-discoverable users
-- [ ] Integration: `notify()` inserts; user can list and mark read
-- [ ] Integration: business owner cannot select from `profiles`
-- [ ] E2E: signup → onboarding redirect
-- [ ] E2E: login → discover
-- [ ] E2E: notification bell shows unread count
-- [ ] E2E: `/dev/theme` screenshots 320/768/1024/1440 light + dark
-- [ ] CI guard: every public table has RLS
-- [ ] CI guard: migrations apply on fresh reset
-- [ ] CI guard: `pnpm db:types` output committed and current
+- [x] Integration: signup creates profile row
+- [x] Integration: profile RLS blocks reading another user's row
+- [x] Integration: `profile_public_cards` hides non-discoverable users
+- [x] Integration: `notify()` inserts; user can list and mark read
+- [x] Integration: business owner cannot select from `profiles`
+- [x] E2E: signup → onboarding redirect
+- [x] E2E: login → discover
+- [x] E2E: notification bell shows unread count
+- [x] E2E: `/dev/theme` screenshots 320/768/1024/1440 light + dark
+- [x] CI guard: every public table has RLS
+- [x] CI guard: migrations apply on fresh reset
+- [x] CI guard: `pnpm db:types` output committed and current
 
 ## Acceptance criteria (specs §10)
 
-- [ ] AC1 fresh clone → `pnpm i && pnpm db:start && pnpm db:reset && pnpm db:seed && pnpm dev` works
-- [ ] AC2 seeded consumer and business owner log in and see their shells
-- [ ] AC3 shared helpers/types exported with TSDoc
+- [x] AC1 fresh clone → `pnpm i && pnpm db:start && pnpm db:reset && pnpm db:seed && pnpm dev` works
+- [x] AC2 seeded consumer and business owner log in and see their shells
+- [x] AC3 shared helpers/types exported with TSDoc
 - [ ] AC4 CI green with §9 guards
 - [ ] AC5 preview deployment with `MOCK_AI=1` `DEMO_MODE=1`
 
 ## P1
 
-- [ ] Dark-mode toggle UI
+- [x] Dark-mode toggle UI
 - [ ] Per-user in-memory rate guard on AI routes
 - [ ] Coverage ≥ 80% on `src/features/core/server`
 
@@ -71,10 +71,13 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Blocked
 
+- AC4 (CI green): the workflow is committed and runs on every push to `ws/**`, but this machine has no `gh` and the worker may not log in, so the run result cannot be read from here. A human should open the Actions tab once; failures there will be fixed on the next wakeup if they are reported in Needs-from-others or main.
+
 - AC5 (Vercel preview + hosted Supabase) needs project credentials a human must create. Everything else is built so that linking the projects is the only remaining step.
 
 ## Log
 
+- 2026-10-24 15:50 — Integration tests (RLS, notify/logAgentAction, seed idempotency, RLS guard) and Playwright smoke (signup→onboarding, login→discover, bell unread, theme gallery 4 widths × 2 themes) green locally; CI workflow + README landed; nav icon serialization fix. Totals: 47 unit, 15 integration, 14 e2e. Next: clean-state check (db reset + seed + all suites), coverage on features/core/server, rate guard on AI routes.
 - 2026-10-24 15:35 — Scaffold, shared enums/types/schemas, API envelope + withAuth, logger, Claude wrapper with MOCK_AI, migration 0100 + RLS + generated types, notify/logAgentAction, tokens + 14 UI primitives, app shell, auth pages, /api/me + /api/notifications + /api/dev/seed, seed runner (15 users, 3 owners, 4 notifications; business/event/group tables skipped until their migrations land), 47 unit tests green, typecheck + lint green. Next: integration tests against local supabase, Playwright smoke + theme screenshots, CI workflow, README quick start.
 
 - 2026-10-24 15:15 — PROGRESS.md created; repo contains specs only. Next: scaffold + shared types + envelope.

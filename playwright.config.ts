@@ -11,7 +11,9 @@ export default defineConfig({
   workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
-  snapshotPathTemplate: '{testDir}/__screenshots__/{testFilePath}/{arg}{ext}',
+  // Baselines are per platform: fonts differ between macOS and Linux CI. CI runs with
+  // --update-snapshots=missing so a new platform writes its own baselines on first run.
+  snapshotPathTemplate: '{testDir}/__screenshots__/{testFilePath}/{arg}-{platform}{ext}',
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.02 } },
   use: {
     baseURL,
