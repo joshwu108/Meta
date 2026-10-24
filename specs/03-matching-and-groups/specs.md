@@ -77,7 +77,8 @@ create table groups (
   visibility text not null default 'private' check (visibility in ('public','private')),
   kind text not null default 'interest' check (kind in ('interest','private','event')),
   event_id uuid,                                     -- set for kind = 'event' (FK added by 06 in 06xx migration)
-  creator_id uuid not null references profiles(id),
+  creator_id uuid not null references profiles(id) on delete cascade,
+  archived_at timestamptz,                           -- set when the last member (the owner) leaves
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -96,7 +97,7 @@ create table invitations (
   kind text not null check (kind in ('group','event')),
   group_id uuid references groups(id) on delete cascade,
   event_id uuid,                                     -- FK added by 06
-  sender_id uuid not null references profiles(id),
+  sender_id uuid not null references profiles(id) on delete cascade,
   recipient_id uuid not null references profiles(id) on delete cascade,
   status text not null default 'pending' check (status in ('pending','accepted','declined','expired')),
   created_at timestamptz not null default now(),
@@ -107,7 +108,7 @@ create index on invitations (recipient_id, status);
 create table group_plans (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references groups(id) on delete cascade,
-  requested_by uuid not null references profiles(id),
+  requested_by uuid references profiles(id) on delete set null,
   request_text text not null,
   suggestions jsonb not null,                        -- PlanSuggestion[] (see §5)
   members_included int not null,                     -- count of consenting members used
@@ -125,31 +126,31 @@ create table group_plan_votes (                      -- P1
 
 ### RLS
 
+Policies on the group tables call security-definer helpers (`is_group_member(group, statuses)`, `is_group_admin(group)`, `can_read_group(group)`), because a policy on `group_members` that selects `group_members` recurses. Block and reachability checks use helpers that only answer for the caller (`is_blocked_with(other)`, `can_reach(other)`). Implemented in `0300_social.sql`, `0301_social_functions.sql` (guard triggers and service-role write functions) and `0303_social_reachability.sql`.
+
 ```sql
--- connections: either party can read; only requester inserts; only recipient updates status
+-- connections: either party can read; only the requester inserts (not across a block, only to a
+-- discoverable person or someone in a shared active group); only the recipient updates status
 create policy conn_read on connections for select using (auth.uid() in (requester_id, recipient_id));
-create policy conn_insert on connections for insert with check (auth.uid() = requester_id);
+create policy conn_insert on connections for insert with check (
+  auth.uid() = requester_id and status = 'pending' and not is_blocked_with(recipient_id) and can_reach(recipient_id));
 create policy conn_respond on connections for update using (auth.uid() = recipient_id);
 
 create policy blocks_self on blocks for all using (auth.uid() = blocker_id) with check (auth.uid() = blocker_id);
 create policy reports_insert on reports for insert with check (auth.uid() = reporter_id);
 
--- groups: public groups readable by all authenticated; private only by active/invited members
-create policy groups_read on groups for select using (
-  visibility = 'public' or exists (select 1 from group_members m where m.group_id = id and m.user_id = auth.uid() and m.status in ('invited','active')));
+-- groups: public groups readable by all authenticated; private only by active/invited members; archived by nobody
+create policy groups_read on groups for select using (can_read_group(id));
 create policy groups_insert on groups for insert with check (auth.uid() = creator_id);
-create policy groups_admin_update on groups for update using (
-  exists (select 1 from group_members m where m.group_id = id and m.user_id = auth.uid() and m.role in ('owner','admin') and m.status = 'active'));
+create policy groups_admin_update on groups for update using (is_group_admin(id));
 
-create policy members_read on group_members for select using (
-  exists (select 1 from groups g where g.id = group_id and (g.visibility = 'public' or exists (select 1 from group_members m2 where m2.group_id = g.id and m2.user_id = auth.uid() and m2.status in ('invited','active')))));
+create policy members_read on group_members for select using (can_read_group(group_id));
 -- member writes go through server functions using the admin client after explicit authorization checks
 
 create policy inv_read on invitations for select using (auth.uid() in (sender_id, recipient_id));
 create policy inv_respond on invitations for update using (auth.uid() = recipient_id);
 
-create policy plans_read on group_plans for select using (
-  exists (select 1 from group_members m where m.group_id = group_id and m.user_id = auth.uid() and m.status = 'active'));
+create policy plans_read on group_plans for select using (is_group_member(group_id, array['active']));
 ```
 
 ## 5. Matching & Planning Logic
@@ -217,6 +218,7 @@ Score is 0–100, rounded. Weights live in `src/features/matching/server/weights
 | `POST /api/groups/:id/leave` | owner must transfer first (`PATCH` with `{ transferOwnerTo }`) or be last member (group archived) |
 | `POST /api/groups/:id/plan` | `{ request: string }` → `GroupPlan` |
 | `POST /api/groups/:id/plans/:planId/vote` | P1 `{ suggestionIndex }` toggle |
+| `GET/POST /api/connections/:id/messages` | P1 text messages between accepted connections; `?after=` for polling |
 
 ## 7. UI
 
