@@ -71,10 +71,11 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 
 ### Integration
 - [x] **T-I1** owner-only access to proposals and events (other owner → `NOT_FOUND`)
+  — **verified against a live stack**; it caught a real security bug (see Decisions)
 - [x] **T-I2** `decide_proposal` RPC is atomic (failure after proposal update → rollback)
 - [x] **T-I3** approve creates `approved_draft` event linked to proposal
 - [~] **T-I4** publish notifies cluster members without exposing ids — written; the
-  cohort half needs 04's `demand_cluster_members`, so it self-skips until 04 merges
+  cohort half needs 04's `demand_cluster_members`, so it skips until 04 merges
 - [~] **T-I5** cancel notifies RSVPs — written; self-skips until 06 merges `rsvps`
 - [x] **T-I6** public can read only published/full/completed events
 - [x] **T-I7** `proposals_business_fk` exists after a full reset (spec §12)
@@ -126,6 +127,22 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - **2026-10-24 — `/business/insights` (P1-1) shipped early** because it is pure banding over
   `demand_clusters` and shares the DTO builders already written for the inbox. It shows an
   empty state until 04 merges.
+- **2026-10-24 — Ran the stack and found two bugs no unit test could reach.** Worth
+  recording because both were invisible to 247 green unit tests:
+  1. **`is_trusted_server()` tested `current_user`.** It is called from SECURITY DEFINER
+     functions, where `current_user` is the function's *owner* (`postgres`) for every
+     caller — so `can_act_on_business()` returned true for any signed-in user and the
+     ownership check in `decide_proposal`, `transition_event_status`, `publish_event` and
+     `cancel_event` was bypassed entirely. One owner could have published or cancelled
+     another venue's event. Fixed to `session_user`, which keeps the role that actually
+     connected (`authenticator` under PostgREST, `postgres` for psql or the seed runner).
+  2. **Every "another workstream has not merged yet" guard checked for `42P01`.** Reads go
+     through PostgREST, which answers from its own schema cache and reports `PGRST205`, so
+     no guard ever fired: the proposal inbox, attendee list and confirmed count would have
+     thrown `INTERNAL` instead of returning empty.
+  The migration was edited in place rather than superseded by an `0502`, because
+  `0501_business_rpc.sql` has only ever existed on this branch and has not been merged to
+  `main`.
 - **2026-10-24 — P1 analytics live on `/business/insights`, not in its response.** Spec §6
   fixes the shape of `GET /api/business/insights` as banded demand, so the past-event
   analytics (`server/analytics.ts`) are rendered by the page's server component instead of
@@ -188,20 +205,38 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
   of this clone confirmed the author email and asked for it to be set, so
   `set-identity.sh "Joshua Wu" "joshwu10806@gmail.com" "joshwu108" 5` ran once
   (repo-local `git config` only, never `--global`). `ws/05-business` exists and is pushed.
-- **E2E and integration tests are written but have never been executed here** — both need
-  the local Supabase stack (and the E2E needs 01's `/login`). They self-skip rather than
-  fail, so `pnpm test` is green; the first person with a stack should run
-  `pnpm db:reset && pnpm db:seed && pnpm test && pnpm test:e2e` and report what breaks.
-- **`supabase` CLI not installed** on this machine, so `pnpm db:reset` / `db:seed` and the
-  integration tests that need a live Postgres cannot run here. Migrations are written and
-  syntax-reviewed; integration tests are written so they skip with a clear message when no
-  local stack is reachable. Needs `brew install supabase/tap/supabase`.
+- ~~The `supabase` CLI is not installed and the integration tests have never run.~~
+  **Resolved 2026-10-24 17:02**: the CLI is now a devDependency (`pnpm add -D supabase`,
+  no global install) and Docker was already running here, so `supabase start`,
+  `db reset`, `db:seed` and the integration suite all execute. Anyone with Docker can now
+  run `npx supabase start && npx supabase db reset && pnpm db:seed && pnpm test`.
+  **Both migrations apply cleanly on a fresh reset** and the suite caught two real bugs.
+- **The Playwright suite still cannot run** — it signs in through workstream 01's `/login`,
+  which does not exist yet, so all 22 cases skip on `appIsReady()`. This is the last thing
+  05 cannot verify itself. Once 01 lands auth, run
+  `npx supabase db reset && pnpm db:seed && pnpm test:e2e`.
+- **The nine proposal-decision integration cases skip** until 04 merges
+  `event_proposals`; they now report as `skipped` rather than passing vacuously.
 
 ## Log
 
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 17:05` — **stood up the real stack; it found two bugs, both fixed and
+  pushed.** Docker was already running here and the supabase CLI ships on npm, so the CLI
+  is now a devDependency and the whole local stack runs from a clone — closing the blocker
+  that had stood since the first tick. **Both migrations apply cleanly on a fresh
+  `db reset`**, `pnpm db:seed` creates the three venues with their owners and capabilities
+  and is idempotent, and `business_candidates` correctly returns only Kiln & Cup for a
+  creative cohort in the Mission (0.011 km) and nothing for a 400-person cohort.
+  The two bugs are written up under Decisions: a SECURITY DEFINER / `current_user`
+  mistake that let **any signed-in user act on another venue's events**, and a
+  missing-table guard that checked Postgres's `42P01` when PostgREST reports `PGRST205`.
+  Also made the cases that wait on another workstream's table report as `skipped` instead
+  of passing vacuously. **259 tests pass (247 unit + 12 real integration), 9 skipped**;
+  coverage 95.2% lines. Next: the Playwright suite is the only thing 05 still cannot run,
+  and it needs 01's `/login`.
 - `2026-10-24 16:19` — **route boundaries and a real audit for criterion 3, pushed.** The
   business screens are server components with no `loading.tsx`, `error.tsx` or
   `not-found.tsx`, so a slow query rendered nothing and a thrown `ApiError` fell through to
