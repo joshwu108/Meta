@@ -3,6 +3,7 @@ import { logAgentAction } from '@/features/core';
 import type { EventCategory, SocialGoal } from '@/shared/enums';
 import type { MatchesQuery } from '@/shared/schemas/social';
 import type { AvailabilitySlot, CompatibilityResult } from '@/shared/types';
+import { mapLimit } from './async';
 import { createTtlCache } from './cache';
 import { loadCandidateIds } from './candidates';
 import { getPublicCards, unknownCard, type PublicCard } from './cards';
@@ -70,6 +71,9 @@ export function rankCandidates(
     .slice(0, opts.limit);
 }
 
+/** Explanation calls in flight at once on a cache miss (each may be a model call). */
+const EXPLAIN_CONCURRENCY = 5;
+
 const cache = createTtlCache<MatchesResult>({ ttlMs: MATCH_LIMITS.cacheTtlMs, maxEntries: 2000 });
 
 /** Drop cached match lists for these viewers (after a connection, block or preference change). */
@@ -79,16 +83,14 @@ export function invalidateMatches(...userIds: string[]): void {
 
 async function toMatchCards(viewer: MatchingPreferences, ranked: readonly RankedCandidate[]): Promise<MatchCard[]> {
   const cards = await getPublicCards(ranked.map((r) => r.prefs.userId));
-  return Promise.all(
-    ranked.map(async ({ prefs, result }) => ({
-      user: cards.get(prefs.userId) ?? unknownCard(prefs.userId),
-      score: result.score,
-      breakdown: result.breakdown,
-      sharedInterests: result.sharedInterests,
-      sharedSlots: result.sharedSlots,
-      explanation: await explainMatch(viewer, prefs, result),
-    })),
-  );
+  return mapLimit(ranked, EXPLAIN_CONCURRENCY, async ({ prefs, result }) => ({
+    user: cards.get(prefs.userId) ?? unknownCard(prefs.userId),
+    score: result.score,
+    breakdown: result.breakdown,
+    sharedInterests: result.sharedInterests,
+    sharedSlots: result.sharedSlots,
+    explanation: await explainMatch(viewer, prefs, result),
+  }));
 }
 
 async function computeMatches(viewerId: string, query: MatchesQuery): Promise<MatchesResult> {

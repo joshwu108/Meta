@@ -24,4 +24,5 @@ export {
 } from './server/social-graph';
 export { getPublicCard, getPublicCards, unknownCard, type PublicCard } from './server/cards';
 export { listConnections, type ConnectionItem } from './server/connections';
+export { notifySafely } from './server/async';
 export type { Actor } from './server/http';

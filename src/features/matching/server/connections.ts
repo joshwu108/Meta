@@ -1,9 +1,9 @@
 import 'server-only';
-import { notify } from '@/features/core';
 import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import type { ConnectionStatus } from '@/shared/enums';
 import type { ConnectionRow } from '@/shared/schemas/social';
+import { notifySafely } from './async';
 import { getPublicCard, getPublicCards, unknownCard, type PublicCard } from './cards';
 import { PG, type Actor } from './http';
 import { invalidateMatches } from './matches';
@@ -72,7 +72,7 @@ export async function sendConnectionRequest(actor: Actor, input: { recipientId: 
   if (error || !data) throw new ApiError('NOT_FOUND', UNAVAILABLE, 404);
 
   const requester = await getPublicCard(actor.userId);
-  await notify(input.recipientId, 'connection_request', {
+  await notifySafely(input.recipientId, 'connection_request', {
     title: `${requester?.displayName ?? 'Someone'} wants to connect`,
     ...(input.message ? { body: input.message } : {}),
     connectionId: data.id,
@@ -103,7 +103,7 @@ export async function respondToConnection(actor: Actor, connectionId: string, st
   const requester = (await getPublicCard(row.requester_id)) ?? unknownCard(row.requester_id);
   if (status === 'accepted') {
     const me = await getPublicCard(actor.userId);
-    await notify(row.requester_id, 'connection_accepted', {
+    await notifySafely(row.requester_id, 'connection_accepted', {
       title: `${me?.displayName ?? 'Someone'} accepted your request`,
       connectionId,
       userId: actor.userId,

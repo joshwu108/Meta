@@ -1,6 +1,5 @@
 import 'server-only';
-import { notify } from '@/features/core';
-import { canReach, getBlockEdges, getConnectionIds, getPublicCard, isBlockedEitherWay, type Actor } from '@/features/matching';
+import { canReach, getBlockEdges, getConnectionIds, getPublicCard, isBlockedEitherWay, notifySafely, type Actor } from '@/features/matching';
 import { ApiError } from '@/lib/api/errors';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { canInvite, canRemove } from './authz';
@@ -21,14 +20,12 @@ async function classifyInvitees(actor: Actor, groupId: string, userIds: readonly
     loadMemberRows(actor, [groupId], ['active', 'invited']),
   ]);
   const members = new Set(current.map((row) => row.user_id));
-  const result: Classified = { eligible: [], alreadyMember: 0, blocked: 0, unreachable: 0 };
-  for (const id of candidates) {
-    if (members.has(id)) result.alreadyMember += 1;
-    else if (isBlockedEitherWay(edges, actor.userId, id)) result.blocked += 1;
-    else if (connections.has(id) || (await canReach(actor.userId, id))) result.eligible.push(id);
-    else result.unreachable += 1;
-  }
-  return result;
+  const alreadyMember = candidates.filter((id) => members.has(id));
+  const blocked = candidates.filter((id) => !members.has(id) && isBlockedEitherWay(edges, actor.userId, id));
+  const open = candidates.filter((id) => !members.has(id) && !blocked.includes(id));
+  const reachable = await Promise.all(open.map((id) => connections.has(id) || canReach(actor.userId, id)));
+  const eligible = open.filter((_, i) => reachable[i]);
+  return { eligible, alreadyMember: alreadyMember.length, blocked: blocked.length, unreachable: open.length - eligible.length };
 }
 
 /**
@@ -48,7 +45,7 @@ export async function inviteMembers(actor: Actor, groupId: string, userIds: read
   const inviter = await getPublicCard(actor.userId);
   await Promise.all(
     (data ?? []).map((row) =>
-      notify(row.invitee_id, 'group_invite', {
+      notifySafely(row.invitee_id, 'group_invite', {
         title: `${inviter?.displayName ?? 'Someone'} invited you to ${group.name}`,
         groupId,
         invitationId: row.invitation_id,
