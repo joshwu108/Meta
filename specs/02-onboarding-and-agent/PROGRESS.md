@@ -73,11 +73,22 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 2026-10-24: Node 20.18.1 and pnpm 9.15.0 installed under ~/.local (no Homebrew on this machine).
 - 2026-10-24: Onboarding replies are returned whole, not streamed. MOCK_AI and structured tool output make streaming moot for the demo; extracted chips still appear as soon as each reply lands. Revisit if live latency is a problem.
 
+## Merge plan for when ws/01-core lands on main
+Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from main only):
+1. Take main's root config (package.json, tsconfig, vitest, eslint, next.config, playwright.config, layout.tsx, tokens.css, shared/enums.ts, shared/types.ts); re-add ws02 dev deps (`zod-to-json-schema` only if 01 lacks it, `@playwright/test`).
+2. Delete `src/features/agent/server/stubs.ts`; import `ok/fail/parseBody/withAuth/ApiError` from `@/lib/api`, `generateStructured` from `@/lib/ai`, `logAgentAction` from `@/features/core`, `createAdminClient` from `@/lib/supabase/admin`.
+3. `generateStructured` has no `system` option in 01: drop per-call `system`, register `AGENT_PROMPT_DEFINITIONS` in `src/lib/ai/prompts/index.ts`.
+4. 01's mock loader returns the whole fixture: ws02 fixtures already keep the default at the top level. Case-specific unit tests (board games, vague follow-ups) then need `vi.mock("@/lib/ai")` instead of relying on `cases`.
+5. Consider replacing `server/rate-limit.ts` with 01's `createRateLimiter({ limit: 30, windowMs: 600000 })`.
+6. Route tests: mock `@/lib/supabase/server` instead of `@supabase/ssr`; use 01's `EMPTY_CONTEXT`.
+7. Swap local `primitives.tsx` for `@/features/core/components/ui` and wrap agent pages in 01's AppShell.
+
 ## Needs from others
 - 03 and 04: import `DEMAND_OPT_OUT_EMAILS` / `MATCHING_OPT_OUT_EMAILS` from `tests/fixtures/consent-cases.ts` and assert those users never appear in matches / cohort counts (closes AC3).
 - README: add `POST /api/agent/feedback` (P1) to the 02 row of the routes table, and `resolveGroupSchedule(members)` / `getSharablePreferencesBatch(ids, purpose)` to the 02 function contracts.
 - 03: the group planner can call `resolveGroupSchedule(members)` from `@/features/agent` with members fetched via `getSharablePreferencesBatch(ids, 'group_plan')`.
-- 01: `users.json` should use the emails in `supabase/seed/fixtures/preferences.json` (maya@, jordan@, … @commonground.test) and call `seedAgent(admin, userIdByEmail)` from `supabase/seed/agent.ts` after users are inserted.
+- 01: call `loadAgentPreferences(ctx)` from `supabase/seed/agent.ts` in `runSeedWith` right after `loadUsers(ctx)` (skip when `user_preferences` is missing, like the other loaders).
+- 01: add `'agent.follow_up_suggestion'` to `PROMPT_IDS` (README assigns the follow-up prompt to 02; 06 can still own `events.reconnect_followup`) and spread ws02's `AGENT_PROMPT_DEFINITIONS` into `PROMPTS`.
 - 01: until the app shell lands, ws02 ships `src/styles/tokens.css` (copied from design-system.md), a bare `src/app/layout.tsx`, and local primitives in `features/agent/components/primitives.tsx`. Replace them with 01's versions on merge.
 - README/01: `SharablePreferences.groupSizePref` is non-null but users may not state one; ws02 returns `'small'` when unset. Prefer making it `GroupSizePref | null`.
 - 01: `profiles`, `agent_action_log`, `set_updated_at()` from `0100_core.sql`; `src/lib/api`, `src/lib/ai`, `logAgentAction`, `getCurrentUser`.
@@ -96,3 +107,4 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 2026-10-24 16:40 · landed: P1 group scheduling helper, P1 feedback memory (route, storage, prompt injection, thumbs UI); 123 unit tests + Scene 1 E2E green. Next: AC3 shared consent fixture for 03/04, UI polish, dark-mode screenshots.
 - 2026-10-24 16:55 · landed: shared AC3 consent fixture + boundary test, theme check (5 screens × light/dark × 320/768/1024/1440, no overflow); 126 unit + 9 E2E green. Next: wait for 01 scaffold on main and swap stubs; meanwhile UI component edge cases.
 - 2026-10-24 17:10 · landed: privacy guard test (no agent-table reads outside features/agent), AI_UNAVAILABLE → form fallback with E2E; 128 unit + 10 E2E green. Next: keep syncing for 01; component edge cases.
+- 2026-10-24 17:30 · ws/01-core reviewed (read-only): re-keyed preferences seed to 01's 14 users (clusters preserved), loader takes SeedContext, fixtures readable by 01's mock loader, prompt defs in 01's registry shape; merge plan recorded. 131 unit + 10 E2E green. Next: wait for 01 on main.
