@@ -74,6 +74,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Needs from others
 
+- 06 (and 02/03): the consumer right rail is now the `@aside` parallel route; add `src/app/(consumer)/@aside/discover/page.tsx` (agent strip) and `@aside/events/page.tsx` (filters) to own those rails. Everything else keeps the default agent strip.
 - All: notification `payload.href` (in-app path) is now honoured by the bell; `payload.title` and `payload.body` override the default copy.
 - ~~README (integrator): §4 `SharablePreferences` / `ExplainInput`, §5 16 users~~ applied on main (67c7e8a).
 - 02: put your `AGENT_PROMPT_DEFINITIONS` in `src/lib/ai/prompts/agent.ts` as `AGENT_PROMPTS` (slot exists), and register `loadAgentPreferences` in `supabase/seed/loaders/registry.ts` `AFTER_USERS` (your `AgentSeedContext` is a subset of `SeedContext`, so it fits as-is).
@@ -97,6 +98,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 19:20 — Wakeup: main unchanged since the 01 merge. 06 merged main into its branch and reports CI lint/typecheck/unit green on its PR (my workflow works; its Supabase job waits on 05). Landed 06's request: `@aside` parallel-route slot for the consumer right rail (default + catch-all → agent strip). 79 unit + 17 integration + 17 e2e green. Next: watch main.
 - 2026-10-24 18:50 — Integrator asked for ws/01-core on main: fast-forwarded main to 5766791, then to integration/ws01 (67c7e8a: Node 22 `.npmrc` + README/design-system contract edits applying this file's requests). Branch synced to main. Scripts verified on the pinned Node 22.20.0: typecheck clean, 79 unit green. Next: other workstreams merge onto this; keep syncing and reconcile their changes to shared files.
 - 2026-10-24 18:20 — Wakeup: main unchanged. Bell rows now follow `payload.href` (03's request): safeNext-validated, mark read first, then navigate; seed notifications carry hrefs. 79 unit + 17 integration + 16 e2e green. Next: watch main.
 - 2026-10-24 18:05 — Check: main unchanged; all five branches moved. Added `demand.revise_proposal` (04). Re-verified all 13 branch migrations (0100–0600 incl. 0302/0303/0402–0404) apply together locally; seed + 17 integration tests pass. 03 and 06 have written merge plans against 01's registries. Next: watch main.
