@@ -62,10 +62,15 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Decisions
 
+- 2026-10-24: Added `--color-warning-ink` (#8A5A00 light / #F7B928 dark) to tokens.css because the spec's `--color-warning` (#F7B928) on `--color-warning-soft` fails AA for text. Used by `StatusPill` amber states. Proposed for design-system.md under Needs from others.
+- 2026-10-24: Dev server and Playwright default to port 3100 (3000 is commonly held by Docker/other tools); `PORT` overrides.
+- 2026-10-24: Screenshot baselines are per platform (`-darwin`, `-linux`); CI writes missing baselines on its first run rather than failing on macOS ones.
+
 - 2026-10-24: Supabase CLI is not installed globally on this machine; it is added as a devDependency so `pnpm supabase ...` works everywhere and in CI.
 
 ## Needs from others
 
+- README/design-system (integrator): add `--color-warning-ink` to design-system.md §1 (see Decisions) so other workstreams use it for text on `--color-warning-soft`.
 - 03/05/06: `supabase/seed/loaders/domain.ts` inserts `businesses`, `events`, `groups`, `group_members` with the column names from your specs and skips while the table is missing. When your migration lands, run `pnpm db:seed` and adjust the loader for any column it gets wrong.
 - 05: `withBusinessOwner` looks up `businesses` by `owner_id = auth.uid()`. Keep that column name (or tell me the real one).
 
