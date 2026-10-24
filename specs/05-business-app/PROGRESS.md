@@ -278,6 +278,18 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 19:45` — **post-merge design-system and coverage pass.** Re-read the changed
+  `design-system.md`: 01 added `--color-warning-ink` because `--color-warning` fails AA on
+  `--color-warning-soft`, so the reconfirm banner now uses it. Also found `src/app/globals.css`
+  orphaned by the merge — the root layout loads 01's `src/styles/global.css`, which already
+  provides `rise-in` and the `@theme inline` mapping, and nothing referenced the `.ai-tag` /
+  `.ai-ring` classes my copy defined now that `AiTag` is 01's component. Checked the one
+  thing that would have been a silent regression: 01's `@theme inline` does map `--text-md`
+  and the rest of the scale, so 05's `text-md` / `text-sm` classes still resolve to the
+  design tokens rather than Tailwind defaults. Added tests for `requireBusinessPage` and
+  `requireVenueContext`, the two modules left at zero coverage by the merge; the measured
+  tree is now 89.6% lines. **335 unit, 29 integration (9 skipped)**; typecheck, lint and
+  build clean. Next: watch main for 04.
 - `2026-10-24 19:20` — **01 merged; integrated it (37 conflicts) and everything is green
   again.** Took main's version of every shared file and adapted 05 to the real contracts;
   the whole list is under Decisions. Net effect: 05 got smaller — the shell, the sign-in
