@@ -50,6 +50,8 @@ export type GroupPlanView = {
   votes: PlanVotes;
   /** Per suggestion: a new activity that needs a venue and has ≥ 50% of members' votes (P1). */
   venueEligible: boolean[];
+  /** Smallest group 04 will route to a venue (`MIN_COHORT_SIZE`). */
+  venueMinMembers: number;
 };
 
 export type GroupEvent = { event: EventSummary; membersGoing: number; sharedWithGroup: boolean };

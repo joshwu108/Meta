@@ -12,6 +12,8 @@ type Props = {
   votedByMe: boolean;
   canVote: boolean;
   venueEligible: boolean;
+  /** Why "Request venue" is disabled, when it is. */
+  venueHint: string | null;
   isVoting: boolean;
   isRequesting: boolean;
   onVote: () => void;
@@ -41,7 +43,7 @@ function Facts({ suggestion }: { suggestion: PlanSuggestion }) {
 }
 
 /** One planner suggestion (Screen 5): AI-marked, votable, with RSVP or "Request venue". */
-export function SuggestionCard({ suggestion, votes, votedByMe, canVote, venueEligible, isVoting, isRequesting, onVote, onRequestVenue }: Props) {
+export function SuggestionCard({ suggestion, votes, votedByMe, canVote, venueEligible, venueHint, isVoting, isRequesting, onVote, onRequestVenue }: Props) {
   return (
     <Card as="article" className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
@@ -75,7 +77,7 @@ export function SuggestionCard({ suggestion, votes, votedByMe, canVote, venueEli
             <Button variant="secondary" disabled={!venueEligible} isLoading={isRequesting} onClick={onRequestVenue}>
               Request venue
             </Button>
-            {!venueEligible && <span className="text-[length:var(--text-xs)] text-text-3">Needs votes from half the group</span>}
+            {!venueEligible && venueHint && <span className="text-[length:var(--text-xs)] text-text-3">{venueHint}</span>}
           </span>
         ) : null}
       </div>

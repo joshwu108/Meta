@@ -161,7 +161,13 @@ describe('group page: plan, votes and events', () => {
     actAs(maker);
     const second = await call(vote, { method: 'POST', params: { id: groupId, planId: latestPlan.id }, body: { suggestionIndex: index } });
     expect(second.body.data.votes.counts[index]).toBe(2);
-    expect(second.body.data.venueEligible[index]).toBe(true);
+    // Three active members is below 04's default MIN_COHORT_SIZE of 4.
+    expect(second.body.data).toMatchObject({ venueMinMembers: 4 });
+    expect(second.body.data.venueEligible[index]).toBe(false);
+    vi.stubEnv('MIN_COHORT_SIZE', '3');
+    const smallCohort = (await call(getGroup, { params: { id: groupId } })).body.data.latestPlan;
+    expect(smallCohort.venueEligible[index]).toBe(true);
+    vi.unstubAllEnvs();
     const undo = await call(vote, { method: 'POST', params: { id: groupId, planId: latestPlan.id }, body: { suggestionIndex: index } });
     expect(undo.body.data.votes.mine).toEqual([]);
     expect((await call(vote, { method: 'POST', params: { id: groupId, planId: latestPlan.id }, body: { suggestionIndex: 3 } })).status).toBe(400);

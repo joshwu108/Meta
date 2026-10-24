@@ -69,10 +69,17 @@ export function PlansPanel({ group }: { group: GroupDetail }) {
     if (next) setPlan(next);
   };
   const requestVenue = (index: number) =>
-    run(`venue:${index}`, '/api/ai/generate-opportunities', { method: 'POST', body: { source: 'group', groupId: group.id, planId: plan!.id, suggestionIndex: index } }, {
-      success: 'Sent to local venues. You’ll hear back if one can host it.',
-      refresh: false,
-    });
+    run<{ proposalId: string; businessName?: string }>(
+      `venue:${index}`,
+      '/api/ai/generate-opportunities',
+      { method: 'POST', body: { source: 'group', groupId: group.id, planId: plan!.id, suggestionIndex: index } },
+      {
+        success: (data) => (data.businessName ? `Sent to ${data.businessName}. They’ll decide whether to host it.` : 'Sent to a local venue. You’ll hear back if they can host it.'),
+        refresh: false,
+      },
+    );
+  const venueHint = (current: GroupPlanView) =>
+    current.activeMemberCount < current.venueMinMembers ? `Venue requests need at least ${current.venueMinMembers} members` : 'Needs votes from half the group';
   return (
     <div className="flex flex-col gap-3">
       <PlannerCard group={{ ...group, latestPlan: plan }} onPlanned={setPlan} />
@@ -86,6 +93,7 @@ export function PlansPanel({ group }: { group: GroupDetail }) {
               votedByMe={plan.votes.mine.includes(index)}
               canVote={group.permissions.canVote}
               venueEligible={plan.venueEligible[index] ?? false}
+              venueHint={venueHint(plan)}
               isVoting={isPending(`vote:${index}`)}
               isRequesting={isPending(`venue:${index}`)}
               onVote={() => vote(index)}

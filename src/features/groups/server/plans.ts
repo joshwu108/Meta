@@ -1,6 +1,7 @@
 import 'server-only';
 import { getPublicCard, type Actor } from '@/features/matching';
 import { ApiError } from '@/lib/api/errors';
+import { serverEnv } from '@/lib/env';
 import { planSuggestionSchema, type PlanSuggestion } from '@/shared/schemas/social';
 import { canVote } from './authz';
 import { loadGroupContext, loadMemberRows } from './context';
@@ -23,10 +24,19 @@ export function tallyVotes(rows: readonly VoteRow[], suggestionCount: number, us
   return { counts, mine };
 }
 
-/** A new activity that needs a venue can go to 04 once at least half of the active members voted for it. */
-export function venueEligibility(suggestions: readonly PlanSuggestion[], counts: readonly number[], activeCount: number): boolean[] {
+/**
+ * A new activity that needs a venue can go to 04 once at least half of the active members voted for
+ * it and the group is at least `minMembers` strong (04 refuses smaller cohorts, `MIN_COHORT_SIZE`).
+ */
+export function venueEligibility(
+  suggestions: readonly PlanSuggestion[],
+  counts: readonly number[],
+  activeCount: number,
+  minMembers: number = serverEnv.minCohortSize,
+): boolean[] {
   return suggestions.map(
-    (s, i) => s.kind === 'new_activity' && s.needsVenue && activeCount > 0 && (counts[i] ?? 0) / activeCount >= VENUE_VOTE_SHARE,
+    (s, i) =>
+      s.kind === 'new_activity' && s.needsVenue && activeCount >= minMembers && activeCount > 0 && (counts[i] ?? 0) / activeCount >= VENUE_VOTE_SHARE,
   );
 }
 
@@ -52,6 +62,7 @@ export async function toPlanView(actor: Actor, row: PlanRow, activeCount: number
     activeMemberCount: activeCount,
     votes: tally,
     venueEligible: venueEligibility(suggestions, tally.counts, activeCount),
+    venueMinMembers: serverEnv.minCohortSize,
   };
 }
 
