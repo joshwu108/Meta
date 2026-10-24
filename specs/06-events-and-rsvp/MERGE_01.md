@@ -15,12 +15,7 @@ Then delete 06's interim `eslint.config.js` (01 ships `eslint.config.mjs`).
 
 - `src/shared/*` merge cleanly: 06's interim copies already match 01's `663b7ed`.
 - `package.json`: devDependencies `pg` and `@types/pg` (`8.23.1`); then `pnpm install` (01 pins pnpm 10).
-- `vitest.config.ts`: 01's `db` project already includes `tests/db/**`; add
-  ```ts
-  setupFiles: ['tests/db/support/setup.ts'],
-  globalSetup: ['tests/db/support/global-setup.ts'],
-  ```
-  Without Supabase running, point it at any local Postgres: `TEST_DATABASE_URL=postgres://localhost:5432/postgres pnpm test:db`.
+- `vitest.config.ts`: nothing to add. 01's `db` project (`39435da`) already includes `tests/db/**` with 06's `setupFiles` and `globalSetup`. Without Supabase running, point it at any local Postgres: `TEST_DATABASE_URL=postgres://localhost:5432/postgres pnpm test:db`.
 - `supabase/seed/loaders/registry.ts`: import `loadRsvps` from `./rsvps` and set
   `AFTER_EVENTS = [{ name: 'rsvps', run: (ctx) => loadRsvps(ctx) }]`. Typechecks against 01's `SeedContext`; running the seed needs a Supabase stack.
 
