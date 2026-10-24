@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git switch:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(git add:*)",
+      "Bash(git restore --staged:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull --rebase:*)",
+      "Bash(git push:*)",
+      "Bash(git push -u origin:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git config --local:*)",
+      "Bash(bash .claude/skills/commit/scripts/check-identity.sh:*)",
+      "Bash(bash .claude/skills/commit/scripts/set-identity.sh:*)",
+      "Bash(bash .claude/skills/commit/scripts/commit.sh:*)",
+      "Bash(gh auth status:*)",
+      "Bash(ssh -T git@github.com:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git config --global:*)"
+    ]
+  }
+}
