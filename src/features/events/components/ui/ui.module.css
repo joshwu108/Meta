@@ -1,0 +1,70 @@
+/* Stand-ins for 01's src/features/core/components/ui primitives (design-system.md §4). */
+
+.button {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  height: 36px; padding: 0 var(--space-4); border: 0; border-radius: var(--radius-md);
+  font: inherit; font-weight: var(--weight-semibold); cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+.button:active:not(:disabled) { transform: scale(.98); }
+.button:disabled { opacity: .5; cursor: not-allowed; }
+.large { height: 40px; }
+.primary { background: var(--color-brand); color: var(--color-text-on-brand); }
+.primary:hover:not(:disabled) { background: var(--color-brand-hover); }
+.secondary { background: var(--color-pressed); color: var(--color-text); }
+.secondary:hover:not(:disabled) { background: var(--color-divider); }
+.ghost { background: transparent; color: var(--color-brand); }
+.ghost:hover:not(:disabled) { background: var(--color-hover); }
+.danger { background: var(--color-danger-soft); color: var(--color-danger); }
+
+.aiTag {
+  display: inline-flex; align-items: center; gap: var(--space-1); padding: 2px var(--space-2);
+  border: 2px solid transparent; border-radius: var(--radius-pill);
+  background: var(--gradient-ai-soft) padding-box, var(--gradient-ai) border-box;
+  color: var(--color-ai-ink); font-size: var(--text-xs); font-weight: var(--weight-semibold); white-space: nowrap;
+}
+.aiRing { display: inline-flex; padding: 2px; border-radius: var(--radius-pill); background: var(--gradient-ai); }
+
+.avatar {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; overflow: hidden;
+  border-radius: var(--radius-pill); background: var(--color-pressed); color: var(--color-text-2);
+  font-weight: var(--weight-semibold); border: 2px solid var(--color-surface);
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.stack { display: inline-flex; }
+.stack > * + * { margin-left: -8px; }
+
+.meter { display: grid; gap: var(--space-1); font-size: var(--text-sm); color: var(--color-text-2); }
+.track { height: 4px; border-radius: var(--radius-pill); background: var(--color-pressed); overflow: hidden; }
+.fill { height: 100%; border-radius: inherit; background: var(--color-brand); transform-origin: left; animation: grow var(--duration-normal) var(--ease-standard); }
+.fillWarn { background: var(--color-warning); }
+.fillFull { background: var(--color-danger); }
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.pill {
+  display: inline-flex; align-items: center; padding: 2px var(--space-2); border-radius: var(--radius-pill);
+  font-size: var(--text-xs); font-weight: var(--weight-semibold);
+}
+.pillGreen { background: var(--color-success-soft); color: var(--color-success); }
+.pillAmber { background: var(--color-warning-soft); color: var(--color-text); }
+.pillRed { background: var(--color-danger-soft); color: var(--color-danger); }
+.pillBlue { background: var(--color-brand-soft); color: var(--color-brand); }
+.pillGray { background: var(--color-surface-2); color: var(--color-text-2); }
+
+.empty {
+  display: grid; justify-items: center; gap: var(--space-2); padding: var(--space-6) var(--space-4);
+  color: var(--color-text-2); text-align: center;
+}
+
+.switchRow { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); cursor: pointer; }
+.switch { position: relative; width: 44px; height: 26px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.switchTrack { position: absolute; inset: 0; border-radius: var(--radius-pill); background: var(--color-divider); transition: background-color var(--duration-fast); }
+.switchTrack::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: var(--radius-pill);
+  background: var(--color-surface); box-shadow: var(--shadow-1); transition: transform var(--duration-normal) var(--ease-standard);
+}
+.switch input:checked + .switchTrack { background: var(--color-brand); }
+.switch input:checked + .switchTrack::after { transform: translateX(18px); }
+.switch input:focus-visible + .switchTrack { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+a.button:hover { text-decoration: none; }
