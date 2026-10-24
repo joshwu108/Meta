@@ -47,12 +47,12 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## P1
 
-- [ ] Filters (category, date, distance)
+- [x] Filters (category, date, distance)
 - [ ] List/map toggle (static tiles)
-- [ ] Bookmarks
+- [x] Bookmarks
 - [x] Waitlist with auto-promotion on cancel (`WAITLIST_ENABLED`)
 - [x] Public group discovery surfacing (Discover "Groups to join", via 03 stub)
-- [ ] Standalone `/places`
+- [x] Standalone `/places`
 
 ## Decisions
 
@@ -85,6 +85,9 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: UI uses CSS modules on the design tokens instead of Tailwind (no Tailwind config on main yet; 01 owns it). `src/styles/tokens.css` is generated verbatim from design-system.md, and primitive stand-ins live in `src/features/events/components/ui/` with 01's names (`Button`, `AiTag`, `AiRing`, `Avatar`, `CapacityMeter`, `StatusPill`, `EmptyState`, `Switch`). Swap the imports to `@/features/core/components/ui` when 01 lands.
 - 2026-10-24: Pages call the services directly as server components; client controls call the routes and `router.refresh()`. The RSVP consent sheet opens on every RSVP (not only the first) so sharing can be changed on re-RSVP.
 - 2026-10-24: The invite picker reads 03's `GET /api/groups` from the browser and degrades to a hint when it is unavailable.
+- 2026-10-24: Event filters are a plain GET form (category, distance) applied to the All and This week tabs; "This week" is the date filter. For you stays ranked and unfiltered.
+- 2026-10-24: Bookmarks get `POST/DELETE /api/events/:id/bookmark` (not in the spec's route table). Saved upcoming events appear in Activity under "Saved", minus any the user already RSVP'd to.
+- 2026-10-24: List/map toggle deferred: static map tiles need a tile provider (and likely a key) plus a CSP `img-src` entry from 01. Recorded under Blocked.
 
 ## Needs from others
 
@@ -101,10 +104,12 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Blocked
 
+- P1 list/map toggle: needs a static map tile provider decision (OpenStreetMap static tiles, Mapbox with a key, etc.) and 01's CSP to allow its `img-src`. Everything else on the page works without it.
 - Supabase CLI and Docker are not available here, so `pnpm db:reset`, `pnpm db:seed`, route-level integration tests through PostgREST, and Playwright scenes cannot run on this machine. SQL is covered on plain Postgres; services are covered with mocked repo/stubs. Needs a machine with `supabase start` (or Docker running) to finish the Supabase-stack checks.
 
 ## Log
 
+- 2026-10-24 15:59 PT: P1 filters, bookmarks (save/unsave + Activity "Saved"), standalone /places (138 tests). Next: theme checklist review, size limits, never-idle pass.
 - 2026-10-24 15:55 PT: coverage 97% lines / 83% branches on features/events/server (137 tests); P1 waitlist UI + promotion notification. Next: P1 filters, bookmarks, /places.
 - 2026-10-24 15:52 PT: seed contribution with idempotent re-runs (110 tests). Next: never-idle list (coverage, edge cases, theme review).
 - 2026-10-24 15:50 PT: UI for Discover, Events (For you/All/This week), event detail (RSVP sheet, reconfirm, invite, feedback, reconnect) and Activity; `next build` passes. Next: seed contribution, then the never-idle list.
