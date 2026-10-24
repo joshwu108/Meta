@@ -504,6 +504,9 @@ isOneToOne: true
             "block_user":
 { Args: { "p_blocked": string,"p_blocker": string }; Returns: undefined
                            },
+"can_reach":
+{ Args: { "p_other": string }; Returns: boolean
+                           },
 "can_read_group":
 { Args: { "p_group": string }; Returns: boolean
                            },
