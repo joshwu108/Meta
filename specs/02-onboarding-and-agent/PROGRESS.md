@@ -48,10 +48,10 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - [ ] Integration: PATCH preferences respects RLS
 - [ ] Integration: agent log row written when preferences shared
 - [x] Prompt eval set: 10 transcripts in `tests/evals/agent/*.json` (running it needs a live key)
-- [ ] E2E Scene 1
+- [x] E2E Scene 1 (UI path with /api intercepted by the MOCK_AI fixture; full-stack run waits on 01 + Docker)
 
 ### Acceptance criteria (spec section 10)
-- [ ] AC1 Scene 1 sentence → pottery, coffee, thu_eve, small; nothing invented (passes at service level under MOCK_AI; E2E waits on Docker)
+- [x] AC1 Scene 1 sentence → pottery, coffee, thu_eve, small; nothing invented (service test + Playwright UI test)
 - [ ] AC2 Deleting an inferred value persists (service-level test passes; DB-backed check waits on Docker)
 - [ ] AC3 Consent off → excluded from matching / demand (shared fixture)
 - [x] AC4 Suggestion cards deep-link and show "Why this?"
@@ -64,6 +64,7 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 
 ## Decisions
 - 2026-10-24: Workstream 01 has not pushed a scaffold yet. To run tests I add the minimum root tooling (package.json, tsconfig, vitest) and the README-verbatim `src/shared/enums.ts` / `types.ts`. Core helpers (`ok`/`fail`/`withAuth`, `generateStructured`, `logAgentAction`) are stubbed in `src/features/agent/server/stubs.ts` with the exact 01 signatures. Main wins on every one of these files when 01 lands.
+- 2026-10-24: Scene 1 Playwright test intercepts `/api/**` with the same MOCK_AI fixture, so the UI path is verified without Supabase. A full-stack variant replaces the intercepts once auth and the DB exist.
 - 2026-10-24: Share logging writes one `agent_action_log` row per shared user per purpose, inserted in one statement per call and deduped within 1 hour. A single batch row with `user_id null` would hide the entry from the user's own log (AC5).
 - 2026-10-24: `SharablePreferences.groupSizePref` is non-null in the contract; when the user never stated one, ws02 returns `'small'`.
 - 2026-10-24: Anti-invention guard (`groundExtraction`): availability slots whose day the user never typed and budgets nobody stated are dropped server-side, and slots the deterministic phrase mapper finds are added. Interests below 0.5 confidence are dropped.
@@ -87,3 +88,4 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 2026-10-24 15:45 · landed: explanations with grounding, rate limiter, extraction merge + anti-invention guard, MOCK_AI fixtures + prompts, repo, onboarding/preferences/chat services, index exports, follow-up suggestion (85 unit tests). Next: API routes, then UI.
 - 2026-10-24 16:05 · landed: 6 API routes (+ route tests), preferences seed + loader, tokens/layout, onboarding/agent/preferences/permissions/log screens; `pnpm build` green, 99 unit tests. Next: component tests, eval transcripts, Playwright Scene 1 spec (runs once Docker exists).
 - 2026-10-24 16:15 · landed: slot mapper per-clause fix, 10-transcript eval set + live runner, repo + follow-up tests; 114 unit tests, 95% line coverage on features/agent/server. Next: DB integration tests (auto-skip without Supabase), Playwright Scene 1 spec, UI component tests.
+- 2026-10-24 16:25 · landed: Supabase integration tests (auto-skip), Playwright Scene 1 (passing). Next: P1 feedback memory and group scheduling helper, UI component tests.
