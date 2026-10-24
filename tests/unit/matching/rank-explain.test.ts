@@ -11,7 +11,7 @@ vi.mock('@/features/matching/server/stubs', () => ({
 }));
 
 const { rankCandidates } = await import('@/features/matching/server/matches');
-const { explainMatch, clearExplanationCache, groundingTerms, isGrounded, templateExplanation } = await import('@/features/matching/server/explain');
+const { explainMatch, clearExplanationCache, groundingTerms, isGrounded, templateExplanation, unsharedTerms } = await import('@/features/matching/server/explain');
 const { getCompatibilityScore } = await import('@/features/matching/server/score');
 const { createTtlCache } = await import('@/features/matching/server/cache');
 
@@ -95,6 +95,25 @@ describe('explanations', () => {
     expect(isGrounded('You would love skydiving together', terms)).toBe(false);
     expect(isGrounded('', terms)).toBe(false);
     expect(isGrounded('anything', [])).toBe(true);
+  });
+
+  it('rejects answers that name an interest or day the two do not share', async () => {
+    // 02's MOCK_AI fixture returns this sentence whenever the input mentions pottery.
+    const fixtureText = 'You both love pottery and are free Thursday evenings.';
+    const coffeeOnly = prefs('yuki', { interests: ['coffee', 'painting'], interestCategories: ['creative', 'food_drink'] });
+    const coffeeResult = getCompatibilityScore(viewer, coffeeOnly);
+    expect(unsharedTerms(viewer, coffeeOnly, coffeeResult)).toEqual(expect.arrayContaining(['pottery', 'painting']));
+    expect(isGrounded(fixtureText, groundingTerms(viewer, coffeeOnly, coffeeResult), unsharedTerms(viewer, coffeeOnly, coffeeResult))).toBe(false);
+    explainRecommendation.mockResolvedValueOnce(fixtureText);
+    expect(await explainMatch(viewer, coffeeOnly, coffeeResult)).toBe('You both like coffee and are free Thursday evenings.');
+
+    const potter = prefs('maya', { interests: ['pottery', 'coffee'] });
+    const potterResult = getCompatibilityScore(viewer, potter);
+    expect(isGrounded(fixtureText, groundingTerms(viewer, potter, potterResult), unsharedTerms(viewer, potter, potterResult))).toBe(true);
+
+    const saturday = prefs('sat', { availabilitySlots: ['thu_eve', 'sat_day'] });
+    const satResult = getCompatibilityScore(prefs('v', { availabilitySlots: ['thu_eve'] }), saturday);
+    expect(isGrounded('Free on Saturday mornings', ['thursday'], unsharedTerms(prefs('v', { availabilitySlots: ['thu_eve'] }), saturday, satResult))).toBe(false);
   });
 
   it('uses a grounded AI answer and caches it', async () => {

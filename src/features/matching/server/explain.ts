@@ -5,6 +5,7 @@ import { CATEGORY_PHRASES, SLOT_PHRASES, interestLabel, isCategory } from '@/sha
 import { SOCIAL_GOAL_LABELS } from '../labels';
 import type { CompatibilityResult } from '@/shared/types';
 import { createTtlCache } from './cache';
+import { normalizeTags } from './similarity';
 import type { MatchingPreferences } from './score';
 import { explainRecommendation } from './stubs';
 import { MATCH_LIMITS } from './weights';
@@ -39,9 +40,30 @@ export function groundingTerms(viewer: MatchingPreferences, candidate: MatchingP
   ];
 }
 
-/** True when the text mentions at least one shared field (or there is nothing shared to cite). */
-export function isGrounded(text: string, terms: readonly string[]): boolean {
+/**
+ * Interests and days that appear in either profile but are NOT shared. An explanation that names
+ * one claims something the data does not support (e.g. "you both love pottery" when only one does).
+ */
+export function unsharedTerms(viewer: MatchingPreferences, candidate: MatchingPreferences, result: CompatibilityResult): string[] {
+  const shared = new Set(result.sharedInterests);
+  const tags = [...new Set([...normalizeTags(viewer.interests), ...normalizeTags(candidate.interests)])].filter((tag) => !shared.has(tag));
+  const sharedDays = new Set(result.sharedSlots.map((slot) => DAY_WORDS[slot.slice(0, 3)]));
+  const days = [...new Set([...viewer.availabilitySlots, ...candidate.availabilitySlots].map((slot) => DAY_WORDS[slot.slice(0, 3)]))].filter(
+    (day): day is string => day !== undefined && !sharedDays.has(day),
+  );
+  return [...new Set([...tags, ...tags.map(interestLabel), ...days].map((t) => t.toLowerCase()))];
+}
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const mentions = (text: string, term: string) => new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(term)}`, 'iu').test(text);
+
+/**
+ * True when the text cites at least one shared field (or there is nothing shared to cite) and
+ * names nothing the two do not share.
+ */
+export function isGrounded(text: string, terms: readonly string[], unshared: readonly string[] = []): boolean {
   if (text.trim().length === 0) return false;
+  if (unshared.some((term) => mentions(text, term))) return false;
   if (terms.length === 0) return true;
   const haystack = text.toLowerCase();
   return terms.some((term) => haystack.includes(term));
@@ -83,7 +105,8 @@ export async function explainMatch(
       target: { kind: 'person', preferences: candidate },
       breakdown: { ...result.breakdown, sharedInterests: result.sharedInterests, sharedSlots: result.sharedSlots },
     });
-    text = isGrounded(answer, groundingTerms(viewer, candidate, result)) ? answer.slice(0, MAX_LENGTH) : fallback;
+    const grounded = isGrounded(answer, groundingTerms(viewer, candidate, result), unsharedTerms(viewer, candidate, result));
+    text = grounded ? answer.slice(0, MAX_LENGTH) : fallback;
   } catch (error) {
     log.warn('matching.explain_failed', { error });
   }
