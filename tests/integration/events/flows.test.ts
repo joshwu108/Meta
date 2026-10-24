@@ -111,7 +111,10 @@ describe.skipIf(!available)("06 flows against Postgres", () => {
     await db.pool.query("insert into profiles (id, display_name) values ($1, 'Owner') on conflict do nothing", [rows[0].owner_id]);
 
     await expect(completeEvent(stranger, eventId)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect((await getEventDetail(stranger, eventId)).canComplete).toBe(false);
+    expect((await getEventDetail(rows[0].owner_id, eventId)).canComplete).toBe(true);
     vi.stubEnv("DEMO_MODE", "1");
+    expect((await getEventDetail(stranger, eventId)).canComplete).toBe(true);
     await expect(completeEvent(stranger, eventId)).resolves.toEqual({ status: "completed" });
     await expect(completeEvent(stranger, eventId)).rejects.toMatchObject({ code: "CONFLICT" });
   });

@@ -3,6 +3,7 @@ import type { BusinessPublicCard, EventPublic } from "@/shared/types";
 import { loadAttendeeData } from "./attendees";
 import { bookmarkedEventIds } from "./bookmarks";
 import { toBusinessCard, toEventPublic } from "./mappers";
+import { canComplete } from "./post-event";
 import { confirmedCounts, getVisibleEvent, hasFeedback, myRsvps, type MyRsvp } from "./repo";
 import { waitlistEnabled } from "./rsvp";
 import { ApiError, createAdminClient, getRsvpConsentDefaults } from "./stubs";
@@ -19,6 +20,8 @@ export type EventDetail = EventPublic & {
   feedbackGiven: boolean;
   waitlistEnabled: boolean;
   bookmarked: boolean;
+  /** Venue owner, or the demo operator while DEMO_MODE=1 (Scene 6). */
+  canComplete: boolean;
 };
 
 /**
@@ -30,13 +33,15 @@ export async function getEventDetail(viewerId: string, eventId: string): Promise
   const row = await getVisibleEvent(admin, eventId);
   if (!row) throw new ApiError("NOT_FOUND", "Event not found");
 
-  const [counts, mine, attendeeData, consentDefaults, feedbackGiven, bookmarks] = await Promise.all([
+  const live = row.status === "published" || row.status === "full";
+  const [counts, mine, attendeeData, consentDefaults, feedbackGiven, bookmarks, completable] = await Promise.all([
     confirmedCounts(admin, [eventId]),
     myRsvps(admin, viewerId, [eventId]),
     loadAttendeeData(admin, viewerId, eventId),
     getRsvpConsentDefaults(viewerId),
     row.status === "completed" ? hasFeedback(admin, viewerId, eventId) : Promise.resolve(false),
     bookmarkedEventIds(admin, viewerId),
+    live ? canComplete(admin, viewerId, row.business_id) : Promise.resolve(false),
   ]);
   const rsvp = mine.get(eventId) ?? null;
   const confirmed = rsvp?.status === "confirmed";
@@ -58,5 +63,6 @@ export async function getEventDetail(viewerId: string, eventId: string): Promise
     feedbackGiven,
     waitlistEnabled: waitlistEnabled(),
     bookmarked: bookmarks.has(eventId),
+    canComplete: completable,
   };
 }

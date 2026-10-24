@@ -1,5 +1,6 @@
 import type { EventDetail } from "../server/detail";
 import type { AttendeeView } from "../server/visibility";
+import { CompleteEventButton } from "./CompleteEventButton";
 import { FeedbackForm } from "./FeedbackForm";
 import { InviteGroupPicker } from "./InviteGroupPicker";
 import { ReconfirmBanner } from "./ReconfirmBanner";
@@ -34,6 +35,7 @@ export function EventStatusSection({ event, attendees, feedbackGiven }: Props) {
       {event.needsReconfirm ? <ReconfirmBanner eventId={event.id} startsAt={event.startsAt} /> : null}
       <RsvpPanel eventId={event.id} status={event.status} rsvpStatus={event.rsvpStatus} defaults={event.consentDefaults} waitlistEnabled={event.waitlistEnabled} />
       <InviteGroupPicker eventId={event.id} />
+      {event.canComplete ? <CompleteEventButton eventId={event.id} /> : null}
     </>
   );
 }

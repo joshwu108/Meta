@@ -55,7 +55,7 @@ export async function expressReconnectInterest(
 }
 
 /** Business owner of the venue, or anyone while DEMO_MODE=1 (the demo operator). */
-async function canComplete(admin: SupabaseClient, userId: string, businessId: string): Promise<boolean> {
+export async function canComplete(admin: SupabaseClient, userId: string, businessId: string): Promise<boolean> {
   if (process.env.DEMO_MODE === "1") return true;
   const { data } = await admin.from("businesses").select("owner_id").eq("id", businessId).maybeSingle();
   return data?.owner_id === userId;

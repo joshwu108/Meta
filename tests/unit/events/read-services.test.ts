@@ -47,6 +47,7 @@ vi.mock("@/features/events/server/repo", async (importOriginal) => ({
 }));
 
 vi.mock("@/features/events/server/bookmarks", () => ({ bookmarkedEventIds: async () => new Set<string>() }));
+vi.mock("@/features/events/server/post-event", () => ({ canComplete: async () => false }));
 
 const { getAttendeeList } = await import("@/features/events/server/attendees");
 const { getEventDetail } = await import("@/features/events/server/detail");
