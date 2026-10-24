@@ -73,7 +73,12 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 2026-10-24: Node 20.18.1 and pnpm 9.15.0 installed under ~/.local (no Homebrew on this machine).
 - 2026-10-24: Onboarding replies are returned whole, not streamed. MOCK_AI and structured tool output make streaming moot for the demo; extracted chips still appear as soon as each reply lands. Revisit if live latency is a problem.
 
+- 2026-10-24 (main sync): main wins on tooling and shared files; ws02 keeps its onboarding/agent pages. Agent prompts live in 01's `src/lib/ai/prompts/agent.ts` slot (`features/agent/server/prompts.ts` re-exports them); `generateStructured` no longer takes a per-call `system`.
+- 2026-10-24 (main sync): 01's mock loader returns a fixture's top level only. App code uses it as is (Scene 1 is the top level); unit tests that need a specific `cases` entry mock `@/lib/ai` with `tests/unit/agent/mock-ai.ts`.
+- 2026-10-24 (main sync): agent E2E is now full stack (real login via 01's helpers, real API + DB, MOCK_AI); only the AI-down test intercepts `/api/agent/chat`.
+
 ## Merge plan for when ws/01-core lands on main
+(Status 2026-10-24: steps 1–6 and 8 done in the main sync; step 7 primitives swap still open.)
 Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from main only):
 1. Take main's root config (package.json, tsconfig, vitest, eslint, next.config, playwright.config, layout.tsx, tokens.css, shared/enums.ts, shared/types.ts); re-add ws02 dev deps (`zod-to-json-schema` only if 01 lacks it, `@playwright/test`).
 2. Delete `src/features/agent/server/stubs.ts`; import `ok/fail/parseBody/withAuth/ApiError` from `@/lib/api`, `generateStructured` from `@/lib/ai`, `logAgentAction` from `@/features/core`, `createAdminClient` from `@/lib/supabase/admin`.
@@ -89,12 +94,12 @@ Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from m
 Tested in a throwaway local merge of `origin/ws/02-agent` @ da4321e with `origin/ws/01-core` @ 67e4f12. Nothing was merged or pushed to main.
 Results after the fixes below: 0100 + 0200 migrations apply on a fresh reset; 206/206 unit; 22/22 integration on Node 22 (including ws02's 5 DB tests); seed gives 14 `user_preferences`, 13 opted in to demand, 6 in the Scene 3 cluster (creative + thu_eve, Mission/Castro/Noe Valley). Scene 1 E2E was not run on the merged tree.
 
-Owner: 01 / main integrator
+Owner: 01 / main integrator — status on main 2026-10-24: 1 done (00d54aa, Node 22); 2 partly (alias only in `db`; ws02 added it to unit/integration); 4 done via registry (ws02 registered its loader)
 1. **Node 22 needed.** 01's resolved `@supabase/supabase-js` needs native WebSocket; on Node 20 the seed and every integration test fail ("native WebSocket not found"). Bump README §1, `engines` and CI to Node 22.
 2. **`server-only` alias missing from 01's `vitest.config.ts`.** Without it 9 ws02 unit files fail to load. Add `'server-only': path.resolve(__dirname, 'tests/support/server-only.ts')` to `alias`. That fix alone took unit tests to 206/206.
 4. **Preferences seed not wired.** 01's `runSeedWith` never calls `loadAgentPreferences(ctx)` (`supabase/seed/agent.ts`), so no preferences are seeded and 04's Scene 3 finds no demand. Call it right after `loadUsers(ctx)`; verified to work.
 
-Owner: ws02 (after 01 lands on main)
+Owner: ws02 (after 01 lands on main) — done 2026-10-24 (db7b82e)
 3. **23 type errors under 01's `noUncheckedIndexedAccess`.** Most in `tests/unit/agent/*.test.ts` (chat, consent-boundary, fixtures, group-schedule, repo); source in `server/extraction.ts:118` and `server/follow-up.ts:39`. Fix them in the sync merge.
 
 ws02 sync procedure once 01 is on main (tested approach):
@@ -104,23 +109,27 @@ ws02 sync procedure once 01 is on main (tested approach):
 - Rerun on Node 22 from clean: `pnpm db:reset`, `pnpm db:seed`, `pnpm test`, `pnpm test:integration`, `pnpm typecheck`, `pnpm lint`, Scene 1 Playwright with `MOCK_AI=1`. Push to `ws/02-agent` only once all pass. Never push to main.
 
 ## Needs from others
-- 01: `src/shared/types.ts` on ws/01-core has a placeholder `ExplainInput = { userId, subject, signals }`. 02 owns this type; please replace it with the shape in specs/02 §5 (`{ viewer, target, breakdown }`), which 06 already codes against.
+- ~~01: `src/shared/types.ts` on ws/01-core has a placeholder `ExplainInput = { userId, subject, signals }`. 02 owns this type; please replace it with the shape in specs/02 §5 (`{ viewer, target, breakdown }`), which 06 already codes against.~~ Done on main (966a415).
+- 01 / integrator: `vitest.config.ts` on main stubs `server-only` only in the `db` project. ws02 added the same alias to `unit` and `integration` (one `serverAlias` const) so 9 agent test files load; please keep it when merging ws02 (integration finding 2).
+- 01 / integrator: `tests/e2e/auth.spec.ts` "a user without onboarding…" clicked 01's placeholder "Continue to Discover" button, which spec 02's onboarding replaces. ws02 changed that one test to assert the agent onboarding heading; finishing onboarding is covered by `agent-scene1.spec.ts`.
+- 01: Playwright wrote Windows baselines for `theme.spec.ts` on first run here (`gallery-*-win32.png`); left uncommitted on this machine since 01 owns those baselines.
+- 01: the `integration` vitest project sets no `MOCK_AI`; ws02's DB tests pin it in-file. Consider `env: { MOCK_AI: '1' }` on that project so no integration test can reach the live model.
 - README: add `getAttendeeSharing(userIds)` and `getConsent(userId)` (requested by 06) to the 02 function contracts.
 - 06: `getAttendeeSharing` and `getConsent` now exist on ws/02-agent with the exact shape of your stub; swap `stubs/agent.ts` for `@/features/agent` after both land on main.
 - 03 and 04: import `DEMAND_OPT_OUT_EMAILS` / `MATCHING_OPT_OUT_EMAILS` from `tests/fixtures/consent-cases.ts` and assert those users never appear in matches / cohort counts (closes AC3).
 - README: add `POST /api/agent/feedback` (P1) to the 02 row of the routes table, and `resolveGroupSchedule(members)` / `getSharablePreferencesBatch(ids, purpose)` to the 02 function contracts.
 - 03: the group planner can call `resolveGroupSchedule(members)` from `@/features/agent` with members fetched via `getSharablePreferencesBatch(ids, 'group_plan')`.
-- 01: call `loadAgentPreferences(ctx)` from `supabase/seed/agent.ts` in `runSeedWith` right after `loadUsers(ctx)` (skip when `user_preferences` is missing, like the other loaders).
-- 01: add `'agent.follow_up_suggestion'` to `PROMPT_IDS` (README assigns the follow-up prompt to 02; 06 can still own `events.reconnect_followup`) and spread ws02's `AGENT_PROMPT_DEFINITIONS` into `PROMPTS`.
-- 01: until the app shell lands, ws02 ships `src/styles/tokens.css` (copied from design-system.md), a bare `src/app/layout.tsx`, and local primitives in `features/agent/components/primitives.tsx`. Replace them with 01's versions on merge.
-- README/01: `SharablePreferences.groupSizePref` is non-null but users may not state one; ws02 returns `'small'` when unset. Prefer making it `GroupSizePref | null`.
-- 01: `profiles`, `agent_action_log`, `set_updated_at()` from `0100_core.sql`; `src/lib/api`, `src/lib/ai`, `logAgentAction`, `getCurrentUser`.
+- ~~01: call `loadAgentPreferences(ctx)` from `supabase/seed/agent.ts` in `runSeedWith` right after `loadUsers(ctx)`.~~ Done: ws02 registered it in 01's `supabase/seed/loaders/registry.ts` `AFTER_USERS` (c23982b).
+- ~~01: add `'agent.follow_up_suggestion'` to `PROMPT_IDS` and spread ws02's prompt definitions into `PROMPTS`.~~ Done on main; ws02 filled the `agent.ts` slot (aba1bb7).
+- ~~01: until the app shell lands, ws02 ships tokens, a bare layout and local primitives; replace them with 01's versions on merge.~~ Tokens and layout now come from main; `primitives.tsx` swap to `@/features/core/components/ui` still open (merge plan step 7).
+- ~~README/01: make `SharablePreferences.groupSizePref` nullable.~~ Done on main; ws02 now shares `null` instead of `'small'` (db7b82e).
+- ~~01: `profiles`, `agent_action_log`, `set_updated_at()`, `src/lib/api`, `src/lib/ai`, `logAgentAction`, `getCurrentUser`.~~ Landed on main; ws02 stubs removed (aba1bb7).
 
 ## Blocked
 - (partly unblocked) Migration + RLS are now verified without Docker via PGlite in `tests/integration/agent/migration.test.ts`; it also passed against ws/01-core's real `0100_core.sql`. The supabase-js integration tests still need the local stack.
 - Running the live prompt eval (`pnpm tsx tests/evals/agent/run.ts`) needs `ANTHROPIC_API_KEY`; the set itself is committed and checked in CI.
-- Even with Docker, `0200_agent.sql` needs 01's `0100_core.sql` (`profiles`, `agent_action_log`, `set_updated_at()`), which is not on main yet.
-- (unblocked 2026-10-24) ws02 now runs on a machine with Docker; the Supabase stack and DB tests run there. Full clean-state check still waits on 01 landing on main.
+- ~~Even with Docker, `0200_agent.sql` needs 01's `0100_core.sql`, which is not on main yet.~~ Unblocked: 01 is on main; 0100 + 0200 apply on a fresh reset.
+- ~~Full clean-state check waits on 01 landing on main.~~ Done 2026-10-24 (see Log).
 
 ## Log
 - 2026-10-24 15:31 · landed: progress checklist, tooling, 0200 migration, schemas, time-slot mapper, consent boundary core (37 unit tests). Next: explainRecommendation, rate limiter, onboarding loop, MOCK_AI fixtures.
@@ -137,3 +146,4 @@ ws02 sync procedure once 01 is on main (tested approach):
 - 2026-10-24 16:35 · integration check (Docker, throwaway merge with ws/01-core, nothing pushed to main): findings 1-4 recorded above. Next: 01 integrator handles 1, 2, 4; ws02 fixes 3 during the main sync.
 - 2026-10-24 16:32 · ws02 worker moved to the Docker machine (option 2). Ticked integration rows + AC2/AC5 from the verified DB run. Next: wait for 01 on main, then run the sync procedure.
 - 2026-10-24 17:40 · Lenovo resumed as the ws02 worker. Full check on Node 22: typecheck + lint clean, 145 unit/integration green (5 Supabase-stack tests skip until 01's 0100 is on main), 10/10 Playwright green. Nothing unblocked left: AC3 waits on 03/04; DB variant and stub swap wait on 01 landing on main.
+- 2026-10-24 18:40 · 01 landed on main: merged main (15 conflicts resolved per plan), adopted nullable groupSizePref + interestCategories, fixed strict-indexing errors, removed 01 stubs for real exports, registered preferences seed, full-stack agent E2E, fixed 320px overflow inside the shell. Clean state on Node 22: db reset + seed (14 prefs), 217 unit + 30 integration + 26 E2E green, typecheck + lint clean. Next: primitives swap (merge plan 7), AC3 waits on 03/04.
