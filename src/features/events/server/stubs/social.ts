@@ -68,3 +68,16 @@ export async function getPendingConnectionRequests(userId: string): Promise<Pend
     id: r.id as string, requesterId: r.requester_id as string, message: (r.message ?? null) as string | null, createdAt: r.created_at as string,
   }));
 }
+
+export type PendingEventInvitation = { id: string; eventId: string; groupId: string | null; senderId: string; createdAt: string };
+
+export async function getPendingEventInvitations(userId: string): Promise<PendingEventInvitation[]> {
+  const { data, error } = await createAdminClient()
+    .from("invitations").select("id, event_id, group_id, sender_id, created_at")
+    .eq("recipient_id", userId).eq("kind", "event").eq("status", "pending").order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    id: r.id as string, eventId: r.event_id as string, groupId: (r.group_id ?? null) as string | null,
+    senderId: r.sender_id as string, createdAt: r.created_at as string,
+  }));
+}

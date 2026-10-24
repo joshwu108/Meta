@@ -1,5 +1,5 @@
 import "server-only";
-import type { EventCategory } from "@/shared/enums";
+import type { AvailabilitySlot, EventCategory } from "@/shared/enums";
 import type { SharablePreferences } from "@/shared/types";
 import type { ScoreBreakdown } from "../recommend";
 import { createAdminClient } from "./core";
@@ -93,5 +93,32 @@ export async function getRsvpConsentDefaults(userId: string): Promise<{ shareWit
   return {
     shareWithAttendees: consent.share_interests_with_attendees === true,
     shareWithBusiness: consent.share_name_with_business === true,
+  };
+}
+
+export type FollowUpInput = {
+  a: SharablePreferences | null;
+  b: SharablePreferences | null;
+  event: { title: string; category: EventCategory; neighborhood: string };
+};
+
+const SLOT_PHRASE: Record<string, string> = {
+  sat_day: "Saturday morning", sun_day: "Sunday morning", sat_eve: "Saturday evening", sun_eve: "Sunday evening",
+  mon_eve: "Monday evening", tue_eve: "Tuesday evening", wed_eve: "Wednesday evening", thu_eve: "Thursday evening",
+  fri_eve: "Friday evening",
+};
+
+/** Stand-in for 02's `agent.follow_up_suggestion` prompt: a coffee meetup in a slot both share. */
+export async function suggestFollowUp(input: FollowUpInput): Promise<{
+  title: string; description: string; suggestedSlot: AvailabilitySlot; suggestedBusinessCategory: EventCategory;
+}> {
+  const theirs = new Set(input.b?.availabilitySlots ?? []);
+  const shared = (input.a?.availabilitySlots ?? []).filter((s) => theirs.has(s));
+  const suggestedSlot: AvailabilitySlot = shared.find((s) => s.endsWith("_day")) ?? shared[0] ?? "sat_day";
+  return {
+    title: `Coffee, ${SLOT_PHRASE[suggestedSlot]}`,
+    description: `You both enjoyed ${input.event.title}. Pick up the conversation over coffee near ${input.event.neighborhood || "the venue"}.`,
+    suggestedSlot,
+    suggestedBusinessCategory: "food_drink",
   };
 }

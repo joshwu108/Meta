@@ -1,10 +1,9 @@
 import "server-only";
-import { createServerClient } from "@supabase/ssr";
-import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { ZodError, type ZodSchema } from "zod";
 import type { NotificationType } from "@/shared/enums";
+import { createAdminClient, createUserClient } from "./clients";
 
 // Stand-ins for 01's src/lib/api, src/lib/supabase and features/core, matching the
 // signatures in specs/01-core-platform/specs.md §4. Swap imports when 01 merges.
@@ -17,6 +16,8 @@ const STATUS: Record<ErrorCode, number> = {
   UNAUTHENTICATED: 401, FORBIDDEN: 403, NOT_FOUND: 404, VALIDATION: 400, CONFLICT: 409,
   CAPACITY_FULL: 409, RATE_LIMITED: 429, AI_UNAVAILABLE: 503, INTERNAL: 500,
 };
+
+export { createAdminClient, createUserClient };
 
 export class ApiError extends Error {
   constructor(public code: ErrorCode, message: string, public status = STATUS[code], public details?: unknown) {
@@ -39,30 +40,6 @@ export async function parseBody<T>(schema: ZodSchema<T>, req: Request): Promise<
     throw new ApiError("VALIDATION", "Request body must be JSON");
   });
   return schema.parse(raw);
-}
-
-function env(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new ApiError("INTERNAL", `${name} is not configured`);
-  return value;
-}
-
-/** Cookie-bound client: every query runs under the signed-in user's RLS. */
-export async function createUserClient(): Promise<SupabaseClient> {
-  const store = await cookies();
-  return createServerClient(env("NEXT_PUBLIC_SUPABASE_URL"), env("NEXT_PUBLIC_SUPABASE_ANON_KEY"), {
-    cookies: {
-      getAll: () => store.getAll(),
-      setAll: (items) => items.forEach(({ name, value, options }) => store.set(name, value, options)),
-    },
-  });
-}
-
-/** Service-role client. Only for cross-user reads this feature filters itself, and for notify(). */
-export function createAdminClient(): SupabaseClient {
-  return createClient(env("NEXT_PUBLIC_SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 }
 
 export type AuthCtx = { user: User; supabase: SupabaseClient };
@@ -101,4 +78,18 @@ export async function logAgentAction(input: {
     permissions_used: input.permissionsUsed, result: input.result,
   });
   if (error) throw new ApiError("INTERNAL", "Could not log agent action");
+}
+
+export type NotificationItem = { id: string; type: string; payload: Record<string, unknown>; readAt: string | null; createdAt: string };
+
+/** Latest notifications for the Activity hub (01 owns the table and GET /api/notifications). */
+export async function listNotifications(userId: string, limit = 20): Promise<NotificationItem[]> {
+  const { data, error } = await createAdminClient()
+    .from("notifications").select("id, type, payload, read_at, created_at")
+    .eq("user_id", userId).order("created_at", { ascending: false }).limit(limit);
+  if (error) throw new ApiError("INTERNAL", "Could not load notifications");
+  return (data ?? []).map((n) => ({
+    id: n.id as string, type: n.type as string, payload: (n.payload ?? {}) as Record<string, unknown>,
+    readAt: (n.read_at ?? null) as string | null, createdAt: n.created_at as string,
+  }));
 }
