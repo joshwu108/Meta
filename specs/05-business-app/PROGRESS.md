@@ -133,6 +133,16 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - **2026-10-24 — `/business/insights` (P1-1) shipped early** because it is pure banding over
   `demand_clusters` and shares the DTO builders already written for the inbox. It shows an
   empty state until 04 merges.
+- **2026-10-24 — Post-mutation redirects are full navigations, not `router.push()`.**
+  Every form looked broken in a production build: the request succeeded, the button stayed
+  disabled and the page never moved. `router.push()` from inside a `startTransition` body
+  does not settle when the page was reached by a client-side navigation, and a `push()` to
+  a route already in the App Router cache — which it always is, because the owner clicked
+  through from it — is deduped into a no-op, with the RSC payload fetched and thrown away
+  while the URL stays put. `router.refresh()` beforehand does not help. `useSubmit()` now
+  awaits outside any transition and redirects with `window.location.assign`, which costs
+  one round trip and makes every server component re-read its data after a mutation, which
+  is what you want after creating, publishing or cancelling an event anyway.
 - **2026-10-24 — The E2E suite no longer waits on workstream 01.** It signed in through
   `/login`, so every case skipped and not one of the nine business screens had ever been
   rendered. `POST /api/dev/session` performs an ordinary email and password sign-in
@@ -239,6 +249,18 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 18:05` — **ran the full clean-state check for the first time; it found a bug
+  that would have broken the demo.** `db reset` → `db:seed` → `typecheck` → `lint` →
+  **259 unit + integration tests** → **24 E2E**, all green on a freshly reset database.
+  Getting there took three real fixes. The big one: **every form silently failed to
+  navigate after saving** in a production build — save an event, approve a proposal or
+  finish onboarding and the request would succeed while the button stayed disabled and the
+  page never moved. Two independent causes, written up under Decisions; neither is
+  reproducible in `next dev` or by reasoning about the code, only by driving the UI in a
+  production build. Also hardened the `/api/dev` guard (it keyed off `NODE_ENV`, which is
+  both too weak and too strong) and moved the E2E suite onto a production build, which is
+  what exposed the navigation bug in the first place. Scene 4's 6 cases still skip, waiting
+  on 04.
 - `2026-10-24 17:30` — **the business UI has now actually been rendered, and the whole
   suite runs.** The Playwright suite was blocked on 01's `/login`, so a dev-only
   `POST /api/dev/session` removes that dependency and **24 of 30 cases pass**: the manual
