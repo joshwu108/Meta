@@ -1,8 +1,8 @@
 import "server-only";
 import type { SharablePreferences } from "@/shared/types";
-import type { SharingPurpose } from "./schemas";
-import { adminLoadSources, adminRecentShareLogs, adminWriteShareLogs } from "./server/repo";
-import { shareBatch, type SharingDeps } from "./server/sharable";
+import type { Consent, SharingPurpose } from "./schemas";
+import { adminLoadConsent, adminLoadSources, adminRecentShareLogs, adminWriteShareLogs } from "./server/repo";
+import { shareBatch, toAttendeeSharing, type AttendeeSharing, type SharingDeps } from "./server/sharable";
 import { getAdminClient } from "./server/stubs";
 
 /** Public surface of workstream 02. Other features import only from here. */
@@ -11,6 +11,7 @@ export { explainRecommendation, explainDetailed, type ExplainInput, type Explain
 export { suggestFollowUp } from "./server/follow-up";
 export { resolveGroupSchedule, type GroupSchedule, type SlotOption } from "./server/group-schedule";
 export type { Consent, SharingPurpose, SuggestionCard, FollowUpSuggestion } from "./schemas";
+export type { AttendeeSharing } from "./server/sharable";
 
 function adminDeps(): SharingDeps {
   const admin = getAdminClient();
@@ -41,4 +42,30 @@ export async function getSharablePreferencesBatch(
   purpose: SharingPurpose,
 ): Promise<Map<string, SharablePreferences>> {
   return shareBatch(adminDeps(), userIds, purpose);
+}
+
+/**
+ * For 06's attendee list: every requested user, with interests only when they turned on
+ * `share_interests_with_attendees`. Each user whose interests are released gets one
+ * activity-log row per hour.
+ */
+export async function getAttendeeSharing(userIds: readonly string[]): Promise<Map<string, AttendeeSharing>> {
+  const unique = [...new Set(userIds)];
+  if (unique.length === 0) return new Map();
+  const admin = getAdminClient();
+  const rows = await adminLoadConsent(admin, unique);
+  const result = new Map(rows.map((r) => [r.userId, toAttendeeSharing(r.interests, r.consent)]));
+  const shared = rows.filter((r) => r.consent.share_interests_with_attendees && r.interests.length > 0).map((r) => r.userId);
+  if (shared.length > 0) {
+    const skip = await adminRecentShareLogs(admin, shared, "attendees");
+    const toLog = shared.filter((id) => !skip.has(id));
+    if (toLog.length > 0) await adminWriteShareLogs(admin, toLog, "attendees");
+  }
+  return result;
+}
+
+/** A user's consent flags, for server-side defaults (e.g. 06's RSVP sharing choices). */
+export async function getConsent(userId: string): Promise<Consent> {
+  const [row] = await adminLoadConsent(getAdminClient(), [userId]);
+  return row.consent;
 }

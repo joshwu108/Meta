@@ -76,3 +76,11 @@ export async function shareBatch(
   }
   return new Map(shared.map((s) => [s.userId, s]));
 }
+
+export type AttendeeSharing = { interests: string[]; shareInterestsWithAttendees: boolean };
+
+/** Attendee-list chips (06): interests only when `share_interests_with_attendees` is on. */
+export function toAttendeeSharing(interests: readonly string[], consent: Consent): AttendeeSharing {
+  const on = consent.share_interests_with_attendees;
+  return { interests: on ? [...interests] : [], shareInterestsWithAttendees: on };
+}

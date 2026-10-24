@@ -181,10 +181,13 @@ export async function adminLoadSources(admin: SupabaseClient, userIds: readonly 
 
 export const SHARE_LOG_WINDOW_MS = 60 * 60 * 1000;
 
+/** What a share log row records: a sharing purpose or the attendee-list consent. */
+export type ShareLogKey = SharingPurpose | "attendees";
+
 export async function adminRecentShareLogs(
   admin: SupabaseClient,
   userIds: readonly string[],
-  purpose: SharingPurpose,
+  purpose: ShareLogKey,
 ): Promise<Set<string>> {
   const since = new Date(Date.now() - SHARE_LOG_WINDOW_MS).toISOString();
   const res = await admin
@@ -198,7 +201,8 @@ export async function adminRecentShareLogs(
   return new Set((check(res, "load share logs") as { user_id: string }[]).map((r) => r.user_id));
 }
 
-const PURPOSE_LABEL: Record<SharingPurpose, string> = {
+const PURPOSE_LABEL: Record<ShareLogKey, string> = {
+  attendees: "fellow attendees of your events",
   matching: "people matching",
   demand: "community event demand (counted anonymously)",
   group_plan: "group activity planning",
@@ -207,16 +211,39 @@ const PURPOSE_LABEL: Record<SharingPurpose, string> = {
 export async function adminWriteShareLogs(
   admin: SupabaseClient,
   userIds: readonly string[],
-  purpose: SharingPurpose,
+  purpose: ShareLogKey,
 ): Promise<void> {
   const rows = userIds.map((id) => ({
     user_id: id,
     actor: "coordination",
     action: "share_preferences",
     permissions_used: [purpose],
-    result: `Shared your interests and availability for ${PURPOSE_LABEL[purpose]}`,
+    result: purpose === "attendees"
+      ? `Shared your interests with ${PURPOSE_LABEL.attendees}`
+      : `Shared your interests and availability for ${PURPOSE_LABEL[purpose]}`,
   }));
   const { error } = await admin.from("agent_action_log").insert(rows);
   // Logging must never break the caller's flow; failures are reported, not thrown.
   if (error) console.error(JSON.stringify({ level: "error", msg: "share_log_failed", code: error.code }));
+}
+
+export type ConsentRow = { userId: string; interests: string[]; consent: Consent };
+
+/** Interests + consent for a set of users (attendee chips, server-side RSVP defaults). */
+export async function adminLoadConsent(admin: SupabaseClient, userIds: readonly string[]): Promise<ConsentRow[]> {
+  const [agents, prefs] = await Promise.all([
+    admin.from("agent_profiles").select("user_id, consent").in("user_id", [...userIds]),
+    admin.from("user_preferences").select("user_id, interests").in("user_id", [...userIds]),
+  ]);
+  const consentById = new Map(
+    (check(agents, "load consent") as { user_id: string; consent: unknown }[]).map((a) => [a.user_id, a.consent]),
+  );
+  const interestsById = new Map(
+    (check(prefs, "load interests") as { user_id: string; interests: string[] }[]).map((p) => [p.user_id, p.interests]),
+  );
+  return [...userIds].map((userId) => ({
+    userId,
+    interests: interestsById.get(userId) ?? [],
+    consent: parseConsent(consentById.get(userId)),
+  }));
 }
