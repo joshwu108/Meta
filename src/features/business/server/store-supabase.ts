@@ -45,8 +45,14 @@ const EVENT_COLUMNS =
 const PROPOSAL_COLUMNS =
   'id, business_id, cluster_id, status, proposal, business_edits, decision_note, decided_at, resulting_event_id, expires_at, created_at';
 
-/** Postgres "relation does not exist": a table another workstream has not merged yet. */
-const UNDEFINED_TABLE = '42P01';
+/**
+ * A table another workstream has not merged yet. Postgres raises `42P01`, but PostgREST
+ * answers from its own schema cache and reports `PGRST205` instead, so both are needed —
+ * only the live stack showed that the `42P01` check alone never fired.
+ */
+const MISSING_TABLE_CODES = new Set(['42P01', 'PGRST205']);
+const isMissingTable = (error: { code?: string } | null): boolean =>
+  error?.code !== undefined && MISSING_TABLE_CODES.has(error.code);
 
 const isErrorCode = (value: string): value is ErrorCode =>
   (ERROR_CODES as readonly string[]).includes(value);
@@ -96,7 +102,7 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
       .eq('event_id', eventId);
 
     if (error) {
-      if (error.code === UNDEFINED_TABLE) return [];
+      if (isMissingTable(error)) return [];
       throw toApiError(error, 'could not read the attendee list');
     }
 
@@ -241,7 +247,7 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
 
       const { data, error } = await (status ? base.eq('status', status) : base);
       if (error) {
-        if (error.code === UNDEFINED_TABLE) return []; // workstream 04 has not merged yet
+        if (isMissingTable(error)) return []; // workstream 04 has not merged yet
         throw toApiError(error, 'could not list the proposals');
       }
       return (data ?? []) as ProposalRow[];
@@ -254,7 +260,7 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
         .eq('id', proposalId)
         .maybeSingle();
       if (error) {
-        if (error.code === UNDEFINED_TABLE) return null;
+        if (isMissingTable(error)) return null;
         throw toApiError(error, 'could not read the proposal');
       }
       return (data as ProposalRow | null) ?? null;
@@ -290,7 +296,7 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
         .eq('event_id', eventId)
         .eq('status', 'confirmed');
       if (error) {
-        if (error.code === UNDEFINED_TABLE) return 0;
+        if (isMissingTable(error)) return 0;
         throw toApiError(error, 'could not count the confirmed attendees');
       }
       return count ?? 0;
@@ -318,7 +324,7 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
         .eq('status', 'confirmed');
 
       if (error) {
-        if (error.code === UNDEFINED_TABLE) return 0;
+        if (isMissingTable(error)) return 0;
         throw toApiError(error, 'could not count the repeat attendees');
       }
 
@@ -341,7 +347,7 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
         .select('user_id')
         .eq('cluster_id', clusterId);
       if (error) {
-        if (error.code === UNDEFINED_TABLE) return [];
+        if (isMissingTable(error)) return [];
         throw toApiError(error, 'could not read the cohort');
       }
       return (data ?? []).map((row) => (row as { user_id: string }).user_id);
@@ -369,7 +375,7 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
         .select('category, slot, member_count, center_lat, center_lng, created_at')
         .gte('created_at', since);
       if (error) {
-        if (error.code === UNDEFINED_TABLE) return [];
+        if (isMissingTable(error)) return [];
         throw toApiError(error, 'could not read the local demand');
       }
 
