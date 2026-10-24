@@ -5,13 +5,13 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 ## Checklist
 
 ### Foundations (unblock others first)
-- [ ] Migration `supabase/migrations/0200_agent.sql` (tables, RLS, triggers)
-- [ ] Zod schemas: `UserPreferences`, `ExtractedPreferences`, `Consent`, `SuggestionCard`, chat request/response
+- [x] Migration `supabase/migrations/0200_agent.sql` (tables, RLS, triggers)
+- [x] Zod schemas: `UserPreferences`, `ExtractedPreferences`, `Consent`, `SuggestionCard`, chat request/response
 - [ ] `src/features/agent/index.ts` exports `getSharablePreferences()` and `explainRecommendation()`
 - [ ] MOCK_AI fixtures: `agent.extract_preferences`, `agent.chat`, `agent.explain_recommendation`, `agent.follow_up_suggestion`
 
 ### P0 server
-- [ ] Time-phrase → availability slot mapping
+- [x] Time-phrase → availability slot mapping
 - [ ] Onboarding loop (extract → follow-up ≤3 → review), writes `ai_inferred` sources
 - [ ] Confirm flips fields to `user_set`, sets `onboarding_completed_at` + `is_discoverable`
 - [ ] `getSharablePreferences` consent gating, private-field stripping, batched log row
@@ -38,9 +38,9 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - [ ] `supabase/seed/fixtures/preferences.json` (14 users, demo clusters, one demand opt-out)
 
 ### Tests (spec section 9)
-- [ ] Unit: time-phrase → slot table
-- [ ] Unit: Zod rejects unknown enum values
-- [ ] Unit: `getSharablePreferences` null per consent flag, strips private fields
+- [x] Unit: time-phrase → slot table
+- [x] Unit: Zod rejects unknown enum values
+- [x] Unit: `getSharablePreferences` null per consent flag, strips private fields
 - [ ] Unit: explanation post-check drops ungrounded highlights
 - [ ] Unit: rate limiter
 - [ ] Integration (MOCK_AI): onboarding chat writes `ai_inferred` fields
@@ -66,9 +66,11 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 2026-10-24: Workstream 01 has not pushed a scaffold yet. To run tests I add the minimum root tooling (package.json, tsconfig, vitest) and the README-verbatim `src/shared/enums.ts` / `types.ts`. Core helpers (`ok`/`fail`/`withAuth`, `generateStructured`, `logAgentAction`) are stubbed in `src/features/agent/server/stubs.ts` with the exact 01 signatures. Main wins on every one of these files when 01 lands.
 
 ## Needs from others
+- README/01: `SharablePreferences.groupSizePref` is non-null but users may not state one; ws02 returns `'small'` when unset. Prefer making it `GroupSizePref | null`.
 - 01: `profiles`, `agent_action_log`, `set_updated_at()` from `0100_core.sql`; `src/lib/api`, `src/lib/ai`, `logAgentAction`, `getCurrentUser`.
 
 ## Blocked
 - Docker is not installed on this machine, so `supabase start` / `db reset` cannot run. Integration tests, the E2E scene and the full clean-state check wait on a human installing Docker Desktop.
 
 ## Log
+- 2026-10-24 15:31 · landed: progress checklist, tooling, 0200 migration, schemas, time-slot mapper, consent boundary core (37 unit tests). Next: explainRecommendation, rate limiter, onboarding loop, MOCK_AI fixtures.
