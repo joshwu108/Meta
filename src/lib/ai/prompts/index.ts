@@ -4,6 +4,8 @@
  *
  * Naming: `<workstream-feature>.<verb_noun>`, e.g. `agent.extract_preferences`.
  */
+import { DEMAND_PROMPTS } from './demand';
+
 export const PROMPT_IDS = [
   // 01 core: used by tests and the health check only
   'core.healthcheck',
@@ -38,6 +40,7 @@ export const PROMPTS: Partial<Record<PromptId, PromptDefinition>> = {
     system: 'You are a health check. Reply with the JSON the tool schema asks for and nothing else.',
     model: 'fast',
   },
+  ...DEMAND_PROMPTS,
 };
 
 export function isPromptId(value: string): value is PromptId {
