@@ -108,6 +108,8 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 2026-10-24: Match explanations are also rejected when they name an interest or day only one side has (02's MOCK_AI fixture says "You both love pottery…" for any input that mentions pottery, which would otherwise appear on every demo card).
 
+- 2026-10-24: Edited `specs.md` §4 (RLS block now shows the helper-based policies actually shipped; `creator_id`/`sender_id` cascade, `requested_by` set null, `archived_at`) and §6 (P1 messages route) so the spec matches the build.
+
 ## Needs from others
 
 - Integrator: merge ws/01-core to main first. This branch carries byte-identical copies of 01's files and of 02's `0200_agent.sql`; after 01 lands, regenerate `src/lib/supabase/database.types.ts` on main (`pnpm db:types`) since every workstream regenerates it.
