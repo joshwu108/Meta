@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { EventCategory, RsvpStatus } from "@/shared/enums";
 import { EVENT_SELECT, EventRow } from "../schemas";
+import { compareInstants } from "./time";
 
 /** Statuses anyone may browse and RSVP to. */
 export const LIVE_STATUSES = ["published", "full"] as const;
@@ -152,7 +153,7 @@ export async function eventsForUser(db: SupabaseClient, userId: string): Promise
   const rows = await getEventsByIds(db, active.map((r) => r.eventId));
   return rows
     .map((row) => ({ row, rsvp: rsvps.get(row.id)! }))
-    .sort((a, b) => a.row.starts_at.localeCompare(b.row.starts_at));
+    .sort((a, b) => compareInstants(a.row.starts_at, b.row.starts_at));
 }
 
 export type ProfilePreview = { userId: string; displayName: string; avatarUrl: string | null };

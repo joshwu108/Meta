@@ -12,6 +12,7 @@ import {
   listNotifications,
   type NotificationItem,
 } from "./stubs";
+import { millis } from "./time";
 
 export type PastEventCard = EventCard & { feedbackGiven: boolean };
 
@@ -32,8 +33,8 @@ async function feedbackGiven(admin: SupabaseClient, userId: string, eventIds: re
 
 async function myEvents(admin: SupabaseClient, userId: string): Promise<Pick<Activity, "upcoming" | "past">> {
   const mine = await eventsForUser(admin, userId);
-  const now = new Date().toISOString();
-  const isPast = (row: (typeof mine)[number]["row"]) => row.status === "completed" || row.ends_at < now;
+  const now = Date.now();
+  const isPast = (row: (typeof mine)[number]["row"]) => row.status === "completed" || millis(row.ends_at) < now;
   const rows = mine.map((m) => m.row);
   const ctx = await loadCardContext(admin, userId, rows);
   const pastRows = rows.filter(isPast).reverse();

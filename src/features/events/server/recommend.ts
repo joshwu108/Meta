@@ -4,6 +4,7 @@ import type { SharablePreferences } from "@/shared/types";
 import { categoriesForInterests } from "./categories";
 import { haversineKm, type LatLng } from "./geo";
 import { deriveSlot } from "./slots";
+import { compareInstants } from "./time";
 
 /** Weights from spec §5; they sum to 100 and are the only place to tune ranking. */
 export const WEIGHTS = { interest: 40, slot: 25, budget: 15, proximity: 10, social: 10 } as const;
@@ -105,7 +106,7 @@ export function scoreEvent(prefs: ViewerPreferences, event: CandidateEvent): { s
 }
 
 function byStartThenId(a: RankedEvent, b: RankedEvent): number {
-  return a.event.startsAt.localeCompare(b.event.startsAt) || a.event.id.localeCompare(b.event.id);
+  return compareInstants(a.event.startsAt, b.event.startsAt) || a.event.id.localeCompare(b.event.id);
 }
 
 function rankPersonalized(prefs: ViewerPreferences, events: readonly CandidateEvent[]): RankedEvent[] {
