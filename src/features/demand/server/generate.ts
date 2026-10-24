@@ -3,6 +3,7 @@ import { generateStructured } from '@/lib/ai';
 import { serverEnv } from '@/lib/env';
 import { ProposalDocument } from '../schemas';
 import type { GenerateInput } from './deps';
+import type { ReviseInput } from './revise';
 
 const SLOT_TIME: Readonly<Record<string, string>> = { sat_day: '11:00', sun_day: '11:00' };
 
@@ -44,4 +45,14 @@ export async function generateProposal(input: GenerateInput): Promise<ProposalDo
   if (!serverEnv.isMockAi) return doc;
   const fits = doc.category === input.brief.category && doc.suggestedSlot === input.brief.slot;
   return fits ? doc : templateProposal(input);
+}
+
+/** Calls `demand.revise_proposal`; under MOCK_AI the fixture is used only when it fits, else the previous draft. */
+export async function generateRevision(input: ReviseInput): Promise<ProposalDocument> {
+  const raw = await generateStructured({ prompt: 'demand.revise_proposal', input, schema: ProposalDocument, model: 'smart' });
+  const doc = ProposalDocument.parse(raw);
+  if (!serverEnv.isMockAi) return doc;
+  const slot = input.changes.slot ?? input.previous.suggestedSlot;
+  const fits = doc.category === input.previous.category && doc.suggestedSlot === slot;
+  return fits ? doc : input.previous;
 }

@@ -12,6 +12,9 @@ export type ValidationIssue =
   | 'forbidden_phrase'
   | 'category_mismatch';
 
+/** What a draft is checked against: a fresh cluster, or (for a revision) the previous proposal. */
+export type ValidationTarget = Pick<AggregatedCluster, 'slot' | 'category' | 'band' | 'neighborhoodLabel' | 'topInterests' | 'budgetP50Cents'>;
+
 export type ValidationResult =
   | { ok: true; proposal: StoredProposal }
   | { ok: false; issues: ValidationIssue[] };
@@ -21,7 +24,7 @@ export function findForbiddenPhrases(text: string): string[] {
   return FORBIDDEN_PHRASES.filter((p) => new RegExp(`\\b${p}\\b`).test(lower));
 }
 
-function priceBounds(cluster: AggregatedCluster, venue: Venue, headroom: number): { min: number; max: number } | null {
+function priceBounds(cluster: ValidationTarget, venue: Venue, headroom: number): { min: number; max: number } | null {
   const { minPriceCents, maxPriceCents } = venue.capabilities;
   if (minPriceCents != null || maxPriceCents != null) {
     return { min: minPriceCents ?? 0, max: maxPriceCents ?? Number.MAX_SAFE_INTEGER };
@@ -29,7 +32,7 @@ function priceBounds(cluster: AggregatedCluster, venue: Venue, headroom: number)
   return cluster.budgetP50Cents == null ? null : { min: 0, max: Math.round(cluster.budgetP50Cents * headroom) };
 }
 
-function collectIssues(doc: ProposalDocument, cluster: AggregatedCluster, venue: Venue, config: Pick<DemandConfig, 'budgetHeadroom'>): ValidationIssue[] {
+function collectIssues(doc: ProposalDocument, cluster: ValidationTarget, venue: Venue, config: Pick<DemandConfig, 'budgetHeadroom'>): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const hosted = venue.capabilities.hostingSlots;
   if (doc.suggestedCapacity > venue.capabilities.capacity) issues.push('over_capacity');
@@ -49,7 +52,7 @@ function collectIssues(doc: ProposalDocument, cluster: AggregatedCluster, venue:
  */
 export function validateProposal(
   doc: ProposalDocument,
-  cluster: AggregatedCluster,
+  cluster: ValidationTarget,
   venue: Venue,
   now: Date,
   config: Pick<DemandConfig, 'budgetHeadroom' | 'minDaysOut'>,

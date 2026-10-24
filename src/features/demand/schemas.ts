@@ -81,3 +81,18 @@ export const RUN_STAGES = ['collecting', 'clustering', 'matching', 'drafting', '
 export type RunStage = (typeof RUN_STAGES)[number];
 
 export const groupSizeSchema = z.enum(GROUP_SIZE_PREF);
+
+/** Spec §6 P1 revise body. 05 sends `{ note }`; the numeric fields are owner overrides applied in code. */
+export const ReviseProposalRequest = z
+  .object({
+    note: z.string().trim().min(1).max(500).optional(),
+    priceCents: z.number().int().min(0).max(100_000).optional(),
+    capacity: z.number().int().min(4).max(60).optional(),
+    slot: z.enum(AVAILABILITY_SLOT).optional(),
+  })
+  .strict()
+  .refine((b) => Object.values(b).some((v) => v !== undefined), { message: 'Give a note or at least one change' });
+export type ReviseProposalRequest = z.infer<typeof ReviseProposalRequest>;
+
+/** A proposal can be revised this many times (also enforced by the 0403 check constraint). */
+export const MAX_REVISIONS = 3;

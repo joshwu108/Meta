@@ -18,6 +18,7 @@ export const PROMPT_IDS = [
   'groups.plan_activity',
   // 04 demand
   'demand.generate_proposal',
+  'demand.revise_proposal',
   // 06 events
   'events.reconnect_followup',
 ] as const;
