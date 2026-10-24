@@ -52,7 +52,8 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - [x] **U3** `/business/proposals` inbox + nav badge with pending count
 - [x] **U4** `/business/proposals/:id` — proposal card, why/assumptions, decision panel, status timeline
 - [x] **U5** `/business/events/new` + `/business/events/:id/edit` editor
-- [x] **U6** `/business/events` table + `/business/events/:id/attendees`
+- [x] **U6** `/business/events` table (status pills, RSVP counts, edit / publish / cancel
+  per row) + `/business/events/:id/attendees`
 - [x] **U7** Theme conformance: tokens, light+dark, `AiTag` on every AI artifact, `StatusPill` colors
 
 ### Seed (spec §8)
@@ -88,6 +89,8 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - [x] **T-E2** Manual event lifecycle in a browser: create draft → edit → publish →
   attendees → cancel, plus the two refusals and another venue's event being unreachable
 - [x] **T-E3** Theme matrix: both themes at 320 / 768 / 1024 / 1440, no horizontal scroll
+- [x] **T-E4** Publish and cancel straight from the events table, and the actions a given
+  status does *not* offer
 
 ## P1 (spec §3)
 - [x] **P1-1** `/business/insights` — banded demand by category × slot within 3 km, last 30 days
@@ -249,6 +252,19 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 18:35` — **spec re-read found a missing feature; shipped it.** Screen 5 in
+  spec §7 asks for "actions (edit, publish, cancel)" on each events-table row and only edit
+  was there — publish and cancel were buried in the editor. Rows now publish in place and
+  send the owner to the editor with the reason panel already open for a cancel, and a row
+  only offers what the status machine allows (a cancelled event shows neither). A small
+  client mirror of the two status questions keeps the `server-only` module out of the
+  bundle, with a unit test asserting the two never disagree. Also covered two pieces of
+  load-bearing logic that had none: the `/api/dev` guard, and the mapping that puts a
+  server validation failure under the right input. Verified at 320px by eye as well as by
+  the overflow assertion. **274 unit + integration tests, 26 E2E, 6 skipped**; `tsc`,
+  `eslint` and `next build` clean.
+  Note for the demo: the E2E leaves its events behind, so run
+  `npx supabase db reset && pnpm db:seed` before presenting.
 - `2026-10-24 18:05` — **ran the full clean-state check for the first time; it found a bug
   that would have broken the demo.** `db reset` → `db:seed` → `typecheck` → `lint` →
   **259 unit + integration tests** → **24 E2E**, all green on a freshly reset database.
