@@ -45,7 +45,7 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - [x] Unit: rate limiter
 - [ ] Integration (MOCK_AI): onboarding chat writes `ai_inferred` fields
 - [ ] Integration: confirm flips to `user_set` and sets `onboarding_completed_at`
-- [ ] Integration: PATCH preferences respects RLS
+- [x] Integration: PATCH preferences respects RLS (PGlite: 0200 on 0100 core, cross-user select/update/insert blocked; Supabase-stack variant still skipped)
 - [ ] Integration: agent log row written when preferences shared
 - [x] Prompt eval set: 10 transcripts in `tests/evals/agent/*.json` (running it needs a live key)
 - [x] E2E Scene 1 (UI path with /api intercepted by the MOCK_AI fixture; full-stack run waits on 01 + Docker)
@@ -82,6 +82,7 @@ Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from m
 5. Consider replacing `server/rate-limit.ts` with 01's `createRateLimiter({ limit: 30, windowMs: 600000 })`.
 6. Route tests: mock `@/lib/supabase/server` instead of `@supabase/ssr`; use 01's `EMPTY_CONTEXT`.
 7. Swap local `primitives.tsx` for `@/features/core/components/ui` and wrap agent pages in 01's AppShell.
+- 2026-10-24: RLS is tested on PGlite (Postgres in WASM) with a stubbed `auth` schema (`auth.users`, `auth.uid()` from `request.jwt.claim.sub`, `authenticated` role). The test uses main's `0100_core.sql` when present, else a stand-in that follows 01's spec.
 
 ## Needs from others
 - 03 and 04: import `DEMAND_OPT_OUT_EMAILS` / `MATCHING_OPT_OUT_EMAILS` from `tests/fixtures/consent-cases.ts` and assert those users never appear in matches / cohort counts (closes AC3).
@@ -94,6 +95,7 @@ Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from m
 - 01: `profiles`, `agent_action_log`, `set_updated_at()` from `0100_core.sql`; `src/lib/api`, `src/lib/ai`, `logAgentAction`, `getCurrentUser`.
 
 ## Blocked
+- (partly unblocked) Migration + RLS are now verified without Docker via PGlite in `tests/integration/agent/migration.test.ts`; it also passed against ws/01-core's real `0100_core.sql`. The supabase-js integration tests still need the local stack.
 - Running the live prompt eval (`pnpm tsx tests/evals/agent/run.ts`) needs `ANTHROPIC_API_KEY`; the set itself is committed and checked in CI.
 - Even with Docker, `0200_agent.sql` needs 01's `0100_core.sql` (`profiles`, `agent_action_log`, `set_updated_at()`), which is not on main yet.
 - Docker is not installed on this machine, so `supabase start` / `db reset` cannot run. Integration tests, the E2E scene and the full clean-state check wait on a human installing Docker Desktop.
@@ -108,3 +110,4 @@ Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from m
 - 2026-10-24 16:55 · landed: shared AC3 consent fixture + boundary test, theme check (5 screens × light/dark × 320/768/1024/1440, no overflow); 126 unit + 9 E2E green. Next: wait for 01 scaffold on main and swap stubs; meanwhile UI component edge cases.
 - 2026-10-24 17:10 · landed: privacy guard test (no agent-table reads outside features/agent), AI_UNAVAILABLE → form fallback with E2E; 128 unit + 10 E2E green. Next: keep syncing for 01; component edge cases.
 - 2026-10-24 17:30 · ws/01-core reviewed (read-only): re-keyed preferences seed to 01's 14 users (clusters preserved), loader takes SeedContext, fixtures readable by 01's mock loader, prompt defs in 01's registry shape; merge plan recorded. 131 unit + 10 E2E green. Next: wait for 01 on main.
+- 2026-10-24 17:50 · landed: PGlite migration/RLS suite (8 tests; also green on ws/01-core's real 0100). 131 unit + 8 PGlite + 10 E2E green. Next: wait for 01 on main, then run the merge plan.
