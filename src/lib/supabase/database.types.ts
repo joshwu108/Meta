@@ -476,7 +476,7 @@ isOneToOne: true
 { Args: { "p_group": string }; Returns: boolean
                            },
 "create_group_with_owner":
-{ Args: { "p_creator": string,"p_description": string,"p_interests": (string)[],"p_name": string,"p_visibility": string }; Returns: string
+{ Args: { "p_creator": string,"p_description"?: string,"p_interests"?: (string)[],"p_name": string,"p_visibility": string }; Returns: string
                            },
 "invite_to_group":
 { Args: { "p_group": string,"p_recipients": (string)[],"p_sender": string }; Returns: {

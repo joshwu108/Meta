@@ -95,7 +95,7 @@ create trigger invitations_guard before update on public.invitations
 
 /* Create a group and make the creator its active owner. */
 create or replace function public.create_group_with_owner(
-  p_creator uuid, p_name text, p_description text, p_interests text[], p_visibility text
+  p_creator uuid, p_name text, p_visibility text, p_description text default null, p_interests text[] default '{}'
 ) returns uuid
 language plpgsql security definer set search_path = public as $$
 declare
@@ -234,13 +234,13 @@ begin
                    where m.group_id = i.group_id and m.user_id = p_blocked and m.status = 'active')))));
 end $$;
 
-revoke all on function public.create_group_with_owner(uuid, text, text, text[], text) from public, anon, authenticated;
+revoke all on function public.create_group_with_owner(uuid, text, text, text, text[]) from public, anon, authenticated;
 revoke all on function public.invite_to_group(uuid, uuid, uuid[]) from public, anon, authenticated;
 revoke all on function public.remove_group_member(uuid, uuid) from public, anon, authenticated;
 revoke all on function public.leave_group(uuid, uuid) from public, anon, authenticated;
 revoke all on function public.transfer_group_owner(uuid, uuid, uuid) from public, anon, authenticated;
 revoke all on function public.block_user(uuid, uuid) from public, anon, authenticated;
-grant execute on function public.create_group_with_owner(uuid, text, text, text[], text) to service_role;
+grant execute on function public.create_group_with_owner(uuid, text, text, text, text[]) to service_role;
 grant execute on function public.invite_to_group(uuid, uuid, uuid[]) to service_role;
 grant execute on function public.remove_group_member(uuid, uuid) to service_role;
 grant execute on function public.leave_group(uuid, uuid) to service_role;
