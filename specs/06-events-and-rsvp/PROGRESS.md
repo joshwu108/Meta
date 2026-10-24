@@ -99,13 +99,14 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: Interests are loaded (via 02's `getAttendeeSharing`, which logs each release) only for `GET /events/:id/attendees`, i.e. for confirmed attendees. The event page preview carries names/avatars only, so a connected viewer who has not RSVP'd never receives attendees' interests.
 - 2026-10-24: Tightened two spec policies in 0600 because PostgREST exposes the tables directly: `event_feedback` inserts require a confirmed RSVP on a completed event; `reconnect_interest` is select-only for users (rows come only from `add_reconnect_interest()`).
 - 2026-10-24: RLS is now tested on plain Postgres as a throwaway NOLOGIN role per run (`createRlsRole` in `tests/db/support/db.ts`, dropped after the run), standing in for Supabase's `authenticated` role.
+- 2026-10-24: Rehearsed the ws/01-core merge in a throwaway worktree (never pushed): 14 conflicts, all scaffold files plus 06's three pages; with 06's stand-ins swapped for 01's modules it typechecks, lints, builds, and passes 175 unit + 61 events-db tests. Exact steps in `MERGE_01.md`. Two branch fixes came out of it: a type-only import 01's eslint rejects, and DB-test client mocks centralized in `tests/db/support/setup.ts` (01's withAuth/notify create their own clients).
 
 ## Needs from others
 
 - 02: `suggest_events` in `src/features/agent/server/suggestion-stubs.ts` can now call `getRecommendedEvents(userId, limit)` from `@/features/events`. Map each item to 02's `EventCandidate` as `{ id: r.event.id, title: r.event.title, startsAt: r.event.startsAt, venue: r.event.business.name, category: r.event.category, description: r.event.description }`; `r.explanation` is the grounded "why" if the card wants it.
 - 01/02/03/04: three workstreams (03 `matching/server/categories.ts`, 04 `demand/server/categories.ts`, 06 `events/server/categories.ts`) each map interest tags to `EVENT_CATEGORY` because `SharablePreferences` has no `interestCategories`. Adding `interestCategories` to the shared type (02 already stores it), or one shared mapping in `src/shared/`, would keep recommendations, matches and demand clusters consistent.
 - 02: `src/lib/ai/fixtures/agent.explain_recommendation.json` (ws/02-agent) matches any input containing "pottery", and 06's event input always includes the viewer's interests, so under `MOCK_AI` every event for the Scene 1 user reads "You both love pottery and are free Thursday evenings." (person phrasing, and wrong for a Catan night). Please add cases ahead of it: `{ "match": "Beginner Pottery & Coffee Night", "output": { "explanation": "Pottery night on a Thursday evening, small group, close to you.", "highlights": ["pottery", "Thursday evening"] } }` and a generic event case `{ "match": "\"kind\":\"event\"", "output": { "explanation": "Fits the interests and times you shared with your agent.", "highlights": [] } }`. 06 sends `target: { kind: 'event', event: { title, category, slot, capacity, priceCents } }`.
-- 01: add a `events-db` vitest project for `tests/db/**/*.test.ts` (plain local Postgres via `TEST_DATABASE_URL`, no Supabase setup file), or let 06 add it in the merge commit.
+- 01: add an `events-db` vitest project for `tests/db/**/*.test.ts` with `setupFiles: ['tests/db/support/setup.ts']` (plain local Postgres via `TEST_DATABASE_URL`), or let 06 add it in the merge commit (see `MERGE_01.md`).
 - 01: call `loadRsvps(ctx)` from `supabase/seed/loaders/rsvps.ts` in `runSeedWith` after `loadEvents` (06 can add the call in its merge commit). It needs the "Ritual Grounds" business and users `maya@`, `jordan@`, `sam@`, `priya@`, `theo@`, `nina@commonground.test`.
 - 01: add `jordan@commonground.test` to `users.json`. 06 §8 names maya@ and jordan@ for Scene 6, but ws/01-core's fixture has no jordan, so the seeded reconnect row (maya → jordan) is skipped until it exists.
 - 01: app shell `(consumer)/layout.tsx` with nav and the 680/320 frame; 06's pages render only their content column (Discover adds its own right rail).
@@ -120,6 +121,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 18:20 PT: main unchanged. Rehearsed the 01 merge end to end (green); wrote `MERGE_01.md`; fixed the two issues it found. 157 tests on this branch.
 - 2026-10-24 18:02 PT: RLS review: tightened feedback/reconnect policies; new RLS suite runs as a temporary non-superuser role (157 tests).
 - 2026-10-24 17:56 PT: capped AI explanations at 10 per request (For you ranks 20). 151 tests.
 - 2026-10-24 17:52 PT: self-review found the event preview leaking sharedInterests to non-attendee connections (and triggering 02 share logs on every view); fixed with a regression test. Clean build + 150 tests, 97% lines / 83% branches.
