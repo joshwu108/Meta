@@ -30,6 +30,19 @@ export default defineConfig({
           poolOptions: { forks: { singleFork: true } },
         },
       },
+      {
+        resolve: { alias: { ...alias, 'server-only': path.resolve(__dirname, 'tests/support/server-only.ts') } },
+        test: {
+          name: 'db',
+          include: ['tests/db/**/*.test.ts'],
+          environment: 'node',
+          env: { TEST_DATABASE_URL: process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' },
+          testTimeout: 30_000,
+          hookTimeout: 60_000,
+          pool: 'forks',
+          poolOptions: { forks: { singleFork: true } },
+        },
+      },
     ],
     coverage: {
       provider: 'v8',
