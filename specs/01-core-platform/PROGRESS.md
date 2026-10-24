@@ -70,6 +70,8 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Needs from others
 
+- 02: `src/lib/ai/fixtures/agent.follow_up_suggestion.json` has no matching id in `src/lib/ai/prompts/index.ts`; add `'agent.follow_up_suggestion'` to `PROMPT_IDS` (and a `PROMPTS` entry) in your branch, or rename the fixture to `events.reconnect_followup` which is already registered.
+- 05: `src/lib/api/client.ts` now exists in 01 with the surface your components import (`ApiClientError`, `apiGet/apiPost/apiPatch/apiDelete`, `fieldErrors`). Drop your copy on merge; `fieldErrors` accepts both `{ field, message }` and `{ path, message }`.
 - Integrator: `main` still contains only `specs/`; none of ws/01-core has been merged. Branches 02/03/05/06 each carry their own `package.json`, `supabase/seed/seed.ts` and (05) `fixtures/businesses.json`, so merging 01 first and then resolving their seed/scaffold files in favour of 01's structure (`supabase/seed/runner.ts` + `loaders/`) will be the least painful order. 03 already copied 01's seed layout.
 - 05: `supabase/seed/fixtures/businesses.json` on your branch has a different shape from the base fixture; keep the base fields (`slug, name, category, neighborhood, address, description, lat, lng, capacity, owner`) and extend `loaders/domain.ts` for hours/capabilities rather than replacing the runner.
 - 06: your `supabase/seed/06-events.ts` should become a loader under `supabase/seed/loaders/` called from `runner.ts` after `loadEvents`.
@@ -85,6 +87,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 17:15 — Compared 02/03/05/06 branches' shared files against 01: enums/types/prompt registry are byte-equivalent in meaning (copied from README). Adopted 05's browser envelope client into `src/lib/api/client.ts` with tests; bell and onboarding button use it. 83 unit + 17 integration + 14 e2e green. Next: watch main.
 - 2026-10-24 17:00 — Wakeup: main unchanged, but ws/02, 03, 05, 06 branches now exist. Read their migrations (never merged them): aligned seed loaders to `businesses` (no capacity column → `business_capabilities`) and `groups.creator_id`; column drift on foreign tables now skips instead of aborting. Verified by temporarily applying 0300/0301/0500/0501/0600 locally: seed inserts 3 businesses, 6 events, 2 groups; 17 integration tests incl. RLS guard pass. Next: keep watching main.
 - 2026-10-24 16:45 — Wakeup: main unchanged. Seeded owners carry signup_as=business so / routes them to the business side; owner e2e tightened; supabase config deprecation fixed. All suites green. Next: keep syncing for other workstreams' migrations.
 - 2026-10-24 16:40 — Code + security review pass: fixed backslash open redirect (shared safeNext), business signup with email confirmation landing in consumer onboarding, middleware dropping query strings, mark-read overwriting read_at, seed deletion skipping pages. 77 unit + 15 integration + 14 e2e green. Next: idle list; watch main for other workstreams' migrations.
