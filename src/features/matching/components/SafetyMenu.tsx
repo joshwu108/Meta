@@ -83,17 +83,28 @@ export function BlockSheet({ person, isPending, onClose, onConfirm }: { person: 
   );
 }
 
-export function ReportSheet({
-  person,
-  isPending,
-  onClose,
-  onSubmit,
-}: {
+function ReasonChoice({ value, onChange }: { value: ReportReason; onChange: (next: ReportReason) => void }) {
+  return (
+    <fieldset className="flex flex-col gap-1">
+      <legend className="mb-2 text-[length:var(--text-sm)] font-medium text-text-2">What’s going on?</legend>
+      {REPORT_REASONS.map((reason) => (
+        <label key={reason} className="flex items-center gap-3 rounded-sm px-2 py-2 hover:bg-hover">
+          <input type="radio" name="reason" value={reason} checked={value === reason} onChange={() => onChange(reason)} className="accent-[var(--color-brand)]" />
+          {REPORT_REASON_LABELS[reason]}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+type ReportSheetProps = {
   person: Person | null;
   isPending: boolean;
   onClose: () => void;
   onSubmit: (p: Person, reason: ReportReason, details: string) => void;
-}) {
+};
+
+export function ReportSheet({ person, isPending, onClose, onSubmit }: ReportSheetProps) {
   const [reason, setReason] = useState<ReportReason>('harassment');
   const [details, setDetails] = useState('');
   const detailsId = useId();
@@ -118,15 +129,7 @@ export function ReportSheet({
         </>
       }
     >
-      <fieldset className="flex flex-col gap-1">
-        <legend className="mb-2 text-[length:var(--text-sm)] font-medium text-text-2">What’s going on?</legend>
-        {REPORT_REASONS.map((value) => (
-          <label key={value} className="flex items-center gap-3 rounded-sm px-2 py-2 hover:bg-hover">
-            <input type="radio" name="reason" value={value} checked={reason === value} onChange={() => setReason(value)} className="accent-[var(--color-brand)]" />
-            {REPORT_REASON_LABELS[value]}
-          </label>
-        ))}
-      </fieldset>
+      <ReasonChoice value={reason} onChange={setReason} />
       <label htmlFor={detailsId} className="mt-3 block text-[length:var(--text-sm)] font-medium text-text-2">
         Details (optional)
       </label>
