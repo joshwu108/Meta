@@ -9,12 +9,12 @@ describe('seed runner', () => {
   it('is idempotent and signs in a seeded consumer and owner', async () => {
     const admin = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
     const first = await runSeedWith(admin);
-    expect(first.consumers).toBe(15);
+    expect(first.consumers).toBe(16);
     expect(first.owners).toBe(3);
     expect(first.notifications).toBeGreaterThan(0);
     const second = await runSeedWith(admin);
-    expect(second.removedUsers).toBe(18);
-    expect(second.consumers).toBe(15);
+    expect(second.removedUsers).toBe(19);
+    expect(second.consumers).toBe(16);
 
     const anon = createClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
     const consumer = await anon.auth.signInWithPassword({ email: 'maya@commonground.test', password: SEED_PASSWORD });
@@ -34,6 +34,6 @@ describe('seed runner', () => {
     expect(owner.error).toBeNull();
 
     const { count } = await admin.from('profiles').select('id', { count: 'exact', head: true }).eq('is_discoverable', true);
-    expect(count).toBe(13);
+    expect(count).toBe(14);
   }, 60_000);
 });

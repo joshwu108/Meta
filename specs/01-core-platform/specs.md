@@ -185,7 +185,7 @@ Design direction (binding for every screen, see [`../design-system.md`](../desig
 
 `pnpm db:seed` runs `seed.ts` with the admin client and loads fixtures in dependency order. Base fixtures delivered here:
 
-- `users.json` — 15 users with display names, neighborhoods (Mission, Hayes Valley, Castro, SoMa, Noe Valley), coarse coordinates, `is_discoverable: true` for 13. Password for every seeded user is `demo-pass-1234`. User `demo.new@commonground.test` has **no** preferences so Scene 1 can be run live.
+- `users.json` — 16 users with display names, neighborhoods (Mission, Hayes Valley, Castro, SoMa, Noe Valley), coarse coordinates, `is_discoverable: true` for 14. (The 16th, `jordan@commonground.test`, is the Scene 6 reconnect partner named in spec 06 §8; `demo.new@` stays the Scene 1 user.) Password for every seeded user is `demo-pass-1234`. User `demo.new@commonground.test` has **no** preferences so Scene 1 can be run live.
 - `businesses.json` — Kiln & Cup (pottery studio, Mission), Ritual Grounds (café, Hayes Valley), Meeple House (board-game venue, SoMa), each with an owner account `owner.<slug>@commonground.test`.
 - `events.json` — 6 published events across the three venues over the next 14 days.
 - `groups.json` — 2 groups ("Mission Makers", public, 4 members; "Thursday Night Crew", private, 3 members).
