@@ -31,6 +31,320 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"agent_conversations": {
+                  Row: {
+                    "created_at": string,"id": string,"kind": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"kind": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"kind"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "agent_conversations_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "agent_conversations_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"agent_messages": {
+                  Row: {
+                    "content": string,"conversation_id": string,"created_at": string,"id": string,"role": string,"suggestions": Json | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content": string,"conversation_id": string,"created_at"?: string,"id"?: string,"role": string,"suggestions"?: Json | null
+                  }
+                  Update: {
+                    "content"?: string,"conversation_id"?: string,"created_at"?: string,"id"?: string,"role"?: string,"suggestions"?: Json | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "agent_messages_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: false
+      referencedRelation: "agent_conversations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"agent_profiles": {
+                  Row: {
+                    "consent": NonNullable<Json>,"consent_updated_at": string | null,"feedback_notes": NonNullable<Json>,"summary": string | null,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "consent"?: NonNullable<Json>,"consent_updated_at"?: string | null,"feedback_notes"?: NonNullable<Json>,"summary"?: string | null,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "consent"?: NonNullable<Json>,"consent_updated_at"?: string | null,"feedback_notes"?: NonNullable<Json>,"summary"?: string | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "agent_profiles_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "agent_profiles_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"blocks": {
+                  Row: {
+                    "blocked_id": string,"blocker_id": string,"created_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "blocked_id": string,"blocker_id": string,"created_at"?: string
+                  }
+                  Update: {
+                    "blocked_id"?: string,"blocker_id"?: string,"created_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "blocks_blocked_id_fkey"
+      columns: ["blocked_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "blocks_blocked_id_fkey"
+      columns: ["blocked_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "blocks_blocker_id_fkey"
+      columns: ["blocker_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "blocks_blocker_id_fkey"
+      columns: ["blocker_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"connections": {
+                  Row: {
+                    "created_at": string,"id": string,"message": string | null,"recipient_id": string,"requester_id": string,"responded_at": string | null,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"message"?: string | null,"recipient_id": string,"requester_id": string,"responded_at"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"message"?: string | null,"recipient_id"?: string,"requester_id"?: string,"responded_at"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "connections_recipient_id_fkey"
+      columns: ["recipient_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "connections_recipient_id_fkey"
+      columns: ["recipient_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "connections_requester_id_fkey"
+      columns: ["requester_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "connections_requester_id_fkey"
+      columns: ["requester_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"group_members": {
+                  Row: {
+                    "created_at": string,"group_id": string,"joined_at": string | null,"role": string,"status": string,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"group_id": string,"joined_at"?: string | null,"role"?: string,"status"?: string,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"group_id"?: string,"joined_at"?: string | null,"role"?: string,"status"?: string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "group_members_group_id_fkey"
+      columns: ["group_id"]
+isOneToOne: false
+      referencedRelation: "groups"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "group_members_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "group_members_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"group_plan_votes": {
+                  Row: {
+                    "created_at": string,"plan_id": string,"suggestion_index": number,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"plan_id": string,"suggestion_index": number,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"plan_id"?: string,"suggestion_index"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "group_plan_votes_plan_id_fkey"
+      columns: ["plan_id"]
+isOneToOne: false
+      referencedRelation: "group_plans"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "group_plan_votes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "group_plan_votes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"group_plans": {
+                  Row: {
+                    "created_at": string,"group_id": string,"id": string,"members_included": number,"request_text": string,"requested_by": string | null,"suggestions": NonNullable<Json>
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"group_id": string,"id"?: string,"members_included": number,"request_text": string,"requested_by"?: string | null,"suggestions": NonNullable<Json>
+                  }
+                  Update: {
+                    "created_at"?: string,"group_id"?: string,"id"?: string,"members_included"?: number,"request_text"?: string,"requested_by"?: string | null,"suggestions"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "group_plans_group_id_fkey"
+      columns: ["group_id"]
+isOneToOne: false
+      referencedRelation: "groups"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "group_plans_requested_by_fkey"
+      columns: ["requested_by"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "group_plans_requested_by_fkey"
+      columns: ["requested_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"groups": {
+                  Row: {
+                    "archived_at": string | null,"created_at": string,"creator_id": string,"description": string | null,"event_id": string | null,"id": string,"interests": (string)[],"kind": string,"name": string,"updated_at": string,"visibility": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"created_at"?: string,"creator_id": string,"description"?: string | null,"event_id"?: string | null,"id"?: string,"interests"?: (string)[],"kind"?: string,"name": string,"updated_at"?: string,"visibility"?: string
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"created_at"?: string,"creator_id"?: string,"description"?: string | null,"event_id"?: string | null,"id"?: string,"interests"?: (string)[],"kind"?: string,"name"?: string,"updated_at"?: string,"visibility"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "groups_creator_id_fkey"
+      columns: ["creator_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "groups_creator_id_fkey"
+      columns: ["creator_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"invitations": {
+                  Row: {
+                    "created_at": string,"event_id": string | null,"group_id": string | null,"id": string,"kind": string,"recipient_id": string,"responded_at": string | null,"sender_id": string,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"event_id"?: string | null,"group_id"?: string | null,"id"?: string,"kind": string,"recipient_id": string,"responded_at"?: string | null,"sender_id": string,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"event_id"?: string | null,"group_id"?: string | null,"id"?: string,"kind"?: string,"recipient_id"?: string,"responded_at"?: string | null,"sender_id"?: string,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invitations_group_id_fkey"
+      columns: ["group_id"]
+isOneToOne: false
+      referencedRelation: "groups"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitations_recipient_id_fkey"
+      columns: ["recipient_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitations_recipient_id_fkey"
+      columns: ["recipient_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitations_sender_id_fkey"
+      columns: ["sender_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitations_sender_id_fkey"
+      columns: ["sender_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"notifications": {
                   Row: {
                     "created_at": string,"id": string,"payload": NonNullable<Json>,"read_at": string | null,"type": string,"user_id": string
@@ -71,6 +385,70 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"reports": {
+                  Row: {
+                    "created_at": string,"details": string | null,"id": string,"reason": string,"reported_id": string,"reporter_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"details"?: string | null,"id"?: string,"reason": string,"reported_id": string,"reporter_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"details"?: string | null,"id"?: string,"reason"?: string,"reported_id"?: string,"reporter_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reports_reported_id_fkey"
+      columns: ["reported_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reports_reported_id_fkey"
+      columns: ["reported_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reports_reporter_id_fkey"
+      columns: ["reporter_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reports_reporter_id_fkey"
+      columns: ["reporter_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"user_preferences": {
+                  Row: {
+                    "activity_prefs": (string)[],"availability_slots": (string)[],"budget_max_cents": number | null,"budget_min_cents": number | null,"dealbreakers": (string)[],"field_sources": NonNullable<Json>,"group_size_pref": string | null,"interest_categories": (string)[],"interests": (string)[],"social_goals": (string)[],"travel_radius_km": number,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "activity_prefs"?: (string)[],"availability_slots"?: (string)[],"budget_max_cents"?: number | null,"budget_min_cents"?: number | null,"dealbreakers"?: (string)[],"field_sources"?: NonNullable<Json>,"group_size_pref"?: string | null,"interest_categories"?: (string)[],"interests"?: (string)[],"social_goals"?: (string)[],"travel_radius_km"?: number,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "activity_prefs"?: (string)[],"availability_slots"?: (string)[],"budget_max_cents"?: number | null,"budget_min_cents"?: number | null,"dealbreakers"?: (string)[],"field_sources"?: NonNullable<Json>,"group_size_pref"?: string | null,"interest_categories"?: (string)[],"interests"?: (string)[],"social_goals"?: (string)[],"travel_radius_km"?: number,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "user_preferences_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_preferences_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -91,8 +469,40 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "tables_without_rls":
+            "block_user":
+{ Args: { "p_blocked": string,"p_blocker": string }; Returns: undefined
+                           },
+"can_read_group":
+{ Args: { "p_group": string }; Returns: boolean
+                           },
+"create_group_with_owner":
+{ Args: { "p_creator": string,"p_description": string,"p_interests": (string)[],"p_name": string,"p_visibility": string }; Returns: string
+                           },
+"invite_to_group":
+{ Args: { "p_group": string,"p_recipients": (string)[],"p_sender": string }; Returns: {
+              "invitation_id": string,"invitee_id": string
+            }[]
+                           },
+"is_blocked_with":
+{ Args: { "p_other": string }; Returns: boolean
+                           },
+"is_group_admin":
+{ Args: { "p_group": string }; Returns: boolean
+                           },
+"is_group_member":
+{ Args: { "p_group": string,"p_statuses"?: (string)[] }; Returns: boolean
+                           },
+"leave_group":
+{ Args: { "p_group": string,"p_user": string }; Returns: string
+                           },
+"remove_group_member":
+{ Args: { "p_group": string,"p_user": string }; Returns: undefined
+                           },
+"tables_without_rls":
 { Args: Record<PropertyKey, never>; Returns: string[]
+                           },
+"transfer_group_owner":
+{ Args: { "p_from": string,"p_group": string,"p_to": string }; Returns: undefined
                            }
           }
           Enums: {
