@@ -30,6 +30,13 @@ function share(count: number, total: number): string {
   return count >= total ? 'All of you' : `${count} of ${total} of you`;
 }
 
+/** "everyone is free" or "3 of 4 of you are free" for a slot. */
+function freeClause(prework: Prework, slot: AvailabilitySlot): string {
+  const free = prework.availability?.freeCounts[slot];
+  if (prework.availability?.everyoneFree !== false || free === undefined || free >= prework.memberCount) return 'everyone is free';
+  return `${free} of ${prework.memberCount} of you are free`;
+}
+
 function categoryCount(prework: Prework, category: EventCategory): number {
   return prework.categories.find((c) => c.category === category)?.count ?? 0;
 }
@@ -46,7 +53,7 @@ export function existingEventSuggestion(event: CandidateEvent, prework: Prework)
     category: event.category,
     slot: event.slot,
     estimatedCostCents: event.priceCents,
-    whyItFits: `It falls on ${SLOT_PHRASES[event.slot]}, when everyone is free${interest}.`.slice(0, 200),
+    whyItFits: `It falls on ${SLOT_PHRASES[event.slot]}, when ${freeClause(prework, event.slot)}${interest}.`.slice(0, 200),
     needsVenue: false,
   };
 }
@@ -56,7 +63,8 @@ export function newActivitySuggestion(category: EventCategory, slot: Availabilit
   const idea = IDEAS[category];
   const count = categoryCount(prework, category);
   const cost = prework.budgetMaxCents === null ? idea.costCents : Math.min(idea.costCents, prework.budgetMaxCents);
-  const why = count > 0 ? `${share(count, prework.memberCount)} like ${CATEGORY_PHRASES[category]}, and` : 'Everyone';
+  const free = `${freeClause(prework, slot)} ${SLOT_PHRASES[slot]}`;
+  const why = count > 0 ? `${share(count, prework.memberCount)} like ${CATEGORY_PHRASES[category]}, and ${free}` : free.charAt(0).toUpperCase() + free.slice(1);
   return {
     kind: 'new_activity',
     eventId: null,
@@ -65,7 +73,7 @@ export function newActivitySuggestion(category: EventCategory, slot: Availabilit
     category,
     slot,
     estimatedCostCents: cost,
-    whyItFits: `${why} ${count > 0 ? 'everyone is' : 'is'} free ${SLOT_PHRASES[slot]}.`.slice(0, 200),
+    whyItFits: `${why}.`.slice(0, 200),
     needsVenue: true,
   };
 }

@@ -11,7 +11,9 @@ const textAreaClass =
 
 function consentLine(plan: GroupPlanView | null, activeCount: number): string {
   if (!plan) return `Uses only what members who allow group planning have shared. ${activeCount} active ${activeCount === 1 ? 'member' : 'members'}.`;
-  return `Based on ${plan.membersIncluded} of ${plan.activeMemberCount} members who allow group planning`;
+  const base = `Based on ${plan.membersIncluded} of ${plan.activeMemberCount} members who allow group planning`;
+  const partial = plan.suggestions.some((s) => s.freeCount !== undefined && s.freeCount < plan.membersIncluded);
+  return partial ? `${base}. No time works for everyone, so these use the times most of you can make.` : base;
 }
 
 function PlannerCard({ group, onPlanned }: { group: GroupDetail; onPlanned: (plan: GroupPlanView) => void }) {
@@ -89,6 +91,7 @@ export function PlansPanel({ group }: { group: GroupDetail }) {
             <SuggestionCard
               key={`${plan.id}-${index}`}
               suggestion={suggestion}
+              membersIncluded={plan.membersIncluded}
               votes={plan.votes.counts[index] ?? 0}
               votedByMe={plan.votes.mine.includes(index)}
               canVote={group.permissions.canVote}

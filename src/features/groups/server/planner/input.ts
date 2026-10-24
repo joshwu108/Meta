@@ -34,6 +34,9 @@ export function buildPlannerInput(request: string, prework: Prework, candidates:
       budgetMaxCents: prework.budgetMaxCents,
       neighborhood: prework.neighborhood,
       groupSizePreference: prework.groupSizePref,
+      ...(prework.availability && !prework.availability.everyoneFree
+        ? { everyoneFree: false, freeCounts: prework.sharedSlots.map((slot) => ({ slot, free: prework.availability?.freeCounts[slot] ?? 0 })) }
+        : {}),
     },
     interests: prework.interests.slice(0, 10),
     categories: prework.categories,

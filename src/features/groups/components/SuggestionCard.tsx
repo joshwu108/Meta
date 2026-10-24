@@ -8,6 +8,8 @@ import { formatCost } from '../labels';
 
 type Props = {
   suggestion: PlanSuggestion;
+  /** Consenting members the plan was built from, to show "3 of 4 free". */
+  membersIncluded: number;
   votes: number;
   votedByMe: boolean;
   canVote: boolean;
@@ -22,13 +24,15 @@ type Props = {
 
 const linkButton = 'inline-flex h-9 items-center justify-center rounded-md bg-brand px-4 font-semibold text-text-on-brand hover:bg-brand-hover hover:no-underline';
 
-function Facts({ suggestion }: { suggestion: PlanSuggestion }) {
+function Facts({ suggestion, membersIncluded }: { suggestion: PlanSuggestion; membersIncluded: number }) {
   const cost = formatCost(suggestion.estimatedCostCents);
+  const partial = suggestion.freeCount !== undefined && suggestion.freeCount < membersIncluded;
   const place = suggestion.kind === 'existing_event' ? 'Already on the calendar' : suggestion.needsVenue ? 'Needs a venue' : 'No venue needed';
   return (
     <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[length:var(--text-sm)] text-text-2">
       <li className="inline-flex items-center gap-1">
         <CalendarClock size={16} strokeWidth={1.75} aria-hidden /> {SLOT_PHRASES[suggestion.slot]}
+        {partial && <span className="font-semibold text-warning-ink">· {suggestion.freeCount} of {membersIncluded} free</span>}
       </li>
       {cost && (
         <li className="inline-flex items-center gap-1">
@@ -43,7 +47,7 @@ function Facts({ suggestion }: { suggestion: PlanSuggestion }) {
 }
 
 /** One planner suggestion (Screen 5): AI-marked, votable, with RSVP or "Request venue". */
-export function SuggestionCard({ suggestion, votes, votedByMe, canVote, venueEligible, venueHint, isVoting, isRequesting, onVote, onRequestVenue }: Props) {
+export function SuggestionCard({ suggestion, membersIncluded, votes, votedByMe, canVote, venueEligible, venueHint, isVoting, isRequesting, onVote, onRequestVenue }: Props) {
   return (
     <Card as="article" className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
@@ -52,7 +56,7 @@ export function SuggestionCard({ suggestion, votes, votedByMe, canVote, venueEli
       </div>
       <h3>{suggestion.title}</h3>
       {suggestion.description && <p className="text-text-2">{suggestion.description}</p>}
-      <Facts suggestion={suggestion} />
+      <Facts suggestion={suggestion} membersIncluded={membersIncluded} />
       <p className="text-[length:var(--text-sm)]">
         <span className="font-semibold">Why it fits: </span>
         {suggestion.whyItFits}

@@ -94,6 +94,8 @@ export const planSuggestionSchema = z.object({
   estimatedCostCents: z.number().int().min(0).nullable(),
   whyItFits: z.string().max(200),
   needsVenue: z.boolean(),
+  /** Consenting members free in `slot`; set by the server, not the model. */
+  freeCount: z.number().int().min(0).optional(),
 });
 export type PlanSuggestion = z.infer<typeof planSuggestionSchema>;
 

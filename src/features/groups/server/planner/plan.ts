@@ -9,12 +9,13 @@ import { planOutputSchema, type PlanSuggestion } from '@/shared/schemas/social';
 import { canPlan } from '../authz';
 import { loadGroupContext, loadMemberRows } from '../context';
 import { toPlanView } from '../plans';
-import { getSharablePreferencesBatch } from '../stubs';
+import { getSharablePreferencesBatch, resolveGroupSchedule } from '../stubs';
 import type { GroupPlanView } from '../types';
 import { loadCandidateEvents } from './candidates';
 import { completeSuggestions } from './fallback';
 import { buildPlannerInput, scrubNames, type PlannerInput } from './input';
-import { buildPrework } from './prework';
+import { buildPrework, type Prework } from './prework';
+import { chooseSlots } from './schedule';
 import { validateSuggestions } from './validate';
 
 export const PLAN_PROMPT_ID = 'groups.plan_activities' as const;
@@ -64,6 +65,16 @@ async function logPlanning(userIds: readonly string[], groupName: string, count:
 }
 
 /**
+ * Slots the plan may use: the ones every consenting member shares, otherwise the best options from
+ * 02's schedule resolver that at least half of them can make. VALIDATION when there are none.
+ */
+function planningSlots(prework: Prework, consenting: readonly MatchingPreferences[]): Prework {
+  const slotPlan = chooseSlots(prework.sharedSlots, resolveGroupSchedule(consenting), prework.memberCount);
+  if (slotPlan.slots.length === 0) throw new ApiError('VALIDATION', 'Members who allow planning have no free time in common yet.', 400);
+  return { ...prework, sharedSlots: slotPlan.slots, availability: { everyoneFree: slotPlan.everyoneFree, freeCounts: slotPlan.freeCounts } };
+}
+
+/**
  * POST /api/groups/:id/plan (spec §5 "Group planner"). Only members who allow group planning
  * contribute, and the model sees only aggregates: shared slots, budget envelope, interest counts,
  * a neighborhood label and candidate events, with member names scrubbed from the request.
@@ -76,14 +87,13 @@ export async function planForGroup(actor: Actor, groupId: string, request: strin
   if (consenting.length < MIN_CONSENTING) {
     throw new ApiError('VALIDATION', 'Not enough members have allowed group planning.', 400, { consenting: consenting.length, active: activeIds.length });
   }
-  const prework = buildPrework(consenting);
-  if (prework.sharedSlots.length === 0) throw new ApiError('VALIDATION', 'Members who allow planning have no free time in common yet.', 400);
+  const planning = planningSlots(buildPrework(consenting), consenting);
 
-  const [candidates, cards] = await Promise.all([loadCandidateEvents(actor.userId, prework), getPublicCards(activeIds)]);
+  const [candidates, cards] = await Promise.all([loadCandidateEvents(actor.userId, planning), getPublicCards(activeIds)]);
   const scrubbed = scrubNames(request, [...cards.values()].map((card) => card.displayName));
-  const raw = await askModel(buildPlannerInput(scrubbed, prework, candidates));
-  const valid = validateSuggestions(raw, { sharedSlots: prework.sharedSlots, candidateEventIds: new Set(candidates.map((c) => c.id)) });
-  const suggestions = completeSuggestions(valid, prework, candidates);
+  const raw = await askModel(buildPlannerInput(scrubbed, planning, candidates));
+  const valid = validateSuggestions(raw, { sharedSlots: planning.sharedSlots, candidateEventIds: new Set(candidates.map((c) => c.id)) });
+  const suggestions = completeSuggestions(valid, planning, candidates).map((s) => ({ ...s, freeCount: planning.availability?.freeCounts[s.slot] }));
 
   const row = await storePlan(groupId, actor.userId, request, suggestions, consenting.length);
   await logPlanning(consenting.map((member) => member.userId), group.name, suggestions.length);

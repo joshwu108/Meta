@@ -192,3 +192,36 @@ describe('group page: plan, votes and events', () => {
     expect(res.body.data.upcomingEvents).toEqual([expect.objectContaining({ membersGoing: 0, sharedWithGroup: true })]);
   });
 });
+
+describe('planner with no slot everyone shares (02 resolveGroupSchedule)', () => {
+  it('plans for the times most consenting members can make and says how many', async () => {
+    const [satOnly, thuOnly] = await Promise.all([createTestUser(admin, 'plan-split-sat'), createTestUser(admin, 'plan-split-thu')]);
+    await setProfile(admin, satOnly, { slots: ['sat_day'] });
+    await setProfile(admin, thuOnly, { slots: ['thu_eve'] });
+    actAs(owner);
+    const split = (await call(createGroup, { method: 'POST', body: { name: 'Split schedules', visibility: 'private' } })).body.data.id;
+    for (const user of [satOnly, thuOnly]) {
+      await admin.from('group_members').insert({ group_id: split, user_id: user.id, role: 'member', status: 'active', joined_at: new Date().toISOString() });
+    }
+    const res = await call(plan, { method: 'POST', params: { id: split }, body: { request: 'Anything fun' } });
+    expect(res.status).toBe(201);
+    const slots = new Set(res.body.data.suggestions.map((s: { slot: string }) => s.slot));
+    expect([...slots].every((slot) => slot === 'thu_eve' || slot === 'sat_day')).toBe(true);
+    expect(res.body.data.suggestions.every((s: { freeCount: number }) => s.freeCount === 2)).toBe(true);
+    const input = JSON.stringify(captured.inputs.at(-1));
+    expect(input).toContain('"everyoneFree":false');
+    expect(input).not.toContain(satOnly.id);
+  });
+
+  it('still refuses when no slot reaches half the members', async () => {
+    const [mon, sun] = await Promise.all([createTestUser(admin, 'plan-apart-mon'), createTestUser(admin, 'plan-apart-sun')]);
+    await setProfile(admin, mon, { slots: ['mon_eve'] });
+    await setProfile(admin, sun, { slots: ['sun_day'] });
+    const { data: groupId } = await admin.rpc('create_group_with_owner', { p_creator: mon.id, p_name: 'Never free together', p_visibility: 'private' });
+    await admin.from('group_members').insert({ group_id: groupId!, user_id: sun.id, role: 'member', status: 'active', joined_at: new Date().toISOString() });
+    actAs(mon);
+    const res = await call(plan, { method: 'POST', params: { id: groupId! }, body: { request: 'x' } });
+    expect(res.status).toBe(400);
+    expect(res.body.error?.message).toBe('Members who allow planning have no free time in common yet.');
+  });
+});

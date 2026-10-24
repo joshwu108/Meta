@@ -190,3 +190,32 @@ describe('planner input', () => {
     expect(JSON.stringify(input)).not.toMatch(/userId|"a"|"b"|"c"/);
   });
 });
+
+describe('scheduling conflicts (02 resolveGroupSchedule + chooseSlots)', () => {
+  it('uses every shared slot when there are any', async () => {
+    const { chooseSlots } = await import('@/features/groups/server/planner/schedule');
+    const { resolveGroupSchedule } = await import('@/features/groups/server/stubs');
+    const plan = chooseSlots(['thu_eve'], resolveGroupSchedule(members), 3);
+    expect(plan).toEqual({ slots: ['thu_eve'], freeCounts: { thu_eve: 3 }, everyoneFree: true });
+  });
+
+  it('falls back to the slots at least half the members can make', async () => {
+    const { chooseSlots } = await import('@/features/groups/server/planner/schedule');
+    const { resolveGroupSchedule } = await import('@/features/groups/server/stubs');
+    const split = [member('a', { availabilitySlots: ['thu_eve', 'sat_day'] }), member('b', { availabilitySlots: ['sat_day'] }), member('c', { availabilitySlots: ['thu_eve'] })];
+    const schedule = resolveGroupSchedule(split);
+    expect(schedule.unanimous).toBeNull();
+    expect(chooseSlots([], schedule, 3)).toEqual({ slots: ['thu_eve', 'sat_day'], freeCounts: { thu_eve: 2, sat_day: 2 }, everyoneFree: false });
+    const apart = [member('a', { availabilitySlots: ['mon_eve'] }), member('b', { availabilitySlots: ['sun_day'] })];
+    expect(chooseSlots([], resolveGroupSchedule(apart), 2).slots).toEqual([]);
+  });
+
+  it('says who is free when not everyone is, and tells the model counts only', async () => {
+    const prework = { ...buildPrework(members), sharedSlots: ['sat_day' as const], availability: { everyoneFree: false, freeCounts: { sat_day: 2 } } };
+    const [idea] = completeSuggestions([], prework, []);
+    expect(idea!.whyItFits).toContain('2 of 3 of you are free Saturday daytime');
+    const input = buildPlannerInput('x', prework, []);
+    expect(input.group).toMatchObject({ everyoneFree: false, freeCounts: [{ slot: 'sat_day', free: 2 }] });
+    expect(JSON.stringify(input)).not.toMatch(/"(a|b|c)"/);
+  });
+});

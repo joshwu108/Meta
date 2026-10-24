@@ -15,6 +15,8 @@ export type Prework = {
   groupSizePref: GroupSizePref | null;
   neighborhood: string | null;
   center: LatLng | null;
+  /** Set when the plan uses slots not every member can make (see `chooseSlots`). */
+  availability?: { everyoneFree: boolean; freeCounts: Partial<Record<AvailabilitySlot, number>> };
 };
 
 type HasSlots = { availabilitySlots: readonly AvailabilitySlot[] };

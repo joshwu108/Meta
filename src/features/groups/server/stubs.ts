@@ -1,8 +1,8 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { EventCategory, EventStatus, RsvpStatus } from '@/shared/enums';
-import type { BusinessPublicCard, EventPublic, EventSummary } from '@/shared/types';
+import { AVAILABILITY_SLOT, type AvailabilitySlot, type EventCategory, type EventStatus, type RsvpStatus } from '@/shared/enums';
+import type { BusinessPublicCard, EventPublic, EventSummary, SharablePreferences } from '@/shared/types';
 
 /**
  * Stand-ins for workstream 06's `getUpcomingEventsForUser` and `getEventPublic` (README §4), with
@@ -86,4 +86,26 @@ export async function getEventPublic(eventId: string): Promise<EventPublic | nul
     format: row.format ?? '',
     source: row.source as EventPublic['source'],
   };
+}
+
+// ---------------------------------------------------------------------------
+// 02's P1 `resolveGroupSchedule` (specs/02 §3 P1), same signature and semantics as on
+// ws/02-agent. Pure; delete and import from `@/features/agent` once 02 is on main.
+// ---------------------------------------------------------------------------
+
+export type SlotOption = { slot: AvailabilitySlot; available: string[]; missing: string[] };
+export type GroupSchedule = { options: SlotOption[]; unanimous: AvailabilitySlot | null; budgetMaxCents: number | null };
+
+export function resolveGroupSchedule(members: readonly SharablePreferences[], maxOptions = 3): GroupSchedule {
+  if (members.length === 0) return { options: [], unanimous: null, budgetMaxCents: null };
+  const options = AVAILABILITY_SLOT.map((slot) => {
+    const available = members.filter((m) => m.availabilitySlots.includes(slot)).map((m) => m.userId);
+    return { slot, available, missing: members.map((m) => m.userId).filter((id) => !available.includes(id)) };
+  })
+    .filter((o) => o.available.length > 0)
+    .sort((a, b) => b.available.length - a.available.length || AVAILABILITY_SLOT.indexOf(a.slot) - AVAILABILITY_SLOT.indexOf(b.slot))
+    .slice(0, maxOptions);
+  const unanimous = options.find((o) => o.missing.length === 0)?.slot ?? null;
+  const budgets = members.map((m) => m.budgetMax).filter((b): b is number => b !== null && b !== undefined);
+  return { options, unanimous, budgetMaxCents: budgets.length ? Math.min(...budgets) : null };
 }
