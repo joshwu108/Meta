@@ -43,19 +43,19 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - [x] Unit: `getSharablePreferences` null per consent flag, strips private fields
 - [x] Unit: explanation post-check drops ungrounded highlights
 - [x] Unit: rate limiter
-- [ ] Integration (MOCK_AI): onboarding chat writes `ai_inferred` fields
-- [ ] Integration: confirm flips to `user_set` and sets `onboarding_completed_at`
+- [x] Integration (MOCK_AI): onboarding chat writes `ai_inferred` fields — verified 2026-10-24 against local Supabase on a throwaway merge with ws/01-core @ 67e4f12 (`agent-db.test.ts`); rerun after main sync
+- [x] Integration: confirm flips to `user_set` and sets `onboarding_completed_at` — verified 2026-10-24 against local Supabase on a throwaway merge with ws/01-core @ 67e4f12 (`agent-db.test.ts`); rerun after main sync
 - [x] Integration: PATCH preferences respects RLS (PGlite: 0200 on 0100 core, cross-user select/update/insert blocked; Supabase-stack variant still skipped)
-- [ ] Integration: agent log row written when preferences shared
+- [x] Integration: agent log row written when preferences shared — verified 2026-10-24 against local Supabase on a throwaway merge with ws/01-core @ 67e4f12 (`agent-db.test.ts`); rerun after main sync
 - [x] Prompt eval set: 10 transcripts in `tests/evals/agent/*.json` (running it needs a live key)
 - [x] E2E Scene 1 (UI path with /api intercepted by the MOCK_AI fixture; full-stack run waits on 01 + Docker)
 
 ### Acceptance criteria (spec section 10)
 - [x] AC1 Scene 1 sentence → pottery, coffee, thu_eve, small; nothing invented (service test + Playwright UI test)
-- [ ] AC2 Deleting an inferred value persists (service-level test passes; DB-backed check waits on Docker)
+- [x] AC2 Deleting an inferred value persists — verified 2026-10-24 against local Supabase on a throwaway merge with ws/01-core @ 67e4f12 (`agent-db.test.ts`); rerun after main sync
 - [ ] AC3 Consent off → excluded from matching / demand (shared fixture) — ws02 side done: `tests/fixtures/consent-cases.ts` + boundary test; needs 03/04 to assert against it
 - [x] AC4 Suggestion cards deep-link and show "Why this?"
-- [ ] AC5 Activity log entry per sharing purpose
+- [x] AC5 Activity log entry per sharing purpose — verified 2026-10-24 against local Supabase on a throwaway merge with ws/01-core @ 67e4f12 (`agent-db.test.ts`); rerun after main sync
 
 ### P1
 - [x] Group scheduling conflict helper
@@ -120,7 +120,7 @@ ws02 sync procedure once 01 is on main (tested approach):
 - (partly unblocked) Migration + RLS are now verified without Docker via PGlite in `tests/integration/agent/migration.test.ts`; it also passed against ws/01-core's real `0100_core.sql`. The supabase-js integration tests still need the local stack.
 - Running the live prompt eval (`pnpm tsx tests/evals/agent/run.ts`) needs `ANTHROPIC_API_KEY`; the set itself is committed and checked in CI.
 - Even with Docker, `0200_agent.sql` needs 01's `0100_core.sql` (`profiles`, `agent_action_log`, `set_updated_at()`), which is not on main yet.
-- Docker is not installed on this machine, so `supabase start` / `db reset` cannot run. Integration tests, the E2E scene and the full clean-state check wait on a human installing Docker Desktop.
+- (unblocked 2026-10-24) ws02 now runs on a machine with Docker; the Supabase stack and DB tests run there. Full clean-state check still waits on 01 landing on main.
 
 ## Log
 - 2026-10-24 15:31 · landed: progress checklist, tooling, 0200 migration, schemas, time-slot mapper, consent boundary core (37 unit tests). Next: explainRecommendation, rate limiter, onboarding loop, MOCK_AI fixtures.
@@ -135,3 +135,4 @@ ws02 sync procedure once 01 is on main (tested approach):
 - 2026-10-24 17:50 · landed: PGlite migration/RLS suite (8 tests; also green on ws/01-core's real 0100). 131 unit + 8 PGlite + 10 E2E green. Next: wait for 01 on main, then run the merge plan.
 - 2026-10-24 18:05 · landed: getAttendeeSharing + getConsent for 06 (consent-gated, logged), spec §5 documents ExplainInput and all extra exports. 145 unit/integration + 10 E2E green. Next: wait for main.
 - 2026-10-24 16:35 · integration check (Docker, throwaway merge with ws/01-core, nothing pushed to main): findings 1-4 recorded above. Next: 01 integrator handles 1, 2, 4; ws02 fixes 3 during the main sync.
+- 2026-10-24 16:32 · ws02 worker moved to the Docker machine (option 2). Ticked integration rows + AC2/AC5 from the verified DB run. Next: wait for 01 on main, then run the sync procedure.
