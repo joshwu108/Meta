@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { signIn, signOut } from "./support";
+import { login } from "./helpers";
 
 // Scene 6: the seeded completed "Latte Art & Conversation" already holds maya → jordan interest;
 // jordan picks maya, and both see the AI follow-up suggestion in Activity.
 const EVENT = "Latte Art & Conversation";
 
 test("mutual reconnect produces a follow-up suggestion for both people", async ({ page }) => {
-  await signIn(page, "jordan@commonground.test");
+  await login(page, "jordan@commonground.test");
   await page.goto("/activity");
   await page.getByRole("region", { name: "Past events" }).getByText(EVENT).click();
 
@@ -19,8 +19,8 @@ test("mutual reconnect produces a follow-up suggestion for both people", async (
   await expect(followUps.getByText(/Your agents suggest/)).toBeVisible();
   await expect(followUps.getByText("AI suggestion")).toBeVisible();
 
-  await signOut(page);
-  await signIn(page, "maya@commonground.test");
+  await page.context().clearCookies();
+  await login(page, "maya@commonground.test");
   await page.goto("/activity");
   await expect(page.getByRole("region", { name: "Follow-up suggestions" }).getByText(/jordan/i)).toBeVisible();
 });
