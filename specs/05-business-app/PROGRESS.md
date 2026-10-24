@@ -202,6 +202,17 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 16:12` — **cleanup and error-path pass, pushed.** Removed the duplicate venue
+  query path (`candidates.ts` was reaching for `supabaseAdmin()` directly alongside the
+  store-port path in `index.ts`; the source is now always injected, so there is one
+  database path and the scoring module has no Supabase dependency) and the unused
+  `localTimeLabel`. Added the edit, reconfirm and data-inconsistency tests: each editable
+  field on its own, which fields do and do not trigger a reconfirm notification, an owner
+  view whose capabilities row is missing, and a store that reports an approval with no
+  event. **234 unit tests pass**; coverage 95.2% lines / 86.9% branches, with candidates,
+  events, validate and decide at 100% of lines. Next: the remaining uncovered branches are
+  all in `store-supabase.ts` error paths and are better pinned by the integration suite,
+  which still cannot run here.
 - `2026-10-24 16:05` — **fixed a privacy and correctness bug in the attendee reads.**
   `rsvps` and the `profiles(display_name)` join were being read with the business owner's
   own client, which breaks privacy invariant 1 (a business must never read `profiles`) and
