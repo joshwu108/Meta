@@ -5,14 +5,22 @@ import { cn } from './cn';
 
 export type ChipProps = {
   children: ReactNode;
+  /** Plain-text label used for the remove button's accessible name ("Remove Pottery"). */
+  label?: string;
   selected?: boolean;
   onSelect?: () => void;
   onRemove?: () => void;
   className?: string;
 };
 
+/** Accessible name for a chip's remove button. */
+export function removeLabel(label: string | undefined, children: ReactNode): string {
+  const text = label ?? (typeof children === 'string' || typeof children === 'number' ? String(children) : '');
+  return text ? `Remove ${text}` : 'Remove';
+}
+
 /** Pill chip. Selected = brand-soft fill with blue text. Backspace or ✕ removes when `onRemove` is set. */
-export function Chip({ children, selected = false, onSelect, onRemove, className }: ChipProps) {
+export function Chip({ children, label, selected = false, onSelect, onRemove, className }: ChipProps) {
   const interactive = Boolean(onSelect || onRemove);
   const onKeyDown = (event: KeyboardEvent<HTMLSpanElement>) => {
     if (onRemove && (event.key === 'Backspace' || event.key === 'Delete')) {
@@ -44,7 +52,7 @@ export function Chip({ children, selected = false, onSelect, onRemove, className
       {onRemove && (
         <button
           type="button"
-          aria-label="Remove"
+          aria-label={removeLabel(label, children)}
           onClick={(event) => {
             event.stopPropagation();
             onRemove();
