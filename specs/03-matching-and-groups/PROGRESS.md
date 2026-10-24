@@ -110,6 +110,8 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 2026-10-24: Edited `specs.md` §4 (RLS block now shows the helper-based policies actually shipped; `creator_id`/`sender_id` cascade, `requested_by` set null, `archived_at`) and §6 (P1 messages route) so the spec matches the build.
 
+- 2026-10-24: `/match?focus=<userId>` (02's agent suggestion cards deep-link there) moves that person to the lead card, labelled "Suggested by your agent"; an unknown or no-longer-matching id is ignored.
+
 ## Needs from others
 
 - Integrator: merge ws/01-core to main first. This branch carries byte-identical copies of 01's files and of 02's `0200_agent.sql`; after 01 lands, regenerate `src/lib/supabase/database.types.ts` on main (`pnpm db:types`) since every workstream regenerates it.
@@ -117,7 +119,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 - 02: `supabase/seed/fixtures/preferences.json` (02 §8). Scene 2 and AC1 need seeded preferences and consent; 03's tests apply an interim copy of the 02 §8 design.
 
 - 01: `src/lib/ai/prompts/index.ts` now lists `groups.plan_activities` (spec name) instead of the reserved `groups.plan_activity`, with its system prompt. `matching.explain_match` is unused: 03 explains matches through 02's `explainRecommendation`.
-- 06: swap your 03 stubs for the real exports, same signatures: `getConnectionIds`, `getBlockEdges`, `getSuggestedPeople` from `@/features/matching`; `getGroupMemberIds`, `createEventInvitations`, `getPendingEventInviteeIds`, `getPendingEventInvitations`, `getPublicGroups` from `@/features/groups`.
+- 06: swap your 03 stubs for the real exports, same signatures: `getConnectionIds`, `getBlockEdges`, `getSuggestedPeople`, `getPendingConnectionRequests` (adds the requester's public card) from `@/features/matching`; `getGroupMemberIds`, `createEventInvitations`, `getPendingEventInviteeIds`, `getPendingEventInvitations`, `getPublicGroups` from `@/features/groups`.
 - 06: `EventSummary` has no `category`, so the planner calls `getEventPublic` per candidate; adding `category` to `EventSummary` would remove those lookups. `getUpcomingEventsForUser` also does not say whether an RSVP is shared with attendees, so group pages show only a count of members going.
 
 - 04 (P1 group proposals, answered): `getGroupVenueRequest` is exported from `@/features/groups` with the shape you asked for (see Decisions). The group page's "Request venue" posts `{ source: 'group', groupId, planId, suggestionIndex }` to `POST /api/ai/generate-opportunities` once a `new_activity` that needs a venue has ≥ 50% of active members' votes.
@@ -128,6 +130,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 ## Log
 
+- 2026-10-24 17:50 CDT · landed: `getPendingConnectionRequests` export for 06's Activity hub, `/match?focus=` deep links for 02's agent cards, spec §4/§6 aligned with the build. 143 unit, 98 integration, 19 E2E. Next: watch main.
 - 2026-10-24 17:45 CDT · landed: stricter explanation grounding (no claims about unshared interests or days), planner + vote and block/report E2E tests, precise merge plan for 01. 143 unit, 97 integration, 18 E2E. Next: watch main.
 - 2026-10-24 17:35 CDT · landed: RLS reachability for connection requests (0303), best-effort notifications and bounded fan-out, bundle trim, production build green, flaky-test fix (location isolation + serial cleanup). 142 unit, 97 integration, 16 E2E. Next: watch main; adopt 01's layout when it lands.
 - 2026-10-24 17:20 CDT · read 01/04/06 branches: 06 aligned its stubs to 03's exports; 04 asked for `getGroupVenueRequest` (now matches their shape); 01 split prompts and seed loaders into per-workstream registries (merge plan recorded). main still has only specs. Next: watch main, adopt 01's layout when it lands.
