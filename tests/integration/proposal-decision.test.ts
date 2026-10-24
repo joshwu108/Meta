@@ -13,14 +13,33 @@ import { SKIP_REASON, cleanup, localStack, signedInOwner, uniqueEmail, type Stac
  */
 
 const stack = await localStack();
-const suite = stack ? describe : describe.skip;
 
 if (!stack) console.info(`[ws05] skipping proposal integration tests: ${SKIP_REASON}`);
 
+/** PostgREST answers from a schema cache, so a missing table is PGRST205, not 42P01. */
+const MISSING_TABLE_CODES = new Set(['42P01', 'PGRST205']);
+
 const tableExists = async (live: Stack, table: string): Promise<boolean> => {
   const { error } = await live.admin.from(table).select('*').limit(1);
-  return error === null || error.code !== '42P01';
+  return error === null || !MISSING_TABLE_CODES.has(error.code);
 };
+
+/**
+ * Probed before the suite is defined, so a table workstream 04 has not merged yet produces
+ * a visible `skipped` in the report rather than tests that return early and read as passes.
+ */
+const hasProposalsTable = stack ? await tableExists(stack, 'event_proposals') : false;
+const hasNotificationsTable = stack ? await tableExists(stack, 'notifications') : false;
+const hasClustersTable = stack ? await tableExists(stack, 'demand_cluster_members') : false;
+const hasRsvpsTable = stack ? await tableExists(stack, 'rsvps') : false;
+
+const suite = stack && hasProposalsTable ? describe : describe.skip;
+
+if (stack && !hasProposalsTable) {
+  console.info(
+    "[ws05] skipping the proposal decision suite: workstream 04's event_proposals table is not migrated yet",
+  );
+}
 
 suite('proposal decisions against the real database', () => {
   const live = stack as Stack;
@@ -29,9 +48,6 @@ suite('proposal decisions against the real database', () => {
   let owner: { userId: string; client: SupabaseClient };
   let businessId: string;
   let proposalDocument: Record<string, unknown>;
-  let hasProposals = false;
-  let hasNotifications = false;
-  let hasClusters = false;
 
   const seedProposal = async (): Promise<string> => {
     const { data, error } = await live.admin
@@ -90,11 +106,6 @@ suite('proposal decisions against the real database', () => {
       accepts_ai_proposals: true,
     });
 
-    [hasProposals, hasNotifications, hasClusters] = await Promise.all([
-      tableExists(live, 'event_proposals'),
-      tableExists(live, 'notifications'),
-      tableExists(live, 'demand_cluster_members'),
-    ]);
   }, 30_000);
 
   afterAll(async () => {
@@ -103,7 +114,6 @@ suite('proposal decisions against the real database', () => {
 
   /** T-I7 — spec section 12: the FK is added by whichever migration lands second. */
   it('has the proposals -> businesses foreign key after a full reset', async () => {
-    if (!hasProposals) return;
     // Probed behaviourally rather than by reading pg_constraint: a proposal for a business
     // id that does not exist is rejected only when the FK is in place.
     const orphan = await live.admin.from('event_proposals').insert({
@@ -118,7 +128,6 @@ suite('proposal decisions against the real database', () => {
 
   /** T-I3 */
   it('approving creates an approved_draft event linked to the proposal', async () => {
-    if (!hasProposals) return;
     const proposalId = await seedProposal();
 
     const { data, error } = await owner.client.rpc('decide_proposal', {
@@ -155,7 +164,6 @@ suite('proposal decisions against the real database', () => {
 
   /** T-I2 — the whole decision rolls back when any part of it fails. */
   it('leaves nothing behind when the event insert violates a constraint', async () => {
-    if (!hasProposals) return;
     const proposalId = await seedProposal();
 
     const { error } = await owner.client.rpc('decide_proposal', {
@@ -180,7 +188,6 @@ suite('proposal decisions against the real database', () => {
   });
 
   it('refuses a second decision and leaves exactly one event', async () => {
-    if (!hasProposals) return;
     const proposalId = await seedProposal();
 
     await owner.client.rpc('decide_proposal', {
@@ -204,7 +211,6 @@ suite('proposal decisions against the real database', () => {
   });
 
   it('rejecting records the note and creates no event', async () => {
-    if (!hasProposals) return;
     const proposalId = await seedProposal();
 
     const { data, error } = await owner.client.rpc('decide_proposal', {
@@ -222,7 +228,6 @@ suite('proposal decisions against the real database', () => {
   });
 
   it('hides another owner proposal behind NOT_FOUND', async () => {
-    if (!hasProposals) return;
     const proposalId = await seedProposal();
     const stranger = await signedInOwner(live, uniqueEmail('stranger'));
 
@@ -237,15 +242,15 @@ suite('proposal decisions against the real database', () => {
   });
 
   /** T-I4 — the cohort is notified and no member id is readable by the owner. */
-  it('keeps cohort member ids unreadable from the owner session', async () => {
-    if (!hasClusters) return;
+  it.skipIf(!hasClustersTable)('keeps cohort member ids unreadable from the owner session', async () => {
     const { data, error } = await owner.client.from('demand_cluster_members').select('user_id').limit(1);
     expect(error !== null || (data ?? []).length === 0).toBe(true);
   });
 
   /** T-I5 — cancelling notifies everyone who confirmed. */
-  it('notifies the confirmed attendees when an event is cancelled', async () => {
-    if (!(await tableExists(live, 'rsvps')) || !hasNotifications) return;
+  it.skipIf(!hasRsvpsTable || !hasNotificationsTable)(
+    'notifies the confirmed attendees when an event is cancelled',
+    async () => {
 
     const attendee = await signedInOwner(live, uniqueEmail('attendee'));
     const { data: event } = await owner.client
@@ -289,8 +294,7 @@ suite('proposal decisions against the real database', () => {
     expect((before.data ?? []).length).toBeGreaterThanOrEqual(0);
   });
 
-  it('writes notifications as the service role only', async () => {
-    if (!hasNotifications) return;
+  it.skipIf(!hasNotificationsTable)('writes notifications as the service role only', async () => {
     const { error } = await owner.client
       .from('notifications')
       .insert({ user_id: owner.userId, type: 'event_published', payload: {} })
