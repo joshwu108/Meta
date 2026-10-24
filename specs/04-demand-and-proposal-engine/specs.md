@@ -199,7 +199,7 @@ The run is resumable per cluster; an LLM failure on one cluster is recorded in `
 - Results table: cluster (category · slot · neighborhood · band), matched business, proposal title, status link to 05's proposal view
 - Suppressed-clusters counter with tooltip "Below the minimum cohort size of 4, not shown to businesses"
 
-This page is the presenter's control panel for Scene 3; it should look intentional (same tokens as the app), not like a debug page.
+This page is the presenter's control panel for Scene 3; it uses the shared Meta-aligned system ([`../design-system.md`](../design-system.md)): a single lead card with the blue Generate button and the stage tracker, results in a white table, generated proposal titles marked with the gradient `AiTag`. It should look intentional, not like a debug page.
 
 ## 8. Seed Contribution
 

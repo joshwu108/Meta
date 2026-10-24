@@ -179,7 +179,7 @@ export type EventPublic = EventSummary & { description: string; category: EventC
 | Business shell | Dashboard, Proposals, Events, Insights; switch link to consumer app if the user also has a profile |
 | `/` | Redirects: no session → `/login`; profile without `onboarding_completed_at` → `/onboarding`; else `/discover` |
 
-Design direction (binding for the shell, recommended for all screens): warm editorial look, off-white surface, ink text, one accent (terracotta) used semantically for primary actions and "AI suggestion" markers, serif display face paired with a humanist sans for body. Tokens live in `src/styles/tokens.css`. Dark mode is **not** required for the MVP.
+Design direction (binding for every screen, see [`../design-system.md`](../design-system.md)): Meta-aligned. Facebook's light palette (canvas `#F0F2F5`, white cards, 8px radius, soft short shadows) with a full dark theme, Meta blue `#0866FF` for every primary action, link, and active nav state, the system font stack facebook.com ships, and the Meta AI gradient used **only** on the `AiTag` and `AiRing` primitives that mark AI-generated content. This workstream ships `src/styles/tokens.css` (light + dark), the `ui/` primitives listed in the design system (Button, Chip, AiTag, AiRing, Avatar, Card, Sheet, Switch, Tabs, StatusPill, CapacityMeter, Toast, EmptyState), the app frames (56px top bar; 280px left rail and 320px right rail at ≥1024px with a 680px feed column; bottom tab bar under 768px), and a `/dev/theme` page rendering every primitive in both themes for visual regression. No Meta or Facebook logos or wordmarks appear anywhere; the product is inspired by Meta's visual language, not branded as Meta.
 
 ## 6. Seed Data (`supabase/seed/`)
 
@@ -216,7 +216,7 @@ Workstream 02 adds `preferences.json` (interests/availability for the 14 seeded 
 |---|---|
 | Unit | envelope helpers; `parseBody` returns `VALIDATION` with field paths; `generateStructured` retries once on schema failure then throws `AI_UNAVAILABLE`; `MOCK_AI` returns fixture; log redaction |
 | Integration | signup creates profile row; profile RLS blocks reading another user's row; `profile_public_cards` hides non-discoverable users; `notify()` inserts and user can list/mark read; business owner cannot select from `profiles` |
-| E2E | signup → redirected to onboarding; login → discover; notification bell shows unread count |
+| E2E | signup → redirected to onboarding; login → discover; notification bell shows unread count; `/dev/theme` screenshots at 320/768/1024/1440 in light and dark match baselines |
 | CI guard | every table has RLS; every migration applies on fresh reset; `pnpm db:types` output is committed and up to date |
 
 ## 10. Acceptance Criteria

@@ -171,7 +171,7 @@ Each card gets an explanation from 02's `explainRecommendation({ viewer, target:
 ## 7. UI
 
 ### `/discover` (Screen 2 — Home)
-Editorial layout, not a uniform card grid: a lead "For you" event with large imagery and the explanation as a pull-quote; a horizontal rail of 3 suggested people (03 cards, compact); a two-column band of nearby businesses with their next event; recommended public groups; the agent's suggestion strip at the bottom ("Your agent noticed…"). Each AI-derived element carries the small "AI suggestion" tag used across the app.
+Feed layout in the Meta-aligned system ([`../design-system.md`](../design-system.md)): 680px center column of white cards on the gray canvas, one lead "For you" event card at full width with 2:1 imagery and the explanation under a gradient `AiTag`; a horizontal rail of 3 suggested people (03 cards, compact, blue Connect buttons); a band of nearby businesses with their next event; recommended public groups; the agent's suggestion strip ("Your agent noticed…") with an `AiRing` avatar lives in the right rail at ≥1024px and at the bottom of the feed on mobile. Supporting cards are compact so the lead card carries the hierarchy; every AI-derived element carries the `AiTag`.
 
 ### `/events`, `/events/:id` (Screen 6)
 - Feed: tabs For you · All · This week; cards show venue, date/time, price, capacity meter, friends-going avatars, explanation line
