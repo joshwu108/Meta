@@ -53,3 +53,54 @@ export async function eventStatus(db: Queryable, eventId: string): Promise<strin
   const { rows } = await db.query<{ status: string }>("select status from events where id = $1", [eventId]);
   return rows[0]!.status;
 }
+
+export async function setLocation(db: Queryable, userId: string, lat: number, lng: number): Promise<void> {
+  await db.query("update profiles set coarse_lat = $2, coarse_lng = $3, neighborhood = 'Mission' where id = $1", [userId, lat, lng]);
+}
+
+export type Consent = Partial<Record<
+  "allow_matching" | "allow_demand_aggregation" | "allow_group_planning" | "share_interests_with_attendees" | "share_name_with_business",
+  boolean
+>>;
+
+export async function setConsent(db: Queryable, userId: string, consent: Consent): Promise<void> {
+  await db.query(
+    `insert into agent_profiles (user_id, consent) values ($1, $2)
+     on conflict (user_id) do update set consent = agent_profiles.consent || excluded.consent`,
+    [userId, consent],
+  );
+}
+
+export async function setPreferences(db: Queryable, userId: string, prefs: {
+  interests: string[]; categories: string[]; slots: string[]; groupSize?: string; budgetMax?: number | null; radiusKm?: number;
+}): Promise<void> {
+  await db.query(
+    `insert into user_preferences (user_id, interests, interest_categories, availability_slots, group_size_pref, budget_max_cents, travel_radius_km)
+     values ($1, $2, $3, $4, $5, $6, $7)`,
+    [userId, prefs.interests, prefs.categories, prefs.slots, prefs.groupSize ?? "small", prefs.budgetMax ?? null, prefs.radiusKm ?? 5],
+  );
+}
+
+export async function connect(db: Queryable, a: string, b: string): Promise<void> {
+  await db.query("insert into connections (requester_id, recipient_id, status) values ($1, $2, 'accepted')", [a, b]);
+}
+
+export async function block(db: Queryable, blocker: string, blocked: string): Promise<void> {
+  await db.query("insert into blocks (blocker_id, blocked_id) values ($1, $2)", [blocker, blocked]);
+}
+
+export async function createGroup(db: Queryable, creator: string, members: Array<[string, string]>): Promise<string> {
+  const { rows } = await db.query<{ id: string }>(
+    "insert into groups (name, creator_id) values ('Mission Makers', $1) returning id",
+    [creator],
+  );
+  const groupId = rows[0]!.id;
+  for (const [userId, status] of members) {
+    await db.query("insert into group_members (group_id, user_id, status) values ($1, $2, $3)", [groupId, userId, status]);
+  }
+  return groupId;
+}
+
+export async function rsvpAs(db: { asUser: <T>(u: string, fn: (c: pg.PoolClient) => Promise<T>) => Promise<T> }, userId: string, eventId: string, share = true) {
+  await db.asUser(userId, (c) => c.query("select * from rsvp_event($1, $2, false)", [eventId, share]));
+}

@@ -33,10 +33,32 @@ create table notifications (
   read_at timestamptz,
   created_at timestamptz not null default now()
 );
+create table agent_action_log (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references profiles(id) on delete set null,
+  actor text not null,
+  action text not null,
+  permissions_used text[] not null default '{}',
+  result text not null,
+  metadata jsonb not null default '{}',
+  created_at timestamptz not null default now()
+);
 create or replace function set_updated_at() returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end $$;
 
--- 02 agent (consent only)
+-- 02 agent
+create table user_preferences (
+  user_id uuid primary key references profiles(id) on delete cascade,
+  interests text[] not null default '{}',
+  interest_categories text[] not null default '{}',
+  availability_slots text[] not null default '{}',
+  social_goals text[] not null default '{}',
+  group_size_pref text,
+  budget_min_cents int,
+  budget_max_cents int,
+  travel_radius_km numeric(4,1) not null default 5,
+  activity_prefs text[] not null default '{}'
+);
 create table agent_profiles (
   user_id uuid primary key references profiles(id) on delete cascade,
   consent jsonb not null default '{"allow_matching": false, "allow_demand_aggregation": false, "allow_group_planning": false, "share_interests_with_attendees": false, "share_name_with_business": false}'
@@ -48,6 +70,7 @@ create table connections (
   requester_id uuid not null references profiles(id) on delete cascade,
   recipient_id uuid not null references profiles(id) on delete cascade,
   status text not null default 'pending' check (status in ('pending','accepted','declined')),
+  message text,
   created_at timestamptz not null default now()
 );
 create table blocks (
