@@ -1,0 +1,161 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* Expose tokens to Tailwind utilities (bg-surface, text-text-2, rounded-md, …). */
+@theme inline {
+  --color-canvas: var(--color-canvas);
+  --color-surface: var(--color-surface);
+  --color-surface-2: var(--color-surface-2);
+  --color-hover: var(--color-hover);
+  --color-pressed: var(--color-pressed);
+  --color-divider: var(--color-divider);
+  --color-border-subtle: var(--color-border-subtle);
+  --color-text: var(--color-text);
+  --color-text-2: var(--color-text-2);
+  --color-text-3: var(--color-text-3);
+  --color-text-on-brand: var(--color-text-on-brand);
+  --color-brand: var(--color-brand);
+  --color-brand-hover: var(--color-brand-hover);
+  --color-brand-pressed: var(--color-brand-pressed);
+  --color-brand-soft: var(--color-brand-soft);
+  --color-brand-soft-2: var(--color-brand-soft-2);
+  --color-success: var(--color-success);
+  --color-success-soft: var(--color-success-soft);
+  --color-warning: var(--color-warning);
+  --color-warning-soft: var(--color-warning-soft);
+  --color-warning-ink: var(--color-warning-ink);
+  --color-danger: var(--color-danger);
+  --color-danger-soft: var(--color-danger-soft);
+  --color-ai-ink: var(--color-ai-ink);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-pill: var(--radius-pill);
+  --shadow-1: var(--shadow-1);
+  --shadow-2: var(--shadow-2);
+  --shadow-3: var(--shadow-3);
+  --font-sans: var(--font-sans);
+  --text-xs: var(--text-xs);
+  --text-sm: var(--text-sm);
+  --text-base: var(--text-base);
+  --text-md: var(--text-md);
+  --text-lg: var(--text-lg);
+  --text-xl: var(--text-xl);
+  --text-2xl: var(--text-2xl);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    margin: 0;
+    background: var(--color-canvas);
+    color: var(--color-text);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    min-height: 100dvh;
+  }
+  a {
+    color: var(--color-brand);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  h1 {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+  }
+  h2 {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
+  }
+  h3 {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
+  }
+}
+
+@layer utilities {
+  .text-lead {
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+  }
+  .surface-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+  }
+  .ai-gradient-border {
+    border: 2px solid transparent;
+    background:
+      var(--gradient-ai-soft) padding-box,
+      var(--gradient-ai) border-box;
+  }
+  .rise-in {
+    animation: rise-in var(--duration-normal) var(--ease-standard) both;
+  }
+  /* Capacity meter fill: scales to --meter-ratio once on mount (transform only). */
+  .meter-fill {
+    transform: scaleX(var(--meter-ratio, 0));
+    animation: grow-x 400ms var(--ease-standard) both;
+  }
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(var(--meter-ratio, 0));
+    }
+  }
+  /* Feed stagger: first paint of a list fades+rises each card 30ms after the previous, max 6. */
+  .feed-stagger > * {
+    animation: rise-in var(--duration-normal) var(--ease-standard) both;
+  }
+  .feed-stagger > :nth-child(2) { animation-delay: 30ms; }
+  .feed-stagger > :nth-child(3) { animation-delay: 60ms; }
+  .feed-stagger > :nth-child(4) { animation-delay: 90ms; }
+  .feed-stagger > :nth-child(5) { animation-delay: 120ms; }
+  .feed-stagger > :nth-child(6) { animation-delay: 150ms; }
+  .feed-stagger > :nth-child(n + 7) { animation: none; }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rise-in,
+    .meter-fill,
+    .feed-stagger > * {
+      animation: none;
+    }
+    * {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}
