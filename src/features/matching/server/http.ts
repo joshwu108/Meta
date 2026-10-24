@@ -13,9 +13,5 @@ export function pathId(params: Record<string, string>, key: string, what = 'Reso
   return parsed.data;
 }
 
-/** Postgres error codes and raised messages the social services translate. */
-export const PG = { uniqueViolation: '23505', rlsViolation: '42501' } as const;
-
-export function raisedMessage(error: { message?: string } | null): string {
-  return error?.message ?? '';
-}
+/** Postgres error codes the social services translate. */
+export const PG = { uniqueViolation: '23505' } as const;
