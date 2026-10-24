@@ -17,7 +17,8 @@ Then delete 06's interim `eslint.config.js` (01 ships `eslint.config.mjs`).
 - `vitest.config.ts`: a third project
   ```ts
   { resolve: { alias }, test: { name: 'events-db', include: ['tests/db/**/*.test.ts'], environment: 'node',
-    setupFiles: ['tests/db/support/setup.ts'], testTimeout: 30_000, hookTimeout: 60_000 } },
+    setupFiles: ['tests/db/support/setup.ts'], globalSetup: ['tests/db/support/global-setup.ts'],
+    testTimeout: 30_000, hookTimeout: 60_000 } },
   ```
 - `supabase/seed/runner.ts`: `await loadRsvps(ctx)` from `./loaders/rsvps` after `loadEvents(ctx)` (it logs its own summary). Typechecks against 01's `SeedContext`; not executed in the rehearsal because running the seed needs a Supabase stack.
 

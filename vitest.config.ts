@@ -17,6 +17,7 @@ export default defineConfig({
           include: ["tests/db/**/*.test.ts"],
           environment: "node",
           setupFiles: ["tests/db/support/setup.ts"],
+          globalSetup: ["tests/db/support/global-setup.ts"],
           testTimeout: 30_000,
           hookTimeout: 60_000,
         },
