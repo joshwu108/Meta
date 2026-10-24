@@ -128,6 +128,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 20:35 PT: CI on PR #2: lint/typecheck/unit green; the Supabase jobs fail only at `supabase start` with `relation "events" does not exist` (0600 needs 05's 0500), as expected. Kept 0600's hard dependency rather than guarding it, so a main without 05 cannot silently lack 06's tables.
 - 2026-10-24 20:15 PT: ws/01-core is on main. Merged it (14 conflicts, resolved per the rehearsed plan), swapped every 01 stand-in for the real module, moved the screens onto 01's shell and primitives, switched e2e to 01's helpers. 176 unit + 61 db tests, typecheck, lint (1 `<img>` warning) and build green.
 - 2026-10-24 19:50 PT: main unchanged; draft PR #3 (`integration/ws01`) will fast-forward main to ws/01-core plus a Node 22.20 pin. Rehearsed merging that head: green (176 unit + 61 db, build). 01 now seats placeholder `tests/db/support/*` files, which resolve to 06's.
 - 2026-10-24 19:35 PT: main unchanged. Added `href` deep links to 06's notifications (01's bell follows them); 03 now exports `getPendingConnectionRequests` with 06's stub signature. 158 tests.
