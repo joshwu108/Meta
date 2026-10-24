@@ -81,7 +81,13 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - [x] **T-I7** `proposals_business_fk` exists after a full reset (spec §12)
 
 ### E2E
-- [x] **T-E1** Scene 4: Kiln & Cup owner → dashboard → pending pottery proposal → edit & approve ($20→$25, 18:30) → publish → list shows Published
+- [~] **T-E1** Scene 4: Kiln & Cup owner → dashboard → pending pottery proposal → edit &
+  approve ($20→$25, 18:30) → publish → list shows Published — written and runnable, but
+  **skips** until 04 migrates `event_proposals`; everything it depends on besides the
+  proposal itself is covered by the event lifecycle spec, which passes
+- [x] **T-E2** Manual event lifecycle in a browser: create draft → edit → publish →
+  attendees → cancel, plus the two refusals and another venue's event being unreachable
+- [x] **T-E3** Theme matrix: both themes at 320 / 768 / 1024 / 1440, no horizontal scroll
 
 ## P1 (spec §3)
 - [x] **P1-1** `/business/insights` — banded demand by category × slot within 3 km, last 30 days
@@ -127,6 +133,14 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - **2026-10-24 — `/business/insights` (P1-1) shipped early** because it is pure banding over
   `demand_clusters` and shares the DTO builders already written for the inbox. It shows an
   empty state until 04 merges.
+- **2026-10-24 — The E2E suite no longer waits on workstream 01.** It signed in through
+  `/login`, so every case skipped and not one of the nine business screens had ever been
+  rendered. `POST /api/dev/session` performs an ordinary email and password sign-in
+  server-side and lets the SSR client write the cookies — the same shape of dev-only
+  affordance as `POST /api/dev/proposals` in spec §11, 404 in production, and **not** an
+  auth bypass, since wrong credentials are refused exactly as a login form would refuse
+  them. `signIn()` prefers `/login` whenever that page exists, so this quietly stops being
+  used the moment 01 merges.
 - **2026-10-24 — Ran the stack and found two bugs no unit test could reach.** Worth
   recording because both were invisible to 247 green unit tests:
   1. **`is_trusted_server()` tested `current_user`.** It is called from SECURITY DEFINER
@@ -211,10 +225,12 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
   `db reset`, `db:seed` and the integration suite all execute. Anyone with Docker can now
   run `npx supabase start && npx supabase db reset && pnpm db:seed && pnpm test`.
   **Both migrations apply cleanly on a fresh reset** and the suite caught two real bugs.
-- **The Playwright suite still cannot run** — it signs in through workstream 01's `/login`,
-  which does not exist yet, so all 22 cases skip on `appIsReady()`. This is the last thing
-  05 cannot verify itself. Once 01 lands auth, run
-  `npx supabase db reset && pnpm db:seed && pnpm test:e2e`.
+- ~~The Playwright suite cannot run until 01 ships `/login`.~~ **Resolved
+  2026-10-24 17:28**: a dev-only `POST /api/dev/session` does an ordinary password sign-in
+  server-side, so the suite no longer waits on 01. **24 of 30 cases pass**, including the
+  whole manual event lifecycle and the theme matrix in both themes at four widths; the
+  6 that skip are Scene 4, waiting on 04. `signIn()` still prefers `/login` and will use it
+  automatically once it exists.
 - **The nine proposal-decision integration cases skip** until 04 merges
   `event_proposals`; they now report as `skipped` rather than passing vacuously.
 
@@ -223,6 +239,19 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 17:30` — **the business UI has now actually been rendered, and the whole
+  suite runs.** The Playwright suite was blocked on 01's `/login`, so a dev-only
+  `POST /api/dev/session` removes that dependency and **24 of 30 cases pass**: the manual
+  event lifecycle end to end (create a draft → edit → publish → attendee page → cancel with
+  a reason), the two refusals an owner actually hits, another venue's event being
+  unreachable by url, and the theme matrix in both themes at 320 / 768 / 1024 / 1440 with
+  no horizontal scroll. Screenshots reviewed by eye in light and dark; the Meta-aligned
+  surfaces, Meta blue actions and empty states all render as specified. Two fixes came out
+  of it: field errors now carry `aria-describedby` / `aria-invalid` so a screen reader ties
+  the message to its input, and the Playwright `webServer` probe points at a route that
+  answers, because 01 owns `/` and it does not exist yet. Scene 4's 6 cases skip visibly
+  until 04 migrates `event_proposals`. **Full state: 259 unit + integration tests pass,
+  24 E2E pass, coverage 95.2% lines, `tsc` / `eslint` / `next build` clean.**
 - `2026-10-24 17:05` — **stood up the real stack; it found two bugs, both fixed and
   pushed.** Docker was already running here and the supabase CLI ships on npm, so the CLI
   is now a devDependency and the whole local stack runs from a clone — closing the blocker
