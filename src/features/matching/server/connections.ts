@@ -1,6 +1,8 @@
 import 'server-only';
 import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/log';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { uuidSchema } from '@/shared/schemas/common';
 import type { ConnectionStatus } from '@/shared/enums';
 import type { ConnectionRow } from '@/shared/schemas/social';
 import { notifySafely } from './async';
@@ -127,4 +129,31 @@ export async function listConnections(actor: Actor, status?: ConnectionStatus): 
   const others = rows.map((row) => (row.requester_id === actor.userId ? row.recipient_id : row.requester_id));
   const cards = await getPublicCards(others);
   return rows.map((row, index) => toItem(row, actor.userId, cards.get(others[index]!) ?? unknownCard(others[index]!)));
+}
+
+/** A pending request someone sent the user (06's Activity hub). */
+export type PendingConnectionRequest = { id: string; requesterId: string; message: string | null; createdAt: string; requester: PublicCard };
+
+/**
+ * Pending requests addressed to `userId`, newest first, never from someone blocked either way.
+ * Service-role read for other surfaces that hold no RLS client; returns the recipient's own data only.
+ */
+export async function getPendingConnectionRequests(userId: string): Promise<PendingConnectionRequest[]> {
+  const { data, error } = await createAdminClient()
+    .from('connections')
+    .select('id, requester_id, message, created_at')
+    .eq('recipient_id', uuidSchema.parse(userId))
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+  if (error) throw new ApiError('INTERNAL', 'Could not load connection requests', 500);
+  const blocked = await getBlockedIds(userId);
+  const rows = (data ?? []).filter((row) => !blocked.has(row.requester_id));
+  const cards = await getPublicCards(rows.map((row) => row.requester_id));
+  return rows.map((row) => ({
+    id: row.id,
+    requesterId: row.requester_id,
+    message: row.message,
+    createdAt: row.created_at,
+    requester: cards.get(row.requester_id) ?? unknownCard(row.requester_id),
+  }));
 }

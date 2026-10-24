@@ -86,6 +86,17 @@ describe('matching exports', () => {
     expect(await matching.getBlockedIds(alice.id)).toEqual(new Set([dave.id]));
   });
 
+  it('getPendingConnectionRequests lists requests to the user, newest first, minus blocked senders', async () => {
+    // Fresh users without consent or location, so these edges cannot change anyone's matches.
+    const [eve, frank, gus] = await Promise.all([createTestUser(admin, 'contract-eve'), createTestUser(admin, 'contract-frank'), createTestUser(admin, 'contract-gus')]);
+    await admin.from('connections').insert({ requester_id: eve.id, recipient_id: frank.id, message: 'Hi Frank' });
+    await admin.from('connections').insert({ requester_id: gus.id, recipient_id: frank.id });
+    await admin.from('blocks').insert({ blocker_id: frank.id, blocked_id: gus.id });
+    const forFrank = await matching.getPendingConnectionRequests(frank.id);
+    expect(forFrank).toEqual([expect.objectContaining({ requesterId: eve.id, message: 'Hi Frank', requester: expect.objectContaining({ displayName: 'Test contract-eve' }) })]);
+    expect(await matching.getPendingConnectionRequests(eve.id)).toEqual([]);
+  });
+
   it('getSuggestedPeople returns compact cards from the match list', async () => {
     matching.invalidateMatches(carol.id);
     const people = await matching.getSuggestedPeople(carol.id, 2);
