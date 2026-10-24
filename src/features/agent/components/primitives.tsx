@@ -1,32 +1,24 @@
 "use client";
 /**
- * Local stand-ins for 01's ui/ primitives (Button, Chip, AiTag, AiRing, Switch).
- * Same props and look as design-system.md; swap for `@/features/core` when it lands.
+ * Agent UI primitives. Button, AiTag and AiRing are 01's shared components (design-system.md §4),
+ * wrapped only to keep ws02 defaults (type="button", "AI inferred"). Chip, ToggleChip and Switch stay
+ * local: 01's Chip names every remove button just "Remove", and ws02's consent rows label the
+ * switch via aria-labelledby/-describedby (see PROGRESS "Needs from others").
  */
-import type { ButtonHTMLAttributes, KeyboardEvent, ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
+import { AiRing as CoreAiRing, AiTag as CoreAiTag, Button as CoreButton, type AiTagLabel, type ButtonProps } from "@/features/core/components/ui";
 import s from "./agent.module.css";
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost";
-  size?: "md" | "lg";
-};
-
-export function Button({ variant = "primary", size = "md", className, ...rest }: ButtonProps) {
-  const classes = [s.button, s[variant], size === "lg" ? s.large : "", className ?? ""].join(" ");
-  return <button type="button" className={classes} {...rest} />;
+export function Button({ type = "button", ...rest }: ButtonProps) {
+  return <CoreButton type={type} {...rest} />;
 }
 
-export function AiTag({ label = "AI inferred" }: { label?: "AI inferred" | "AI suggestion" | "Estimate" }) {
-  return (
-    <span className={s.aiTag}>
-      <span className={s.aiGlyph} aria-hidden />
-      {label}
-    </span>
-  );
+export function AiTag({ label = "AI inferred" }: { label?: AiTagLabel }) {
+  return <CoreAiTag label={label} />;
 }
 
 export function AiRing({ children }: { children: ReactNode }) {
-  return <span className={s.aiRing}>{children}</span>;
+  return <CoreAiRing>{children}</CoreAiRing>;
 }
 
 /** Removable chip. Backspace or Delete removes it when focused. */
