@@ -1,20 +1,19 @@
 import { expect, test } from "@playwright/test";
+import { NEW_USER, login, reseed } from "./helpers";
 
-const EMPTY = {
-  interests: [], interestCategories: [], availabilitySlots: [], socialGoals: [], groupSizePref: null,
-  budgetMinCents: null, budgetMaxCents: null, travelRadiusKm: 5, activityPrefs: [], dealbreakers: [], fieldSources: {},
-};
+test.describe.configure({ mode: "serial" });
 
+/** Full stack with only the chat route forced to AI_UNAVAILABLE, as if the model were down. */
 test("onboarding falls back to the form when the AI is unavailable", async ({ page }) => {
-  await page.route("**/api/**", (route) => {
-    const path = new URL(route.request().url()).pathname;
-    if (path === "/api/agent/chat") {
-      return route.fulfill({ status: 503, contentType: "application/json",
-        body: JSON.stringify({ ok: false, error: { code: "AI_UNAVAILABLE", message: "The assistant is unavailable right now" } }) });
-    }
-    const data = path === "/api/agent/preferences" ? EMPTY : { ok: true };
-    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data }) });
-  });
+  await reseed(page);
+  await login(page, NEW_USER.email);
+  await page.route("**/api/agent/chat", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: false, error: { code: "AI_UNAVAILABLE", message: "The assistant is unavailable right now" } }),
+    }),
+  );
   await page.goto("/onboarding");
   await page.getByPlaceholder(/start typing/i).fill("Castro");
   await page.getByRole("button", { name: "Continue" }).click();
