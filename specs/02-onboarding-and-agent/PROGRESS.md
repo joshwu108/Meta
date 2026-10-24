@@ -53,7 +53,7 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 ### Acceptance criteria (spec section 10)
 - [x] AC1 Scene 1 sentence → pottery, coffee, thu_eve, small; nothing invented (service test + Playwright UI test)
 - [ ] AC2 Deleting an inferred value persists (service-level test passes; DB-backed check waits on Docker)
-- [ ] AC3 Consent off → excluded from matching / demand (shared fixture)
+- [ ] AC3 Consent off → excluded from matching / demand (shared fixture) — ws02 side done: `tests/fixtures/consent-cases.ts` + boundary test; needs 03/04 to assert against it
 - [x] AC4 Suggestion cards deep-link and show "Why this?"
 - [ ] AC5 Activity log entry per sharing purpose
 
@@ -73,6 +73,7 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 2026-10-24: Node 20.18.1 and pnpm 9.15.0 installed under ~/.local (no Homebrew on this machine).
 
 ## Needs from others
+- 03 and 04: import `DEMAND_OPT_OUT_EMAILS` / `MATCHING_OPT_OUT_EMAILS` from `tests/fixtures/consent-cases.ts` and assert those users never appear in matches / cohort counts (closes AC3).
 - README: add `POST /api/agent/feedback` (P1) to the 02 row of the routes table, and `resolveGroupSchedule(members)` / `getSharablePreferencesBatch(ids, purpose)` to the 02 function contracts.
 - 03: the group planner can call `resolveGroupSchedule(members)` from `@/features/agent` with members fetched via `getSharablePreferencesBatch(ids, 'group_plan')`.
 - 01: `users.json` should use the emails in `supabase/seed/fixtures/preferences.json` (maya@, jordan@, … @commonground.test) and call `seedAgent(admin, userIdByEmail)` from `supabase/seed/agent.ts` after users are inserted.
