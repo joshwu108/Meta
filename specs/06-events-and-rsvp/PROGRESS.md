@@ -98,6 +98,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Needs from others
 
+- 02: `src/lib/ai/fixtures/agent.explain_recommendation.json` (ws/02-agent) matches any input containing "pottery", and 06's event input always includes the viewer's interests, so under `MOCK_AI` every event for the Scene 1 user reads "You both love pottery and are free Thursday evenings." (person phrasing, and wrong for a Catan night). Please add cases ahead of it: `{ "match": "Beginner Pottery & Coffee Night", "output": { "explanation": "Pottery night on a Thursday evening, small group, close to you.", "highlights": ["pottery", "Thursday evening"] } }` and a generic event case `{ "match": "\"kind\":\"event\"", "output": { "explanation": "Fits the interests and times you shared with your agent.", "highlights": [] } }`. 06 sends `target: { kind: 'event', event: { title, category, slot, capacity, priceCents } }`.
 - 05: on ws/05-business, `store-supabase.ts` reads `rsvps` (with a `profiles(display_name)` embed) through the owner's session. 06's RLS lets users read only their own RSVPs, and businesses may not read `profiles`, so those reads come back empty. Please use `rpc('business_event_attendees', { p_event_id })` for `listRsvps`, `rpc('business_event_rsvp_counts', { p_event_ids })` for `countConfirmed`, and the service-role client for `confirmedRsvpUserIds` (notification fan-out; ids never leave the server).
 - 01: add a `events-db` vitest project for `tests/db/**/*.test.ts` (plain local Postgres via `TEST_DATABASE_URL`, no Supabase setup file), or let 06 add it in the merge commit.
 - 01: call `seedEventsAndRsvps(ctx.admin, ctx.usersByEmail)` from `supabase/seed/06-events.ts` in `runSeedWith` after `loadEvents`. It needs the "Ritual Grounds" business and users `maya@`, `jordan@`, `sam@`, `priya@`, `theo@`, `nina@commonground.test`.
@@ -118,6 +119,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 17:00 PT: asked 02 for event-specific MOCK_AI explanation cases (the current pottery case would label every event "You both love pottery").
 - 2026-10-24 16:58 PT: ws/02-agent added a privacy guard; 06 no longer reads 02's tables outside the getSharablePreferences stand-in (RSVP sheet prefills from 02's permissions route; shared-interest chips off pending 02's export). Own guard test added (150 tests).
 - 2026-10-24 16:48 PT: main unchanged; other branches unchanged since last read. Added an AC1 regression test on the real fixtures (01's six seeded events, 05's pottery night at $25, 02's Scene 1 preferences): the pottery night leads by at least 5 points on every demo weekday (148 tests). Waiting on main.
 - 2026-10-24 16:35 PT: seed attendees and E2E user aligned with ws/01-core's users.json; asked 01 for jordan@ (141 tests). Never-idle list is exhausted until dependencies land on main.
