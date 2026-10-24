@@ -99,7 +99,8 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 - 05: on ws/05-business, `store-supabase.ts` reads `rsvps` (with a `profiles(display_name)` embed) through the owner's session. 06's RLS lets users read only their own RSVPs, and businesses may not read `profiles`, so those reads come back empty. Please use `rpc('business_event_attendees', { p_event_id })` for `listRsvps`, `rpc('business_event_rsvp_counts', { p_event_ids })` for `countConfirmed`, and the service-role client for `confirmedRsvpUserIds` (notification fan-out; ids never leave the server).
 - 01: add a `events-db` vitest project for `tests/db/**/*.test.ts` (plain local Postgres via `TEST_DATABASE_URL`, no Supabase setup file), or let 06 add it in the merge commit.
-- 01: call `seedEventsAndRsvps(admin, usersByEmail)` from `supabase/seed/06-events.ts` after users, businesses and events load. It expects a "Ritual Grounds" business and users `maya@`, `jordan@`, `alex@`, `sam@`, `priya@`, `lee@commonground.test` (any missing attendee is skipped). Fixture: `supabase/seed/fixtures/events-06.json`.
+- 01: call `seedEventsAndRsvps(ctx.admin, ctx.usersByEmail)` from `supabase/seed/06-events.ts` in `runSeedWith` after `loadEvents`. It needs the "Ritual Grounds" business and users `maya@`, `jordan@`, `sam@`, `priya@`, `theo@`, `nina@commonground.test`.
+- 01: add `jordan@commonground.test` to `users.json`. 06 §8 names maya@ and jordan@ for Scene 6, but ws/01-core's fixture has no jordan, so the seeded reconnect row (maya → jordan) is skipped until it exists.
 - 03: export a server function for Discover's people rail (top N matches with explanation); `getSuggestedPeople` is an empty stub, so the rail shows an empty state linking to /match.
 - 01: app shell `(consumer)/layout.tsx` with nav and the 680/320 frame; 06's pages render only their content column (Discover adds its own right rail).
 - 02: export `getAttendeeSharing(userIds)` → `{ interests, shareInterestsWithAttendees }` per user and `getRsvpConsentDefaults(userId)`. The RSVP sheet and shared-interest chips need them, and only 02 may read `agent_profiles` / `user_preferences`. Stubbed in `src/features/events/server/stubs/agent.ts`.
@@ -110,12 +111,13 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Blocked
 
-- E2E scenes 5 and 6 are written (`tests/e2e/`) but need 01's `/login` page and seed runner plus a running Supabase stack. Scene 5 assumes the demo consumer is `demo@commonground.test` (override with `E2E_DEMO_EMAIL`) and that Scene 4 published "Beginner Pottery & Coffee Night".
+- E2E scenes 5 and 6 are written (`tests/e2e/`) but need 01's `/login` page and seed runner plus a running Supabase stack. Scene 5 runs as `demo.new@commonground.test`, the Scene 1 user (override with `E2E_DEMO_EMAIL`) and that Scene 4 published "Beginner Pottery & Coffee Night".
 - P1 list/map toggle: needs a static map tile provider decision (OpenStreetMap static tiles, Mapbox with a key, etc.) and 01's CSP to allow its `img-src`. Everything else on the page works without it.
 - Supabase CLI and Docker are not available here, so `pnpm db:reset`, `pnpm db:seed`, route-level integration tests through PostgREST, and Playwright scenes cannot run on this machine. SQL is covered on plain Postgres; services are covered with mocked repo/stubs. Needs a machine with `supabase start` (or Docker running) to finish the Supabase-stack checks.
 
 ## Log
 
+- 2026-10-24 16:35 PT: seed attendees and E2E user aligned with ws/01-core's users.json; asked 01 for jordan@ (141 tests). Never-idle list is exhausted until dependencies land on main.
 - 2026-10-24 16:31 PT: 0601 owner-only RSVP reads for 05's attendee list and counts (141 tests). Next: wait for main; swap stubs as dependencies land.
 - 2026-10-24 16:27 PT: prepared for 01's merge: Postgres suites moved to tests/db, per-file server-only mocks, ui stand-in props match 01's primitives (139 tests, also green under a 01-shaped vitest config). Next: wait for 01–05 to land on main.
 - 2026-10-24 16:20 PT: main unchanged; read ws/01-core, ws/02-agent and ws/05-business ahead of their merges. Fixed 0600 for 05's status guard, aligned stubs with 02's contracts (139 tests). Next: prepare the 01 merge (vitest projects, app shell, ui primitives).
