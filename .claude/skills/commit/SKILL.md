@@ -17,6 +17,7 @@ Helper scripts (all in `.claude/skills/commit/scripts/`):
 | `set-identity.sh "Name" "email" "ghuser" [ws 1-6]` | One-command identity setup for this clone |
 | `check-identity.sh` | Prints identity + branch, exits 2 if not configured |
 | `commit.sh [--push] [--allow-main] "subject" ["body"]` | Guarded commit that enforces every rule below |
+| `sync-main.sh` | Fetch and merge `origin/main` into this clone's `ws/` branch (main only, merge not rebase); lists spec files changed on main; exit 3 on conflict |
 
 ## Modes
 
@@ -65,8 +66,21 @@ Commit the current work. Steps, in order:
 
 Same as `/commit`, with `--push` on the final script call. Pushes to `origin`
 on the current branch, setting upstream on first push. If the push is rejected
-because the remote moved, run `git pull --rebase` and push again; if the rebase
-conflicts, stop and report the conflicting files.
+because the remote moved, run `sync-main.sh` (merge from main only, never
+rebase) and push again; on exit 3 resolve the listed conflicts, commit the merge, and push.
+
+### `/commit sync`
+
+Run `bash .claude/skills/commit/scripts/sync-main.sh`. It only ever pulls from
+`origin/main`, never from another `ws/` branch, and merges rather than rebases so
+pushed history is never rewritten. Read every spec file it reports as changed.
+On exit 3, resolve the listed conflicts (main wins on shared contracts), `git add`
+them, then `commit.sh "chore(ws0N): merge main"`.
+
+### Cadence for autonomous workers (see `specs/WORKER_PROMPT.md`)
+
+Commit after every coherent unit. Sync and push every 3 commits, every 45 minutes,
+and before stopping. Push only to this clone's `ws/0N-...` branch.
 
 ## Autonomous use
 

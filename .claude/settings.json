@@ -10,7 +10,6 @@
       "Bash(git add:*)",
       "Bash(git restore --staged:*)",
       "Bash(git fetch:*)",
-      "Bash(git pull --rebase:*)",
       "Bash(git push:*)",
       "Bash(git push -u origin:*)",
       "Bash(git rev-parse:*)",
@@ -19,13 +18,24 @@
       "Bash(bash .claude/skills/commit/scripts/set-identity.sh:*)",
       "Bash(bash .claude/skills/commit/scripts/commit.sh:*)",
       "Bash(gh auth status:*)",
-      "Bash(ssh -T git@github.com:*)"
+      "Bash(ssh -T git@github.com:*)",
+      "Bash(git merge:*)",
+      "Bash(git rev-list:*)",
+      "Bash(git stash:*)",
+      "Bash(git show:*)",
+      "Bash(bash .claude/skills/commit/scripts/sync-main.sh:*)",
+      "Bash(pnpm:*)",
+      "Bash(npx playwright:*)",
+      "Bash(supabase:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
       "Bash(git reset --hard:*)",
-      "Bash(git config --global:*)"
+      "Bash(git config --global:*)",
+      "Bash(git rebase:*)",
+      "Bash(git push origin main:*)",
+      "Bash(git pull:*)"
     ]
   }
 }
