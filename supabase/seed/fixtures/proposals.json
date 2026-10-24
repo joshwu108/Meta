@@ -1,0 +1,39 @@
+[
+  {
+    "businessSlug": "ritual-grounds",
+    "status": "pending",
+    "source": "demand",
+    "proposal": {
+      "title": "Single-Origin Tasting & Meet Your Neighbours",
+      "description": "A guided tasting of three single-origin pours, with a short talk on what to notice, then open table seating so people can keep talking once the cups are empty.",
+      "category": "food_drink",
+      "format": "Guided 45-min tasting, then 45 min open seating",
+      "intendedSocialExperience": "Something to talk about from the first minute: everyone tastes the same thing and compares notes",
+      "suggestedSlot": "wed_eve",
+      "suggestedStartTimeLocal": "18:00",
+      "estimatedDurationMinutes": 90,
+      "suggestedCapacity": 14,
+      "suggestedPriceCents": 1200,
+      "priceRangeCents": {
+        "min": 0,
+        "max": 1500
+      },
+      "demand": {
+        "band": "4-5",
+        "neighborhoodLabel": "Hayes Valley",
+        "topInterests": [
+          "coffee",
+          "meeting neighbours"
+        ]
+      },
+      "whySuggested": "A small group nearby opted into community demand for food and drink meetups on weekday evenings, and your espresso bar already hosts tastings.",
+      "assumptionsToValidate": [
+        "Three single origins available that week",
+        "One barista can lead the tasting"
+      ],
+      "disclaimers": [
+        "demand_is_estimate"
+      ]
+    }
+  }
+]

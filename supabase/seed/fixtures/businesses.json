@@ -1,0 +1,94 @@
+[
+  {
+    "slug": "kiln-and-cup",
+    "ownerEmail": "owner.kiln@commonground.test",
+    "name": "Kiln & Cup",
+    "description": "A pottery studio with an espresso bar in the front room. Eight wheels, one kiln, and a long table for people who stay after class.",
+    "category": "creative",
+    "address": "1 Valencia St, San Francisco, CA",
+    "neighborhood": "Mission",
+    "lat": 37.7599,
+    "lng": -122.4148,
+    "imageUrl": null,
+    "hours": {
+      "tue": [["10:00", "20:00"]],
+      "wed": [["10:00", "20:00"]],
+      "thu": [["09:00", "21:00"]],
+      "fri": [["09:00", "21:00"]],
+      "sat": [["10:00", "18:00"]]
+    },
+    "capabilities": {
+      "eventCategories": ["creative", "food_drink"],
+      "capacity": 12,
+      "minPriceCents": 1500,
+      "maxPriceCents": 3500,
+      "hostingSlots": ["thu_eve", "sat_day"],
+      "equipmentTags": ["pottery-wheels", "kiln"],
+      "formats": ["workshop"],
+      "notes": "Two staff on Thursday evenings. Clay is included in the ticket price.",
+      "acceptsAiProposals": true
+    }
+  },
+  {
+    "slug": "ritual-grounds",
+    "ownerEmail": "owner.ritual@commonground.test",
+    "name": "Ritual Grounds",
+    "description": "Neighbourhood coffee bar with a back room that holds twenty people and a tasting flight menu.",
+    "category": "food_drink",
+    "address": "400 Hayes St, San Francisco, CA",
+    "neighborhood": "Hayes Valley",
+    "lat": 37.7765,
+    "lng": -122.4255,
+    "imageUrl": null,
+    "hours": {
+      "mon": [["07:00", "20:00"]],
+      "tue": [["07:00", "20:00"]],
+      "wed": [["07:00", "21:00"]],
+      "thu": [["07:00", "21:00"]],
+      "fri": [["07:00", "21:00"]],
+      "sat": [["08:00", "21:00"]],
+      "sun": [["08:00", "19:00"]]
+    },
+    "capabilities": {
+      "eventCategories": ["food_drink", "community"],
+      "capacity": 20,
+      "minPriceCents": 0,
+      "maxPriceCents": 1500,
+      "hostingSlots": ["mon_eve", "tue_eve", "wed_eve", "thu_eve", "fri_eve", "sat_eve", "sun_eve"],
+      "equipmentTags": ["espresso-bar"],
+      "formats": ["social-mixer", "tasting"],
+      "notes": "Back room only; the front counter stays open during events.",
+      "acceptsAiProposals": true
+    }
+  },
+  {
+    "slug": "meeple-house",
+    "ownerEmail": "owner.meeple@commonground.test",
+    "name": "Meeple House",
+    "description": "Board game shop and cafe with a library of six hundred games and tables for thirty players.",
+    "category": "games",
+    "address": "1200 Irving St, San Francisco, CA",
+    "neighborhood": "Sunset",
+    "lat": 37.7533,
+    "lng": -122.4842,
+    "imageUrl": null,
+    "hours": {
+      "wed": [["12:00", "22:00"]],
+      "thu": [["12:00", "22:00"]],
+      "fri": [["12:00", "23:00"]],
+      "sat": [["10:00", "23:00"]],
+      "sun": [["10:00", "20:00"]]
+    },
+    "capabilities": {
+      "eventCategories": ["games", "community"],
+      "capacity": 30,
+      "minPriceCents": 500,
+      "maxPriceCents": 1500,
+      "hostingSlots": ["fri_eve", "sat_eve", "sun_day"],
+      "equipmentTags": ["board-game-library"],
+      "formats": ["tournament", "social-mixer"],
+      "notes": "Game library is free to use during events; staff can teach rules.",
+      "acceptsAiProposals": true
+    }
+  }
+]
