@@ -13,7 +13,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 ## Build items (P0)
 
 - [x] Migration `0600_events_rsvp.sql` (rsvps, event_feedback, reconnect_interest, follow_up_suggestions, bookmarks, deferred FKs, RLS, `rsvp_event`, `cancel_rsvp`)
-- [ ] Exported contracts in `src/features/events/index.ts`: `getUpcomingEventsForUser`, `getEventPublic`
+- [x] Exported contracts in `src/features/events/index.ts`: `getUpcomingEventsForUser`, `getEventPublic`
 - [ ] Recommendation scoring (`server/recommend.ts`) with explanations via 02's `explainRecommendation`
 - [x] Attendee visibility function (single function used by every attendee-facing DTO)
 - [x] Invite-group filtering (skip RSVP'd and blocked members, never RSVP anyone)
@@ -35,8 +35,8 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - [x] Cancel reopens a full event
 - [x] `ALREADY_RSVPED`
 - [x] RSVP rejected on draft, cancelled and past events
-- [ ] Attendee endpoint forbidden without an RSVP
-- [ ] Non-consenting names hidden
+- [x] Attendee endpoint forbidden without an RSVP (service level, mocked repo; Supabase-stack run pending, see Blocked)
+- [x] Non-consenting names hidden (service level, mocked repo; Supabase-stack run pending, see Blocked)
 - [x] Reconnect requires completion + attendance
 - [ ] Mutual reconnect creates one suggestion and two notifications
 - [x] Reconfirm flow
@@ -69,15 +69,28 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: Scoring interprets the +0.5 tag bonus as `(categoryMatch + 0.5·tagMatch) / 1.5` so interest never exceeds its 40 points. Unknown budget or viewer location scores half credit; group size gets 0.7 for an exact capacity bucket and 0.35 for an adjacent one, plus 0.3 when friends are going (capped at 1).
 - 2026-10-24: Slots use local America/Los_Angeles time: 17:00+ is the evening slot of that day, Sat/Sun before 17:00 is `sat_day`/`sun_day`, 00:00–04:59 belongs to the previous evening, weekday daytime maps to no slot.
 - 2026-10-24: Attendee list `count` is every confirmed attendee (viewer included, same number as the capacity meter). Non-consenting attendees appear as anonymous `{ isConnection: false }` entries so a hidden connection cannot be inferred; blocked attendees are omitted from the list in both directions. Order: connections, named, anonymous.
+- 2026-10-24: `getUpcomingEventsForUser(userId)` returns every live event in the next 21 days plus the user's own upcoming RSVP'd events, each with the user's `rsvpStatus` (null if none), soonest first. 03's planner filters it; a group page can filter `rsvpStatus !== null` per member.
+- 2026-10-24: Event detail `attendeePreview.avatars` shows consented attendees only to viewers with a confirmed RSVP; before RSVPing a viewer sees only their own connections (plus the count). "Share my name with other attendees" is not consent to be shown to browsers.
+- 2026-10-24: Feed cards return `friendsGoing` as `{ userId, displayName, avatarUrl }[]` (accepted connections, consented, confirmed, not blocked either way) so the UI can render avatars.
+- 2026-10-24: Explanations are cached in-process for 24h keyed by `(viewer, event, prefsHash)`; failures fall back to "Coming up soon near you." rather than failing the feed.
+- 2026-10-24: Routes and services read cross-user data (counts, attendees, friends) with the service-role client and filter it in `visibility.ts`; the user's own RSVP writes go through the RLS-bound client and the security-definer functions.
 
 ## Needs from others
 
+- 02: export `getAttendeeSharing(userIds)` → `{ interests, shareInterestsWithAttendees }` per user and `getRsvpConsentDefaults(userId)`. The RSVP sheet and shared-interest chips need them, and only 02 may read `agent_profiles` / `user_preferences`. Stubbed in `src/features/events/server/stubs/agent.ts`.
+- 02: add `ExplainInput` to `src/shared/types.ts`. 06 sends `{ viewer, target: { kind: 'event', title, category, slotLabel, capacity, priceCents }, breakdown }`.
+- 02: export `suggestFollowUp({ a, b, event })` wrapping the `agent.follow_up_suggestion` prompt (06 §6 reconnect).
+- 03: export `getConnectionIds(userId)` and `getBlockEdges(userId)`, plus helpers to create and read `invitations(kind='event')`. Stubbed in `src/features/events/server/stubs/social.ts`.
+- 03: `EventSummary` has no `category`; if the planner needs to filter by category, call `getEventPublic` or ask the integrator to add `category` to `EventSummary`.
 - 05: `events` needs the shared `set_updated_at` trigger (README says every table has one; 05 §4 does not list it). 06's reconfirm relies on `events.updated_at` moving on edits.
 - 01/02: `SharablePreferences` in `src/shared/types.ts` has no `interestCategories`, but 06 §5 scores on it. Please add `interestCategories: EventCategory[]` (02 already stores `interest_categories`). Until then 06 derives categories from interest tags.
 
 ## Blocked
 
+- Supabase CLI and Docker are not available here, so `pnpm db:reset`, `pnpm db:seed`, route-level integration tests through PostgREST, and Playwright scenes cannot run on this machine. SQL is covered on plain Postgres; services are covered with mocked repo/stubs. Needs a machine with `supabase start` (or Docker running) to finish the Supabase-stack checks.
+
 ## Log
 
+- 2026-10-24 15:34 PT: stubs for 01/02/03, repository, exported contracts, RSVP service, feed/recommendation/detail/attendee services (68 unit + 18 integration tests). Next: invite-group, activity, post-event services, route handlers.
 - 2026-10-24 15:27 PT: slot derivation, recommendation scorer, attendee visibility, invite selection (48 unit tests). Next: data access layer, exported contracts, route handlers.
 - 2026-10-24 15:23 PT: progress file, interim scaffold, 0600 migration with 18 passing integration tests. Next: domain logic (slots, scoring, visibility, invites) with unit tests.
