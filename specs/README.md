@@ -194,14 +194,14 @@ getUpcomingEventsForUser(userId: string): Promise<EventSummary[]>
 getEventPublic(eventId: string): Promise<EventPublic | null>
 ```
 
-Types `SharablePreferences`, `CompatibilityResult`, `VenueCriteria`, `BusinessMatch`, `EventSummary`, `EventPublic`, `BusinessPublicCard` live in `src/shared/types.ts` and are defined in the owning spec. Workstream 01 lands the file with these types on day one so every workstream compiles against the same shapes.
+Types `SharablePreferences`, `ExplainInput`, `CompatibilityResult`, `VenueCriteria`, `BusinessMatch`, `EventSummary`, `EventPublic`, `BusinessPublicCard` live in `src/shared/types.ts` and are defined in the owning spec. `SharablePreferences` (with `interestCategories: EventCategory[]` and a nullable `groupSizePref`) and `ExplainInput` (`{ viewer, target, breakdown }`) follow spec 02 §5. Workstream 01 lands the file with these types on day one so every workstream compiles against the same shapes.
 
 ---
 
 ## 5. Working Independently
 
 - **Mocks:** `MOCK_AI=1` makes `src/lib/ai/` return fixture JSON from `src/lib/ai/fixtures/` instead of calling Claude. Every workstream adds fixtures for the prompts it owns.
-- **Seed:** `pnpm db:seed` loads `supabase/seed/fixtures/*.json` (15 users, 3 businesses, 6 events, 2 groups). Each workstream appends to the fixtures it needs; the demo path is described in each spec.
+- **Seed:** `pnpm db:seed` loads `supabase/seed/fixtures/*.json` (16 users, 3 businesses, 6 events, 2 groups). Each workstream appends to the fixtures it needs; the demo path is described in each spec.
 - **Stubs:** Until a dependency ships, import its contract from `src/shared/types.ts` and use a local stub in `src/features/<name>/server/stubs.ts`. Delete the stub when the real export lands.
 - **Branches:** `ws/01-core`, `ws/02-agent`, `ws/03-matching`, `ws/04-demand`, `ws/05-business`, `ws/06-events`. Merge 01 first; others rebase on it.
 - **Committing:** every clone uses the repo's `/commit` skill (`.claude/skills/commit/`). Run the setup once per clone with `bash .claude/skills/commit/scripts/set-identity.sh "Name" "github-email" "github-user" <ws>` (or paste `.claude/skills/commit/SETUP_PROMPT.md` into Claude Code). After that `/commit` and `/commit push` produce Conventional Commits authored by you, on your `ws/` branch, with no AI attribution lines and a secret scan on the staged diff.

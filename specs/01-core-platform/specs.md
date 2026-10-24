@@ -26,7 +26,7 @@ This workstream contains no product-specific AI logic. Its success is measured b
 - `src/shared/enums.ts`, `src/shared/types.ts`, `src/shared/schemas/*` baseline
 - `src/lib/api` envelope and `withAuth` / `withBusinessOwner` / `parseBody`
 - `src/lib/ai` Claude wrapper with `generateStructured()` and `MOCK_AI` fixtures
-- Seed runner and the base fixture set (15 users, 3 businesses, 6 events, 2 groups)
+- Seed runner and the base fixture set (16 users, 3 businesses, 6 events, 2 groups)
 - App shell: responsive layout, consumer nav (Discover, Match, Groups, Events, Agent, Activity), business nav (Dashboard, Proposals, Events, Insights), auth pages
 - `.env.example`, Vercel project, hosted Supabase project, `README` quick start
 - Observability: structured server logging (`src/lib/log.ts`) that redacts PII fields
@@ -160,7 +160,7 @@ export function NotificationBell()
 Landed on day one with the cross-workstream types (full definitions in owning specs, baseline shapes here so everything compiles):
 
 ```ts
-export type SharablePreferences = { userId: string; interests: string[]; availabilitySlots: AvailabilitySlot[]; socialGoals: SocialGoal[]; groupSizePref: GroupSizePref; budgetMin: number | null; budgetMax: number | null; travelRadiusKm: number; activityPrefs: string[]; coarseLat: number | null; coarseLng: number | null; neighborhood: string | null };
+export type SharablePreferences = { userId: string; interests: string[]; interestCategories: EventCategory[]; availabilitySlots: AvailabilitySlot[]; socialGoals: SocialGoal[]; groupSizePref: GroupSizePref | null; budgetMin: number | null; budgetMax: number | null; travelRadiusKm: number; activityPrefs: string[]; coarseLat: number | null; coarseLng: number | null; neighborhood: string | null };
 export type CompatibilityResult = { score: number; breakdown: { interests: number; availability: number; social: number; location: number; budget: number }; sharedInterests: string[]; sharedSlots: AvailabilitySlot[]; hardFilterFailed: null | 'distance' | 'blocked' | 'not_discoverable' };
 export type VenueCriteria = { category: EventCategory; cohortSize: number; slot: AvailabilitySlot; centerLat: number; centerLng: number; radiusKm: number; budgetMax: number | null };
 export type BusinessMatch = { businessId: string; name: string; score: number; reasons: string[] };
