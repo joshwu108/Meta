@@ -1,5 +1,5 @@
 -- Workstream 06: RSVPs, post-event signals, follow-up suggestions, bookmarks.
--- Depends on 0100 (profiles, set_updated_at) and 0500/0501 (events, transition_event_status).
+-- Depends on 0100 (profiles, set_updated_at) and 0500 (events and its status guard).
 -- 03's tables are optional at apply time.
 
 create table rsvps (
@@ -89,6 +89,32 @@ create policy followup_parties on follow_up_suggestions for select using (auth.u
 create policy bookmarks_self on bookmarks for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 -- rsvp inserts/updates go through the functions below (security definer) so capacity is enforced atomically
 
+-- 06 owns published <-> full (README §2). 05's transition_event_status() trusts only the venue
+-- owner or the service role, and RSVPs come from attendees, so capacity flips go through this
+-- helper instead. It derives the status from the confirmed count, so no caller can pick the outcome.
+create or replace function sync_event_capacity_status(p_event_id uuid)
+returns text language plpgsql security definer set search_path = public as $$
+declare v_status text; v_capacity int; v_confirmed int; v_target text;
+begin
+  select status, capacity into v_status, v_capacity from events where id = p_event_id;
+  if v_status is null or v_status not in ('published', 'full') then return v_status; end if;
+  select count(*) into v_confirmed from rsvps where event_id = p_event_id and status = 'confirmed';
+  v_target := case when v_confirmed >= v_capacity then 'full' else 'published' end;
+  if v_target <> v_status then
+    perform set_config('commonground.status_rpc', 'on', true);   -- 05's status guard flag
+    update events set status = v_target where id = p_event_id;
+    perform set_config('commonground.status_rpc', '', true);
+  end if;
+  return v_target;
+end $$;
+revoke all on function sync_event_capacity_status(uuid) from public;
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    revoke all on function sync_event_capacity_status(uuid) from anon, authenticated;
+  end if;
+end $$;
+
 -- Capacity-safe RSVP. p_allow_waitlist = false (P0) raises CAPACITY_FULL instead of inserting a waitlisted row.
 create or replace function rsvp_event(
   p_event_id uuid, p_share_attendees boolean, p_share_business boolean, p_allow_waitlist boolean default false
@@ -117,10 +143,7 @@ begin
       event_version_seen = excluded.event_version_seen
     where rsvps.status = 'cancelled';
   if not found then raise exception 'ALREADY_RSVPED'; end if;
-  -- Status changes go through 05's transition_event_status() (its guard rejects direct UPDATEs).
-  if v_status = 'confirmed' and v_confirmed + 1 >= v_event.capacity and v_event.status = 'published' then
-    perform transition_event_status(p_event_id, 'full');
-  end if;
+  if v_status = 'confirmed' then perform sync_event_capacity_status(p_event_id); end if;
   return query select v_status, (select e.status from events e where e.id = p_event_id);
 end $$;
 
@@ -145,10 +168,7 @@ begin
       and (select count(*) from rsvps c where c.event_id = p_event_id and c.status = 'confirmed')
           < (select e.capacity from events e where e.id = p_event_id)
     returning user_id into v_promoted;
-  if exists (select 1 from events e where e.id = p_event_id and e.status = 'full'
-             and (select count(*) from rsvps r where r.event_id = e.id and r.status = 'confirmed') < e.capacity) then
-    perform transition_event_status(p_event_id, 'published');
-  end if;
+  perform sync_event_capacity_status(p_event_id);
   return query select true, v_promoted, (select e.status from events e where e.id = p_event_id);
 end $$;
 
