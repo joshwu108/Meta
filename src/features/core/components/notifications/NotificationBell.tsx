@@ -1,7 +1,7 @@
 'use client';
 import { Bell, BellOff } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ApiResponse } from '@/lib/api/envelope';
+import { apiGet, apiPatch } from '@/lib/api/client';
 import type { NotificationRow } from '@/shared/schemas/notification';
 import { cn } from '../ui/cn';
 import { EmptyState } from '../ui/EmptyState';
@@ -19,11 +19,9 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch('/api/notifications?limit=20', { cache: 'no-store' });
-      const body = (await res.json()) as ApiResponse<ListData>;
-      if (!body.ok) throw new Error(body.error.message);
-      setItems(body.data.items);
-      setUnread(body.data.unreadCount);
+      const data = await apiGet<ListData>('/api/notifications?limit=20', { cache: 'no-store' });
+      setItems(data.items);
+      setUnread(data.unreadCount);
       setError(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not load notifications');
@@ -49,10 +47,13 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
   }, [isOpen]);
 
   const markRead = useCallback(async (id: string) => {
-    const res = await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
-    const body = (await res.json()) as ApiResponse<NotificationRow>;
-    if (!body.ok) return;
-    setItems((current) => current?.map((item) => (item.id === id ? body.data : item)) ?? null);
+    let updated: NotificationRow;
+    try {
+      updated = await apiPatch<NotificationRow>(`/api/notifications/${id}/read`);
+    } catch {
+      return;
+    }
+    setItems((current) => current?.map((item) => (item.id === id ? updated : item)) ?? null);
     setUnread((current) => Math.max(0, current - 1));
   }, []);
 
