@@ -26,6 +26,8 @@ export type MatchScreenProps = {
   connected: ConnectionItem[];
   filters: MatchFilterState;
   initialTab: Tab;
+  /** Deep link from an agent suggestion card (`/match?focus=<userId>`): shown first. */
+  focusId?: string;
 };
 
 const TAB_LABELS: Record<Tab, string> = {
@@ -178,10 +180,15 @@ export function MatchScreen({
   connected,
   filters,
   initialTab,
+  focusId,
 }: MatchScreenProps) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const a = useMatchActions();
-  const visible = matches.filter((match) => !a.hidden.has(match.user.id));
+  const unhidden = matches.filter((match) => !a.hidden.has(match.user.id));
+  const visible = focusId
+    ? [...unhidden.filter((m) => m.user.id === focusId), ...unhidden.filter((m) => m.user.id !== focusId)]
+    : unhidden;
+  const isFocused = Boolean(focusId) && visible[0]?.user.id === focusId;
   const actionsFor = (match: MatchCard) => {
     const person = { id: match.user.id, displayName: match.user.displayName };
     return (
@@ -247,6 +254,7 @@ export function MatchScreen({
                       match={match}
                       variant={index === 0 ? 'lead' : 'compact'}
                       actions={actionsFor(match)}
+                      leadLabel={isFocused ? 'Suggested by your agent' : undefined}
                     />
                   </li>
                 ))}

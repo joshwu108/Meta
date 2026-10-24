@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/features/core';
 import { getMatchesForViewer, listConnections, type MatchCard } from '@/features/matching';
 import { MatchScreen, type MatchTab } from '@/features/matching/components/MatchScreen';
 import { createServerClient } from '@/lib/supabase/server';
+import { uuidSchema } from '@/shared/schemas/common';
 import { matchesQuerySchema, type MatchesQuery } from '@/shared/schemas/social';
 
 export const metadata = { title: 'Match' };
@@ -47,6 +48,7 @@ export default async function MatchPage({ searchParams }: { searchParams: Search
       connected={connections.filter((item) => item.status === 'accepted')}
       filters={{ interest: query.interest, goal: query.goal, interestOptions: interestOptions((unfiltered ?? result).matches) }}
       initialTab={TABS.find((tab) => tab === first(params.tab)) ?? 'recommended'}
+      focusId={uuidSchema.safeParse(first(params.focus)).data}
     />
   );
 }

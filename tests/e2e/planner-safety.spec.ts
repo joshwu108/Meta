@@ -57,3 +57,13 @@ test('Block and Report from a match card', async ({ page }) => {
   await expect(page.getByRole('list', { name: 'Recommended people' }).getByRole('article').first()).toBeVisible();
   await expect(page.getByRole('article', { name: /^Yuki Tanaka/ })).toHaveCount(0);
 });
+
+test('an agent deep link (/match?focus=) shows that person as the lead card', async ({ page }) => {
+  test.setTimeout(60_000);
+  const { data } = await admin().auth.admin.listUsers({ perPage: 200 });
+  const ana = data.users.find((u) => u.email === 'ana@commonground.test')!;
+  await login(page, NEW_USER.email);
+  await page.goto(`/match?focus=${ana.id}`);
+  const lead = page.getByRole('list', { name: 'Recommended people' }).getByRole('article').first();
+  await expect(lead).toHaveAccessibleName(/^Suggested by your agent: Ana Souza/);
+});

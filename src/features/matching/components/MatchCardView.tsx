@@ -60,10 +60,10 @@ function Place({ neighborhood }: { neighborhood: string | null }) {
 }
 
 /** The page's lead element: top match with bio, chips, explanation and the breakdown open. */
-function LeadMatch({ match, actions }: { match: MatchCard; actions: ReactNode }) {
+function LeadMatch({ match, actions, label }: { match: MatchCard; actions: ReactNode; label: string }) {
   return (
-    <Card as="article" className="flex flex-col gap-3 sm:p-5" aria-label={`Top match: ${match.user.displayName}, compatibility ${match.score}`}>
-      <p className="text-[length:var(--text-sm)] font-semibold text-brand">Top match</p>
+    <Card as="article" className="flex flex-col gap-3 sm:p-5" aria-label={`${label}: ${match.user.displayName}, compatibility ${match.score}`}>
+      <p className="text-[length:var(--text-sm)] font-semibold text-brand">{label}</p>
       <div className="flex items-start gap-3">
         <Avatar name={match.user.displayName} src={match.user.avatarUrl} size={56} />
         <div className="min-w-0 flex-1">
@@ -116,6 +116,16 @@ function CompactMatch({ match, actions }: { match: MatchCard; actions: ReactNode
 }
 
 /** One recommended person (Screen 3). Actions (Connect, overflow menu) come from the screen. */
-export function MatchCardView({ match, variant, actions }: { match: MatchCard; variant: 'lead' | 'compact'; actions: ReactNode }) {
-  return variant === 'lead' ? <LeadMatch match={match} actions={actions} /> : <CompactMatch match={match} actions={actions} />;
+export function MatchCardView({
+  match,
+  variant,
+  actions,
+  leadLabel = 'Top match',
+}: {
+  match: MatchCard;
+  variant: 'lead' | 'compact';
+  actions: ReactNode;
+  leadLabel?: string;
+}) {
+  return variant === 'lead' ? <LeadMatch match={match} actions={actions} label={leadLabel} /> : <CompactMatch match={match} actions={actions} />;
 }
