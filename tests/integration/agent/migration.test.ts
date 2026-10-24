@@ -12,7 +12,8 @@ beforeAll(async () => {
   await addUser(db, B);
 }, 30_000);
 
-const rows = async (sql: string, params: unknown[] = []) => (await db.query(sql, params)).rows;
+type Row = Record<string, unknown>;
+const rows = async (sql: string, params: unknown[] = []) => (await db.query<Row>(sql, params)).rows;
 
 describe("0200_agent.sql on PGlite", () => {
   it("applies on top of core and enables RLS on every agent table", async () => {
