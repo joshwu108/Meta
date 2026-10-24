@@ -102,6 +102,32 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 
 ## Decisions
 
+- **2026-10-24 — Merged workstream 01 (37 conflicts).** Main wins on every file 05 stubbed:
+  scaffold, `src/shared/enums.ts` and `types.ts`, `src/lib/api/*`, `src/lib/supabase/*`, the
+  UI primitives, `tokens.css`, the seed runner and all the configs. 05 kept its screens,
+  domain layer, migrations and tests, and moved onto the real contracts:
+  - **Routes** use 01's `withAuth` / `withBusinessOwner`, which return the handler directly
+    (no `route()` wrapper) and pass resolved `params`; dynamic ids are validated with
+    `uuidSchema` the way 01's own routes do.
+  - **`stubs.ts` is gone.** 01's `notify()` and `logAgentAction()` are real now. Their log
+    takes an `actor`, and the enum has no `business_owner`, so 05's actions are logged as
+    `planning_agent` — which is what spec §5 names for the publish path anyway.
+  - **`BusinessShell` is gone** in favour of 01's `AppShell`, which was rendering a second
+    `<main>` inside mine. `AppShell` reserves a `proposalsBadge` "supplied by workstream
+    05"; the `(business)` layout now supplies it from `countPendingProposals`.
+  - **The dev-only sign-in route is gone.** `/login` exists, so the e2e suite signs in
+    through the real page with 01's `login()` helper and calls their `reseed()` between
+    specs — which also retires the note about leftover events before a demo.
+  - **Seed**: 01's runner and `loaders/` stay; `businesses.json` keeps their base fields and
+    gains optional `hours` and `capabilities`, and `loaders/domain.ts` uses them when
+    present. 05's `business-seed.ts` was deleted.
+  - **Form controls**: 05 uses 01's `Input` (it carries its own label, hint and error, so
+    05's `Field` wrapper went away); the textarea, select and link-button 01 does not ship
+    live in `features/business/components/form.tsx`.
+  - `EventDraft` and the money helpers moved out of `EventFieldset.tsx` into a plain
+    `event-draft.ts`, because the Scene 4 payload test runs in Node and must not pull a
+    component — and with it the whole UI barrel's JSX — into its graph.
+
 - **2026-10-24 — Built the workspace scaffold locally.** `main` carries only `specs/` and
   `.claude/`; workstream 01's Next.js scaffold has not landed, and nothing (not even
   `vitest`) can run without one. Added the minimum needed to build and test: `package.json`,
@@ -252,6 +278,14 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 19:20` — **01 merged; integrated it (37 conflicts) and everything is green
+  again.** Took main's version of every shared file and adapted 05 to the real contracts;
+  the whole list is under Decisions. Net effect: 05 got smaller — the shell, the sign-in
+  route, the notify and agent-log stubs, the seed runner and the `Field` wrapper all
+  deleted in favour of 01's. **326 unit, 29 integration (9 skipped) and 29 e2e (3 skipped)
+  tests pass** on a fresh `db reset` + `db:seed` with 0100/0500/0501 applied together;
+  typecheck, lint and `next build` clean. The skips are all Scene 4, still waiting on 04's
+  `event_proposals`. Next: watch main for 04.
 - `2026-10-24 18:35` — **spec re-read found a missing feature; shipped it.** Screen 5 in
   spec §7 asks for "actions (edit, publish, cancel)" on each events-table row and only edit
   was there — publish and cancel were buried in the editor. Rows now publish in place and
@@ -265,6 +299,7 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
   `eslint` and `next build` clean.
   Note for the demo: the E2E leaves its events behind, so run
   `npx supabase db reset && pnpm db:seed` before presenting.
+  *(Superseded 19:20: the suite now calls 01's `reseed()` between specs.)*
 - `2026-10-24 18:05` — **ran the full clean-state check for the first time; it found a bug
   that would have broken the demo.** `db reset` → `db:seed` → `typecheck` → `lint` →
   **259 unit + integration tests** → **24 E2E**, all green on a freshly reset database.
