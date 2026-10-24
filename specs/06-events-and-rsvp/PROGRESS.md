@@ -117,6 +117,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 16:48 PT: main unchanged; other branches unchanged since last read. Added an AC1 regression test on the real fixtures (01's six seeded events, 05's pottery night at $25, 02's Scene 1 preferences): the pottery night leads by at least 5 points on every demo weekday (148 tests). Waiting on main.
 - 2026-10-24 16:35 PT: seed attendees and E2E user aligned with ws/01-core's users.json; asked 01 for jordan@ (141 tests). Never-idle list is exhausted until dependencies land on main.
 - 2026-10-24 16:31 PT: 0601 owner-only RSVP reads for 05's attendee list and counts (141 tests). Next: wait for main; swap stubs as dependencies land.
 - 2026-10-24 16:27 PT: prepared for 01's merge: Postgres suites moved to tests/db, per-file server-only mocks, ui stand-in props match 01's primitives (139 tests, also green under a 01-shaped vitest config). Next: wait for 01–05 to land on main.
