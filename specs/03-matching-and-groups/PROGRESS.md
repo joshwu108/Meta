@@ -97,6 +97,9 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 2026-10-24: P1 messaging adds `0302_direct_messages.sql` (`direct_messages`, RLS: both parties of an accepted connection read and write, so a block hides the thread), `GET/POST /api/connections/:id/messages` (`after` for polling) and a Connections tab on `/match` whose chat polls every 5 s. No notification type exists for messages, so none is sent.
 
+- 2026-10-24: The candidate prefilter runs on radius in SQL and caps at 500 but does not prefilter by shared category in SQL (spec §12 risk mitigation): that would mean reading `user_preferences` outside 02's consent boundary. Categories are compared after the consent-gated batch read.
+- 2026-10-24: `/match`, `/groups` and `/groups/:id` have route `loading.tsx` skeletons (explanations can take a moment with the live model) and `error.tsx` boundaries with a retry. Tab strips scroll sideways at narrow widths.
+
 ## Needs from others
 
 - Integrator: merge ws/01-core to main first. This branch carries byte-identical copies of 01's files and of 02's `0200_agent.sql`; after 01 lands, regenerate `src/lib/supabase/database.types.ts` on main (`pnpm db:types`) since every workstream regenerates it.
@@ -109,10 +112,13 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 04 (P1 group proposals): the group page's "Request venue" posts `{ source: 'group', groupId, planId, suggestionIndex }` to `POST /api/ai/generate-opportunities` once a `new_activity` that needs a venue has ≥ 50% of active members' votes. 03 can export the suggestion plus aggregates (category, slot, group size, budget envelope, neighborhood, no member ids) for 04 to read; say which shape you want.
 
+- 01: at 320px the consumer `TopBar` is 27px wider than the viewport on every page (theme toggle, bell, avatar and sign-out next to the wordmark and search), so pages scroll sideways (design-system §3: no horizontal scroll at 320px). 03's own content fits; this one is in `src/features/core/components/app-shell/TopBar.tsx`.
+
 ## Blocked
 
 ## Log
 
+- 2026-10-24 17:17 CDT · clean-state check green (db reset → seed → 138 unit, 96 integration, 16 E2E, typecheck, lint). Landed loading/error states, 320px tab overflow fix, icon and menu-focus polish, group edge-case tests. Next: keep syncing main for 01/02/06 landings; swap stubs when they arrive.
 - 2026-10-24 17:12 CDT · landed: `getGroupVenueRequest` export for 04, contract tests for every 03 export, P1 direct messages (migration, routes, Connections tab, polled chat) with integration and E2E tests. Coverage on 03 server code: 92% statements, 83% branches. Next: clean-state check, design checklist pass, edge cases.
 - 2026-10-24 17:05 CDT · landed: `/match` (lead card, compact rows, filters, connect/block/report sheets, requests tab), `/groups`, `/groups/:id` (planner lead, votes, venue request, events, members/invite/transfer/leave), `/groups/discover`; AC1 integration test; Scene 2 Playwright test. All P0 items ticked. Totals: 138 unit, 78 integration, 15 E2E green (earlier log line's "112" should have read 120). Next: P1 messaging, 04 venue-request export, coverage, clean-state check.
 - 2026-10-24 16:45 CDT · landed: matches service + `GET /api/matches` with grounded explanations; connection, block and report routes; group services, invitations, removal, transfer, leave/archive; group planner (consent-gated aggregates, name scrubbing, validation, fallbacks) and votes; matching/groups contracts for 06. 112 unit+integration tests across 03 (63 unit, 57 integration incl. seed). Next: `/match`, `/groups`, `/groups/:id` UI, then the Scene 2 E2E.
