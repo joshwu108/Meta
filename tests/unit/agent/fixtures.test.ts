@@ -20,7 +20,8 @@ const SCHEMAS: Record<(typeof AGENT_PROMPTS)[number], ZodSchema> = {
 
 function outputs(prompt: string): unknown[] {
   const raw = JSON.parse(readFileSync(path.join("src/lib/ai/fixtures", `${prompt}.json`), "utf8"));
-  return Array.isArray(raw.cases) ? [...raw.cases.map((c: { output: unknown }) => c.output), raw.default] : [raw];
+  const { cases, ...fallback } = raw;
+  return [fallback, ...(Array.isArray(cases) ? cases.map((c: { output: unknown }) => c.output) : [])];
 }
 
 describe("MOCK_AI fixtures", () => {
@@ -37,12 +38,19 @@ describe("MOCK_AI fixtures", () => {
     expect(out.interests[0].tag).toBe("board-games");
   });
 
-  it("falls back to the default output", async () => {
+  it("returns the top-level default (Scene 1) when no case matches", async () => {
     const out = await generateStructured({
       prompt: "agent.extract_preferences",
-      input: { transcript: [{ role: "user", content: "hello" }] },
+      input: { transcript: [{ role: "user", content: "something else entirely" }] },
       schema: ExtractedPreferencesSchema,
     });
-    expect(out.followUpQuestion).not.toBeNull();
+    expect(out.interests.map((i) => i.tag)).toEqual(["pottery", "coffee"]);
+  });
+
+  it("keeps the top level valid for 01's plain loader (cases key is ignored)", () => {
+    for (const prompt of AGENT_PROMPTS) {
+      const raw = JSON.parse(readFileSync(path.join("src/lib/ai/fixtures", `${prompt}.json`), "utf8"));
+      expect(SCHEMAS[prompt].safeParse(raw).success).toBe(true);
+    }
   });
 });

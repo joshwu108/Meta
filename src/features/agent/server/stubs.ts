@@ -166,18 +166,17 @@ export async function generateStructured<T>(opts: {
 }
 
 /**
- * MOCK_AI fixture: `src/lib/ai/fixtures/<prompt>.json`. A fixture may be a single
- * response or `{ "cases": [{ "match": "<substring of input JSON>", "output": ... }], "default": ... }`.
+ * MOCK_AI fixture: `src/lib/ai/fixtures/<prompt>.json`. The top level is the default
+ * response (so 01's plain loader works unchanged); an optional `cases` array of
+ * `{ match: "<substring of input JSON>", output }` selects a different response.
  */
 async function loadFixture(prompt: string, input: unknown): Promise<unknown> {
   const file = path.join(process.cwd(), "src/lib/ai/fixtures", `${prompt}.json`);
-  const fixture = JSON.parse(await readFile(file, "utf8")) as Record<string, unknown>;
-  if (!Array.isArray(fixture.cases)) return fixture;
+  const { cases, ...fallback } = JSON.parse(await readFile(file, "utf8")) as Record<string, unknown>;
+  if (!Array.isArray(cases)) return fallback;
   const haystack = JSON.stringify(input).toLowerCase();
-  const hit = (fixture.cases as { match: string; output: unknown }[]).find((c) =>
-    haystack.includes(c.match.toLowerCase()),
-  );
-  return hit ? hit.output : fixture.default;
+  const hit = (cases as { match: string; output: unknown }[]).find((c) => haystack.includes(c.match.toLowerCase()));
+  return hit ? hit.output : fallback;
 }
 
 function env(name: string): string {

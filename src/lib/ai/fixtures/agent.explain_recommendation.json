@@ -1,15 +1,16 @@
 {
+  "explanation": "Fits the interests and times you shared with your agent.",
+  "highlights": [],
   "cases": [
     {
       "match": "pottery",
       "output": {
         "explanation": "You both love pottery and are free Thursday evenings.",
-        "highlights": ["pottery", "thu_eve"]
+        "highlights": [
+          "pottery",
+          "thu_eve"
+        ]
       }
     }
-  ],
-  "default": {
-    "explanation": "Fits the interests and times you shared with your agent.",
-    "highlights": []
-  }
+  ]
 }
