@@ -36,6 +36,8 @@ export default defineConfig({
           name: 'db',
           include: ['tests/db/**/*.test.ts'],
           environment: 'node',
+          setupFiles: ['tests/db/support/setup.ts'],
+          globalSetup: ['tests/db/support/global-setup.ts'],
           env: { TEST_DATABASE_URL: process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' },
           testTimeout: 30_000,
           hookTimeout: 60_000,
@@ -46,7 +48,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      include: ['src/features/core/server/**', 'src/lib/**'],
+      include: ['src/features/*/server/**', 'src/lib/**'],
       exclude: ['src/lib/supabase/database.types.ts', 'src/lib/ai/fixtures/**'],
       thresholds: { lines: 80, functions: 80, branches: 70, statements: 80 },
     },
