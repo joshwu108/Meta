@@ -29,9 +29,10 @@ export async function getSharablePreferences(
   return {
     userId,
     interests: prefs.interests ?? [],
+    interestCategories: prefs.interest_categories ?? [],
     availabilitySlots: prefs.availability_slots ?? [],
     socialGoals: prefs.social_goals ?? [],
-    groupSizePref: prefs.group_size_pref ?? "small",
+    groupSizePref: prefs.group_size_pref ?? null,
     budgetMin: prefs.budget_min_cents ?? null,
     budgetMax: prefs.budget_max_cents ?? null,
     travelRadiusKm: Number(prefs.travel_radius_km ?? 5),

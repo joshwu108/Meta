@@ -88,9 +88,12 @@ describe("scoreEvent golden cases", () => {
     expect(scoreEvent(viewer, { ...pottery, capacity: 10 }).breakdown.social).toBe(3.5);
   });
 
-  it("derives categories from tags when 02 does not send interestCategories", () => {
-    const { interestCategories: _omit, ...legacy } = viewer;
-    expect(scoreEvent(legacy, pottery).breakdown.interest).toBe(40);
+  it("derives categories from tags when 02 sends none", () => {
+    expect(scoreEvent({ ...viewer, interestCategories: [] }, pottery).breakdown.interest).toBe(40);
+  });
+
+  it("scores group size as neutral when the viewer stated no preference", () => {
+    expect(scoreEvent({ ...viewer, groupSizePref: null }, pottery).breakdown.social).toBe(3.5);
   });
 });
 

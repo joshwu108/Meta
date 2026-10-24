@@ -16,8 +16,8 @@ const UNKNOWN = 0.5;
 
 const SIZE_ORDER: readonly GroupSizePref[] = ["one_on_one", "small", "medium", "large"];
 
-/** 02 may extend SharablePreferences with categories; older payloads fall back to tag mapping. */
-export type ViewerPreferences = SharablePreferences & { interestCategories?: EventCategory[] };
+/** The viewer's consented preferences (02); categories fall back to tag mapping when empty. */
+export type ViewerPreferences = SharablePreferences;
 
 export type CandidateEvent = {
   id: string;
@@ -66,7 +66,9 @@ function mentionsAny(text: string, tags: readonly string[]): boolean {
 }
 
 function interestFit(prefs: ViewerPreferences, event: CandidateEvent): number {
-  const categories = prefs.interestCategories ?? categoriesForInterests(prefs.interests);
+  // ws/02-agent does not send interestCategories yet (01's type now requires it); treat absent as empty.
+  const sent = prefs.interestCategories ?? [];
+  const categories = sent.length > 0 ? sent : categoriesForInterests(prefs.interests);
   const categoryMatch = categories.includes(event.category) ? 1 : 0;
   const tagMatch = mentionsAny(`${event.title} ${event.description}`, prefs.interests) ? TAG_BONUS : 0;
   return (categoryMatch + tagMatch) / (1 + TAG_BONUS);
@@ -83,10 +85,15 @@ function proximityFit(prefs: ViewerPreferences, distanceKm: number | null): numb
   return Math.max(0, 1 - distanceKm / prefs.travelRadiusKm);
 }
 
+function sizeFit(pref: GroupSizePref | null, capacity: number): number {
+  if (pref === null) return SIZE_ADJACENT; // no stated preference: neutral, neither match nor miss
+  const gap = Math.abs(SIZE_ORDER.indexOf(capacityBucket(capacity)) - SIZE_ORDER.indexOf(pref));
+  return gap === 0 ? SIZE_MATCH : gap === 1 ? SIZE_ADJACENT : 0;
+}
+
 function socialFit(prefs: ViewerPreferences, event: CandidateEvent): number {
-  const gap = Math.abs(SIZE_ORDER.indexOf(capacityBucket(event.capacity)) - SIZE_ORDER.indexOf(prefs.groupSizePref));
-  const sizeFit = gap === 0 ? SIZE_MATCH : gap === 1 ? SIZE_ADJACENT : 0;
-  return Math.min(1, sizeFit + (event.friendsGoing > 0 ? FRIENDS_BONUS : 0));
+  const fit = sizeFit(prefs.groupSizePref, event.capacity);
+  return Math.min(1, fit + (event.friendsGoing > 0 ? FRIENDS_BONUS : 0));
 }
 
 /** Deterministic 0–100 score with a per-factor breakdown in points (spec §5). */

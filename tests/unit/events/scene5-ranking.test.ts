@@ -26,6 +26,7 @@ const SEEDED = [
 const SCENE1: ViewerPreferences = {
   userId: "demo.new",
   interests: ["pottery", "coffee"],
+  interestCategories: ["creative", "food_drink"],
   availabilitySlots: ["thu_eve"],
   socialGoals: ["make_friends", "explore_city"],
   groupSizePref: "small",
