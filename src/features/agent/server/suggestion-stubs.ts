@@ -17,6 +17,7 @@ const person = (id: string, displayName: string, neighborhood: string, interests
   preferences: {
     userId: id,
     interests,
+    interestCategories: ["creative", "food_drink"],
     availabilitySlots: ["thu_eve"],
     socialGoals: ["make_friends"],
     groupSizePref: "small",

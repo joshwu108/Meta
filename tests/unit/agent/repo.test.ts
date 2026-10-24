@@ -14,13 +14,13 @@ describe("repo: preferences", () => {
     const sb = createFakeSupabase({ user_preferences: [{ data: prefRow, error: null }] });
     const prefs = await repo.getPreferences(sb.client, "u1");
     expect(prefs).toMatchObject({ interests: ["pottery"], travelRadiusKm: 5, fieldSources: { interests: "ai_inferred" } });
-    expect(op(sb.calls[0], "eq")).toEqual(["user_id", "u1"]);
+    expect(op(sb.calls[0]!, "eq")).toEqual(["user_id", "u1"]);
   });
 
   it("upserts snake_case columns with field sources", async () => {
     const sb = createFakeSupabase({ user_preferences: [{ data: prefRow, error: null }] });
     await repo.savePreferences(sb.client, "u1", { ...EMPTY_PREFERENCES, interests: ["pottery"], fieldSources: { interests: "user_set" } });
-    const [row] = op(sb.calls[0], "upsert") as [Record<string, unknown>];
+    const [row] = op(sb.calls[0]!, "upsert") as [Record<string, unknown>];
     expect(row).toMatchObject({ user_id: "u1", interests: ["pottery"], availability_slots: [], field_sources: { interests: "user_set" } });
     expect(row).not.toHaveProperty("fieldSources");
   });
@@ -37,7 +37,7 @@ describe("repo: agent profile and conversations", () => {
     expect(await repo.getAgentProfile(sb.client, "u1")).toEqual({ summary: null, consent: DEFAULT_CONSENT });
     const saved = await repo.saveAgentProfile(sb.client, "u1", { consent: { ...DEFAULT_CONSENT, allow_matching: true } });
     expect(saved.consent.allow_matching).toBe(true);
-    const [row] = op(sb.calls[1], "upsert") as [Record<string, unknown>];
+    const [row] = op(sb.calls[1]!, "upsert") as [Record<string, unknown>];
     expect(row).toHaveProperty("consent_updated_at");
   });
 
@@ -51,7 +51,7 @@ describe("repo: agent profile and conversations", () => {
     });
     expect(await repo.resolveConversation(sb.client, "u1", "chat")).toBe("c1");
     expect(await repo.resolveConversation(sb.client, "u1", "chat")).toBe("c2");
-    expect(op(sb.calls[2], "insert")).toEqual([{ user_id: "u1", kind: "chat" }]);
+    expect(op(sb.calls[2]!, "insert")).toEqual([{ user_id: "u1", kind: "chat" }]);
     await expect(repo.resolveConversation(sb.client, "u1", "chat", "other")).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
@@ -67,16 +67,16 @@ describe("repo: agent profile and conversations", () => {
       { role: "user", content: "x", suggestions: null },
       { role: "assistant", content: "y", suggestions: null },
     ]);
-    const [rows] = op(sb.calls[1], "insert") as [{ created_at: string }[]];
-    expect(rows[0].created_at < rows[1].created_at).toBe(true);
+    const [rows] = op(sb.calls[1]!, "insert") as [{ created_at: string }[]];
+    expect(rows[0]!.created_at < rows[1]!.created_at).toBe(true);
   });
 
   it("updates the profile and lists the caller's log", async () => {
     const sb = createFakeSupabase({ profiles: [{ data: null, error: null }], agent_action_log: [{ data: [], error: null }] });
     await repo.updateProfile(sb.client, "u1", { neighborhood: "Mission" });
-    expect(op(sb.calls[0], "eq")).toEqual(["id", "u1"]);
+    expect(op(sb.calls[0]!, "eq")).toEqual(["id", "u1"]);
     expect(await repo.listAgentLog(sb.client, "u1", 10)).toEqual([]);
-    expect(op(sb.calls[1], "limit")).toEqual([10]);
+    expect(op(sb.calls[1]!, "limit")).toEqual([10]);
   });
 });
 
@@ -88,15 +88,15 @@ describe("repo: service-role sharing reads", () => {
     });
     const [src] = await repo.adminLoadSources(admin.client, ["u1"]);
     expect(src).toMatchObject({ userId: "u1", isDiscoverable: true, coarseLat: 37.76, consent: { allow_matching: true, allow_demand_aggregation: false } });
-    expect(src.preferences).not.toHaveProperty("fieldSources");
+    expect(src!.preferences).not.toHaveProperty("fieldSources");
   });
 
   it("finds recent share logs and writes one row per user", async () => {
     const admin = createFakeSupabase({ agent_action_log: [{ data: [{ user_id: "a" }], error: null }, { data: null, error: null }] });
     expect(await repo.adminRecentShareLogs(admin.client, ["a", "b"], "matching")).toEqual(new Set(["a"]));
-    expect(op(admin.calls[0], "contains")).toEqual(["permissions_used", ["matching"]]);
+    expect(op(admin.calls[0]!, "contains")).toEqual(["permissions_used", ["matching"]]);
     await repo.adminWriteShareLogs(admin.client, ["b"], "matching");
-    const [rows] = op(admin.calls[1], "insert") as [Record<string, unknown>[]];
+    const [rows] = op(admin.calls[1]!, "insert") as [Record<string, unknown>[]];
     expect(rows).toEqual([expect.objectContaining({ user_id: "b", actor: "coordination", action: "share_preferences", permissions_used: ["matching"] })]);
   });
 

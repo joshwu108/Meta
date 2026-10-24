@@ -31,8 +31,8 @@ describe("AC3 consent boundary on the seed data", () => {
   it("matching drops users with consent off or who are not discoverable", async () => {
     const hidden = sources.map((s, i) => (i === 0 ? { ...s, isDiscoverable: false } : i === 1 ? { ...s, consent: { ...s.consent, allow_matching: false } } : s));
     const shared = await shareBatch({ ...deps, loadSources: async () => hidden }, everyone, "matching");
-    expect(shared.has(everyone[0])).toBe(false);
-    expect(shared.has(everyone[1])).toBe(false);
+    expect(shared.has(everyone[0]!)).toBe(false);
+    expect(shared.has(everyone[1]!)).toBe(false);
     expect(shared.size).toBe(everyone.length - 2);
   });
 

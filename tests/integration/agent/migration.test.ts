@@ -31,8 +31,8 @@ describe("0200_agent.sql on PGlite", () => {
   it("defaults consent to everything off", async () => {
     await asUser(db, A, () => db.query("insert into agent_profiles (user_id) values ($1)", [A]));
     const [row] = await rows("select consent from agent_profiles where user_id = $1", [A]);
-    expect(Object.values(row.consent as Record<string, boolean>).every((v) => v === false)).toBe(true);
-    expect(Object.keys(row.consent as object)).toHaveLength(5);
+    expect(Object.values(row!.consent as Record<string, boolean>).every((v) => v === false)).toBe(true);
+    expect(Object.keys(row!.consent as object)).toHaveLength(5);
   });
 
   it("lets a user write their own preferences but not someone else's", async () => {
@@ -47,14 +47,14 @@ describe("0200_agent.sql on PGlite", () => {
     expect(seen.rows).toEqual([]);
     const updated = await asUser(db, B, () => db.query("update user_preferences set interests = '{x}' where user_id = $1", [A]));
     expect(updated.affectedRows).toBe(0);
-    expect((await rows("select interests from user_preferences where user_id = $1", [A]))[0].interests).toEqual(["pottery"]);
+    expect((await rows("select interests from user_preferences where user_id = $1", [A]))[0]!.interests).toEqual(["pottery"]);
   });
 
   it("keeps conversations and messages private, including inserts into a foreign conversation", async () => {
     const conv = await asUser(db, A, () =>
       db.query<{ id: string }>("insert into agent_conversations (user_id, kind) values ($1, 'onboarding') returning id", [A]),
     );
-    const convId = conv.rows[0].id;
+    const convId = conv.rows[0]!.id;
     await asUser(db, A, () => db.query("insert into agent_messages (conversation_id, role, content) values ($1, 'user', 'secret')", [convId]));
     expect((await asUser(db, B, () => db.query("select * from agent_messages"))).rows).toEqual([]);
     expect((await asUser(db, B, () => db.query("select * from agent_conversations"))).rows).toEqual([]);
@@ -78,7 +78,7 @@ describe("0200_agent.sql on PGlite", () => {
     await new Promise((r) => setTimeout(r, 5));
     await db.query("update user_preferences set interests = '{pottery,coffee}' where user_id = $1", [A]);
     const [after] = await rows("select updated_at from user_preferences where user_id = $1", [A]);
-    expect((after.updated_at as Date).getTime()).toBeGreaterThan((before.updated_at as Date).getTime());
+    expect((after!.updated_at as Date).getTime()).toBeGreaterThan((before!.updated_at as Date).getTime());
   });
 
   it("cascades deletes from the auth user", async () => {

@@ -7,9 +7,6 @@ export const CONSENT_FOR_PURPOSE: Record<SharingPurpose, ConsentKey> = {
   group_plan: "allow_group_planning",
 };
 
-/** Used when the user never stated a group size; the contract type is non-null. */
-export const DEFAULT_GROUP_SIZE = "small" as const;
-
 export type SharableSource = {
   userId: string;
   preferences: UserPreferences;
@@ -32,9 +29,10 @@ export function toSharable(src: SharableSource, purpose: SharingPurpose): Sharab
   return {
     userId: src.userId,
     interests: [...p.interests],
+    interestCategories: [...p.interestCategories],
     availabilitySlots: [...p.availabilitySlots],
     socialGoals: [...p.socialGoals],
-    groupSizePref: p.groupSizePref ?? DEFAULT_GROUP_SIZE,
+    groupSizePref: p.groupSizePref,
     budgetMin: p.budgetMinCents,
     budgetMax: p.budgetMaxCents,
     travelRadiusKm: p.travelRadiusKm,

@@ -3,7 +3,7 @@ import { resolveGroupSchedule } from "@/features/agent/server/group-schedule";
 import type { SharablePreferences } from "@/shared/types";
 
 const m = (userId: string, slots: SharablePreferences["availabilitySlots"], budgetMax: number | null = null): SharablePreferences => ({
-  userId, interests: [], availabilitySlots: slots, socialGoals: [], groupSizePref: "small", budgetMin: null, budgetMax,
+  userId, interests: [], interestCategories: [], availabilitySlots: slots, socialGoals: [], groupSizePref: "small", budgetMin: null, budgetMax,
   travelRadiusKm: 5, activityPrefs: [], coarseLat: null, coarseLng: null, neighborhood: null,
 });
 
@@ -18,7 +18,7 @@ describe("resolveGroupSchedule", () => {
     const out = resolveGroupSchedule([m("a", ["thu_eve"]), m("b", ["fri_eve", "thu_eve"]), m("c", ["fri_eve"])]);
     expect(out.unanimous).toBeNull();
     expect(out.options.map((o) => o.slot)).toEqual(["thu_eve", "fri_eve"]);
-    expect(out.options[0].missing).toEqual(["c"]);
+    expect(out.options[0]!.missing).toEqual(["c"]);
   });
 
   it("uses the lowest stated budget and ignores members without one", () => {

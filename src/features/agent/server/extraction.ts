@@ -115,7 +115,8 @@ export function nextOnboardingStep(
 export function recap(prefs: UserPreferences): string {
   const slotLabel = (s: string) => {
     const [d, p] = s.split("_");
-    const day = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" }[d];
+    const days: Record<string, string> = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
+    const day = days[d ?? ""] ?? s;
     return `${day} ${p === "eve" ? "evenings" : "daytime"}`;
   };
   const size = prefs.groupSizePref ? `${prefs.groupSizePref.replace(/_/g, " ")} groups` : null;

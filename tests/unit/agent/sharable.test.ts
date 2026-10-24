@@ -13,6 +13,7 @@ function source(overrides: Partial<SharableSource> = {}): SharableSource {
     preferences: {
       ...EMPTY_PREFERENCES,
       interests: ["pottery", "coffee"],
+      interestCategories: ["creative", "food_drink"],
       availabilitySlots: ["thu_eve"],
       groupSizePref: "small",
       dealbreakers: ["no-alcohol"],
@@ -61,6 +62,7 @@ describe("toSharable", () => {
     expect(toSharable(source(), "demand")).toEqual({
       userId: "u1",
       interests: ["pottery", "coffee"],
+      interestCategories: ["creative", "food_drink"],
       availabilitySlots: ["thu_eve"],
       socialGoals: [],
       groupSizePref: "small",
@@ -72,6 +74,12 @@ describe("toSharable", () => {
       coarseLng: -122.42,
       neighborhood: "Mission",
     });
+  });
+
+  it("shares an unstated group size as null instead of guessing (contract on main)", () => {
+    const src = source();
+    const shared = toSharable({ ...src, preferences: { ...src.preferences, groupSizePref: null } }, "matching");
+    expect(shared?.groupSizePref).toBeNull();
   });
 
   it("does not share array references with the source", () => {

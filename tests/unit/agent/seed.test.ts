@@ -50,9 +50,9 @@ describe("loadAgentPreferences", () => {
     const logs: string[] = [];
     const ids = new Map([["maya@commonground.test", "id-maya"], ["leo@commonground.test", "id-leo"]]);
     expect(await loadAgentPreferences({ admin: sb.client, usersByEmail: ids, log: (m) => logs.push(m) })).toBe(2);
-    const [prefs] = op(sb.calls[0], "upsert") as [{ user_id: string; field_sources: Record<string, string> }[]];
+    const [prefs] = op(sb.calls[0]!, "upsert") as [{ user_id: string; field_sources: Record<string, string> }[]];
     expect(prefs.map((r) => r.user_id)).toEqual(["id-maya", "id-leo"]);
-    expect(Object.values(prefs[0].field_sources).every((v) => v === "user_set")).toBe(true);
+    expect(Object.values(prefs[0]!.field_sources).every((v) => v === "user_set")).toBe(true);
     expect(logs.filter((l) => l.includes("skipping"))).toHaveLength(12);
   });
 
