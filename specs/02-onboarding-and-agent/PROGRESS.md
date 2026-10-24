@@ -71,8 +71,6 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 2026-10-24: `index.ts` also exports `getSharablePreferencesBatch(userIds, purpose)` for 03/04 pipelines (one query and one log insert per call).
 - 2026-10-24: Service logic is unit-tested against an in-memory repo (`tests/unit/agent/fake-repo.ts`) while Docker is unavailable; the DB-backed integration rows stay open.
 - 2026-10-24: Node 20.18.1 and pnpm 9.15.0 installed under ~/.local (no Homebrew on this machine).
-
-## Decisions (later)
 - 2026-10-24: Onboarding replies are returned whole, not streamed. MOCK_AI and structured tool output make streaming moot for the demo; extracted chips still appear as soon as each reply lands. Revisit if live latency is a problem.
 
 ## Needs from others
