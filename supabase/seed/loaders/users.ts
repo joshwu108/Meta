@@ -5,19 +5,19 @@ const PAGE = 200;
 
 /** Delete every auth user under the seed domain. Cascades to profiles and everything that references them. */
 export async function deleteSeedUsers(ctx: SeedContext): Promise<number> {
-  let removed = 0;
+  // Collect every target id first: deleting while paging shifts later users into earlier pages.
+  const targets: string[] = [];
   for (let page = 1; page < 50; page += 1) {
     const { data, error } = await ctx.admin.auth.admin.listUsers({ page, perPage: PAGE });
     if (error) throw new Error(`listUsers failed: ${error.message}`);
-    const targets = data.users.filter((user) => user.email?.endsWith(`@${SEED_DOMAIN}`));
-    for (const user of targets) {
-      const { error: deleteError } = await ctx.admin.auth.admin.deleteUser(user.id);
-      if (deleteError) throw new Error(`deleteUser(${user.id}) failed: ${deleteError.message}`);
-      removed += 1;
-    }
+    targets.push(...data.users.filter((user) => user.email?.endsWith(`@${SEED_DOMAIN}`)).map((user) => user.id));
     if (data.users.length < PAGE) break;
   }
-  return removed;
+  for (const id of targets) {
+    const { error } = await ctx.admin.auth.admin.deleteUser(id);
+    if (error) throw new Error(`deleteUser(${id}) failed: ${error.message}`);
+  }
+  return targets.length;
 }
 
 type NewUser = { email: string; display_name: string };
