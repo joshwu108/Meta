@@ -26,15 +26,15 @@ function Facts({ suggestion }: { suggestion: PlanSuggestion }) {
   return (
     <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[length:var(--text-sm)] text-text-2">
       <li className="inline-flex items-center gap-1">
-        <CalendarClock size={14} strokeWidth={1.75} aria-hidden /> {SLOT_PHRASES[suggestion.slot]}
+        <CalendarClock size={16} strokeWidth={1.75} aria-hidden /> {SLOT_PHRASES[suggestion.slot]}
       </li>
       {cost && (
         <li className="inline-flex items-center gap-1">
-          <Wallet size={14} strokeWidth={1.75} aria-hidden /> {suggestion.kind === 'existing_event' ? cost : `About ${cost}`}
+          <Wallet size={16} strokeWidth={1.75} aria-hidden /> {suggestion.kind === 'existing_event' ? cost : `About ${cost}`}
         </li>
       )}
       <li className="inline-flex items-center gap-1">
-        <MapPinned size={14} strokeWidth={1.75} aria-hidden /> {place}
+        <MapPinned size={16} strokeWidth={1.75} aria-hidden /> {place}
       </li>
     </ul>
   );

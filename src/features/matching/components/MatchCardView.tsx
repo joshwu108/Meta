@@ -26,7 +26,7 @@ function SharedChips({ match, max }: { match: MatchCard; max: number }) {
       {slots.map((slot) => (
         <li key={slot}>
           <Chip>
-            <CalendarClock size={14} strokeWidth={1.75} aria-hidden />
+            <CalendarClock size={16} strokeWidth={1.75} aria-hidden />
             {SLOT_LABELS[slot]}
           </Chip>
         </li>
@@ -53,7 +53,7 @@ function Place({ neighborhood }: { neighborhood: string | null }) {
   if (!neighborhood) return null;
   return (
     <span className="inline-flex items-center gap-1 text-[length:var(--text-sm)] text-text-2">
-      <MapPin size={14} strokeWidth={1.75} aria-hidden />
+      <MapPin size={16} strokeWidth={1.75} aria-hidden />
       {neighborhood}
     </span>
   );

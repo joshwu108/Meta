@@ -38,7 +38,7 @@ export function SafetyMenu({ person, onBlock, onReport }: { person: Person; onBl
       </button>
       {isOpen && (
         <div role="menu" className="rise-in absolute right-0 bottom-11 z-40 w-44 rounded-md bg-surface p-1 shadow-[var(--shadow-3)]">
-          <button role="menuitem" type="button" className={item} onClick={() => {
+          <button role="menuitem" type="button" autoFocus className={item} onClick={() => {
               setIsOpen(false);
               onBlock(person);
             }}>
