@@ -9,7 +9,9 @@ import { zodIssues } from './parse-body';
 
 /** Route params as Next.js 15 delivers them (a Promise in the second handler argument). */
 export type Params = Record<string, string>;
-type RouteContext = { params: Promise<Params> } | { params?: Params };
+export type RouteContext = { params: Promise<Params> };
+/** Context to pass when calling a wrapped handler outside Next (tests). */
+export const EMPTY_CONTEXT: RouteContext = { params: Promise.resolve({}) };
 
 export type AuthCtx = {
   user: User;
@@ -25,9 +27,8 @@ export type BusinessCtx = AuthCtx & { business: BusinessRow };
 
 type Handler<Ctx> = (ctx: Ctx, req: Request, params: Params) => Promise<Response>;
 
-async function resolveParams(context: RouteContext | undefined): Promise<Params> {
-  if (!context || !('params' in context) || context.params === undefined) return {};
-  return await context.params;
+async function resolveParams(context: RouteContext): Promise<Params> {
+  return (await context.params) ?? {};
 }
 
 /** Convert a thrown value into the error envelope. Unknown errors never leak their message. */
@@ -48,7 +49,7 @@ export function toErrorResponse(error: unknown, requestId: string): Response {
  * the envelope, and logs anything else under a request id.
  */
 export function withAuth(handler: Handler<AuthCtx>) {
-  return async (req: Request, context?: RouteContext): Promise<Response> => {
+  return async (req: Request, context: RouteContext): Promise<Response> => {
     const requestId = newRequestId();
     try {
       const supabase = await createServerClient();
@@ -99,7 +100,7 @@ async function loadOwnedBusiness(ctx: AuthCtx): Promise<BusinessRow | null> {
  * Use sparingly; mark the route public in a comment at the call site.
  */
 export function withPublic(handler: (req: Request, params: Params, requestId: string) => Promise<Response>) {
-  return async (req: Request, context?: RouteContext): Promise<Response> => {
+  return async (req: Request, context: RouteContext): Promise<Response> => {
     const requestId = newRequestId();
     try {
       return await handler(req, await resolveParams(context), requestId);

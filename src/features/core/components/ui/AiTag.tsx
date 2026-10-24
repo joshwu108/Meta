@@ -11,7 +11,7 @@ export function AiTag({ label = 'AI suggestion', className }: { label?: AiTagLab
   return (
     <span
       className={cn(
-        'ai-gradient-border inline-flex h-6 items-center gap-1 rounded-pill px-2 text-[length:var(--text-xs)] font-bold',
+        'ai-gradient-border inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-pill px-2 text-[length:var(--text-xs)] font-bold',
         'text-ai-ink',
         className,
       )}

@@ -6,7 +6,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createServerClient: vi.fn(async () => ({ auth: { getUser } })),
 }));
 
-const { ApiError, toErrorResponse, withAuth, withPublic } = await import('@/lib/api');
+const { ApiError, EMPTY_CONTEXT, toErrorResponse, withAuth, withPublic } = await import('@/lib/api');
 
 describe('withAuth', () => {
   beforeEach(() => getUser.mockReset());
@@ -14,7 +14,7 @@ describe('withAuth', () => {
   it('returns UNAUTHENTICATED when there is no session', async () => {
     getUser.mockResolvedValue({ data: { user: null }, error: null });
     const handler = withAuth(async () => new Response('never'));
-    const res = await handler(new Request('http://test/api/me'));
+    const res = await handler(new Request('http://test/api/me'), EMPTY_CONTEXT);
     expect(res.status).toBe(401);
     expect(await res.json()).toMatchObject({ ok: false, error: { code: 'UNAUTHENTICATED' } });
   });
@@ -33,7 +33,7 @@ describe('withAuth', () => {
     const handler = withAuth(async () => {
       throw new ApiError('NOT_FOUND', 'missing');
     });
-    const res = await handler(new Request('http://test/api'));
+    const res = await handler(new Request('http://test/api'), EMPTY_CONTEXT);
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ ok: false, error: { code: 'NOT_FOUND', message: 'missing' } });
   });
@@ -44,7 +44,7 @@ describe('withAuth', () => {
       z.object({ a: z.number() }).parse({ a: 'x' });
       return new Response();
     });
-    const res = await handler(new Request('http://test/api'));
+    const res = await handler(new Request('http://test/api'), EMPTY_CONTEXT);
     expect(res.status).toBe(400);
     expect(await res.json()).toMatchObject({ error: { code: 'VALIDATION', details: [{ path: 'a' }] } });
   });
@@ -54,7 +54,7 @@ describe('withAuth', () => {
     const handler = withAuth(async () => {
       throw new Error('secret database string');
     });
-    const res = await handler(new Request('http://test/api'));
+    const res = await handler(new Request('http://test/api'), EMPTY_CONTEXT);
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.error.code).toBe('INTERNAL');
@@ -68,7 +68,7 @@ describe('withPublic / toErrorResponse', () => {
     const handler = withPublic(async () => {
       throw new ApiError('RATE_LIMITED', 'slow');
     });
-    const res = await handler(new Request('http://test/api/public'));
+    const res = await handler(new Request('http://test/api/public'), EMPTY_CONTEXT);
     expect(res.status).toBe(429);
   });
 

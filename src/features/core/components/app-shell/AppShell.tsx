@@ -49,7 +49,7 @@ export async function AppShell({ mode, children, aside, proposalsBadge }: AppShe
           <ul className="flex flex-col gap-1 px-2">
             {nav.map((item) => (
               <li key={item.href}>
-                <NavLink item={item} layout="rail" badge={badgeFor(item.href)} />
+                <NavLink href={item.href} label={item.label} icon={<item.icon size={20} strokeWidth={1.75} aria-hidden />} layout="rail" badge={badgeFor(item.href)} />
               </li>
             ))}
           </ul>
@@ -71,7 +71,7 @@ export async function AppShell({ mode, children, aside, proposalsBadge }: AppShe
       </div>
       <nav aria-label="Primary" className={cn('fixed inset-x-0 bottom-0 z-40 flex h-[var(--tabbar-height)] border-t border-border-subtle bg-surface', tabBreakpoint)}>
         {tabItems.map((item) => (
-          <NavLink key={item.href} item={item} layout="tab" />
+          <NavLink key={item.href} href={item.href} label={item.label} icon={<item.icon size={22} strokeWidth={1.75} aria-hidden />} layout="tab" />
         ))}
       </nav>
     </div>
