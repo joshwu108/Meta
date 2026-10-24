@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type * as ReactModule from 'react';
 
 vi.mock('server-only', () => ({}));
 vi.mock('react', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react')>();
+  const actual = await importOriginal<typeof ReactModule>();
   return { ...actual, cache: <T extends (...args: never[]) => unknown>(fn: T) => fn };
 });
 
