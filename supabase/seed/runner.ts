@@ -1,6 +1,7 @@
 import type { AdminClient, SeedContext } from './context';
 import { loadBusinesses, loadEvents, loadGroups } from './loaders/domain';
 import { loadNotifications } from './loaders/notifications';
+import { loadBlocks, loadConnections } from './loaders/social';
 import { deleteSeedUsers, loadUsers } from './loaders/users';
 
 export type SeedSummary = {
@@ -10,6 +11,8 @@ export type SeedSummary = {
   businesses: number;
   events: number;
   groups: number;
+  connections: number;
+  blocks: number;
   notifications: number;
   durationMs: number;
 };
@@ -30,8 +33,21 @@ export async function runSeedWith(admin: AdminClient, log: (message: string) => 
   const businesses = await loadBusinesses(ctx);
   const events = await loadEvents(ctx);
   const groups = await loadGroups(ctx);
+  const connections = await loadConnections(ctx);
+  const blocks = await loadBlocks(ctx);
   const notifications = await loadNotifications(ctx);
-  log(`businesses=${businesses} events=${events} groups=${groups} notifications=${notifications}`);
+  log(`businesses=${businesses} events=${events} groups=${groups} connections=${connections} blocks=${blocks} notifications=${notifications}`);
 
-  return { removedUsers, consumers, owners, businesses, events, groups, notifications, durationMs: Date.now() - started };
+  return {
+    removedUsers,
+    consumers,
+    owners,
+    businesses,
+    events,
+    groups,
+    connections,
+    blocks,
+    notifications,
+    durationMs: Date.now() - started,
+  };
 }

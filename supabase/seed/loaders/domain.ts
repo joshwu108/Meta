@@ -1,5 +1,5 @@
 import { isMissingTable, loadFixture, requireUser, type SeedContext } from '../context';
-import { seedBusinessSchema, seedEventSchema, seedGroupSchema } from '../types';
+import { seedBusinessSchema, seedEventSchema } from '../types';
 
 /**
  * Businesses, events and groups live in tables owned by workstreams 05, 06 and 03. The loaders
@@ -83,33 +83,5 @@ export async function loadEvents(ctx: SeedContext): Promise<number> {
   return rows.length;
 }
 
-export async function loadGroups(ctx: SeedContext): Promise<number> {
-  const groups = await loadFixture('groups', seedGroupSchema);
-  let inserted = 0;
-  for (const group of groups) {
-    const ownerId = requireUser(ctx, group.owner);
-    const { data, error } = await ctx.admin
-      .from('groups')
-      .insert({ name: group.name, description: group.description, visibility: group.visibility, owner_id: ownerId })
-      .select('id')
-      .single();
-    if (error) {
-      if (isMissingTable(error)) {
-        ctx.log('groups table not migrated yet (workstream 03); skipping groups');
-        return 0;
-      }
-      throw new Error(`groups insert (${group.slug}) failed: ${error.message}`);
-    }
-    const groupId = (data as { id: string }).id;
-    const members = [
-      { group_id: groupId, user_id: ownerId, role: 'owner', status: 'active' },
-      ...group.members.map((email) => ({ group_id: groupId, user_id: requireUser(ctx, email), role: 'member', status: 'active' })),
-    ];
-    const { error: memberError } = await ctx.admin.from('group_members').insert(members);
-    if (memberError && !isMissingTable(memberError)) {
-      throw new Error(`group_members insert (${group.slug}) failed: ${memberError.message}`);
-    }
-    inserted += 1;
-  }
-  return inserted;
-}
+/** Groups are seeded by workstream 03's loader (column names from specs/03 §4). */
+export { loadGroups } from './social';
