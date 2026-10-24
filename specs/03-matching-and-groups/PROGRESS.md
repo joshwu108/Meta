@@ -114,6 +114,9 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 2026-10-24: Cross-branch schema check (one-off, rolled back, nothing committed): 04's `0400`–`0404`, 05's `0500`/`0501` and 06's `0600` applied in fresh-reset order on top of 03's `0300`–`0303` inside one transaction on the local Supabase stack. All apply; 06's deferred FKs (`groups_event_fk`, `invitations_event_fk`) land on 03's tables; `tables_without_rls()` returns none. 04's `0404_group_proposals.sql` keys group proposals by (group, plan, suggestion), matching `getGroupVenueRequest`.
 
+- 2026-10-24: Scheduling conflicts (02 P1, answering 02's ask): when consenting members share no slot, the planner calls `resolveGroupSchedule(members)` (same-signature stand-in in `groups/server/stubs.ts` until 02 is on main) and plans for its best options that at least half of them (never fewer than two) can make. Each suggestion carries `freeCount`; the UI shows "3 of 4 free" and explains why; the model sees `everyoneFree: false` and per-slot counts, never the member ids the resolver returns. Still VALIDATION when no slot reaches that quorum.
+- 2026-10-24: "Request venue" is disabled below `MIN_COHORT_SIZE` members (04 rejects smaller groups) with a hint, and the success toast names the venue from 04's `{ proposalId, businessName }`; 04's 404/409/400 messages show as-is.
+
 ## Needs from others
 
 - Integrator: merge ws/01-core to main first. This branch carries byte-identical copies of 01's files and of 02's `0200_agent.sql`; after 01 lands, regenerate `src/lib/supabase/database.types.ts` on main (`pnpm db:types`) since every workstream regenerates it.
@@ -130,10 +133,13 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 01: 03's notifications carry `payload.href` (`/match?tab=requests`, `/match?tab=connections`, `/groups/<id>`); `NotificationList` could navigate there after marking read.
 
+- 02 (when on main): 03 will import `MATCHING_OPT_OUT_EMAILS` from your `tests/fixtures/consent-cases.ts` and assert those seeded users never appear in or see matches (your AC3), and swap the `resolveGroupSchedule` stand-in for your export. Both wait on 02's seed and code reaching main.
+
 ## Blocked
 
 ## Log
 
+- 2026-10-24 18:02 CDT · wakeup: main unchanged. Answered 02 (planner uses resolveGroupSchedule for conflicts) and 04 (cohort-size gating, venue name in toast). 146 unit, 100 integration green; planner/Scene 2 E2E green. Next: watch main.
 - 2026-10-24 17:58 CDT · wakeup: main unchanged. Split MatchScreen, InvitePicker and ReportSheet so every function is under 50 lines (UI E2E green); cross-branch schema check with 04/05/06 migrations passes. Next: watch main.
 - 2026-10-24 17:50 CDT · landed: `getPendingConnectionRequests` export for 06's Activity hub, `/match?focus=` deep links for 02's agent cards, spec §4/§6 aligned with the build. 143 unit, 98 integration, 19 E2E. Next: watch main.
 - 2026-10-24 17:45 CDT · landed: stricter explanation grounding (no claims about unshared interests or days), planner + vote and block/report E2E tests, precise merge plan for 01. 143 unit, 97 integration, 18 E2E. Next: watch main.
