@@ -1,0 +1,25 @@
+{
+  "title": "Beginner Pottery & Coffee Night",
+  "description": "A guided wheel-throwing session for complete beginners. Everyone starts at the same place, hands stay busy, and the second half is coffee and easy conversation around the tables.",
+  "category": "creative",
+  "format": "Guided 60-min beginner session, then 45 min open conversation",
+  "intendedSocialExperience": "Low-pressure first meeting: shared beginner status, hands busy, no need to fill silences",
+  "suggestedSlot": "thu_eve",
+  "suggestedStartTimeLocal": "18:30",
+  "estimatedDurationMinutes": 105,
+  "suggestedCapacity": 8,
+  "suggestedPriceCents": 2000,
+  "priceRangeCents": { "min": 1500, "max": 3500 },
+  "demand": {
+    "band": "6-9",
+    "neighborhoodLabel": "Mission",
+    "topInterests": ["pottery", "coffee", "making things"]
+  },
+  "whySuggested": "People nearby who opted into community demand share an interest in creative activities and are free on Thursday evenings. Your studio hosts creative events, has wheels and a kiln, and is open Thursday until 21:00.",
+  "assumptionsToValidate": [
+    "Studio has 8 wheels available that evening",
+    "Staff available Thursday 18:30-20:15",
+    "Clay and glaze cost is covered by the ticket price"
+  ],
+  "disclaimers": ["demand_is_estimate"]
+}
