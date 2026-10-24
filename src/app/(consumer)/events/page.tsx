@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { EventCard } from "@/features/events/components/EventCard";
 import { EventFilters } from "@/features/events/components/EventFilters";
-import { EmptyState } from "@/features/events/components/ui";
+import { EmptyState } from "@/features/core/components/ui";
 import s from "@/features/events/components/events.module.css";
 import type { EventCard as EventCardData } from "@/features/events/server/cards";
 import { listEventFeed } from "@/features/events/server/feed";
@@ -44,27 +44,23 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
   const items = await load(userId, filters);
 
   return (
-    <div className={s.withRail}>
-      <main className={s.main}>
-        <h1 className={s.pageTitle}>Events</h1>
-        <nav className={s.tabs} aria-label="Event lists">
-          {TABS.map((t) => (
-            <Link key={t.key} href={`/events?tab=${t.key}`} className={`${s.tab} ${t.key === filters.tab ? s.tabActive : ""}`} aria-current={t.key === filters.tab ? "page" : undefined}>
-              {t.label}
-            </Link>
-          ))}
-        </nav>
-        {items.length === 0 ? (
-          <div className={s.card}><EmptyState icon={<CalendarX size={20} aria-hidden />} title="Nothing scheduled here yet." /></div>
-        ) : (
-          <ul className={s.list}>
-            {items.map(({ event, explanation }) => <li key={event.id}><EventCard event={event} explanation={explanation} /></li>)}
-          </ul>
-        )}
-      </main>
-      <div className={s.rail}>
-        <EventFilters values={filters} />
-      </div>
+    <div className={s.column}>
+      <h1 className={s.pageTitle}>Events</h1>
+      <nav className={s.tabs} aria-label="Event lists">
+        {TABS.map((t) => (
+          <Link key={t.key} href={`/events?tab=${t.key}`} className={`${s.tab} ${t.key === filters.tab ? s.tabActive : ""}`} aria-current={t.key === filters.tab ? "page" : undefined}>
+            {t.label}
+          </Link>
+        ))}
+      </nav>
+      {filters.tab === "for-you" ? null : <EventFilters values={filters} />}
+      {items.length === 0 ? (
+        <div className={s.card}><EmptyState icon={<CalendarX size={20} aria-hidden />} title="Nothing scheduled here yet." /></div>
+      ) : (
+        <ul className={s.list}>
+          {items.map(({ event, explanation }) => <li key={event.id}><EventCard event={event} explanation={explanation} /></li>)}
+        </ul>
+      )}
     </div>
   );
 }

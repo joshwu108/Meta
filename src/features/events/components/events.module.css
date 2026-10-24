@@ -1,8 +1,6 @@
-.column { max-width: 680px; margin: 0 auto; padding: var(--space-4); display: grid; gap: var(--space-6); }
-.withRail { display: grid; gap: var(--space-6); max-width: 1024px; margin: 0 auto; padding: var(--space-4); }
-@media (min-width: 1024px) { .withRail { grid-template-columns: minmax(0, 680px) 320px; justify-content: center; } }
-.main { display: grid; gap: var(--space-6); min-width: 0; }
-.rail { display: grid; gap: var(--space-3); align-content: start; }
+/* Page content inside 01's AppShell, which already sets the 680px feed column and gutters. */
+.column { display: grid; gap: var(--space-6); min-width: 0; }
+.filterRow { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3); }
 .pageTitle { margin: 0; font-size: var(--text-xl); font-weight: var(--weight-bold); }
 .section { display: grid; gap: var(--space-3); }
 .sectionTitle { margin: 0; font-size: var(--text-lg); font-weight: var(--weight-bold); }

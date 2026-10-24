@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { FollowUpView } from "../server/follow-ups";
-import { send } from "./api";
+import { apiPatch } from "@/lib/api/client";
 import { SLOT_PHRASES } from "./format";
-import { AiTag, Avatar, Button } from "./ui";
+import { AiTag, Avatar, Button } from "@/features/core/components/ui";
 import s from "./events.module.css";
 
 export function FollowUpCard({ followUp }: { followUp: FollowUpView }) {
@@ -17,7 +17,7 @@ export function FollowUpCard({ followUp }: { followUp: FollowUpView }) {
   const respond = (action: "accept" | "dismiss") =>
     startTransition(async () => {
       try {
-        await send(`/api/follow-ups/${followUp.id}`, "PATCH", { action });
+        await apiPatch(`/api/follow-ups/${followUp.id}`, { action });
         router.refresh();
       } catch (err) {
         setError((err as Error).message);

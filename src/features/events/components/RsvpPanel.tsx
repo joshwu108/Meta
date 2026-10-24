@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { send } from "./api";
+import { apiDelete, apiPost } from "@/lib/api/client";
 import { ConsentSheet } from "./ConsentSheet";
-import { Button } from "./ui";
+import { Button } from "@/features/core/components/ui";
 import s from "./events.module.css";
 
 type Props = {
@@ -35,7 +35,7 @@ export function RsvpPanel({ eventId, status, rsvpStatus, waitlistEnabled }: Prop
     });
 
   if (rsvpStatus === "confirmed" || rsvpStatus === "waitlisted") {
-    return <HeldRsvp waitlisted={rsvpStatus === "waitlisted"} pending={pending} error={error} onCancel={() => run(() => send(path, "DELETE"))} />;
+    return <HeldRsvp waitlisted={rsvpStatus === "waitlisted"} pending={pending} error={error} onCancel={() => run(() => apiDelete(path))} />;
   }
   const joinWaitlist = status === "full" && waitlistEnabled;
   if (status !== "published" && !joinWaitlist) {
@@ -52,7 +52,7 @@ export function RsvpPanel({ eventId, status, rsvpStatus, waitlistEnabled }: Prop
           confirmLabel={joinWaitlist ? "Join waitlist" : "Confirm RSVP"}
           pending={pending}
           error={error}
-          onConfirm={(choices) => run(() => send(path, "POST", choices))}
+          onConfirm={(choices) => run(() => apiPost(path, choices))}
           onClose={() => setSheetOpen(false)}
         />
       ) : null}

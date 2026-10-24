@@ -1,5 +1,5 @@
 import { EVENT_CATEGORY } from "@/shared/enums";
-import { buttonClass } from "./ui";
+import { buttonClass } from "./local-ui";
 import s from "./events.module.css";
 
 const LABELS: Record<string, string> = {
@@ -10,10 +10,10 @@ const DISTANCES = [1, 3, 5, 10];
 
 export type FilterValues = { tab: string; category?: string; radiusKm?: number };
 
-/** Plain GET form so filters work without client JavaScript; lives in the right rail at ≥1024px. */
+/** Plain GET form so filters work without client JavaScript. */
 export function EventFilters({ values }: { values: FilterValues }) {
   return (
-    <form method="get" action="/events" className={s.card} aria-label="Filter events">
+    <form method="get" action="/events" className={`${s.card} ${s.filterRow}`} aria-label="Filter events">
       <input type="hidden" name="tab" value={values.tab === "for-you" ? "all" : values.tab} />
       <div className={s.field}>
         <label htmlFor="filter-category" className={s.meta}>Category</label>

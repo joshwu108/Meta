@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { send } from "./api";
-import { Button, Switch } from "./ui";
+import { apiGet } from "@/lib/api/client";
+import { Button, Switch } from "@/features/core/components/ui";
 import s from "./events.module.css";
 
 type Choices = { shareWithAttendees: boolean; shareWithBusiness: boolean };
@@ -28,7 +28,7 @@ export function ConsentSheet({ title, confirmLabel, pending, error, onConfirm, o
 
   useEffect(() => {
     let active = true;
-    send<Consent>("/api/agent/permissions", "GET")
+    apiGet<Consent>("/api/agent/permissions")
       .then((consent) => {
         if (!active || touched) return;
         setShareAttendees(consent.share_interests_with_attendees === true);

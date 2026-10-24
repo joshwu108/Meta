@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import type { AttendeeView } from "../server/visibility";
-import { send } from "./api";
-import { Avatar, Button } from "./ui";
+import { apiPost } from "@/lib/api/client";
+import { Avatar, Button } from "@/features/core/components/ui";
 import s from "./events.module.css";
 
 /** "Who would you like to see again?" Only named attendees can be picked; nobody is told unless it is mutual. */
@@ -18,7 +18,7 @@ export function ReconnectList({ eventId, attendees }: { eventId: string; attende
   const pick = (userId: string) =>
     startTransition(async () => {
       try {
-        const res = await send<{ mutual: boolean }>(`/api/events/${eventId}/reconnect`, "POST", { toUserId: userId });
+        const res = await apiPost<{ mutual: boolean }>(`/api/events/${eventId}/reconnect`, { toUserId: userId });
         setChosen((prev) => ({ ...prev, [userId]: res.mutual ? "mutual" : "sent" }));
       } catch (err) {
         setError((err as Error).message);

@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { send } from "./api";
-import { Button } from "./ui";
+import { apiPatch } from "@/lib/api/client";
+import { Button } from "@/features/core/components/ui";
 import s from "./events.module.css";
 
 /** Venue / demo-operator control that ends the event and opens feedback and reconnect. */
@@ -14,7 +14,7 @@ export function CompleteEventButton({ eventId }: { eventId: string }) {
   const complete = () =>
     startTransition(async () => {
       try {
-        await send(`/api/events/${eventId}/complete`, "PATCH");
+        await apiPatch(`/api/events/${eventId}/complete`);
         router.refresh();
       } catch (err) {
         setError((err as Error).message);

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { send } from "./api";
-import { Button } from "./ui";
+import { apiGet, apiPost } from "@/lib/api/client";
+import { Button } from "@/features/core/components/ui";
 import s from "./events.module.css";
 
 type Group = { id: string; name: string };
@@ -15,7 +15,7 @@ export function InviteGroupPicker({ eventId }: { eventId: string }) {
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    send<Group[]>("/api/groups", "GET")
+    apiGet<Group[]>("/api/groups")
       .then((list) => setGroups(list.map((g) => ({ id: g.id, name: g.name }))))
       .catch(() => setGroups([]));
   }, []);
@@ -26,7 +26,7 @@ export function InviteGroupPicker({ eventId }: { eventId: string }) {
   const invite = () =>
     startTransition(async () => {
       try {
-        const result = await send<{ invited: number }>(`/api/events/${eventId}/invite-group`, "POST", { groupId });
+        const result = await apiPost<{ invited: number }>(`/api/events/${eventId}/invite-group`, { groupId });
         setMessage(result.invited === 0 ? "Everyone in that group is already invited or going." : `Invited ${result.invited} ${result.invited === 1 ? "member" : "members"}. They'll each choose whether to RSVP.`);
       } catch (err) {
         setMessage((err as Error).message);

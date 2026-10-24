@@ -2,8 +2,8 @@
 
 import { Star } from "lucide-react";
 import { useState, useTransition } from "react";
-import { send } from "./api";
-import { Button, Switch } from "./ui";
+import { apiPost } from "@/lib/api/client";
+import { Button, Switch } from "@/features/core/components/ui";
 import s from "./events.module.css";
 
 export function FeedbackForm({ eventId, alreadyGiven }: { eventId: string; alreadyGiven: boolean }) {
@@ -19,7 +19,7 @@ export function FeedbackForm({ eventId, alreadyGiven }: { eventId: string; alrea
   const submit = () =>
     startTransition(async () => {
       try {
-        await send(`/api/events/${eventId}/feedback`, "POST", { rating, metSomeone, comment: comment || undefined });
+        await apiPost(`/api/events/${eventId}/feedback`, { rating, metSomeone, comment: comment || undefined });
         setDone(true);
       } catch (err) {
         setError((err as Error).message);

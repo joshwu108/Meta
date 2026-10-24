@@ -4,7 +4,8 @@ import type { NearbyBusiness } from "../server/nearby";
 import type { RecommendedEvent } from "../server/recommended";
 import type { GroupCard, SuggestedPerson } from "../server/stubs/social";
 import { formatWhen, SLOT_PHRASES } from "./format";
-import { AiRing, AiTag, Avatar, buttonClass, EmptyState } from "./ui";
+import { AiRing, AiTag, Avatar, EmptyState } from "@/features/core/components/ui";
+import { buttonClass } from "./local-ui";
 import s from "./events.module.css";
 
 export function PeopleRail({ people }: { people: SuggestedPerson[] }) {

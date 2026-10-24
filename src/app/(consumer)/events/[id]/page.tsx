@@ -4,7 +4,8 @@ import { EventCover } from "@/features/events/components/EventCover";
 import { AboutCard, VenueCard, WhoIsGoing } from "@/features/events/components/EventInfoCards";
 import { EventStatusSection } from "@/features/events/components/EventStatusSection";
 import { formatPrice, formatTime, formatWhen } from "@/features/events/components/format";
-import { CapacityMeter, StatusPill } from "@/features/events/components/ui";
+import { StatusPill } from "@/features/core/components/ui";
+import { Pill, SpotsMeter } from "@/features/events/components/local-ui";
 import s from "@/features/events/components/events.module.css";
 import { EventIdParams } from "@/features/events/schemas";
 import { getAttendeeList } from "@/features/events/server/attendees";
@@ -32,18 +33,18 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
   const attendees = completedAttendee ? await getAttendeeList(userId, event.id) : null;
 
   return (
-    <main className={s.column}>
+    <div className={s.column}>
       <article className={s.card}>
         <EventCover imageUrl={event.business.imageUrl} category={event.category} lead />
         <div className={s.spread}>
           <h1 className={s.leadTitle}>{event.title}</h1>
-          <StatusPill status={event.needsReconfirm ? "reconfirm" : event.rsvpStatus === "confirmed" ? "confirmed" : event.status} />
+          {event.needsReconfirm ? <Pill tone="warning">Needs reconfirm</Pill> : <StatusPill status={event.rsvpStatus === "confirmed" ? "confirmed" : event.status} />}
         </div>
         <p className={s.meta}>
           {formatWhen(event.startsAt)} – {formatTime(event.endsAt)} · {formatPrice(event.priceCents)}{event.format ? ` · ${event.format}` : ""}
         </p>
         <div className={s.spread}>
-          <div style={{ flex: 1 }}><CapacityMeter confirmed={event.confirmedCount} capacity={event.capacity} /></div>
+          <div style={{ flex: 1 }}><SpotsMeter confirmed={event.confirmedCount} capacity={event.capacity} /></div>
           <BookmarkButton eventId={event.id} initial={event.bookmarked} />
         </div>
         <EventStatusSection event={event} attendees={attendees?.attendees ?? null} feedbackGiven={event.feedbackGiven} />
@@ -52,6 +53,6 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
       <VenueCard venue={event.venue} />
       <AboutCard description={event.description} />
       <WhoIsGoing event={event} />
-    </main>
+    </div>
   );
 }

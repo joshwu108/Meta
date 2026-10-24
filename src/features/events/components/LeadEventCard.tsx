@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { RecommendedEvent } from "../server/recommended";
 import { EventCover } from "./EventCover";
 import { formatPrice, formatWhen } from "./format";
-import { AiTag, AvatarStack, CapacityMeter } from "./ui";
+import { AiTag, AvatarStack } from "@/features/core/components/ui";
+import { SpotsMeter } from "./local-ui";
 import s from "./events.module.css";
 
 /** The page's lead element: full width, 2:1 imagery, explanation under the AI tag. */
@@ -20,7 +21,7 @@ export function LeadEventCard({ item }: { item: RecommendedEvent }) {
         <AiTag />
         <span>{item.explanation}</span>
       </div>
-      <CapacityMeter confirmed={event.confirmedCount} capacity={event.capacity} />
+      <SpotsMeter confirmed={event.confirmedCount} capacity={event.capacity} />
       {event.friendsGoing.length > 0 ? <AvatarStack people={event.friendsGoing.map((f) => ({ name: f.displayName, src: f.avatarUrl }))} size={32} /> : null}
     </Link>
   );

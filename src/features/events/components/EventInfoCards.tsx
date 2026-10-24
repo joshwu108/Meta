@@ -1,6 +1,6 @@
 import { MapPin } from "lucide-react";
 import type { EventDetail } from "../server/detail";
-import { Avatar } from "./ui";
+import { Avatar } from "@/features/core/components/ui";
 import s from "./events.module.css";
 
 export function VenueCard({ venue }: { venue: EventDetail["venue"] }) {

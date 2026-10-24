@@ -2,8 +2,8 @@
 
 import { Bookmark } from "lucide-react";
 import { useState, useTransition } from "react";
-import { send } from "./api";
-import { Button } from "./ui";
+import { apiDelete, apiPost } from "@/lib/api/client";
+import { Button } from "@/features/core/components/ui";
 
 export function BookmarkButton({ eventId, initial }: { eventId: string; initial: boolean }) {
   const [saved, setSaved] = useState(initial);
@@ -13,7 +13,8 @@ export function BookmarkButton({ eventId, initial }: { eventId: string; initial:
       const next = !saved;
       setSaved(next);
       try {
-        await send(`/api/events/${eventId}/bookmark`, next ? "POST" : "DELETE");
+        const url = `/api/events/${eventId}/bookmark`;
+        await (next ? apiPost(url) : apiDelete(url));
       } catch {
         setSaved(!next);
       }

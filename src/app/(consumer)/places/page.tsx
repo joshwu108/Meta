@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { EventCover } from "@/features/events/components/EventCover";
 import { formatWhen } from "@/features/events/components/format";
-import { EmptyState } from "@/features/events/components/ui";
+import { EmptyState } from "@/features/core/components/ui";
 import s from "@/features/events/components/events.module.css";
 import { getNearbyBusinesses } from "@/features/events/server/nearby";
 import { getCurrentUserId } from "@/features/events/server/stubs";
@@ -21,7 +21,7 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
   const places = await getNearbyBusinesses(userId, radiusKm);
 
   return (
-    <main className={s.column}>
+    <div className={s.column}>
       <h1 className={s.pageTitle}>Places near you</h1>
       <nav className={s.tabs} aria-label="Distance">
         {RADII.map((r) => (
@@ -54,6 +54,6 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
           ))}
         </ul>
       )}
-    </main>
+    </div>
   );
 }

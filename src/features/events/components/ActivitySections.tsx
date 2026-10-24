@@ -5,7 +5,8 @@ import type { Activity } from "../server/activity";
 import { EventCard } from "./EventCard";
 import { FollowUpCard } from "./FollowUpCard";
 import { formatWhen } from "./format";
-import { Avatar, EmptyState, StatusPill } from "./ui";
+import { Avatar, EmptyState } from "@/features/core/components/ui";
+import { Pill } from "./local-ui";
 import s from "./events.module.css";
 
 const NOTIFICATION_TEXT: Record<string, string> = {
@@ -121,7 +122,7 @@ export function NotificationsSection({ notifications }: { notifications: Activit
             <li key={n.id} className={s.spread}>
               <span>{NOTIFICATION_TEXT[n.type] ?? n.type}</span>
               <span className={s.row}>
-                {n.readAt ? null : <StatusPill status="new" />}
+                {n.readAt ? null : <Pill tone="brand">New</Pill>}
                 <span className={s.meta}>{formatWhen(n.createdAt)}</span>
               </span>
             </li>

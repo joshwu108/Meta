@@ -20,7 +20,7 @@ export default async function ActivityPage() {
   const activity = await getActivity(userId);
 
   return (
-    <main className={s.column}>
+    <div className={s.column}>
       <h1 className={s.pageTitle}>My Activity</h1>
       <UpcomingSection events={activity.upcoming} />
       <SavedSection events={activity.saved} />
@@ -29,6 +29,6 @@ export default async function ActivityPage() {
       <PastSection events={activity.past} />
       <FollowUpsSection followUps={activity.followUps} />
       <NotificationsSection notifications={activity.notifications} />
-    </main>
+    </div>
   );
 }
