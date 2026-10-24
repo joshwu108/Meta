@@ -16,6 +16,7 @@ const state = {
   attendees: [] as ConfirmedAttendee[],
   prefs: null as unknown,
   explanations: 0,
+  sharingCalls: 0,
 };
 
 vi.mock("@/features/events/server/stubs", async (importOriginal) => ({
@@ -23,8 +24,10 @@ vi.mock("@/features/events/server/stubs", async (importOriginal) => ({
   createAdminClient: () => ({}),
   getConnectionIds: async () => new Set([FRIEND]),
   getBlockEdges: async () => [{ blockerId: BLOCKER, blockedId: VIEWER }],
-  getAttendeeSharing: async (ids: string[]) =>
-    new Map(ids.map((id) => [id, { interests: ["pottery", "coffee"], shareInterestsWithAttendees: id !== STRANGER }])),
+  getAttendeeSharing: async (ids: string[]) => {
+    state.sharingCalls += 1;
+    return new Map(ids.map((id) => [id, { interests: ["pottery", "coffee"], shareInterestsWithAttendees: id !== STRANGER }]));
+  },
   getSharablePreferences: async () => state.prefs,
   explainRecommendation: async () => {
     state.explanations += 1;
@@ -114,6 +117,14 @@ describe("getEventDetail", () => {
     expect(detail.rsvpStatus).toBe("confirmed");
     expect(detail.needsReconfirm).toBe(true);
     expect(detail.attendeePreview.avatars.map((a) => a.userId)).toEqual([FRIEND, STRANGER]);
+  });
+
+  it("never puts interests in the preview or asks 02 to release them", async () => {
+    state.sharingCalls = 0;
+    const detail = await getEventDetail(VIEWER, EVENT);
+
+    expect(detail.attendeePreview.avatars.every((a) => a.sharedInterests === undefined)).toBe(true);
+    expect(state.sharingCalls).toBe(0);
   });
 });
 

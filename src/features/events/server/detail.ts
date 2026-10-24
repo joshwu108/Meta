@@ -36,7 +36,7 @@ export async function getEventDetail(viewerId: string, eventId: string): Promise
   const [counts, mine, attendeeData, feedbackGiven, bookmarks, completable] = await Promise.all([
     confirmedCounts(admin, [eventId]),
     myRsvps(admin, viewerId, [eventId]),
-    loadAttendeeData(admin, viewerId, eventId),
+    loadAttendeeData(admin, viewerId, eventId, { withInterests: false }),
     row.status === "completed" ? hasFeedback(admin, viewerId, eventId) : Promise.resolve(false),
     bookmarkedEventIds(admin, viewerId),
     live ? canComplete(admin, viewerId, row.business_id) : Promise.resolve(false),

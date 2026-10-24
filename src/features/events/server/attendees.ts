@@ -1,16 +1,22 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { confirmedAttendees, myRsvps } from "./repo";
-import { ApiError, createAdminClient, getAttendeeSharing, getBlockEdges, getConnectionIds } from "./stubs";
+import { ApiError, createAdminClient, getAttendeeSharing, getBlockEdges, getConnectionIds, type AttendeeSharing } from "./stubs";
 import { buildAttendeeList, type AttendeeList, type AttendeeRow, type ViewerContext } from "./visibility";
 
 export type AttendeeData = { viewer: ViewerContext; rows: AttendeeRow[] };
 
-/** Everything the visibility function needs for one viewer and one event's confirmed attendees. */
-export async function loadAttendeeData(admin: SupabaseClient, viewerId: string, eventId: string): Promise<AttendeeData> {
+/**
+ * Everything the visibility function needs for one viewer and one event's confirmed attendees.
+ * Interests are loaded (and released by 02) only when `withInterests` is set, i.e. for a viewer
+ * who is a confirmed attendee; previews never carry them.
+ */
+export async function loadAttendeeData(
+  admin: SupabaseClient, viewerId: string, eventId: string, { withInterests }: { withInterests: boolean },
+): Promise<AttendeeData> {
   const attendees = await confirmedAttendees(admin, eventId);
   const [sharing, connectionIds, blocks] = await Promise.all([
-    getAttendeeSharing([viewerId, ...attendees.map((a) => a.userId)]),
+    withInterests ? getAttendeeSharing([viewerId, ...attendees.map((a) => a.userId)]) : Promise.resolve(new Map<string, AttendeeSharing>()),
     getConnectionIds(viewerId),
     getBlockEdges(viewerId),
   ]);
@@ -40,6 +46,6 @@ export async function getAttendeeList(viewerId: string, eventId: string): Promis
   if (mine.get(eventId)?.status !== "confirmed") {
     throw new ApiError("FORBIDDEN", "RSVP to see who else is going");
   }
-  const { viewer, rows } = await loadAttendeeData(admin, viewerId, eventId);
+  const { viewer, rows } = await loadAttendeeData(admin, viewerId, eventId, { withInterests: true });
   return buildAttendeeList(viewer, rows);
 }
