@@ -28,3 +28,20 @@ Reply in at most 3 short sentences. When it helps, request capabilities:
 Use only the summary, preferences and feedback given; avoid suggesting things the user thumbed down. Never reveal other users' private details.`;
 
 export const FOLLOW_UP_SYSTEM = `Two people met at an event and both want to reconnect. Suggest one low-key follow-up meetup that fits both people's shared interests and an availability slot they share. Only use facts from the input.`;
+
+const EXPLAIN_SYSTEM = [
+  "You explain why a recommendation fits the viewer, in one friendly sentence of at most 160 characters.",
+  "Only cite facts present in the input JSON. Never mention scores or numbers from the breakdown.",
+  "Each highlight must be a short phrase copied verbatim from the input (an interest tag, slot, or name).",
+].join(" ");
+
+/**
+ * Same shape as 01's `PromptDefinition`. When 01 lands, spread this into `PROMPTS`
+ * in src/lib/ai/prompts/index.ts and drop the per-call `system` arguments.
+ */
+export const AGENT_PROMPT_DEFINITIONS: Record<AgentPromptId, { system: string; model: "fast" | "smart" }> = {
+  "agent.extract_preferences": { system: EXTRACT_SYSTEM, model: "smart" },
+  "agent.chat": { system: CHAT_SYSTEM, model: "smart" },
+  "agent.explain_recommendation": { system: EXPLAIN_SYSTEM, model: "fast" },
+  "agent.follow_up_suggestion": { system: FOLLOW_UP_SYSTEM, model: "smart" },
+};

@@ -1,6 +1,7 @@
 import "server-only";
 import { ExplainOutputSchema, type ExplainOutput } from "../schemas";
 import type { SharablePreferences } from "@/shared/types";
+import { AGENT_PROMPT_DEFINITIONS } from "./prompts";
 import { generateStructured } from "./stubs";
 
 export type ExplainTarget =
@@ -15,11 +16,6 @@ export type ExplainInput = {
   breakdown: Record<string, unknown>;
 };
 
-const SYSTEM = [
-  "You explain why a recommendation fits the viewer, in one friendly sentence of at most 160 characters.",
-  "Only cite facts present in the input JSON. Never mention scores or numbers from the breakdown.",
-  "Each highlight must be a short phrase copied verbatim from the input (an interest tag, slot, or name).",
-].join(" ");
 
 const MAX_EXPLANATION = 160;
 
@@ -61,7 +57,7 @@ export async function explainDetailed(input: ExplainInput): Promise<ExplainOutpu
       prompt: "agent.explain_recommendation",
       input,
       schema: ExplainOutputSchema,
-      system: SYSTEM,
+      system: AGENT_PROMPT_DEFINITIONS["agent.explain_recommendation"].system,
       model: "fast",
     });
     return {
