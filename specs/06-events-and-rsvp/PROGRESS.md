@@ -19,7 +19,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - [x] Invite-group filtering (skip RSVP'd and blocked members, never RSVP anyone)
 - [x] Reconnect + follow-up suggestion flow
 - [x] Route handlers: `GET /events`, `GET /events/recommended`, `GET /events/:id`, `POST|DELETE /events/:id/rsvp`, `POST /events/:id/reconfirm`, `GET /events/:id/attendees`, `POST /events/:id/invite-group`, `GET /activity`, `POST /events/:id/feedback`, `POST /events/:id/reconnect`, `PATCH /events/:id/complete`, `GET /businesses/nearby`
-- [ ] UI: `/discover`, `/events`, `/events/:id`, `/activity`
+- [x] UI: `/discover`, `/events`, `/events/:id`, `/activity` (builds; visual/E2E run pending, see Blocked)
 - [ ] Seed: RSVPs for seeded events, one full event, completed Ritual Grounds event with maya@ and jordan@ plus one reconnect row
 
 ## Tests (spec §9)
@@ -82,9 +82,14 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: Group event invitations notify with type `group_invite` and payload `{ kind: 'event', eventId, groupId, title }` (no dedicated event-invite type in NOTIFICATION_TYPE).
 - 2026-10-24: Event completion is allowed for the venue owner or anyone while `DEMO_MODE=1`; it goes through the service-role client because 05's RLS only lets owners write events.
 - 2026-10-24: Follow-up suggestions pick the nearest active business in the suggested category to the event venue as `businessId` (Scene 6 lands on Ritual Grounds).
+- 2026-10-24: UI uses CSS modules on the design tokens instead of Tailwind (no Tailwind config on main yet; 01 owns it). `src/styles/tokens.css` is generated verbatim from design-system.md, and primitive stand-ins live in `src/features/events/components/ui/` with 01's names (`Button`, `AiTag`, `AiRing`, `Avatar`, `CapacityMeter`, `StatusPill`, `EmptyState`, `Switch`). Swap the imports to `@/features/core/components/ui` when 01 lands.
+- 2026-10-24: Pages call the services directly as server components; client controls call the routes and `router.refresh()`. The RSVP consent sheet opens on every RSVP (not only the first) so sharing can be changed on re-RSVP.
+- 2026-10-24: The invite picker reads 03's `GET /api/groups` from the browser and degrades to a hint when it is unavailable.
 
 ## Needs from others
 
+- 03: export a server function for Discover's people rail (top N matches with explanation); `getSuggestedPeople` is an empty stub, so the rail shows an empty state linking to /match.
+- 01: app shell `(consumer)/layout.tsx` with nav and the 680/320 frame; 06's pages render only their content column (Discover adds its own right rail).
 - 02: export `getAttendeeSharing(userIds)` → `{ interests, shareInterestsWithAttendees }` per user and `getRsvpConsentDefaults(userId)`. The RSVP sheet and shared-interest chips need them, and only 02 may read `agent_profiles` / `user_preferences`. Stubbed in `src/features/events/server/stubs/agent.ts`.
 - 02: add `ExplainInput` to `src/shared/types.ts`. 06 sends `{ viewer, target: { kind: 'event', title, category, slotLabel, capacity, priceCents }, breakdown }`.
 - 02: export `suggestFollowUp({ a, b, event })` wrapping the `agent.follow_up_suggestion` prompt (06 §6 reconnect).
@@ -99,6 +104,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 15:50 PT: UI for Discover, Events (For you/All/This week), event detail (RSVP sheet, reconfirm, invite, feedback, reconnect) and Activity; `next build` passes. Next: seed contribution, then the never-idle list.
 - 2026-10-24 15:43 PT: all 13 route handlers plus PATCH /follow-ups/:id, route tests over Postgres (107 tests); fixed duplicate-vs-full RSVP error order. Next: UI for /discover, /events, /events/:id, /activity.
 - 2026-10-24 15:41 PT: invite, post-event, follow-up, activity and nearby services; Postgres-backed service tests; reconnect race and timestamp-ordering fixes (100 tests). AC2–AC5 covered at service level. Next: route handlers, then UI.
 - 2026-10-24 15:34 PT: stubs for 01/02/03, repository, exported contracts, RSVP service, feed/recommendation/detail/attendee services (68 unit + 18 integration tests). Next: invite-group, activity, post-event services, route handlers.
