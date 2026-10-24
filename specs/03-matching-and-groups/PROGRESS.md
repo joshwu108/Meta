@@ -60,9 +60,9 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 ## P1
 
 - [x] Voting on planner suggestions (`POST /api/groups/:id/plans/:planId/vote`)
-- [ ] Send a chosen `new_activity` suggestion to 04 as a group-originated proposal request — eligibility (≥ 50% votes) and the "Request venue" button are done; needs 04's `source: 'group'` path
+- [ ] Send a chosen `new_activity` suggestion to 04 as a group-originated proposal request — eligibility (≥ 50% votes) and the "Request venue" button are done; `getGroupVenueRequest()` is exported for 04; needs 04's `source: 'group'` path
 - [x] Filters on `/match` by interest and social goal
-- [ ] Basic 1:1 messaging between accepted connections (text only, polled)
+- [x] Basic 1:1 messaging between accepted connections (text only, polled)
 - [x] Public group discovery (`/groups/discover`)
 
 ## Decisions
@@ -95,6 +95,8 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 - 2026-10-24: The invite picker lists accepted connections, people with an open request, then matches; the server re-checks reachability and blocks.
 - 2026-10-24: `tests/fixtures/social/preferences.json` is an interim copy of 02 §8's seed design used by the AC1 integration test and the Scene 2 E2E (applied with the service role after the seed). It is never loaded by `pnpm db:seed`, so it cannot collide with 02's `preferences.json`.
 
+- 2026-10-24: P1 messaging adds `0302_direct_messages.sql` (`direct_messages`, RLS: both parties of an accepted connection read and write, so a block hides the thread), `GET/POST /api/connections/:id/messages` (`after` for polling) and a Connections tab on `/match` whose chat polls every 5 s. No notification type exists for messages, so none is sent.
+
 ## Needs from others
 
 - Integrator: merge ws/01-core to main first. This branch carries byte-identical copies of 01's files and of 02's `0200_agent.sql`; after 01 lands, regenerate `src/lib/supabase/database.types.ts` on main (`pnpm db:types`) since every workstream regenerates it.
@@ -111,6 +113,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 ## Log
 
+- 2026-10-24 17:12 CDT · landed: `getGroupVenueRequest` export for 04, contract tests for every 03 export, P1 direct messages (migration, routes, Connections tab, polled chat) with integration and E2E tests. Coverage on 03 server code: 92% statements, 83% branches. Next: clean-state check, design checklist pass, edge cases.
 - 2026-10-24 17:05 CDT · landed: `/match` (lead card, compact rows, filters, connect/block/report sheets, requests tab), `/groups`, `/groups/:id` (planner lead, votes, venue request, events, members/invite/transfer/leave), `/groups/discover`; AC1 integration test; Scene 2 Playwright test. All P0 items ticked. Totals: 138 unit, 78 integration, 15 E2E green (earlier log line's "112" should have read 120). Next: P1 messaging, 04 venue-request export, coverage, clean-state check.
 - 2026-10-24 16:45 CDT · landed: matches service + `GET /api/matches` with grounded explanations; connection, block and report routes; group services, invitations, removal, transfer, leave/archive; group planner (consent-gated aggregates, name scrubbing, validation, fallbacks) and votes; matching/groups contracts for 06. 112 unit+integration tests across 03 (63 unit, 57 integration incl. seed). Next: `/match`, `/groups`, `/groups/:id` UI, then the Scene 2 E2E.
 
