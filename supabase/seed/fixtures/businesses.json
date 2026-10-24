@@ -1,0 +1,38 @@
+[
+  {
+    "slug": "kiln-and-cup",
+    "name": "Kiln & Cup",
+    "category": "creative",
+    "neighborhood": "Mission District",
+    "address": "3120 Valencia St, San Francisco, CA",
+    "description": "Pottery studio with a small café. Wheel and hand-building classes for beginners.",
+    "lat": 37.75,
+    "lng": -122.42,
+    "capacity": 12,
+    "owner": { "email": "owner.kiln-and-cup@commonground.test", "display_name": "Rosa Delgado" }
+  },
+  {
+    "slug": "ritual-grounds",
+    "name": "Ritual Grounds",
+    "category": "food_drink",
+    "neighborhood": "Hayes Valley",
+    "address": "432 Octavia St, San Francisco, CA",
+    "description": "Neighborhood café with a back room for tastings, talks and slow mornings.",
+    "lat": 37.78,
+    "lng": -122.42,
+    "capacity": 20,
+    "owner": { "email": "owner.ritual-grounds@commonground.test", "display_name": "Ben Okoro" }
+  },
+  {
+    "slug": "meeple-house",
+    "name": "Meeple House",
+    "category": "games",
+    "neighborhood": "SoMa",
+    "address": "875 Folsom St, San Francisco, CA",
+    "description": "Board-game venue with 400+ titles, game masters on staff and snacks.",
+    "lat": 37.78,
+    "lng": -122.40,
+    "capacity": 30,
+    "owner": { "email": "owner.meeple-house@commonground.test", "display_name": "Lina Vogel" }
+  }
+]

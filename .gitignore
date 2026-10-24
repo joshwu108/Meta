@@ -15,8 +15,13 @@ coverage/
 # OS
 .DS_Store
 
-# tooling output
+# test output
 playwright-report/
 test-results/
-*.tsbuildinfo
+tests/e2e/__screenshots__/**/*-actual.png
 next-env.d.ts
+*.tsbuildinfo
+
+# supabase local
+supabase/.branches
+supabase/.temp
