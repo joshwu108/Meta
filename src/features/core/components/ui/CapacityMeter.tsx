@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { cn } from './cn';
 
 export type CapacityMeterProps = { confirmed: number; capacity: number; className?: string; showLabel?: boolean };
@@ -23,11 +24,8 @@ export function CapacityMeter({ confirmed, capacity, className, showLabel = true
         className="h-1.5 flex-1 overflow-hidden rounded-pill bg-pressed"
       >
         <div
-          className={cn(
-            'h-full origin-left rounded-pill transition-transform duration-[400ms] ease-[var(--ease-standard)]',
-            isFull ? 'bg-danger' : isTight ? 'bg-warning' : 'bg-brand',
-          )}
-          style={{ transform: `scaleX(${ratio})` }}
+          className={cn('meter-fill h-full origin-left rounded-pill', isFull ? 'bg-danger' : isTight ? 'bg-warning' : 'bg-brand')}
+          style={{ '--meter-ratio': ratio } as CSSProperties}
         />
       </div>
       {showLabel && (

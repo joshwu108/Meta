@@ -114,6 +114,19 @@
   .rise-in {
     animation: rise-in var(--duration-normal) var(--ease-standard) both;
   }
+  /* Capacity meter fill: scales to --meter-ratio once on mount (transform only). */
+  .meter-fill {
+    transform: scaleX(var(--meter-ratio, 0));
+    animation: grow-x 400ms var(--ease-standard) both;
+  }
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(var(--meter-ratio, 0));
+    }
+  }
   /* Feed stagger: first paint of a list fades+rises each card 30ms after the previous, max 6. */
   .feed-stagger > * {
     animation: rise-in var(--duration-normal) var(--ease-standard) both;
@@ -136,6 +149,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .rise-in,
+    .meter-fill,
     .feed-stagger > * {
       animation: none;
     }
