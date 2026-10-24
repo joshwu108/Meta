@@ -1,0 +1,21 @@
+export const EVENT_STATUS = ['proposed','awaiting_approval','approved_draft','published','full','completed','cancelled'] as const;
+export const PROPOSAL_STATUS = ['pending','approved','modified','rejected','expired'] as const;
+export const CONNECTION_STATUS = ['pending','accepted','declined'] as const;
+export const MEMBERSHIP_STATUS = ['invited','active','removed','left'] as const;
+export const MEMBER_ROLE = ['owner','admin','member'] as const;
+export const RSVP_STATUS = ['confirmed','cancelled','waitlisted'] as const;
+export const VISIBILITY = ['public','private'] as const;
+export const GROUP_SIZE_PREF = ['one_on_one','small','medium','large'] as const; // 2 / 3-6 / 7-12 / 13+
+export const SOCIAL_GOAL = ['make_friends','explore_city','learn_skill','find_activity_partners','network'] as const;
+export const EVENT_CATEGORY = ['creative','food_drink','games','outdoors','fitness','learning','music','community'] as const;
+export const AVAILABILITY_SLOT = ['mon_eve','tue_eve','wed_eve','thu_eve','fri_eve','sat_day','sat_eve','sun_day','sun_eve'] as const;
+export const NOTIFICATION_TYPE = ['connection_request','connection_accepted','group_invite','event_recommended','event_published','rsvp_confirmed','event_updated','event_cancelled','proposal_received','proposal_decided','reconnect_suggestion'] as const;
+
+export type EventStatus = (typeof EVENT_STATUS)[number];
+export type ProposalStatus = (typeof PROPOSAL_STATUS)[number];
+export type RsvpStatus = (typeof RSVP_STATUS)[number];
+export type GroupSizePref = (typeof GROUP_SIZE_PREF)[number];
+export type SocialGoal = (typeof SOCIAL_GOAL)[number];
+export type EventCategory = (typeof EVENT_CATEGORY)[number];
+export type AvailabilitySlot = (typeof AVAILABILITY_SLOT)[number];
+export type NotificationType = (typeof NOTIFICATION_TYPE)[number];
