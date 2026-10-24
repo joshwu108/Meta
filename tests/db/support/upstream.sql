@@ -81,6 +81,8 @@ create table blocks (
 create table groups (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  description text,
+  interests text[] not null default '{}',
   visibility text not null default 'private',
   kind text not null default 'interest',
   event_id uuid,
