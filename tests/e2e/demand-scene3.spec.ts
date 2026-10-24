@@ -10,7 +10,9 @@ loadEnv({ path: '.env' });
 async function signIn(context: BrowserContext, baseURL: string, email: string, password: string): Promise<void> {
   const written: Array<{ name: string; value: string }> = [];
   const client = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-    cookies: { getAll: () => [], setAll: (cookies) => written.push(...cookies.map(({ name, value }) => ({ name, value }))) },
+    cookies: { getAll: () => [], setAll: (cookies: Array<{ name: string; value: string }>) => {
+      written.push(...cookies.map(({ name, value }) => ({ name, value })));
+    } },
   });
   const { error } = await client.auth.signInWithPassword({ email, password });
   if (error) throw new Error(`sign in failed: ${error.message}`);
