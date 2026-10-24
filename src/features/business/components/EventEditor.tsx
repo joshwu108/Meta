@@ -110,7 +110,7 @@ export function EventEditor({
         />
 
         {warnsAboutReconfirm ? (
-          <p className="flex items-start gap-2 rounded-sm bg-warning-soft px-3 py-2 text-sm">
+          <p className="flex items-start gap-2 rounded-sm bg-warning-soft px-3 py-2 text-sm text-warning-ink">
             <AlertTriangle aria-hidden size={16} strokeWidth={1.75} className="mt-0.5 shrink-0" />
             <span>
               {event.confirmedCount} {event.confirmedCount === 1 ? 'person has' : 'people have'}{' '}
