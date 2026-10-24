@@ -47,7 +47,7 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - [ ] Integration: confirm flips to `user_set` and sets `onboarding_completed_at`
 - [ ] Integration: PATCH preferences respects RLS
 - [ ] Integration: agent log row written when preferences shared
-- [ ] Prompt eval set: 10 transcripts in `tests/evals/agent/*.json` (running it needs a live key)
+- [x] Prompt eval set: 10 transcripts in `tests/evals/agent/*.json` (running it needs a live key)
 - [ ] E2E Scene 1
 
 ### Acceptance criteria (spec section 10)
@@ -78,9 +78,12 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 01: `profiles`, `agent_action_log`, `set_updated_at()` from `0100_core.sql`; `src/lib/api`, `src/lib/ai`, `logAgentAction`, `getCurrentUser`.
 
 ## Blocked
+- Running the live prompt eval (`pnpm tsx tests/evals/agent/run.ts`) needs `ANTHROPIC_API_KEY`; the set itself is committed and checked in CI.
+- Even with Docker, `0200_agent.sql` needs 01's `0100_core.sql` (`profiles`, `agent_action_log`, `set_updated_at()`), which is not on main yet.
 - Docker is not installed on this machine, so `supabase start` / `db reset` cannot run. Integration tests, the E2E scene and the full clean-state check wait on a human installing Docker Desktop.
 
 ## Log
 - 2026-10-24 15:31 · landed: progress checklist, tooling, 0200 migration, schemas, time-slot mapper, consent boundary core (37 unit tests). Next: explainRecommendation, rate limiter, onboarding loop, MOCK_AI fixtures.
 - 2026-10-24 15:45 · landed: explanations with grounding, rate limiter, extraction merge + anti-invention guard, MOCK_AI fixtures + prompts, repo, onboarding/preferences/chat services, index exports, follow-up suggestion (85 unit tests). Next: API routes, then UI.
 - 2026-10-24 16:05 · landed: 6 API routes (+ route tests), preferences seed + loader, tokens/layout, onboarding/agent/preferences/permissions/log screens; `pnpm build` green, 99 unit tests. Next: component tests, eval transcripts, Playwright Scene 1 spec (runs once Docker exists).
+- 2026-10-24 16:15 · landed: slot mapper per-clause fix, 10-transcript eval set + live runner, repo + follow-up tests; 114 unit tests, 95% line coverage on features/agent/server. Next: DB integration tests (auto-skip without Supabase), Playwright Scene 1 spec, UI component tests.
