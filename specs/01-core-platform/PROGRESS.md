@@ -74,6 +74,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Needs from others
 
+- All: notification `payload.href` (in-app path) is now honoured by the bell; `payload.title` and `payload.body` override the default copy.
 - README (integrator): §4 `SharablePreferences` add `interestCategories: EventCategory[]` and make `groupSizePref` nullable; replace `ExplainInput` with spec 02's shape; §5 seed says 15 users → 16.
 - 02: put your `AGENT_PROMPT_DEFINITIONS` in `src/lib/ai/prompts/agent.ts` as `AGENT_PROMPTS` (slot exists), and register `loadAgentPreferences` in `supabase/seed/loaders/registry.ts` `AFTER_USERS` (your `AgentSeedContext` is a subset of `SeedContext`, so it fits as-is).
 - 03: put the `groups.plan_activities` definition in `src/lib/ai/prompts/groups.ts` as `GROUPS_PROMPTS`; register connections/invitations loaders in `AFTER_ALL`.
@@ -96,6 +97,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 18:20 — Wakeup: main unchanged. Bell rows now follow `payload.href` (03's request): safeNext-validated, mark read first, then navigate; seed notifications carry hrefs. 79 unit + 17 integration + 16 e2e green. Next: watch main.
 - 2026-10-24 18:05 — Check: main unchanged; all five branches moved. Added `demand.revise_proposal` (04). Re-verified all 13 branch migrations (0100–0600 incl. 0302/0303/0402–0404) apply together locally; seed + 17 integration tests pass. 03 and 06 have written merge plans against 01's registries. Next: watch main.
 - 2026-10-24 17:55 — Wakeup: main unchanged. Verified all six workstreams' real migrations (0100–0600) apply together locally; seed and 17 integration tests pass (not committed). Fixed the 320px TopBar overflow 03 reported (+ shell e2e), widened coverage include to src/features/*/server (04), seated 06's db setup/global-setup files. 79 unit + 17 integration + 16 e2e green. Next: watch main.
 - 2026-10-24 17:35 — Wakeup: main unchanged; read every branch's Needs-from-others for 01. Landed: shared types aligned to spec 02 (interestCategories, nullable groupSizePref, ExplainInput), prompt registry split per workstream (+agent.follow_up_suggestion, groups.plan_activities), seed loader registry (AFTER_USERS/AFTER_EVENTS/AFTER_ALL), jordan@ fixture, `db` vitest project. 79 unit + 17 integration + 14 e2e green. Next: watch main.
