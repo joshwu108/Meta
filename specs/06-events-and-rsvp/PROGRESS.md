@@ -119,6 +119,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 17:08 PT: opened PR #2 (ws/06-events → main) for the integrator, marked merge-after-01 because this branch carries interim copies of 01's scaffold files. Not merged.
 - 2026-10-24 17:00 PT: asked 02 for event-specific MOCK_AI explanation cases (the current pottery case would label every event "You both love pottery").
 - 2026-10-24 16:58 PT: ws/02-agent added a privacy guard; 06 no longer reads 02's tables outside the getSharablePreferences stand-in (RSVP sheet prefills from 02's permissions route; shared-interest chips off pending 02's export). Own guard test added (150 tests).
 - 2026-10-24 16:48 PT: main unchanged; other branches unchanged since last read. Added an AC1 regression test on the real fixtures (01's six seeded events, 05's pottery night at $25, 02's Scene 1 preferences): the pottery night leads by at least 5 points on every demo weekday (148 tests). Waiting on main.
