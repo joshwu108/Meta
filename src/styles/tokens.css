@@ -28,6 +28,7 @@
   --color-success-soft: #e6f4ea;
   --color-warning: #f7b928;
   --color-warning-soft: #fff4d6;
+  --color-warning-ink: #8a5a00; /* text on warning-soft (AA) */
   --color-danger: #e41e3f;
   --color-danger-soft: #fde8ec;
 
@@ -114,6 +115,7 @@
     --color-success-soft: #1f3a27;
     --color-warning: #f7b928;
     --color-warning-soft: #3d3416;
+    --color-warning-ink: #f7b928;
     --color-danger: #f3425f;
     --color-danger-soft: #3f1f26;
     --gradient-ai-soft: linear-gradient(135deg, #1f2e4d 0%, #2a2650 50%, #3d1f3d 100%);
@@ -146,6 +148,7 @@
   --color-success-soft: #1f3a27;
   --color-warning: #f7b928;
   --color-warning-soft: #3d3416;
+  --color-warning-ink: #f7b928;
   --color-danger: #f3425f;
   --color-danger-soft: #3f1f26;
   --gradient-ai-soft: linear-gradient(135deg, #1f2e4d 0%, #2a2650 50%, #3d1f3d 100%);

@@ -23,6 +23,7 @@
   --color-success-soft: var(--color-success-soft);
   --color-warning: var(--color-warning);
   --color-warning-soft: var(--color-warning-soft);
+  --color-warning-ink: var(--color-warning-ink);
   --color-danger: var(--color-danger);
   --color-danger-soft: var(--color-danger-soft);
   --color-ai-ink: var(--color-ai-ink);
@@ -113,6 +114,16 @@
   .rise-in {
     animation: rise-in var(--duration-normal) var(--ease-standard) both;
   }
+  /* Feed stagger: first paint of a list fades+rises each card 30ms after the previous, max 6. */
+  .feed-stagger > * {
+    animation: rise-in var(--duration-normal) var(--ease-standard) both;
+  }
+  .feed-stagger > :nth-child(2) { animation-delay: 30ms; }
+  .feed-stagger > :nth-child(3) { animation-delay: 60ms; }
+  .feed-stagger > :nth-child(4) { animation-delay: 90ms; }
+  .feed-stagger > :nth-child(5) { animation-delay: 120ms; }
+  .feed-stagger > :nth-child(6) { animation-delay: 150ms; }
+  .feed-stagger > :nth-child(n + 7) { animation: none; }
   @keyframes rise-in {
     from {
       opacity: 0;
@@ -124,7 +135,8 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .rise-in {
+    .rise-in,
+    .feed-stagger > * {
       animation: none;
     }
     * {

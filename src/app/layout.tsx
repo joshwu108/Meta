@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // Browser chrome color; mirrors --color-canvas in tokens.css (meta tags cannot read CSS vars).
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#F0F2F5' },
     { media: '(prefers-color-scheme: dark)', color: '#18191A' },

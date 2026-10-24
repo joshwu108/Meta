@@ -47,7 +47,7 @@ const TONES: Record<string, Tone> = {
 
 const toneClass: Record<Tone, string> = {
   success: 'bg-success-soft text-success',
-  warning: 'bg-warning-soft text-[color:oklch(45%_0.12_75)] dark:text-warning',
+  warning: 'bg-warning-soft text-warning-ink',
   danger: 'bg-danger-soft text-danger',
   neutral: 'bg-surface-2 text-text-2',
   brand: 'bg-brand-soft text-brand',
