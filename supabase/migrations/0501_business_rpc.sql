@@ -10,6 +10,13 @@
 
 -- ------------------------------------------------------------- trust helpers
 
+-- True only for a worker, never for a signed-in owner.
+--
+-- `session_user`, not `current_user`: this is called from SECURITY DEFINER functions, where
+-- `current_user` is the function's owner (`postgres`) for every caller. Using it here made
+-- every authenticated request look like a trusted server and bypassed the ownership check
+-- in each RPC below. `session_user` keeps the role that actually connected — `authenticator`
+-- under PostgREST, `postgres` for a psql session or the seed runner.
 create or replace function is_trusted_server() returns boolean
 language sql stable as $$
   select coalesce(
@@ -17,7 +24,7 @@ language sql stable as $$
            nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role',
            ''
          ) = 'service_role'
-      or current_user in ('postgres', 'supabase_admin', 'service_role');
+      or session_user in ('postgres', 'supabase_admin', 'service_role');
 $$;
 
 create or replace function can_act_on_business(p_business_id uuid) returns boolean
