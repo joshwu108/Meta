@@ -1,5 +1,7 @@
 # Merging ws/01-core into ws/06-events
 
+**Done** on 2026-10-24: main (with ws/01-core) merged into ws/06-events at `422ecf3` following these steps; the follow-ups in §4 for UI primitives, the API client and Discover's rail landed in `b8e72f4`. Kept as the record of how the 14 conflicts were resolved.
+
 Rehearsed three times on 2026-10-24 in throwaway worktrees; latest against `integration/ws01` `67c7e8a` (draft PR #3, what main will be fast-forwarded to) from ws/06-events `197c962`. After the steps below: typecheck 0 errors, lint 0 errors (2 `<img>` warnings), 176 unit + 61 db tests green, `next build` compiles. pnpm runs scripts on Node 22.20 there (`.npmrc`). Whoever merges (06's worker on its next sync, or the integrator) can follow it as written.
 
 ## 1. Conflicts (14 files)
