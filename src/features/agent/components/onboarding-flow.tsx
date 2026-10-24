@@ -143,13 +143,13 @@ function Review() {
   );
 }
 
-/** Screen 1: basics → talk to your agent → review & confirm. */
-export function OnboardingFlow() {
+/** Screen 1: basics → talk to your agent → review & confirm. `displayName` greets the signed-in user. */
+export function OnboardingFlow({ displayName }: { displayName?: string }) {
   const [step, setStep] = useState<Step>("basics");
   return (
     <main className={`${s.page} ${step === "talk" ? s.wide : ""}`}>
       <Progress step={step} />
-      <h1 className={s.lead}>Welcome to CommonGround</h1>
+      <h1 className={s.lead}>{displayName ? `Hi ${displayName}, welcome to CommonGround` : "Welcome to CommonGround"}</h1>
       {step === "basics" ? <Basics onDone={() => setStep("talk")} /> : null}
       {step === "talk" ? <Talk onDone={() => setStep("review")} /> : null}
       {step === "review" ? <Review /> : null}
