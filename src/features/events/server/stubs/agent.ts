@@ -1,8 +1,7 @@
 import "server-only";
 import type { AvailabilitySlot, EventCategory } from "@/shared/enums";
 import type { SharablePreferences } from "@/shared/types";
-import type { ScoreBreakdown } from "../recommend";
-import { createAdminClient } from "./core";
+import { createAdminClient, logAgentAction } from "./core";
 
 // Stand-ins for 02's exports (specs/02-onboarding-and-agent/specs.md §5). Only these stubs read
 // 02's tables; replace each with the real export from "@/features/agent" when it lands.
@@ -19,7 +18,7 @@ type Consent = Record<string, boolean | undefined>;
 export async function getSharablePreferences(
   userId: string,
   purpose: Purpose,
-): Promise<(SharablePreferences & { interestCategories: EventCategory[] }) | null> {
+): Promise<SharablePreferences | null> {
   const db = createAdminClient();
   const [{ data: prefs }, { data: agent }, { data: profile }] = await Promise.all([
     db.from("user_preferences").select("*").eq("user_id", userId).maybeSingle(),
@@ -32,7 +31,6 @@ export async function getSharablePreferences(
   return {
     userId,
     interests: prefs.interests ?? [],
-    interestCategories: prefs.interest_categories ?? [],
     availabilitySlots: prefs.availability_slots ?? [],
     socialGoals: prefs.social_goals ?? [],
     groupSizePref: prefs.group_size_pref ?? "small",
@@ -46,23 +44,30 @@ export async function getSharablePreferences(
   };
 }
 
-export type ExplainEventInput = {
+/** 02's ExplainInput (src/features/agent/server/explain.ts on ws/02-agent). */
+export type ExplainInput = {
   viewer: SharablePreferences;
-  target: { kind: "event"; title: string; category: EventCategory; slotLabel: string | null; capacity: number; priceCents: number | null };
-  breakdown: ScoreBreakdown;
+  target:
+    | { kind: "person"; preferences: SharablePreferences; displayName?: string }
+    | { kind: "event"; event: Record<string, unknown> }
+    | { kind: "group"; group: Record<string, unknown> };
+  breakdown: Record<string, unknown>;
 };
 
 /** Templated "why" built only from the input, standing in for 02's `agent.explain_recommendation`. */
-export async function explainRecommendation(input: ExplainEventInput): Promise<string> {
-  const { target, breakdown } = input;
+export async function explainRecommendation(input: ExplainInput): Promise<string> {
+  if (input.target.kind !== "event") return "Matches your preferences and availability.";
+  const event = input.target.event as { title?: string; slot?: string | null; capacity?: number; priceCents?: number | null };
+  const b = input.breakdown as Partial<Record<"interest" | "slot" | "budget" | "proximity" | "social", number>>;
+  const title = event.title ?? "This event";
   const parts = [
-    breakdown.interest > 0 ? `${target.title} fits your interests` : target.title,
-    breakdown.slot > 0 && target.slotLabel ? `on a ${target.slotLabel}` : null,
+    (b.interest ?? 0) > 0 ? `${title} fits your interests` : title,
+    (b.slot ?? 0) > 0 && event.slot ? `on a ${event.slot}` : null,
   ].filter(Boolean);
   const extras = [
-    breakdown.social >= 7 ? `${target.capacity <= 6 ? "small" : "right-sized"} group` : null,
-    breakdown.budget === 15 ? (target.priceCents ? "within your budget" : "free") : null,
-    breakdown.proximity >= 7 ? "close to you" : null,
+    (b.social ?? 0) >= 7 ? `${(event.capacity ?? 0) <= 6 ? "small" : "right-sized"} group` : null,
+    b.budget === 15 ? (event.priceCents ? "within your budget" : "free") : null,
+    (b.proximity ?? 0) >= 7 ? "close to you" : null,
   ].filter(Boolean);
   return [parts.join(" "), ...extras].join(", ") + ".";
 }
@@ -96,29 +101,33 @@ export async function getRsvpConsentDefaults(userId: string): Promise<{ shareWit
   };
 }
 
-export type FollowUpInput = {
-  a: SharablePreferences | null;
-  b: SharablePreferences | null;
-  event: { title: string; category: EventCategory; neighborhood: string };
-};
-
 const SLOT_PHRASE: Record<string, string> = {
   sat_day: "Saturday morning", sun_day: "Sunday morning", sat_eve: "Saturday evening", sun_eve: "Sunday evening",
   mon_eve: "Monday evening", tue_eve: "Tuesday evening", wed_eve: "Wednesday evening", thu_eve: "Thursday evening",
   fri_eve: "Friday evening",
 };
 
-/** Stand-in for 02's `agent.follow_up_suggestion` prompt: a coffee meetup in a slot both share. */
-export async function suggestFollowUp(input: FollowUpInput): Promise<{
-  title: string; description: string; suggestedSlot: AvailabilitySlot; suggestedBusinessCategory: EventCategory;
-}> {
-  const theirs = new Set(input.b?.availabilitySlots ?? []);
-  const shared = (input.a?.availabilitySlots ?? []).filter((s) => theirs.has(s));
+/**
+ * Stand-in for 02's suggestFollowUp (same signature): both people's consented preferences are
+ * required, and like 02's version it writes one agent-log row per person.
+ */
+export async function suggestFollowUp(input: {
+  a: SharablePreferences;
+  b: SharablePreferences;
+  event: { title: string; category: EventCategory; startsAt: string };
+}): Promise<{ title: string; description: string; suggestedSlot: AvailabilitySlot; suggestedBusinessCategory: EventCategory }> {
+  const theirs = new Set(input.b.availabilitySlots);
+  const shared = input.a.availabilitySlots.filter((s) => theirs.has(s));
   const suggestedSlot: AvailabilitySlot = shared.find((s) => s.endsWith("_day")) ?? shared[0] ?? "sat_day";
-  return {
+  const suggestion = {
     title: `Coffee, ${SLOT_PHRASE[suggestedSlot]}`,
-    description: `You both enjoyed ${input.event.title}. Pick up the conversation over coffee near ${input.event.neighborhood || "the venue"}.`,
+    description: `You both enjoyed ${input.event.title}. Pick up the conversation over coffee.`,
     suggestedSlot,
-    suggestedBusinessCategory: "food_drink",
+    suggestedBusinessCategory: "food_drink" as const,
   };
+  await Promise.all([input.a.userId, input.b.userId].map((userId) => logAgentAction({
+    userId, actor: "personal_agent", action: "follow_up_suggestion", permissionsUsed: ["reconnect"],
+    result: `Suggested a follow-up: ${suggestion.title}`,
+  })));
+  return suggestion;
 }

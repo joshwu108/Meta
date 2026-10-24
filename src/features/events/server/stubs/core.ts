@@ -70,14 +70,16 @@ export async function notify(userId: string, type: NotificationType, payload: Re
   if (error) throw new ApiError("INTERNAL", "Could not create notification");
 }
 
+/** Same input as 01's logAgentAction; like 01's, an audit failure never breaks the caller. */
 export async function logAgentAction(input: {
-  userId: string; action: string; permissionsUsed: string[]; result: string;
+  userId?: string | null; actor?: "personal_agent" | "coordination" | "demand_engine" | "planning_agent";
+  action: string; permissionsUsed?: string[]; result: string;
 }): Promise<void> {
   const { error } = await createAdminClient().from("agent_action_log").insert({
-    user_id: input.userId, actor: "coordination", action: input.action,
-    permissions_used: input.permissionsUsed, result: input.result,
+    user_id: input.userId ?? null, actor: input.actor ?? "personal_agent", action: input.action,
+    permissions_used: input.permissionsUsed ?? [], result: input.result,
   });
-  if (error) throw new ApiError("INTERNAL", "Could not log agent action");
+  if (error) console.error(JSON.stringify({ level: "error", msg: "agent_log.insert_failed", action: input.action }));
 }
 
 export type NotificationItem = { id: string; type: string; payload: Record<string, unknown>; readAt: string | null; createdAt: string };

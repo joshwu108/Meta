@@ -92,6 +92,29 @@ describe.skipIf(!available)("06 edge cases against Postgres", () => {
     await expect(respondToFollowUp(b, id, "accept")).rejects.toMatchObject({ code: "CONFLICT" });
   });
 
+  it("asks the agent for the suggestion only when both people consent, logging one action each", async () => {
+    const { setConsent, setPreferences } = await import("../support/factories");
+    const consenting = await pairAfterEvent();
+    for (const u of [consenting.a, consenting.b]) {
+      await setPreferences(db.pool, u, { interests: ["coffee"], categories: ["food_drink"], slots: ["sun_day", "thu_eve"] });
+      await setConsent(db.pool, u, { allow_matching: true });
+    }
+    const private_ = await pairAfterEvent();
+
+    await createFollowUp(consenting.eventId, consenting.a, consenting.b);
+    await createFollowUp(private_.eventId, private_.a, private_.b);
+
+    const { rows } = await db.pool.query(
+      `select f.event_id, f.suggestion->>'suggestedSlot' as slot,
+              (select count(*)::int from agent_action_log l where l.user_id in (f.user_a, f.user_b)) as logs
+       from follow_up_suggestions f where f.event_id = any($1)`,
+      [[consenting.eventId, private_.eventId]],
+    );
+    const byEvent = new Map(rows.map((r) => [r.event_id, r]));
+    expect(byEvent.get(consenting.eventId)).toMatchObject({ slot: "sun_day", logs: 2 });
+    expect(byEvent.get(private_.eventId)).toMatchObject({ slot: "sat_day", logs: 0 });
+  });
+
   it("keeps a second accept by the same person idempotent", async () => {
     const { eventId, a, b } = await pairAfterEvent();
     const id = await createFollowUp(eventId, a, b);

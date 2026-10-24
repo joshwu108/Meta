@@ -43,9 +43,11 @@ async function explain(prefs: SharablePreferences, ranked: RankedEvent): Promise
   const text = await explainRecommendation({
     viewer: prefs,
     target: {
-      kind: "event", title: event.title, category: event.category,
-      slotLabel: ranked.slot ? SLOT_LABELS[ranked.slot] ?? null : null,
-      capacity: event.capacity, priceCents: event.priceCents,
+      kind: "event",
+      event: {
+        title: event.title, category: event.category, slot: ranked.slot ? SLOT_LABELS[ranked.slot] ?? null : null,
+        capacity: event.capacity, priceCents: event.priceCents,
+      },
     },
     breakdown: ranked.breakdown,
   }).catch(() => FALLBACK_EXPLANATION);

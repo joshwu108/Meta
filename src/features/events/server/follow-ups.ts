@@ -5,7 +5,7 @@ import { FollowUpSuggestion } from "../schemas";
 import { haversineKm, type LatLng } from "./geo";
 import { venueOf } from "./mappers";
 import { getEventsByIds, getVisibleEvent, profilePreviews, type ProfilePreview } from "./repo";
-import { ApiError, createAdminClient, getSharablePreferences, logAgentAction, notify, suggestFollowUp } from "./stubs";
+import { ApiError, createAdminClient, getSharablePreferences, notify, suggestFollowUp } from "./stubs";
 
 export const FOLLOW_UP_STATUS = ["suggested", "accepted_a", "accepted_b", "accepted_both", "dismissed"] as const;
 export type FollowUpStatus = (typeof FOLLOW_UP_STATUS)[number];
@@ -22,6 +22,16 @@ export function nextFollowUpStatus(current: FollowUpStatus, side: "a" | "b", act
 }
 
 const canonicalPair = (x: string, y: string): [string, string] => (x < y ? [x, y] : [y, x]);
+
+/** Used when either person has not consented to sharing preferences: no AI, no personal data. */
+function defaultFollowUp(eventTitle: string): FollowUpSuggestion {
+  return {
+    title: "Coffee, Saturday morning",
+    description: `You both enjoyed ${eventTitle}. Pick up the conversation over coffee.`,
+    suggestedSlot: "sat_day",
+    suggestedBusinessCategory: "food_drink",
+  };
+}
 
 async function nearestBusinessId(admin: SupabaseClient, category: string, near: LatLng): Promise<string | undefined> {
   const { data } = await admin.from("businesses").select("id, lat, lng").eq("category", category).eq("is_active", true);
@@ -41,9 +51,10 @@ export async function createFollowUp(eventId: string, userX: string, userY: stri
   const event = await getVisibleEvent(admin, eventId);
   if (!event) throw new ApiError("NOT_FOUND", "Event not found");
   const [a, b] = await Promise.all([getSharablePreferences(userA, "matching"), getSharablePreferences(userB, "matching")]);
-  const raw = FollowUpSuggestion.parse(await suggestFollowUp({
-    a, b, event: { title: event.title, category: event.category, neighborhood: event.businesses.neighborhood ?? "" },
-  }));
+  // 02's agent needs both people's consented preferences; without them, a non-AI default.
+  const raw = FollowUpSuggestion.parse(a && b
+    ? await suggestFollowUp({ a, b, event: { title: event.title, category: event.category, startsAt: event.starts_at } })
+    : defaultFollowUp(event.title));
   const businessId = await nearestBusinessId(admin, raw.suggestedBusinessCategory, venueOf(event));
   const suggestion = { ...raw, ...(businessId ? { businessId } : {}) };
 
@@ -54,12 +65,7 @@ export async function createFollowUp(eventId: string, userX: string, userY: stri
   const created = data?.[0]?.id as string | undefined;
   if (!created) return createFollowUp(eventId, userA, userB);
 
-  await Promise.all(
-    [userA, userB].flatMap((userId) => [
-      notify(userId, "reconnect_suggestion", { eventId, suggestionId: created }),
-      logAgentAction({ userId, action: "suggest_follow_up", permissionsUsed: ["matching"], result: `Suggested a follow-up after ${event.title}` }),
-    ]),
-  );
+  await Promise.all([userA, userB].map((userId) => notify(userId, "reconnect_suggestion", { eventId, suggestionId: created })));
   return created;
 }
 

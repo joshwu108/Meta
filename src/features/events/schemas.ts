@@ -34,8 +34,8 @@ export const RecommendedQuery = z.object({ limit: z.coerce.number().int().min(1)
 export const NearbyQuery = z.object({ radiusKm: z.coerce.number().positive().max(50).default(5) });
 
 export const FollowUpSuggestion = z.object({
-  title: z.string().min(1).max(80),
-  description: z.string().max(300),
+  title: z.string().min(1).max(100),
+  description: z.string().max(400),
   suggestedSlot: z.enum(AVAILABILITY_SLOT),
   suggestedBusinessCategory: z.enum(EVENT_CATEGORY),
   businessId: id.optional(),
