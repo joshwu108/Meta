@@ -13,11 +13,11 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 ## Acceptance criteria (P0, spec §10)
 
-- [ ] AC1. Seeded demo user receives ranked matches whose top 3 share `creative` interests and `thu_eve`
-- [ ] AC2. Every match card shows an explanation grounded in shared fields
+- [x] AC1. Seeded demo user receives ranked matches whose top 3 share `creative` interests and `thu_eve` (verified with the interim 02 §8 preferences fixture until 02's seed lands)
+- [x] AC2. Every match card shows an explanation grounded in shared fields
 - [x] AC3. Connection, block, report, group create/invite/accept/remove/leave all work and respect authorization
 - [x] AC4. Group planner produces 2–4 suggestions referencing only shared slots and consenting members' data
-- [ ] AC5. A group can view upcoming events (through 06's contract) and open them
+- [x] AC5. A group can view upcoming events (through 06's contract) and open them (contract-level test against 06's stand-in; real events need 05/06 on main)
 
 ## Build items (P0, spec §3, §6, §7)
 
@@ -29,9 +29,9 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 - [x] `POST /api/groups/:id/invite`, `PATCH /api/invitations/:id`
 - [x] `DELETE /api/groups/:id/members/:userId`, `POST /api/groups/:id/leave` (with owner transfer)
 - [x] `POST /api/groups/:id/plan` (group planner)
-- [ ] UI `/match` (Screen 3)
-- [ ] UI `/groups` (Screen 4)
-- [ ] UI `/groups/:id` (Screen 5)
+- [x] UI `/match` (Screen 3)
+- [x] UI `/groups` (Screen 4)
+- [x] UI `/groups/:id` (Screen 5)
 - [x] Seed: group members, `connections.json` (6 accepted edges), one block pair
 
 ## Tests (spec §9)
@@ -55,15 +55,15 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 - [x] Planner never includes names in prompt input (assert on captured mock input)
 
 ### E2E
-- [ ] Scene 2: demo user sees ≥ 3 matches with explanations → connects with one → creates "Thursday Makers" (private) → invites 2 → second seeded user accepts via API → roster shows 2 active
+- [x] Scene 2: demo user sees ≥ 3 matches with explanations → connects with one → creates "Thursday Makers" (private) → invites 2 → second seeded user accepts via API → roster shows 2 active
 
 ## P1
 
-- [ ] Voting on planner suggestions (`POST /api/groups/:id/plans/:planId/vote`) — API done, UI pending
-- [ ] Send a chosen `new_activity` suggestion to 04 as a group-originated proposal request
-- [ ] Filters on `/match` by interest and social goal — API done (`?interest=&goal=`), UI pending
+- [x] Voting on planner suggestions (`POST /api/groups/:id/plans/:planId/vote`)
+- [ ] Send a chosen `new_activity` suggestion to 04 as a group-originated proposal request — eligibility (≥ 50% votes) and the "Request venue" button are done; needs 04's `source: 'group'` path
+- [x] Filters on `/match` by interest and social goal
 - [ ] Basic 1:1 messaging between accepted connections (text only, polled)
-- [ ] Public group discovery (`/groups/discover`) — API done (`GET /api/groups?discover=1`), UI pending
+- [x] Public group discovery (`/groups/discover`)
 
 ## Decisions
 
@@ -90,6 +90,11 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 - 2026-10-24: Planner requires at least one slot all consenting members share (VALIDATION otherwise). Candidate events: published, in a shared slot, in a member category, within the budget envelope. If the model fails, suggestions come from the aggregates; every plan has 2–4 suggestions and leads with a candidate event when one exists. Members' full and first names are scrubbed from the request before it reaches the model. Each consenting member gets one `group_plan` agent log row.
 - 2026-10-24: Votes toggle per member and suggestion; a `new_activity` that needs a venue becomes eligible to send to 04 at ≥ 50% of active members.
 
+- 2026-10-24: UI uses 01's primitives and tokens from `@/features/core/components/ui`. `/match` leads with the top match (breakdown open) and lists the rest as compact rows; `/groups` leads with invitations when there are any; on a group page the planner is the lead element. Chips show shared tags when there are any (their categories are implied), otherwise shared categories.
+- 2026-10-24: Client components call routes through `src/lib/api/fetch-json.ts` and `use-api-action.ts` (new, client-safe; the `@/lib/api` index pulls in server-only modules). A missing route (e.g. 04's group venue request before 04 ships) shows "This isn't available yet" instead of a network error.
+- 2026-10-24: The invite picker lists accepted connections, people with an open request, then matches; the server re-checks reachability and blocks.
+- 2026-10-24: `tests/fixtures/social/preferences.json` is an interim copy of 02 §8's seed design used by the AC1 integration test and the Scene 2 E2E (applied with the service role after the seed). It is never loaded by `pnpm db:seed`, so it cannot collide with 02's `preferences.json`.
+
 ## Needs from others
 
 - Integrator: merge ws/01-core to main first. This branch carries byte-identical copies of 01's files and of 02's `0200_agent.sql`; after 01 lands, regenerate `src/lib/supabase/database.types.ts` on main (`pnpm db:types`) since every workstream regenerates it.
@@ -100,10 +105,13 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 - 06: swap your 03 stubs for the real exports, same signatures: `getConnectionIds`, `getBlockEdges`, `getSuggestedPeople` from `@/features/matching`; `getGroupMemberIds`, `createEventInvitations`, `getPendingEventInviteeIds`, `getPendingEventInvitations`, `getPublicGroups` from `@/features/groups`.
 - 06: `EventSummary` has no `category`, so the planner calls `getEventPublic` per candidate; adding `category` to `EventSummary` would remove those lookups. `getUpcomingEventsForUser` also does not say whether an RSVP is shared with attendees, so group pages show only a count of members going.
 
+- 04 (P1 group proposals): the group page's "Request venue" posts `{ source: 'group', groupId, planId, suggestionIndex }` to `POST /api/ai/generate-opportunities` once a `new_activity` that needs a venue has ≥ 50% of active members' votes. 03 can export the suggestion plus aggregates (category, slot, group size, budget envelope, neighborhood, no member ids) for 04 to read; say which shape you want.
+
 ## Blocked
 
 ## Log
 
+- 2026-10-24 17:05 CDT · landed: `/match` (lead card, compact rows, filters, connect/block/report sheets, requests tab), `/groups`, `/groups/:id` (planner lead, votes, venue request, events, members/invite/transfer/leave), `/groups/discover`; AC1 integration test; Scene 2 Playwright test. All P0 items ticked. Totals: 138 unit, 78 integration, 15 E2E green (earlier log line's "112" should have read 120). Next: P1 messaging, 04 venue-request export, coverage, clean-state check.
 - 2026-10-24 16:45 CDT · landed: matches service + `GET /api/matches` with grounded explanations; connection, block and report routes; group services, invitations, removal, transfer, leave/archive; group planner (consent-gated aggregates, name scrubbing, validation, fallbacks) and votes; matching/groups contracts for 06. 112 unit+integration tests across 03 (63 unit, 57 integration incl. seed). Next: `/match`, `/groups`, `/groups/:id` UI, then the Scene 2 E2E.
 
 - 2026-10-24 16:25 CDT · landed: progress file; 01 scaffold + 02 migration copies; 0300/0301 migrations (RLS, guards, service functions) with 18 integration tests; seed contribution (groups, 6 connections, a block) with 3 tests; compatibility scorer with 34 unit tests. Next: matches service + `GET /api/matches`, then connections, block and report routes.
