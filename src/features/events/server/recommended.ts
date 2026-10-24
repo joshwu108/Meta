@@ -1,5 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
+import type { AvailabilitySlot } from "@/shared/enums";
 import type { SharablePreferences } from "@/shared/types";
 import type { EventRow } from "../schemas";
 import { loadCardContext, toEventCard, type EventCard } from "./cards";
@@ -14,6 +15,7 @@ const FALLBACK_EXPLANATION = "Coming up soon near you.";
 
 export type RecommendedEvent = {
   event: EventCard;
+  slot: AvailabilitySlot | null;
   score: number | null;
   breakdown: ScoreBreakdown | null;
   explanation: string;
@@ -78,6 +80,7 @@ export async function getRecommendedEvents(viewerId: string, limit: number): Pro
   return Promise.all(
     ranked.map(async (r) => ({
       event: toEventCard(byId.get(r.event.id)!, ctx),
+      slot: r.slot,
       score: r.score,
       breakdown: r.breakdown,
       explanation: prefs ? await explain(prefs, r) : FALLBACK_EXPLANATION,

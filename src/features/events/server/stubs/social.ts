@@ -81,3 +81,29 @@ export async function getPendingEventInvitations(userId: string): Promise<Pendin
     senderId: r.sender_id as string, createdAt: r.created_at as string,
   }));
 }
+
+export type GroupCard = { id: string; name: string; memberCount: number };
+
+/** Public groups for Discover, largest first (03 owns groups; replace with its export). */
+export async function getPublicGroups(limit: number): Promise<GroupCard[]> {
+  const admin = createAdminClient();
+  const { data: groups, error } = await admin.from("groups").select("id, name").eq("visibility", "public").limit(20);
+  if (error) throw error;
+  const ids = (groups ?? []).map((g) => g.id as string);
+  const { data: members } = ids.length
+    ? await admin.from("group_members").select("group_id").eq("status", "active").in("group_id", ids)
+    : { data: [] };
+  const counts = new Map<string, number>();
+  for (const m of members ?? []) counts.set(m.group_id as string, (counts.get(m.group_id as string) ?? 0) + 1);
+  return (groups ?? [])
+    .map((g) => ({ id: g.id as string, name: g.name as string, memberCount: counts.get(g.id as string) ?? 0 }))
+    .sort((a, b) => b.memberCount - a.memberCount)
+    .slice(0, limit);
+}
+
+export type SuggestedPerson = { userId: string; displayName: string; avatarUrl: string | null; explanation: string };
+
+/** 03's top matches for Discover. Empty until 03 exports its match list (GET /api/matches logic). */
+export async function getSuggestedPeople(_userId: string, _limit: number): Promise<SuggestedPerson[]> {
+  return [];
+}

@@ -176,3 +176,8 @@ export async function viewerLocation(db: SupabaseClient, userId: string): Promis
     lng: data?.coarse_lng == null ? null : Number(data.coarse_lng),
   };
 }
+
+export async function hasFeedback(db: SupabaseClient, userId: string, eventId: string): Promise<boolean> {
+  const data = must(await db.from("event_feedback").select("event_id").eq("user_id", userId).eq("event_id", eventId).maybeSingle());
+  return data !== null;
+}

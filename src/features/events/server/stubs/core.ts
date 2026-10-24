@@ -93,3 +93,10 @@ export async function listNotifications(userId: string, limit = 20): Promise<Not
     readAt: (n.read_at ?? null) as string | null, createdAt: n.created_at as string,
   }));
 }
+
+/** Signed-in user id for server components; null when there is no session (01's getCurrentUser). */
+export async function getCurrentUserId(): Promise<string | null> {
+  const supabase = await createUserClient();
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? null;
+}

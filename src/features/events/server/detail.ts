@@ -2,7 +2,7 @@ import "server-only";
 import type { BusinessPublicCard, EventPublic } from "@/shared/types";
 import { loadAttendeeData } from "./attendees";
 import { toBusinessCard, toEventPublic } from "./mappers";
-import { confirmedCounts, getVisibleEvent, myRsvps, type MyRsvp } from "./repo";
+import { confirmedCounts, getVisibleEvent, hasFeedback, myRsvps, type MyRsvp } from "./repo";
 import { ApiError, createAdminClient, getRsvpConsentDefaults } from "./stubs";
 import { buildAttendeeList, type AttendeeView } from "./visibility";
 
@@ -14,6 +14,7 @@ export type EventDetail = EventPublic & {
   venue: BusinessPublicCard & { lat: number; lng: number };
   attendeePreview: { count: number; avatars: AttendeeView[] };
   consentDefaults: { shareWithAttendees: boolean; shareWithBusiness: boolean };
+  feedbackGiven: boolean;
 };
 
 /**
@@ -25,11 +26,12 @@ export async function getEventDetail(viewerId: string, eventId: string): Promise
   const row = await getVisibleEvent(admin, eventId);
   if (!row) throw new ApiError("NOT_FOUND", "Event not found");
 
-  const [counts, mine, attendeeData, consentDefaults] = await Promise.all([
+  const [counts, mine, attendeeData, consentDefaults, feedbackGiven] = await Promise.all([
     confirmedCounts(admin, [eventId]),
     myRsvps(admin, viewerId, [eventId]),
     loadAttendeeData(admin, viewerId, eventId),
     getRsvpConsentDefaults(viewerId),
+    row.status === "completed" ? hasFeedback(admin, viewerId, eventId) : Promise.resolve(false),
   ]);
   const rsvp = mine.get(eventId) ?? null;
   const confirmed = rsvp?.status === "confirmed";
@@ -48,5 +50,6 @@ export async function getEventDetail(viewerId: string, eventId: string): Promise
     venue: { ...toBusinessCard(row.businesses), lat: row.businesses.lat, lng: row.businesses.lng },
     attendeePreview: { count: list.count, avatars },
     consentDefaults,
+    feedbackGiven,
   };
 }
