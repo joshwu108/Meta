@@ -3,7 +3,8 @@ import { signIn } from "./support";
 
 // Scene 5: the published pottery event leads Discover with an explanation; RSVP with sharing on;
 // Activity lists it. Requires Scene 4 (05 publishes the event) or the seeded equivalent.
-const DEMO_EMAIL = process.env.E2E_DEMO_EMAIL ?? "demo@commonground.test";
+// The Scene 1 user carries on into Scene 5 (01 seeds demo.new@ with no preferences).
+const DEMO_EMAIL = process.env.E2E_DEMO_EMAIL ?? "demo.new@commonground.test";
 const TITLE = "Beginner Pottery & Coffee Night";
 
 test("Discover leads with the pottery night, RSVP with sharing, Activity shows it", async ({ page }) => {

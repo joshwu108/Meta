@@ -8,7 +8,7 @@ import { createBusiness, createEvent, createUser } from "../support/factories";
 vi.mock("server-only", () => ({}));
 
 const available = await isDbAvailable();
-const NAMES = ["maya", "jordan", "alex", "sam", "priya", "lee", "rosa", "theo", "nina", "omar", "demo.new", "demo"];
+const NAMES = ["maya", "jordan", "sam", "priya", "theo", "nina", "leo", "ana", "kai", "omar", "demo.new", "demo"];
 
 describe("seed planning", () => {
   it("never seeds RSVPs for demo or owner accounts", () => {
@@ -43,7 +43,7 @@ describe.skipIf(!available)("seedEventsAndRsvps against Postgres", () => {
     const admin = fakeSupabase(db.pool) as unknown as SupabaseClient;
 
     const first = await seedEventsAndRsvps(admin, users);
-    const second = await seedEventsAndRsvps(admin, users);
+    const second = await seedEventsAndRsvps(admin, new Map(Object.entries(users)));
 
     expect(first.rsvps).toBeGreaterThan(0);
     expect(second).toEqual({ rsvps: 0, fullEventId: first.fullEventId, completedEventId: first.completedEventId });

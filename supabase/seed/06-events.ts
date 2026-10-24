@@ -2,7 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import fixture from "./fixtures/events-06.json";
 
 // Workstream 06 seed contribution (spec §8). Called by 01's seed runner after users, businesses
-// and events are loaded, with the runner's email → user id map. Idempotent: re-running adds nothing.
+// and events are loaded, with the runner's email → user id map (`ctx.usersByEmail`).
+// Idempotent: re-running adds nothing.
 
 export type SeedSummary = { rsvps: number; fullEventId: string | null; completedEventId: string | null };
 
@@ -71,8 +72,9 @@ async function seedCompletedEvent(admin: SupabaseClient, usersByEmail: Record<st
 }
 
 export async function seedEventsAndRsvps(
-  admin: SupabaseClient, usersByEmail: Record<string, string>, now = new Date(),
+  admin: SupabaseClient, users: ReadonlyMap<string, string> | Record<string, string>, now = new Date(),
 ): Promise<SeedSummary> {
+  const usersByEmail: Record<string, string> = users instanceof Map ? Object.fromEntries(users) : { ...users };
   // Include `full` so a re-run sees the same events and plans the same (already inserted) RSVPs.
   const events = must(await admin.from("events").select("id, capacity, starts_at, status").in("status", ["published", "full"])
     .gte("starts_at", now.toISOString())) as SeedEvent[];
