@@ -20,22 +20,22 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - [x] Chat capabilities (`suggest_people`, `suggest_events`, `suggest_groups`, `update_preference`) with stubs for 03/06
 
 ### P0 API
-- [ ] `POST /api/users/onboard`
-- [ ] `POST /api/agent/chat`
-- [ ] `GET/PATCH /api/agent/preferences`
-- [ ] `POST /api/agent/preferences/confirm`
-- [ ] `GET/PATCH /api/agent/permissions`
-- [ ] `GET /api/agent/log`
+- [x] `POST /api/users/onboard`
+- [x] `POST /api/agent/chat`
+- [x] `GET/PATCH /api/agent/preferences`
+- [x] `POST /api/agent/preferences/confirm`
+- [x] `GET/PATCH /api/agent/permissions`
+- [x] `GET /api/agent/log`
 
 ### P0 UI
-- [ ] `/onboarding` 3 steps (basics, talk, review)
-- [ ] `/agent` chat with suggestion cards + "Why this?"
-- [ ] `/agent/preferences` editor with AI-inferred badges and delete
-- [ ] `/agent/permissions` consent switches
-- [ ] Agent action log view
+- [x] `/onboarding` 3 steps (basics, talk, review)
+- [x] `/agent` chat with suggestion cards + "Why this?"
+- [x] `/agent/preferences` editor with AI-inferred badges and delete
+- [x] `/agent/permissions` consent switches
+- [x] Agent action log view
 
 ### Seed
-- [ ] `supabase/seed/fixtures/preferences.json` (14 users, demo clusters, one demand opt-out)
+- [x] `supabase/seed/fixtures/preferences.json` (14 users, demo clusters, one demand opt-out)
 
 ### Tests (spec section 9)
 - [x] Unit: time-phrase → slot table
@@ -51,10 +51,10 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - [ ] E2E Scene 1
 
 ### Acceptance criteria (spec section 10)
-- [ ] AC1 Scene 1 sentence → pottery, coffee, thu_eve, small; nothing invented
-- [ ] AC2 Deleting an inferred value persists
+- [ ] AC1 Scene 1 sentence → pottery, coffee, thu_eve, small; nothing invented (passes at service level under MOCK_AI; E2E waits on Docker)
+- [ ] AC2 Deleting an inferred value persists (service-level test passes; DB-backed check waits on Docker)
 - [ ] AC3 Consent off → excluded from matching / demand (shared fixture)
-- [ ] AC4 Suggestion cards deep-link and show "Why this?"
+- [x] AC4 Suggestion cards deep-link and show "Why this?"
 - [ ] AC5 Activity log entry per sharing purpose
 
 ### P1
@@ -72,6 +72,8 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - 2026-10-24: Node 20.18.1 and pnpm 9.15.0 installed under ~/.local (no Homebrew on this machine).
 
 ## Needs from others
+- 01: `users.json` should use the emails in `supabase/seed/fixtures/preferences.json` (maya@, jordan@, … @commonground.test) and call `seedAgent(admin, userIdByEmail)` from `supabase/seed/agent.ts` after users are inserted.
+- 01: until the app shell lands, ws02 ships `src/styles/tokens.css` (copied from design-system.md), a bare `src/app/layout.tsx`, and local primitives in `features/agent/components/primitives.tsx`. Replace them with 01's versions on merge.
 - README/01: `SharablePreferences.groupSizePref` is non-null but users may not state one; ws02 returns `'small'` when unset. Prefer making it `GroupSizePref | null`.
 - 01: `profiles`, `agent_action_log`, `set_updated_at()` from `0100_core.sql`; `src/lib/api`, `src/lib/ai`, `logAgentAction`, `getCurrentUser`.
 
@@ -81,3 +83,4 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 ## Log
 - 2026-10-24 15:31 · landed: progress checklist, tooling, 0200 migration, schemas, time-slot mapper, consent boundary core (37 unit tests). Next: explainRecommendation, rate limiter, onboarding loop, MOCK_AI fixtures.
 - 2026-10-24 15:45 · landed: explanations with grounding, rate limiter, extraction merge + anti-invention guard, MOCK_AI fixtures + prompts, repo, onboarding/preferences/chat services, index exports, follow-up suggestion (85 unit tests). Next: API routes, then UI.
+- 2026-10-24 16:05 · landed: 6 API routes (+ route tests), preferences seed + loader, tokens/layout, onboarding/agent/preferences/permissions/log screens; `pnpm build` green, 99 unit tests. Next: component tests, eval transcripts, Playwright Scene 1 spec (runs once Docker exists).
