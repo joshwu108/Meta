@@ -80,7 +80,9 @@ export function GroupScreen({ group, candidates, initialTab }: { group: GroupDet
     <div className="flex flex-col gap-4">
       <GroupHeader group={group} onEdit={() => setIsEditing(true)} />
       <InvitedBanner group={group} />
-      <Tabs items={items} value={active} onChange={setTab} ariaLabel="Group sections" />
+      <div className="overflow-x-auto">
+        <Tabs items={items} value={active} onChange={setTab} ariaLabel="Group sections" />
+      </div>
       <div role="tabpanel" aria-label={items.find((item) => item.value === active)?.label}>
         {active === 'plans' && <PlansPanel group={group} />}
         {active === 'events' && <EventsPanel events={group.upcomingEvents} />}
