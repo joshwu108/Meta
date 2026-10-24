@@ -146,19 +146,18 @@ create table events (
 );
 create trigger events_updated before update on events for each row execute function set_updated_at();
 
--- 05 event status machine, copied verbatim from ws/05-business (0500_business.sql, 0501_business_rpc.sql)
--- so 06's tests fail the same way production would on a direct status UPDATE.
--- Only deviation: is_trusted_server() also trusts the database owner, because this local
--- cluster has no `postgres` role and the test database's functions are owned by the test user.
+-- 05 event status machine, copied from ws/05-business (0500_business.sql, 0501_business_rpc.sql
+-- after 0ad45d9) so 06's tests fail the same way production would on a direct status UPDATE.
+-- Only deviation: is_trusted_server() drops 05's `session_user in ('postgres', ...)` clause,
+-- because every test session connects as the local superuser. What remains models PostgREST:
+-- a service-role request is trusted, a signed-in user's request is not.
 create or replace function is_trusted_server() returns boolean
 language sql stable as $$
   select coalesce(
            nullif(current_setting('request.jwt.claim.role', true), ''),
            nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role',
            ''
-         ) = 'service_role'
-      or current_user in ('postgres', 'supabase_admin', 'service_role')
-      or current_user = (select pg_get_userbyid(datdba) from pg_database where datname = current_database());
+         ) = 'service_role';
 $$;
 
 create or replace function events_guard_status() returns trigger
