@@ -1,7 +1,7 @@
 import type { ProposalDocument } from '@/shared/types';
 import { fromDateTimeLocalValue, toDateTimeLocalValue } from '../../format';
 import type { RejectionReason } from '../../schemas';
-import { centsToPrice, priceToCents, type EventDraft } from '../EventFieldset';
+import { centsToPrice, priceToCents, type EventDraft } from '../event-draft';
 
 /**
  * The pure half of the decision panel: what the editor starts from, and the exact body

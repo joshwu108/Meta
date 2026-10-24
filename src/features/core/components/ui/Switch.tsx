@@ -1,41 +1,38 @@
 'use client';
+import { cn } from './cn';
 
-import { cn } from '@/lib/util/cn';
-
-/** OWNED BY WORKSTREAM 01. iOS-style; on = brand. Used by every consent toggle. */
-export function Switch({
-  checked,
-  onChange,
-  label,
-  description,
-}: {
+export type SwitchProps = {
   checked: boolean;
   onChange: (next: boolean) => void;
   label: string;
   description?: string;
-}) {
+  disabled?: boolean;
+};
+
+/** iOS-style switch; on = brand. Used for every consent toggle. */
+export function Switch({ checked, onChange, label, description, disabled }: SwitchProps) {
   return (
-    <label className="flex cursor-pointer items-start justify-between gap-4">
-      <span>
-        <span className="block text-base font-medium">{label}</span>
-        {description ? <span className="mt-0.5 block text-sm text-text-2">{description}</span> : null}
+    <label className={cn('flex items-center justify-between gap-4 py-2', disabled && 'opacity-50')}>
+      <span className="min-w-0">
+        <span className="block font-medium">{label}</span>
+        {description && <span className="block text-[length:var(--text-sm)] text-text-2">{description}</span>}
       </span>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         aria-label={label}
+        disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cn(
-          'relative h-6 w-11 shrink-0 rounded-pill transition-colors duration-[120ms]',
-          checked ? 'bg-brand' : 'bg-pressed',
+          'relative h-7 w-12 shrink-0 rounded-pill transition-colors duration-[var(--duration-normal)] ease-[var(--ease-standard)]',
+          checked ? 'bg-brand' : 'bg-divider',
         )}
       >
         <span
           className={cn(
-            'absolute top-0.5 h-5 w-5 rounded-pill bg-surface shadow-1',
-            'transition-[left] duration-[120ms] ease-[var(--ease-standard)]',
-            checked ? 'left-[22px]' : 'left-0.5',
+            'absolute top-0.5 left-0.5 h-6 w-6 rounded-pill bg-white shadow-[var(--shadow-1)] transition-transform duration-[var(--duration-normal)] ease-[var(--ease-standard)]',
+            checked && 'translate-x-5',
           )}
         />
       </button>

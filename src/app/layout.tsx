@@ -1,16 +1,33 @@
-import type { Metadata } from 'next';
-import './globals.css';
+import type { Metadata, Viewport } from 'next';
+import type { ReactNode } from 'react';
+import '@/styles/global.css';
+import { ThemeScript } from '@/features/core/components/theme/ThemeScript';
+import { ToastProvider } from '@/features/core/components/ui/Toast';
 
-/** OWNED BY WORKSTREAM 01 — root layout. Main wins on the next sync. */
 export const metadata: Metadata = {
-  title: 'CommonGround',
-  description: 'Local social discovery: people, groups and events near you.',
+  title: { default: 'CommonGround', template: '%s · CommonGround' },
+  description: 'Find your people nearby. A personal AI agent that brings neighbors together.',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  // Browser chrome color; mirrors --color-canvas in tokens.css (meta tags cannot read CSS vars).
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F0F2F5' },
+    { media: '(prefers-color-scheme: dark)', color: '#18191A' },
+  ],
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
+      <body>
+        <ToastProvider>{children}</ToastProvider>
+      </body>
     </html>
   );
 }

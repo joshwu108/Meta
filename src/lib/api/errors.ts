@@ -1,8 +1,4 @@
-/**
- * OWNED BY WORKSTREAM 01 (src/lib/api). Transcribed from specs/README.md section 4 so
- * workstream 05 throws and maps the real error codes before 01's envelope lands.
- * Main wins on the next sync.
- */
+/** Error codes shared by every Route Handler (README §4). */
 export const ERROR_CODES = [
   'UNAUTHENTICATED',
   'FORBIDDEN',
@@ -14,14 +10,14 @@ export const ERROR_CODES = [
   'AI_UNAVAILABLE',
   'INTERNAL',
 ] as const;
-
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
-const DEFAULT_STATUS: Record<ErrorCode, number> = {
+/** Default HTTP status for each code. `fail()` uses these when no status is passed. */
+export const ERROR_STATUS: Record<ErrorCode, number> = {
   UNAUTHENTICATED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
-  VALIDATION: 422,
+  VALIDATION: 400,
   CONFLICT: 409,
   CAPACITY_FULL: 409,
   RATE_LIMITED: 429,
@@ -29,21 +25,22 @@ const DEFAULT_STATUS: Record<ErrorCode, number> = {
   INTERNAL: 500,
 };
 
+/**
+ * Throw this anywhere inside a handler wrapped by `withAuth` / `withBusinessOwner` and it is
+ * converted into the error envelope with the given status.
+ */
 export class ApiError extends Error {
-  readonly code: ErrorCode;
-  readonly status: number;
-  readonly details?: unknown;
-
-  constructor(code: ErrorCode, message: string, status?: number, details?: unknown) {
+  constructor(
+    public readonly code: ErrorCode,
+    message: string,
+    public readonly status: number = ERROR_STATUS[code],
+    public readonly details?: unknown,
+  ) {
     super(message);
     this.name = 'ApiError';
-    this.code = code;
-    this.status = status ?? DEFAULT_STATUS[code];
-    this.details = details;
   }
 }
 
-export const isApiError = (err: unknown): err is ApiError =>
-  err instanceof ApiError || (typeof err === 'object' && err !== null && 'code' in err && 'status' in err);
-
-export const statusForCode = (code: ErrorCode): number => DEFAULT_STATUS[code];
+export function isApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError;
+}

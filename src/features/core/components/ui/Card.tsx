@@ -1,52 +1,35 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-import { cn } from '@/lib/util/cn';
+import { cn } from './cn';
 
-/** OWNED BY WORKSTREAM 01. Surface, radius-md, shadow-1, 16px padding. */
+export type CardProps = HTMLAttributes<HTMLDivElement> & { isClickable?: boolean; as?: 'div' | 'article' | 'section' };
 
-export type CardProps = HTMLAttributes<HTMLDivElement> & {
-  children: ReactNode;
-  interactive?: boolean;
-};
-
-export function Card({ className, children, interactive = false, ...rest }: CardProps) {
+/** Surface card: radius-md, shadow-1, 16px padding. Hover shadow only when the whole card is clickable. */
+export function Card({ isClickable = false, className, as = 'div', ...rest }: CardProps) {
+  const Tag = as;
   return (
-    <div
-      {...rest}
+    <Tag
       className={cn(
-        'rounded-md bg-surface p-4 shadow-1',
-        interactive && 'transition-shadow duration-[120ms] hover:shadow-2',
+        'surface-card p-4',
+        isClickable && 'cursor-pointer transition-shadow duration-[var(--duration-fast)] hover:shadow-[var(--shadow-2)]',
         className,
       )}
-    >
-      {children}
-    </div>
+      {...rest}
+    />
   );
 }
 
-export function CardHeader({
-  title,
-  subtitle,
-  action,
-}: {
-  title: ReactNode;
-  subtitle?: ReactNode;
-  action?: ReactNode;
-}) {
+export function CardHeader({ title, subtitle, action, className }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode; className?: string }) {
   return (
-    <div className="mb-3 flex items-start justify-between gap-4">
-      <div>
-        <h2 className="text-md font-semibold leading-tight">{title}</h2>
-        {subtitle ? <p className="mt-1 text-sm text-text-2">{subtitle}</p> : null}
+    <header className={cn('mb-3 flex items-start justify-between gap-3', className)}>
+      <div className="min-w-0">
+        <h3 className="truncate">{title}</h3>
+        {subtitle && <p className="mt-0.5 text-[length:var(--text-sm)] text-text-2">{subtitle}</p>}
       </div>
       {action}
-    </div>
+    </header>
   );
 }
 
-export function CardFooter({ children }: { children: ReactNode }) {
-  return (
-    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border-subtle pt-3">
-      {children}
-    </div>
-  );
+export function CardFooter({ children, className }: { children: ReactNode; className?: string }) {
+  return <footer className={cn('mt-4 flex items-center justify-between gap-3 border-t border-border-subtle pt-3', className)}>{children}</footer>;
 }

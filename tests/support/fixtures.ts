@@ -31,23 +31,23 @@ export type RecordedNotification = {
 
 export type TestDeps = BusinessDeps & {
   notifications: RecordedNotification[];
-  actions: { userId: string; action: string; result: string }[];
+  actions: { userId: string | null; action: string; result: string }[];
 };
 
 /** Deps wired to the in-memory store, with every notification and action recorded. */
 export function testDeps(store: MemoryBusinessStore, now = new Date('2026-10-26T12:00:00Z')): TestDeps {
   const notifications: RecordedNotification[] = [];
-  const actions: { userId: string; action: string; result: string }[] = [];
+  const actions: { userId: string | null; action: string; result: string }[] = [];
 
   const deps = makeDeps({
     store,
     now: () => now,
     timezone: 'UTC',
-    notify: async (userId, type, payload) => {
+    notify: async (userId, type, payload = {}) => {
       notifications.push({ userId, type, payload });
     },
     logAgentAction: async ({ userId, action, result }) => {
-      actions.push({ userId, action, result });
+      actions.push({ userId: userId ?? null, action, result });
     },
   });
 

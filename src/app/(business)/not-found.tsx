@@ -1,5 +1,6 @@
 import { SearchX } from 'lucide-react';
-import { ButtonLink, Card } from '@/features/core/components/ui';
+import { Card } from '@/features/core/components/ui';
+import { ButtonLink } from '@/features/business/components/form';
 
 /**
  * Reached when a page calls notFound(), which 05 does for an event or proposal that either
@@ -8,8 +9,7 @@ import { ButtonLink, Card } from '@/features/core/components/ui';
  */
 export default function BusinessNotFound() {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[560px] items-center px-4">
-      <Card className="flex w-full flex-col gap-4">
+    <Card className="flex w-full max-w-[560px] flex-col gap-4">
         <span className="inline-flex size-10 items-center justify-center rounded-pill bg-surface-2 text-text-2">
           <SearchX aria-hidden size={20} strokeWidth={1.75} />
         </span>
@@ -25,7 +25,6 @@ export default function BusinessNotFound() {
             Your events
           </ButtonLink>
         </div>
-      </Card>
-    </div>
+    </Card>
   );
 }

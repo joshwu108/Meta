@@ -2,17 +2,13 @@
 
 import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { Button, Card, CardFooter, CardHeader, Field, Textarea } from '@/features/core/components/ui';
+import { Button, Card, CardFooter, CardHeader } from '@/features/core/components/ui';
+import { Textarea } from './form';
 import { apiPatch, apiPost } from '@/lib/api/client';
 import type { BusinessEvent } from '@/shared/types';
 import type { EventCategory } from '@/shared/enums';
 import { fromDateTimeLocalValue, toDateTimeLocalValue } from '../format';
-import {
-  EventFieldset,
-  centsToPrice,
-  priceToCents,
-  type EventDraft,
-} from './EventFieldset';
+import { EventFieldset, centsToPrice, priceToCents, type EventDraft } from './EventFieldset';
 import { useSubmit } from './use-submit';
 
 /**
@@ -178,14 +174,10 @@ export function EventEditor({
             title="Cancel this event"
             subtitle="Everyone who confirmed is notified with the reason you give here."
           />
-          <Field label="Reason" htmlFor="cancel-reason">
-            <Textarea
-              id="cancel-reason"
+          <Textarea label="Reason" id="cancel-reason"
               value={cancelReason}
               maxLength={500}
-              onChange={(input) => setCancelReason(input.target.value)}
-            />
-          </Field>
+              onChange={(input) => setCancelReason(input.target.value)} />
           <div className="flex gap-2">
             <Button variant="danger" onClick={cancel} disabled={pending || cancelReason.trim().length < 4}>
               Cancel event

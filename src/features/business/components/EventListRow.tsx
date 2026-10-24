@@ -1,7 +1,7 @@
 import { CapacityMeter, StatusPill } from '@/features/core/components/ui';
 import type { BusinessEvent } from '@/shared/types';
 import { AiTag } from '@/features/core/components/ui';
-import { CATEGORY_LABEL, STATUS_LABEL, STATUS_TONE } from '../labels';
+import { CATEGORY_LABEL } from '../labels';
 import { formatDateTime, formatPrice } from '../format';
 import { EventRowActions } from './EventRowActions';
 
@@ -11,7 +11,7 @@ export function EventListRow({ event }: { event: BusinessEvent }) {
     <li className="flex min-h-14 flex-col gap-3 border-b border-border-subtle px-4 py-3 last:border-b-0 sm:flex-row sm:items-center">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <StatusPill tone={STATUS_TONE[event.status]}>{STATUS_LABEL[event.status]}</StatusPill>
+          <StatusPill status={event.status} />
           {event.source === 'ai_proposal' ? <AiTag label="AI suggestion" /> : null}
         </div>
         <p className="mt-1.5 truncate text-base font-semibold">{event.title}</p>

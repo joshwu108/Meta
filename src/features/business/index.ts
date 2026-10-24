@@ -1,6 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { BusinessMatch, BusinessPublicCard, VenueCriteria } from '@/shared/types';
 import { getBusinessPublicCardFor } from './server/businesses';
 import { findCandidateBusinesses as rank } from './server/candidates';
@@ -18,7 +18,7 @@ import { businessDeps } from './server/context';
 /** `getBusinessPublicCard(businessId)` — no owner id, no capability notes, active only. */
 export async function getBusinessPublicCard(
   businessId: string,
-  db: SupabaseClient = supabaseAdmin(),
+  db: SupabaseClient = createAdminClient(),
 ): Promise<BusinessPublicCard> {
   return getBusinessPublicCardFor(businessDeps(db), businessId);
 }
@@ -29,7 +29,7 @@ export async function getBusinessPublicCard(
  */
 export async function findCandidateBusinesses(
   criteria: VenueCriteria,
-  db: SupabaseClient = supabaseAdmin(),
+  db: SupabaseClient = createAdminClient(),
 ): Promise<BusinessMatch[]> {
   const { store } = businessDeps(db);
   return rank(criteria, (c) =>

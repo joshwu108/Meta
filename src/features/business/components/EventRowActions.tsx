@@ -1,6 +1,7 @@
 'use client';
 
-import { Button, ButtonLink } from '@/features/core/components/ui';
+import { Button } from '@/features/core/components/ui';
+import { ButtonLink } from './form';
 import { apiPost } from '@/lib/api/client';
 import type { BusinessEvent } from '@/shared/types';
 import { isCancellable } from '../status-machine-client';

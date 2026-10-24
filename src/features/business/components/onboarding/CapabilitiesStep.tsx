@@ -1,6 +1,7 @@
 'use client';
 
-import { CardHeader, Field, Input, Switch, Textarea } from '@/features/core/components/ui';
+import { CardHeader, Input, Switch } from '@/features/core/components/ui';
+import { Field, Textarea } from '../form';
 import { AVAILABILITY_SLOT, EVENT_CATEGORY } from '@/shared/enums';
 import { CATEGORY_LABEL, SLOT_LABEL } from '../../labels';
 import { ChipMultiSelect, TagList } from '../ChipMultiSelect';
@@ -13,7 +14,7 @@ export function CapabilitiesStep({ draft, set, errors }: StepProps) {
         title="What you can host"
         subtitle="This is what event suggestions are matched against."
       />
-      <Field label="Event categories you can host" htmlFor="">
+      <Field label="Event categories you can host">
         <ChipMultiSelect
           options={EVENT_CATEGORY}
           selected={draft.eventCategories}
@@ -21,43 +22,27 @@ export function CapabilitiesStep({ draft, set, errors }: StepProps) {
           labelOf={(value) => CATEGORY_LABEL[value]}
         />
       </Field>
-      <Field label="Capacity" htmlFor="venue-capacity" error={errors.capacity}>
-        <Input
-          id="venue-capacity"
+      <Input label="Capacity" error={errors.capacity} id="venue-capacity"
           type="number"
           min={1}
           max={500}
           value={draft.capacity}
-          onChange={(e) => set('capacity', Number(e.target.value))}
-        />
-      </Field>
+          onChange={(e) => set('capacity', Number(e.target.value))} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field
-          label="Lowest ticket price"
-          htmlFor="venue-min-price"
-          hint="In dollars. Leave empty for free events."
-        >
-          <Input
-            id="venue-min-price"
+        <Input label="Lowest ticket price" hint="In dollars. Leave empty for free events." id="venue-min-price"
             type="number"
             min={0}
             step="0.5"
             value={draft.minPriceDollars}
-            onChange={(e) => set('minPriceDollars', e.target.value)}
-          />
-        </Field>
-        <Field label="Highest ticket price" htmlFor="venue-max-price" error={errors.maxPriceCents}>
-          <Input
-            id="venue-max-price"
+            onChange={(e) => set('minPriceDollars', e.target.value)} />
+        <Input label="Highest ticket price" error={errors.maxPriceCents} id="venue-max-price"
             type="number"
             min={0}
             step="0.5"
             value={draft.maxPriceDollars}
-            onChange={(e) => set('maxPriceDollars', e.target.value)}
-          />
-        </Field>
+            onChange={(e) => set('maxPriceDollars', e.target.value)} />
       </div>
-      <Field label="When you can host" htmlFor="">
+      <Field label="When you can host">
         <ChipMultiSelect
           options={AVAILABILITY_SLOT}
           selected={draft.hostingSlots}
@@ -65,28 +50,24 @@ export function CapabilitiesStep({ draft, set, errors }: StepProps) {
           labelOf={(value) => SLOT_LABEL[value]}
         />
       </Field>
-      <Field label="Equipment" htmlFor="" hint="Comma separated, e.g. pottery-wheels, kiln">
+      <Field label="Equipment" hint="Comma separated, e.g. pottery-wheels, kiln">
         <TagList
           value={draft.equipmentTags}
           onChange={(next) => set('equipmentTags', next)}
           placeholder="pottery-wheels, kiln"
         />
       </Field>
-      <Field label="Formats" htmlFor="" hint="Comma separated, e.g. workshop, social-mixer">
+      <Field label="Formats" hint="Comma separated, e.g. workshop, social-mixer">
         <TagList
           value={draft.formats}
           onChange={(next) => set('formats', next)}
           placeholder="workshop, tasting"
         />
       </Field>
-      <Field label="Anything else we should know" htmlFor="venue-notes">
-        <Textarea
-          id="venue-notes"
+      <Textarea label="Anything else we should know" id="venue-notes"
           value={draft.notes}
           maxLength={500}
-          onChange={(e) => set('notes', e.target.value)}
-        />
-      </Field>
+          onChange={(e) => set('notes', e.target.value)} />
       <Switch
         checked={draft.acceptsAiProposals}
         onChange={(next) => set('acceptsAiProposals', next)}

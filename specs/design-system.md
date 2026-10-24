@@ -40,6 +40,7 @@ Light is the default. Dark mode is supported through the same tokens (Meta apps 
   --color-success-soft:  #E6F4EA;
   --color-warning:       #F7B928;
   --color-warning-soft:  #FFF4D6;
+  --color-warning-ink:   #8A5A00;   /* text on --color-warning-soft (#F7B928 fails AA there) */
   --color-danger:        #E41E3F;
   --color-danger-soft:   #FDE8EC;
 
@@ -91,6 +92,7 @@ Light is the default. Dark mode is supported through the same tokens (Meta apps 
   --color-success-soft:  #1F3A27;
   --color-warning:       #F7B928;
   --color-warning-soft:  #3D3416;
+  --color-warning-ink:   #F7B928;
   --color-danger:        #F3425F;
   --color-danger-soft:   #3F1F26;
   --gradient-ai-soft:    linear-gradient(135deg, #1F2E4D 0%, #2A2650 50%, #3D1F3D 100%);

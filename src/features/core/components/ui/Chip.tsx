@@ -1,49 +1,59 @@
 'use client';
-
 import { X } from 'lucide-react';
-import { cn } from '@/lib/util/cn';
+import type { KeyboardEvent, ReactNode } from 'react';
+import { cn } from './cn';
 
-/**
- * OWNED BY WORKSTREAM 01. Pill, surface-2 by default, selected = brand-soft with blue text,
- * removable with a ✕ (Backspace from the keyboard).
- */
-export function Chip({
-  children,
-  selected = false,
-  onToggle,
-  onRemove,
-  className,
-}: {
-  children: React.ReactNode;
+export type ChipProps = {
+  children: ReactNode;
   selected?: boolean;
-  onToggle?: () => void;
+  onSelect?: () => void;
   onRemove?: () => void;
   className?: string;
-}) {
-  const interactive = onToggle !== undefined || onRemove !== undefined;
+};
 
+/** Pill chip. Selected = brand-soft fill with blue text. Backspace or ✕ removes when `onRemove` is set. */
+export function Chip({ children, selected = false, onSelect, onRemove, className }: ChipProps) {
+  const interactive = Boolean(onSelect || onRemove);
+  const onKeyDown = (event: KeyboardEvent<HTMLSpanElement>) => {
+    if (onRemove && (event.key === 'Backspace' || event.key === 'Delete')) {
+      event.preventDefault();
+      onRemove();
+    }
+    if (onSelect && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      onSelect();
+    }
+  };
   return (
-    <button
-      type="button"
-      aria-pressed={onToggle ? selected : undefined}
-      onClick={onToggle ?? onRemove}
-      onKeyDown={(event) => {
-        if (onRemove && (event.key === 'Backspace' || event.key === 'Delete')) {
-          event.preventDefault();
-          onRemove();
-        }
-      }}
-      disabled={!interactive}
+    <span
+      role={onSelect ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-pressed={onSelect ? selected : undefined}
+      onClick={onSelect}
+      onKeyDown={interactive ? onKeyDown : undefined}
       className={cn(
-        'inline-flex items-center gap-1 rounded-pill px-3 py-1 text-sm font-medium',
-        'transition-colors duration-[120ms] disabled:cursor-default',
-        selected ? 'bg-brand-soft text-brand' : 'bg-surface-2 text-text-2',
-        interactive && !selected && 'hover:bg-pressed',
+        'inline-flex h-8 items-center gap-1 rounded-pill px-3 text-[length:var(--text-sm)] font-medium',
+        'transition-colors duration-[var(--duration-fast)]',
+        selected ? 'bg-brand-soft text-brand' : 'bg-surface-2 text-text',
+        interactive && 'cursor-pointer hover:bg-hover',
+        selected && interactive && 'hover:bg-brand-soft-2',
         className,
       )}
     >
       {children}
-      {onRemove ? <X aria-hidden size={14} strokeWidth={1.75} /> : null}
-    </button>
+      {onRemove && (
+        <button
+          type="button"
+          aria-label="Remove"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemove();
+          }}
+          className="-mr-1 inline-flex h-5 w-5 items-center justify-center rounded-pill hover:bg-pressed"
+        >
+          <X size={14} aria-hidden />
+        </button>
+      )}
+    </span>
   );
 }

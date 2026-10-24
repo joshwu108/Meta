@@ -1,39 +1,38 @@
-import { cn } from '@/lib/util/cn';
+import type { CSSProperties } from 'react';
+import { cn } from './cn';
 
-/**
- * OWNED BY WORKSTREAM 01. Thin bar, blue fill, amber at 80%, red when full
- * (design-system.md section 4).
- */
-export function CapacityMeter({
-  confirmed,
-  capacity,
-  className,
-}: {
-  confirmed: number;
-  capacity: number;
-  className?: string;
-}) {
-  const ratio = capacity > 0 ? Math.min(1, confirmed / capacity) : 0;
-  const fill = ratio >= 1 ? 'bg-danger' : ratio >= 0.8 ? 'bg-warning' : 'bg-brand';
+export type CapacityMeterProps = { confirmed: number; capacity: number; className?: string; showLabel?: boolean };
 
+export function capacityRatio(confirmed: number, capacity: number): number {
+  if (capacity <= 0) return 1;
+  return Math.min(1, Math.max(0, confirmed / capacity));
+}
+
+/** Thin bar, blue fill; amber at ≥80%, red when full. Width animates once on mount. */
+export function CapacityMeter({ confirmed, capacity, className, showLabel = true }: CapacityMeterProps) {
+  const ratio = capacityRatio(confirmed, capacity);
+  const isFull = ratio >= 1;
+  const isTight = ratio >= 0.8;
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <div
-        className="h-1.5 w-full overflow-hidden rounded-pill bg-pressed"
-        role="progressbar"
+        role="meter"
         aria-valuemin={0}
         aria-valuemax={capacity}
         aria-valuenow={confirmed}
-        aria-label={`${confirmed} of ${capacity} places taken`}
+        aria-label="Spots filled"
+        className="h-1.5 flex-1 overflow-hidden rounded-pill bg-pressed"
       >
         <div
-          className={cn('h-full rounded-pill transition-[width] duration-[200ms]', fill)}
-          style={{ width: `${ratio * 100}%` }}
+          className={cn('meter-fill h-full origin-left rounded-pill', isFull ? 'bg-danger' : isTight ? 'bg-warning' : 'bg-brand')}
+          style={{ '--meter-ratio': ratio } as CSSProperties}
         />
       </div>
-      <span className="shrink-0 text-xs tabular-nums text-text-2">
-        {confirmed}/{capacity}
-      </span>
+      {showLabel && (
+        <span className="shrink-0 text-[length:var(--text-xs)] text-text-2">
+          {isFull ? 'Full' : `${Math.max(0, capacity - confirmed)} left`}
+        </span>
+      )}
     </div>
   );
 }

@@ -1,34 +1,25 @@
-/**
- * OWNED BY WORKSTREAM 01 (src/lib/supabase). Request-scoped client so RLS applies to every
- * read and write a route makes. Main wins on the next sync.
- */
+import { createServerClient as createSsrClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { publicEnv } from '@/lib/env';
+import type { Database } from './database.types';
 
-function required(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} is not set; copy .env.example to .env.local`);
-  return value;
-}
-
-export async function supabaseServer(): Promise<SupabaseClient> {
-  const store = await cookies();
-  return createServerClient(
-    required('NEXT_PUBLIC_SUPABASE_URL'),
-    required('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
-    {
-      cookies: {
-        getAll: () => store.getAll(),
-        setAll: (toSet: { name: string; value: string; options: CookieOptions }[]) => {
-          // A Server Component render cannot set cookies; middleware refreshes the session.
-          try {
-            for (const { name, value, options } of toSet) store.set(name, value, options);
-          } catch {
-            /* read-only cookie store */
-          }
-        },
+/**
+ * Supabase client bound to the request cookies. Use in Server Components, Server Actions and
+ * Route Handlers. Writes to cookies are ignored inside Server Components (the middleware
+ * refreshes sessions there).
+ */
+export async function createServerClient() {
+  const cookieStore = await cookies();
+  return createSsrClient<Database>(publicEnv.supabaseUrl, publicEnv.supabaseAnonKey, {
+    cookies: {
+      getAll: () => cookieStore.getAll(),
+      setAll: (cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) => {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+        } catch {
+          // Called from a Server Component: cookies are read-only there, middleware refreshes.
+        }
       },
     },
-  );
+  });
 }

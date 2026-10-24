@@ -1,59 +1,58 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
+import path from 'node:path';
 
-const src = fileURLToPath(new URL('./src', import.meta.url));
-
-/**
- * Vitest does not read `.env` files the way Next does, so the integration suite would skip
- * itself even with a local stack running. `supabase start` prints the three values it
- * needs; put them in `.env.local` (gitignored) and `pnpm test` picks them up.
- * Done by hand rather than with Vite's `loadEnv`, which is ESM-only and cannot be imported
- * from a config file loaded through `require`.
- */
-function localEnv(file = '.env.local'): Record<string, string> {
-  let contents: string;
-  try {
-    contents = readFileSync(new URL(file, import.meta.url), 'utf8');
-  } catch {
-    return {};
-  }
-
-  return contents.split('\n').reduce<Record<string, string>>((acc, rawLine) => {
-    const line = rawLine.trim();
-    if (line === '' || line.startsWith('#')) return acc;
-    const separator = line.indexOf('=');
-    if (separator < 1) return acc;
-    const key = line.slice(0, separator).trim();
-    const value = line.slice(separator + 1).trim().replace(/^["']|["']$/g, '');
-    return { ...acc, [key]: value };
-  }, {});
-}
+const alias = { '@': path.resolve(__dirname, 'src') };
 
 export default defineConfig({
+  resolve: { alias },
   test: {
-    environment: 'node',
-    include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
-    env: localEnv(),
+    projects: [
+      {
+        // `server-only` throws when imported outside an RSC graph; 05's domain modules
+        // import it and the unit project runs them in plain Node.
+        resolve: { alias: { ...alias, 'server-only': path.resolve(__dirname, 'tests/support/server-only.ts') } },
+        test: {
+          name: 'unit',
+          include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.tsx'],
+          environment: 'node',
+          env: { MOCK_AI: '1' },
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
+          name: 'integration',
+          include: ['tests/integration/**/*.test.ts'],
+          environment: 'node',
+          setupFiles: ['tests/integration/setup.ts'],
+          testTimeout: 30_000,
+          hookTimeout: 60_000,
+          sequence: { concurrent: false },
+          pool: 'forks',
+          poolOptions: { forks: { singleFork: true } },
+        },
+      },
+      {
+        resolve: { alias: { ...alias, 'server-only': path.resolve(__dirname, 'tests/support/server-only.ts') } },
+        test: {
+          name: 'db',
+          include: ['tests/db/**/*.test.ts'],
+          environment: 'node',
+          setupFiles: ['tests/db/support/setup.ts'],
+          globalSetup: ['tests/db/support/global-setup.ts'],
+          env: { TEST_DATABASE_URL: process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' },
+          testTimeout: 30_000,
+          hookTimeout: 60_000,
+          pool: 'forks',
+          poolOptions: { forks: { singleFork: true } },
+        },
+      },
+    ],
     coverage: {
       provider: 'v8',
-      include: ['src/features/business/server/**', 'src/features/proposals/server/**'],
-      // Type-only and framework-wiring modules: `store.ts` is an interface, and
-      // `context.ts` / `page-data.ts` only build the dependency bundle from `next/headers`
-      // and the Supabase clients. Both are exercised by the integration and E2E tests.
-      exclude: [
-        'src/features/business/server/store.ts',
-        'src/features/business/server/context.ts',
-        'src/features/business/server/page-data.ts',
-      ],
-      thresholds: { lines: 80, functions: 80, branches: 75, statements: 80 },
-    },
-  },
-  resolve: {
-    alias: {
-      '@': src,
-      // `server-only` throws on import outside an RSC graph; Vitest runs plain Node.
-      'server-only': fileURLToPath(new URL('./tests/stubs/server-only.ts', import.meta.url)),
+      include: ['src/features/*/server/**', 'src/lib/**'],
+      exclude: ['src/lib/supabase/database.types.ts', 'src/lib/ai/fixtures/**'],
+      thresholds: { lines: 80, functions: 80, branches: 70, statements: 80 },
     },
   },
 });

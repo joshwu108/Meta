@@ -14,7 +14,7 @@ import { SKIP_REASON, cleanup, localStack, signedInOwner, uniqueEmail, type Stac
 
 const stack = await localStack();
 
-if (!stack) console.info(`[ws05] skipping proposal integration tests: ${SKIP_REASON}`);
+if (!stack) console.warn(`[ws05] skipping proposal integration tests: ${SKIP_REASON}`);
 
 /** PostgREST answers from a schema cache, so a missing table is PGRST205, not 42P01. */
 const MISSING_TABLE_CODES = new Set(['42P01', 'PGRST205']);
@@ -36,7 +36,7 @@ const hasRsvpsTable = stack ? await tableExists(stack, 'rsvps') : false;
 const suite = stack && hasProposalsTable ? describe : describe.skip;
 
 if (stack && !hasProposalsTable) {
-  console.info(
+  console.warn(
     "[ws05] skipping the proposal decision suite: workstream 04's event_proposals table is not migrated yet",
   );
 }

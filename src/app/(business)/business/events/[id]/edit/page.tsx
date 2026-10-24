@@ -1,9 +1,7 @@
 import { notFound } from 'next/navigation';
 import { ApiError } from '@/lib/api/errors';
-import { BusinessShell } from '@/features/business/components/BusinessShell';
 import { EventEditor } from '@/features/business/components/EventEditor';
 import { getBusinessEvent } from '@/features/business/server/events';
-import { countPendingProposals } from '@/features/business/server/proposals';
 import { requireBusinessPage } from '@/features/business/server/page-data';
 
 export const dynamic = 'force-dynamic';
@@ -23,16 +21,13 @@ export default async function EditEventPage({
     if (err instanceof ApiError && err.code === 'NOT_FOUND') notFound();
     throw err;
   });
-  const pendingCount = await countPendingProposals(deps, business.id);
 
   return (
-    <BusinessShell active="events" businessName={business.name} pendingCount={pendingCount}>
-      <EventEditor
-        event={event}
-        defaultCategory={event.category}
-        capacityCeiling={business.capabilities.capacity}
-        startCancelling={query.cancel === '1'}
-      />
-    </BusinessShell>
+    <EventEditor
+      event={event}
+      defaultCategory={event.category}
+      capacityCeiling={business.capabilities.capacity}
+      startCancelling={query.cancel === '1'}
+    />
   );
 }

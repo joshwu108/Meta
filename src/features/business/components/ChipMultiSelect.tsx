@@ -20,7 +20,7 @@ export function ChipMultiSelect<T extends string>({
   return (
     <div className="flex flex-wrap gap-2">
       {options.map((option) => (
-        <Chip key={option} selected={selected.includes(option)} onToggle={() => toggle(option)}>
+        <Chip key={option} selected={selected.includes(option)} onSelect={() => toggle(option)}>
           {labelOf ? labelOf(option) : option}
         </Chip>
       ))}

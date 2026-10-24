@@ -2,19 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button, Card, CardHeader, Field, Select, Textarea } from '@/features/core/components/ui';
+import { Button, Card, CardHeader } from '@/features/core/components/ui';
+import { Select, Textarea } from './form';
 import { apiPatch } from '@/lib/api/client';
 import type { BusinessEvent, ProposalDetail } from '@/shared/types';
 import { REJECTION_REASONS, type RejectionReason } from '../schemas';
 import { EventFieldset, type EventDraft } from './EventFieldset';
-import {
-  REASON_LABEL,
-  approveBody,
-  initialEventDraft,
-  modifyBody,
-  rejectBody,
-  type DecisionMode,
-} from './decision/decision';
+import { REASON_LABEL, approveBody, initialEventDraft, modifyBody, rejectBody, type DecisionMode } from './decision/decision';
 import { useSubmit } from './use-submit';
 
 /**
@@ -161,9 +155,7 @@ export function DecisionPanel({
 
       {mode === 'rejecting' ? (
         <div className="flex flex-col gap-4">
-          <Field label="Reason" htmlFor="reject-reason">
-            <Select
-              id="reject-reason"
+          <Select label="Reason" id="reject-reason"
               value={reason}
               onChange={(event) => setReason(event.target.value as RejectionReason)}
             >
@@ -173,15 +165,10 @@ export function DecisionPanel({
                 </option>
               ))}
             </Select>
-          </Field>
-          <Field label="Note (optional)" htmlFor="reject-note" hint="Only you and our team see this.">
-            <Textarea
-              id="reject-note"
+          <Textarea label="Note (optional)" hint="Only you and our team see this." id="reject-note"
               value={note}
               maxLength={500}
-              onChange={(event) => setNote(event.target.value)}
-            />
-          </Field>
+              onChange={(event) => setNote(event.target.value)} />
           <div className="flex flex-col gap-2">
             <Button variant="danger" onClick={reject} disabled={pending}>
               Reject proposal

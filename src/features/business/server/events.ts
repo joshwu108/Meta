@@ -128,6 +128,7 @@ export async function publishBusinessEvent(
 
   await notifyOriginatingCohort(deps, published);
   await deps.logAgentAction({
+    actor: 'planning_agent',
     userId: businessId,
     action: 'publish_event',
     permissionsUsed: ['allow_demand_aggregation'],

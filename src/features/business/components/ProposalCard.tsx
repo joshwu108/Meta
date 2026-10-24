@@ -1,5 +1,6 @@
 import { Clock } from 'lucide-react';
-import { AiTag, ButtonLink, Card, StatusPill } from '@/features/core/components/ui';
+import { AiTag, Card, StatusPill } from '@/features/core/components/ui';
+import { ButtonLink } from './form';
 import type { ProposalSummary } from '@/shared/types';
 import { CATEGORY_LABEL, SLOT_LABEL, demandSentence } from '../labels';
 import { formatDateTime } from '../format';
@@ -11,14 +12,14 @@ import { formatDateTime } from '../format';
  */
 export function ProposalCard({ proposal }: { proposal: ProposalSummary }) {
   return (
-    <Card interactive className="flex flex-col gap-3">
+    <Card isClickable className="flex flex-col gap-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <AiTag label="AI suggestion" />
-            <StatusPill tone={proposal.status === 'pending' ? 'warning' : 'neutral'}>
-              {proposal.status === 'pending' ? 'Awaiting your approval' : proposal.status}
-            </StatusPill>
+            {/* `pending` reads as "awaiting your approval" to an owner, which is the
+                label 01's pill already gives that status. */}
+            <StatusPill status={proposal.status === 'pending' ? 'awaiting_approval' : proposal.status} />
           </div>
           <h3 className="mt-2 text-md font-semibold leading-tight">{proposal.title}</h3>
           <p className="mt-1 text-sm text-text-2">

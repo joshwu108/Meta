@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import { fail, ok, parseBody, route, withBusinessOwner } from '@/lib/api/envelope';
+import { fail, ok, parseBody,  withBusinessOwner } from '@/lib/api';
 import { devRoutesEnabled } from '@/lib/api/dev-routes';
-import { ApiError } from '@/lib/api/errors';
+import { ApiError } from '@/lib/api';
 import { businessDeps } from '@/features/business/server/context';
 import { toProposalDetail } from '@/features/business/server/proposals';
 
@@ -20,8 +20,7 @@ const bodySchema = z.object({
   clusterId: z.string().uuid().nullish(),
 });
 
-export const POST = route(
-  withBusinessOwner(async (ctx, req) => {
+export const POST = withBusinessOwner(async (ctx, req) => {
     if (!devRoutesEnabled()) {
       return fail('NOT_FOUND', 'not found');
     }
@@ -30,7 +29,19 @@ export const POST = route(
     const file = path.join(process.cwd(), 'tests', 'fixtures', 'proposals', `${fixture}.json`);
     const proposal = JSON.parse(await readFile(file, 'utf8')) as unknown;
 
-    const { data, error } = await ctx.supabase
+    // `event_proposals` is workstream 04's table, so it is not in the generated Database
+    // types and the typed client refuses the name.
+    const untyped = ctx.supabase as unknown as {
+      from: (table: string) => {
+        insert: (row: Record<string, unknown>) => {
+          select: (cols: string) => {
+            single: () => Promise<{ data: { id: string } | null; error: { code?: string; message?: string } | null }>;
+          };
+        };
+      };
+    };
+
+    const { data, error } = await untyped
       .from('event_proposals')
       .insert({
         business_id: ctx.business.id,
@@ -53,5 +64,4 @@ export const POST = route(
     const row = await deps.store.findProposal((data as { id: string }).id);
     if (!row) throw new ApiError('INTERNAL', 'the fixture proposal disappeared');
     return ok(toProposalDetail(row, deps), undefined, { status: 201 });
-  }),
-);
+});

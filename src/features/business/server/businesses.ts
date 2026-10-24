@@ -90,6 +90,7 @@ export async function createBusinessForOwner(
   );
 
   await deps.logAgentAction({
+    actor: 'planning_agent',
     userId: ownerId,
     action: 'business_onboarded',
     permissionsUsed: [],

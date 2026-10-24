@@ -12,7 +12,7 @@ import { SKIP_REASON, cleanup, localStack, signedInOwner, uniqueEmail, type Stac
 const stack = await localStack();
 const suite = stack ? describe : describe.skip;
 
-if (!stack) console.info(`[ws05] skipping integration tests: ${SKIP_REASON}`);
+if (!stack) console.warn(`[ws05] skipping integration tests: ${SKIP_REASON}`);
 
 suite('business platform against the real database', () => {
   const live = stack as Stack;

@@ -1,61 +1,51 @@
-import Link from 'next/link';
-import type { ButtonHTMLAttributes, ComponentProps, ReactNode } from 'react';
-import { cn } from '@/lib/util/cn';
-
-/**
- * OWNED BY WORKSTREAM 01 (design-system.md section 4). Variants primary, secondary, ghost,
- * danger; 36px and 40px heights; hover darkens, active scales to .98.
- */
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { Loader2 } from 'lucide-react';
+import { cn } from './cn';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'md' | 'lg';
 
-const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-brand text-text-on-brand hover:bg-brand-hover active:bg-brand-pressed',
-  secondary: 'bg-pressed text-text hover:bg-hover',
-  ghost: 'bg-transparent text-text hover:bg-hover',
-  danger: 'bg-danger text-text-on-brand hover:brightness-95',
-};
-
-const SIZES: Record<ButtonSize, string> = {
-  md: 'h-9 px-4 text-base',
-  lg: 'h-10 px-5 text-base',
-};
-
-export const buttonClass = (
-  variant: ButtonVariant = 'primary',
-  size: ButtonSize = 'md',
-  className?: string,
-): string =>
-  cn(
-    'inline-flex items-center justify-center gap-2 rounded-md font-semibold',
-    'transition-[background-color,transform] duration-[120ms] ease-[var(--ease-standard)]',
-    'active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100',
-    VARIANTS[variant],
-    SIZES[size],
-    className,
-  );
-
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  children: ReactNode;
+  isLoading?: boolean;
+  leadingIcon?: ReactNode;
 };
 
-export function Button({ variant, size, className, children, ...rest }: ButtonProps) {
+const base =
+  'inline-flex items-center justify-center gap-2 rounded-md px-4 font-semibold whitespace-nowrap select-none ' +
+  'transition-[background-color,color,transform] duration-[var(--duration-fast)] ease-[var(--ease-standard)] ' +
+  'active:scale-[.98] disabled:pointer-events-none disabled:opacity-50 ' +
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
+
+const variants: Record<ButtonVariant, string> = {
+  primary: 'bg-brand text-text-on-brand hover:bg-brand-hover active:bg-brand-pressed',
+  secondary: 'bg-pressed text-text hover:bg-divider/70 active:bg-divider',
+  ghost: 'bg-transparent text-text hover:bg-hover active:bg-pressed',
+  danger: 'bg-danger text-text-on-brand hover:brightness-95 active:brightness-90',
+};
+
+const sizes: Record<ButtonSize, string> = {
+  md: 'h-9 text-[length:var(--text-base)]',
+  lg: 'h-10 text-[length:var(--text-base)]',
+};
+
+/** Primary action button (design-system §4). */
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { variant = 'primary', size = 'md', isLoading = false, leadingIcon, className, children, disabled, ...rest },
+  ref,
+) {
   return (
-    <button {...rest} className={buttonClass(variant, size, className)}>
+    <button
+      ref={ref}
+      type={rest.type ?? 'button'}
+      className={cn(base, variants[variant], sizes[size], className)}
+      disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
+      {...rest}
+    >
+      {isLoading ? <Loader2 size={16} className="animate-spin" aria-hidden /> : leadingIcon}
       {children}
     </button>
   );
-}
-
-export type ButtonLinkProps = ComponentProps<typeof Link> & {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-};
-
-/** A link that looks like a button, for navigation actions (Review, Edit, New event). */
-export function ButtonLink({ variant, size, className, ...rest }: ButtonLinkProps) {
-  return <Link {...rest} className={buttonClass(variant, size, className)} />;
-}
+});

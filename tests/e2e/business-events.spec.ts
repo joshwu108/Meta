@@ -70,7 +70,7 @@ test.describe('a business runs its own event', () => {
 
     const published = page.getByRole('listitem').filter({ hasText: title });
     await expect(published.getByText('Published')).toBeVisible();
-    await expect(published.getByText('0/12')).toBeVisible();
+    await expect(published.getByRole('meter')).toHaveAttribute('aria-valuemax', '12');
 
     // The dashboard counts it as upcoming.
     await page.goto('/business');
@@ -168,8 +168,15 @@ test.describe('a business runs its own event', () => {
     await expect(page.locator('#event-starts-error')).toContainText(/open 09:00-21:00 on thu/i);
   });
 
-  test('another venue event is not reachable by url', async ({ page }) => {
+});
+
+test.describe('a venue cannot reach another venue data', () => {
+  test.beforeEach(async ({ page }) => {
+    test.skip(!(await appIsReady(page)), 'the app is not reachable');
     await signIn(page, OWNERS.ritual);
+  });
+
+  test('an event id this venue does not own is not found', async ({ page }) => {
     await page.goto('/business/events/00000000-0000-0000-0000-000000000000/edit');
     await expect(page.getByRole('heading', { name: /could not find that/i })).toBeVisible();
   });

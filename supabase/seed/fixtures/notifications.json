@@ -1,0 +1,6 @@
+[
+  { "user": "demo.new@commonground.test", "type": "event_recommended", "payload": { "href": "/events", "title": "Event picked for you", "body": "Wheel Throwing Basics at Kiln & Cup matches your Thursday evenings." } },
+  { "user": "demo.new@commonground.test", "type": "connection_request", "payload": { "href": "/match?tab=requests", "title": "Maya Chen wants to connect", "body": "You both like pottery and coffee shops." } },
+  { "user": "maya@commonground.test", "type": "group_invite", "payload": { "href": "/groups", "title": "You're invited to Thursday Night Crew" } },
+  { "user": "owner.kiln-and-cup@commonground.test", "type": "proposal_received", "payload": { "href": "/business/proposals", "title": "New event proposal", "body": "Beginner Pottery & Coffee Night for 6 interested neighbors." } }
+]

@@ -1,6 +1,5 @@
 'use client';
 
-import { Input } from '@/features/core/components/ui';
 import type { WeekdayKey, WeeklyHours } from '@/shared/types';
 import { WEEKDAYS } from '../schemas';
 
@@ -43,21 +42,21 @@ export function HoursGrid({
         return (
           <li key={day} className="flex flex-wrap items-center gap-3 py-2.5">
             <span className="w-24 text-base font-medium">{DAY_LABEL[day]}</span>
-            <Input
+            <input
               aria-label={`${DAY_LABEL[day]} opens`}
               type="time"
               value={open}
-              className="w-32"
+              className="h-9 w-32 rounded-sm border border-divider bg-surface px-2 text-[length:var(--text-base)] text-text"
               onChange={(event) => setDay(day, event.target.value, close || '21:00')}
             />
             <span aria-hidden className="text-text-2">
               to
             </span>
-            <Input
+            <input
               aria-label={`${DAY_LABEL[day]} closes`}
               type="time"
               value={close}
-              className="w-32"
+              className="h-9 w-32 rounded-sm border border-divider bg-surface px-2 text-[length:var(--text-base)] text-text"
               onChange={(event) => setDay(day, open || '09:00', event.target.value)}
             />
             {closed ? (
