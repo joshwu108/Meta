@@ -8,7 +8,7 @@ import { consentingUsers } from './harness';
 
 function user(id: string, lat: number, lng: number, extra: Partial<DemandUser> = {}): DemandUser {
   return {
-    userId: id, interests: ['pottery'], availabilitySlots: ['thu_eve'], socialGoals: [], groupSizePref: 'small',
+    userId: id, interests: ['pottery'], interestCategories: [], availabilitySlots: ['thu_eve'], socialGoals: [], groupSizePref: 'small',
     budgetMin: null, budgetMax: 2000, travelRadiusKm: 5, activityPrefs: [], coarseLat: lat, coarseLng: lng, neighborhood: 'Mission District',
     ...extra,
   };

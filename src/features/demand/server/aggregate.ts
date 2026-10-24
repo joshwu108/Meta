@@ -71,7 +71,7 @@ export function aggregate(cluster: RawCluster, config: Pick<DemandConfig, 'minIn
     memberCount: members.length,
     band: toBand(members.length),
     topInterests,
-    groupSizeMode: (tally(members.map((m) => m.groupSizePref))[0]?.tag as GroupSizePref | undefined) ?? null,
+    groupSizeMode: (tally(members.flatMap((m) => (m.groupSizePref ? [m.groupSizePref] : [])))[0]?.tag as GroupSizePref | undefined) ?? null,
     budgetP50Cents: median(members.flatMap((m) => (m.budgetMax == null ? [] : [m.budgetMax]))),
     activityPrefs: tally(members.flatMap((m) => m.activityPrefs)).filter(floor).map((t) => t.tag),
     neighborhoodLabel: tally(members.flatMap((m) => (m.neighborhood ? [m.neighborhood] : [])))[0]?.tag ?? 'Nearby',
