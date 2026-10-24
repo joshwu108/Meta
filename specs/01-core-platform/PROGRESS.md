@@ -70,6 +70,9 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Needs from others
 
+- Integrator: `main` still contains only `specs/`; none of ws/01-core has been merged. Branches 02/03/05/06 each carry their own `package.json`, `supabase/seed/seed.ts` and (05) `fixtures/businesses.json`, so merging 01 first and then resolving their seed/scaffold files in favour of 01's structure (`supabase/seed/runner.ts` + `loaders/`) will be the least painful order. 03 already copied 01's seed layout.
+- 05: `supabase/seed/fixtures/businesses.json` on your branch has a different shape from the base fixture; keep the base fields (`slug, name, category, neighborhood, address, description, lat, lng, capacity, owner`) and extend `loaders/domain.ts` for hours/capabilities rather than replacing the runner.
+- 06: your `supabase/seed/06-events.ts` should become a loader under `supabase/seed/loaders/` called from `runner.ts` after `loadEvents`.
 - README/design-system (integrator): add `--color-warning-ink` to design-system.md §1 (see Decisions) so other workstreams use it for text on `--color-warning-soft`.
 - 03/05/06: `supabase/seed/loaders/domain.ts` inserts `businesses`, `events`, `groups`, `group_members` with the column names from your specs and skips while the table is missing. When your migration lands, run `pnpm db:seed` and adjust the loader for any column it gets wrong.
 - 05: `withBusinessOwner` looks up `businesses` by `owner_id = auth.uid()`. Keep that column name (or tell me the real one).
@@ -82,6 +85,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 17:00 — Wakeup: main unchanged, but ws/02, 03, 05, 06 branches now exist. Read their migrations (never merged them): aligned seed loaders to `businesses` (no capacity column → `business_capabilities`) and `groups.creator_id`; column drift on foreign tables now skips instead of aborting. Verified by temporarily applying 0300/0301/0500/0501/0600 locally: seed inserts 3 businesses, 6 events, 2 groups; 17 integration tests incl. RLS guard pass. Next: keep watching main.
 - 2026-10-24 16:45 — Wakeup: main unchanged. Seeded owners carry signup_as=business so / routes them to the business side; owner e2e tightened; supabase config deprecation fixed. All suites green. Next: keep syncing for other workstreams' migrations.
 - 2026-10-24 16:40 — Code + security review pass: fixed backslash open redirect (shared safeNext), business signup with email confirmation landing in consumer onboarding, middleware dropping query strings, mark-read overwriting read_at, seed deletion skipping pages. 77 unit + 15 integration + 14 e2e green. Next: idle list; watch main for other workstreams' migrations.
 - 2026-10-24 16:25 — Production build passes (103 kB first load, all files < 220 lines). Design-system pass: warning ink token, feed stagger, capacity meter mount animation, no color literals outside tokens.css. Seed route production guard tested. README now has a per-workstream module guide. 72 unit + 15 integration + 14 e2e green. Next: idle list (periodic sync for other workstreams' tables; adjust seed loaders when they land).
