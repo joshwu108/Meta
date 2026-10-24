@@ -8,12 +8,14 @@ import type { ReportReason } from '@/shared/schemas/social';
 import type { ConnectionItem } from '../server/connections';
 import type { MatchCard, MatchesStatus } from '../server/matches';
 import { ConnectSheet } from './ConnectSheet';
+import { ConnectionsPanel } from './ConnectionsPanel';
 import { MatchCardView } from './MatchCardView';
 import { MatchFilters, type MatchFilterState } from './MatchFilters';
 import { RequestsPanel } from './RequestsPanel';
 import { BlockSheet, ReportSheet, SafetyMenu } from './SafetyMenu';
 
-type Tab = 'recommended' | 'requests';
+export type MatchTab = 'recommended' | 'requests' | 'connections';
+type Tab = MatchTab;
 type Person = { id: string; displayName: string };
 
 export type MatchScreenProps = {
@@ -21,9 +23,12 @@ export type MatchScreenProps = {
   matches: MatchCard[];
   incoming: ConnectionItem[];
   outgoing: ConnectionItem[];
+  connected: ConnectionItem[];
   filters: MatchFilterState;
   initialTab: Tab;
 };
+
+const TAB_LABELS: Record<Tab, string> = { recommended: 'Recommended', requests: 'Requests', connections: 'Connections' };
 
 const linkButton =
   'inline-flex h-9 items-center justify-center rounded-md bg-brand px-4 font-semibold text-text-on-brand hover:bg-brand-hover hover:no-underline';
@@ -88,7 +93,7 @@ function useMatchActions() {
 }
 
 /** Screen 3 `/match`: Recommended people and connection requests. */
-export function MatchScreen({ status, matches, incoming, outgoing, filters, initialTab }: MatchScreenProps) {
+export function MatchScreen({ status, matches, incoming, outgoing, connected, filters, initialTab }: MatchScreenProps) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const a = useMatchActions();
   const visible = matches.filter((match) => !a.hidden.has(match.user.id));
@@ -112,13 +117,16 @@ export function MatchScreen({ status, matches, incoming, outgoing, filters, init
         items={[
           { value: 'recommended', label: 'Recommended' },
           { value: 'requests', label: 'Requests', count: incoming.length > 0 ? incoming.length : undefined },
+          { value: 'connections', label: 'Connections', count: connected.length > 0 ? connected.length : undefined },
         ]}
         value={tab}
         onChange={setTab}
         ariaLabel="Match views"
       />
-      <div role="tabpanel" aria-label={tab === 'recommended' ? 'Recommended' : 'Requests'} className="flex flex-col gap-3">
-        {tab === 'requests' ? (
+      <div role="tabpanel" aria-label={TAB_LABELS[tab]} className="flex flex-col gap-3">
+        {tab === 'connections' ? (
+          <ConnectionsPanel connected={connected} />
+        ) : tab === 'requests' ? (
           <RequestsPanel incoming={incoming} outgoing={outgoing} isPending={a.isPending} onAnswer={a.answer} />
         ) : (
           <>

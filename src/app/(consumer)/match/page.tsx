@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/features/core';
 import { getMatchesForViewer, listConnections, type MatchCard } from '@/features/matching';
-import { MatchScreen } from '@/features/matching/components/MatchScreen';
+import { MatchScreen, type MatchTab } from '@/features/matching/components/MatchScreen';
 import { createServerClient } from '@/lib/supabase/server';
 import { matchesQuerySchema, type MatchesQuery } from '@/shared/schemas/social';
 
@@ -11,6 +11,7 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 const MAX_FILTER_CHIPS = 6;
+const TABS: readonly MatchTab[] = ['recommended', 'requests', 'connections'];
 
 /** Most common shared interests across the unfiltered list, for the filter chips. */
 function interestOptions(matches: readonly MatchCard[]): string[] {
@@ -31,19 +32,21 @@ export default async function MatchPage({ searchParams }: { searchParams: Search
   const query: MatchesQuery = parsed.success ? parsed.data : { limit: 20 };
   const isFiltered = Boolean(query.interest || query.goal);
   const supabase = await createServerClient();
-  const [result, unfiltered, pending] = await Promise.all([
+  const [result, unfiltered, connections] = await Promise.all([
     getMatchesForViewer(user.id, query),
     isFiltered ? getMatchesForViewer(user.id, { limit: 20 }) : Promise.resolve(null),
-    listConnections({ userId: user.id, supabase }, 'pending'),
+    listConnections({ userId: user.id, supabase }),
   ]);
+  const pending = connections.filter((item) => item.status === 'pending');
   return (
     <MatchScreen
       status={result.status}
       matches={result.matches}
       incoming={pending.filter((item) => item.direction === 'incoming')}
       outgoing={pending.filter((item) => item.direction === 'outgoing')}
+      connected={connections.filter((item) => item.status === 'accepted')}
       filters={{ interest: query.interest, goal: query.goal, interestOptions: interestOptions((unfiltered ?? result).matches) }}
-      initialTab={first(params.tab) === 'requests' ? 'requests' : 'recommended'}
+      initialTab={TABS.find((tab) => tab === first(params.tab)) ?? 'recommended'}
     />
   );
 }
