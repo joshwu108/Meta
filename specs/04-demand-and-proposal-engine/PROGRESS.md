@@ -25,10 +25,10 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - [x] Run lock: one-running-run unique index + stale reclaim (see Decisions)
 
 ### API and UI
-- [ ] `POST /api/ai/generate-opportunities`
-- [ ] `GET /api/ai/opportunities/:runId`
-- [ ] `GET /api/cron/opportunities` (Bearer `OPPORTUNITY_CRON_SECRET`)
-- [ ] `/admin/opportunities` operator page (DEMO_MODE only)
+- [x] `POST /api/ai/generate-opportunities` (202 + `{ runId }`, run finishes in `after()`; DEMO_MODE or `is_operator`)
+- [x] `GET /api/ai/opportunities/:runId`
+- [x] `GET /api/cron/opportunities` (Bearer `OPPORTUNITY_CRON_SECRET`; closed when unset)
+- [x] `/admin/opportunities` operator page (DEMO_MODE only; `pnpm build` green)
 
 ### Tests (spec §9)
 - [x] Unit: geocell + neighbor merge
@@ -76,6 +76,9 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - Store is one `save_demand_proposal()` RPC (cluster + members + proposal in one transaction); `event_proposals.proposal` is frozen by a trigger.
 - Integration tests create guarded stand-ins for 02's and 05's tables from `tests/integration/demand/test-schema.sql` via `psql` in the local db container; nothing test-only is in `supabase/migrations`.
 
+- `0402_operator.sql` adds `profiles.is_operator` (spec §6 names 0402); a trigger stops anyone but the service role changing it.
+- Copied 01's UI primitives, styles, ThemeScript, root layout, health route and Playwright config byte-for-byte (same rule as the tooling copy).
+
 ## Needs from others
 - 02 / README: add `interestCategories: EventCategory[]` to `SharablePreferences` (02 already stores it). Until then 04 derives categories from tags.
 - 02: export `getSharablePreferencesBatch(ids, 'demand')` from `@/features/agent` on main (exists on ws/02-agent).
@@ -87,3 +90,4 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 ## Log
 - 2026-10-24 17:05 · landed: 01 tooling copy, proposal schema/prompt/fixtures, full pure pipeline (42 unit tests). Next: 0400 migration, Supabase wiring, API routes, operator page, integration tests.
 - 2026-10-24 17:35 · landed: 0400 migration (RLS, run lock, atomic store), Supabase wiring behind 01/02/05 stubs, 8 integration tests on local Supabase; 42 unit + 8 integration green. Next: API routes, cron route, operator page.
+- 2026-10-24 18:05 · landed: operator flag (0402), generate/status/cron routes, /admin/opportunities page; 56 unit + 10 integration green, build green. Next: Playwright Scene 3, then P1 revise endpoint for 05.
