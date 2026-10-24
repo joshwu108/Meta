@@ -243,5 +243,6 @@ export function fakeSupabase(pool: pg.Pool, userId?: string) {
   return {
     from: (table: string) => new Query(run, table),
     rpc: (fn: string, args: Record<string, unknown> = {}) => rpc(run, fn, args),
+    auth: { getUser: async () => ({ data: { user: userId ? { id: userId } : null }, error: null }) },
   };
 }
