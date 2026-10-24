@@ -138,6 +138,31 @@ export async function getSharablePreferences(userId, purpose: 'matching' | 'dema
 - Never includes `dealbreakers`, `field_sources`, summary text, or any message content
 - Logs an `agent_action_log` row `{ actor: 'coordination', action: 'share_preferences', permissions_used: [purpose] }` per call batch (batched per request, not per user, to avoid log spam)
 
+Additional exports from `@/features/agent` (as built):
+
+```ts
+// Batch form for 03/04 pipelines; users without consent are absent from the map.
+getSharablePreferencesBatch(userIds: string[], purpose): Promise<Map<string, SharablePreferences>>
+// 06 attendee list: every requested user; interests only when share_interests_with_attendees is on.
+getAttendeeSharing(userIds: string[]): Promise<Map<string, { interests: string[]; shareInterestsWithAttendees: boolean }>>
+// Consent flags only (no preference values), for server-side defaults such as 06's RSVP sharing choices.
+getConsent(userId: string): Promise<Consent>
+// P1, for 03's planner: rank slots by member availability; members must come from purpose 'group_plan'.
+resolveGroupSchedule(members: SharablePreferences[]): { options: { slot, available: string[], missing: string[] }[]; unanimous: AvailabilitySlot | null; budgetMaxCents: number | null }
+
+// explainRecommendation input (02 owns this type; replaces the placeholder in shared/types.ts)
+type ExplainInput = {
+  viewer: SharablePreferences;
+  target:
+    | { kind: 'person'; preferences: SharablePreferences; displayName?: string }
+    | { kind: 'event'; event: Record<string, unknown> }   // e.g. EventPublic fields plus slot
+    | { kind: 'group'; group: Record<string, unknown> };
+  breakdown: Record<string, unknown>;                      // caller's deterministic score parts
+};
+```
+
+Share logging is one row per shared user per purpose (deduped within an hour, inserted in one statement per call) so each user's activity log shows the entry (AC5).
+
 ## 6. API
 
 | Route | Body / Response |
