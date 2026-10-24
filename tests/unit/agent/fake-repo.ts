@@ -6,6 +6,7 @@ import {
   type UserPreferencesWithSources,
 } from "@/features/agent/schemas";
 import type { StoredMessage } from "@/features/agent/server/repo";
+import { ApiError } from "@/features/agent/server/stubs";
 
 /** In-memory stand-in for server/repo.ts so services run without Postgres. */
 export function createFakeRepo() {
@@ -35,7 +36,7 @@ export function createFakeRepo() {
     resolveConversation: vi.fn(async (_sb: unknown, userId: string, kind: string, id?: string) => {
       if (id) {
         const c = state.convs.get(id);
-        if (!c || c.userId !== userId) throw Object.assign(new Error("Conversation not found"), { code: "NOT_FOUND" });
+        if (!c || c.userId !== userId) throw new ApiError("NOT_FOUND", "Conversation not found");
         return id;
       }
       const existing = [...state.convs.entries()].reverse().find(([, c]) => c.userId === userId && c.kind === kind);
