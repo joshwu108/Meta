@@ -155,9 +155,14 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
   (migration `0501_business_rpc.sql`). A direct `UPDATE ... SET status` is rejected by the
   `events_status_guard` trigger. Legal transitions from 05's side: `published -> full`,
   `full -> published`, `published|full -> completed`.
-  06 also needs `rsvps.share_with_business` (set from 02's `share_name_with_business`
-  consent) and a `profiles(display_name)` join for the attendee list; 05 reads both through
-  a guarded query that returns empty until the table exists.
+  06 also needs **`rsvps.share_with_business`**, set from 02's `share_name_with_business`
+  consent. 05 defaults a missing or null value to `false`, so an attendee is private unless
+  06 says otherwise.
+  **No RLS policy is needed on `rsvps` for the business side.** 05 reads `rsvps` and the
+  `profiles(display_name)` join with the **service role** and masks before returning,
+  because privacy invariant 1 forbids a business from reading `profiles` and 06's RLS will
+  scope `rsvps` to each attendee. If 06 would rather expose a count to the owning business
+  directly, say so and 05 will switch that one read back to the request client.
 - **04** — `event_proposals` / `demand_clusters` migrations (`0400–0499`). 05 works from
   `tests/fixtures/proposals/*.json` and `POST /api/dev/proposals` per spec §11. Three asks:
   - **`findCandidateBusinesses(criteria)` is ready now**, exported from
@@ -197,6 +202,15 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 16:05` — **fixed a privacy and correctness bug in the attendee reads.**
+  `rsvps` and the `profiles(display_name)` join were being read with the business owner's
+  own client, which breaks privacy invariant 1 (a business must never read `profiles`) and
+  would have silently returned zero once 06 lands its RLS, since those policies scope
+  `rsvps` to each attendee — so `confirmedCount` and every attendee list would have been
+  empty on the demo. Both now go through the service role and are masked by
+  `buildAttendeeList()` before they leave the server. Every service-role read also degrades
+  to its empty value with a warning when `SUPABASE_SERVICE_ROLE_KEY` is unset, so a missing
+  key can no longer 500 the dashboard. 223 unit tests pass; coverage 93.9% lines.
 - `2026-10-24 15:58` — **first push: `ws/05-business` @ `8b3d03a`.** Identity unblocked by
   the clone's owner, so the whole workstream went up as 11 conventional commits, one
   concern each: scaffold, shared contracts, migrations, tokens + primitives, domain layer,
