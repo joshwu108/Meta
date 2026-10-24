@@ -38,9 +38,14 @@ function daysIn(text: string): Day[] {
  * Returns [] when no day is mentioned; never guesses.
  */
 export function phraseToSlots(phrase: string): AvailabilitySlot[] {
-  const text = phrase.toLowerCase();
-  const daytime = DAYTIME.test(text);
-  const evening = EVENING.test(text);
-  const found = new Set(daysIn(text).flatMap((d) => slotsForDay(d, daytime, evening)));
+  // Time-of-day words bind to days in the same clause: "Monday nights, Saturday afternoons".
+  const clauses = phrase.toLowerCase().split(/[.,;!?\n]+/);
+  const found = new Set(
+    clauses.flatMap((clause) => {
+      const daytime = DAYTIME.test(clause);
+      const evening = EVENING.test(clause);
+      return daysIn(clause).flatMap((d) => slotsForDay(d, daytime, evening));
+    }),
+  );
   return AVAILABILITY_SLOT.filter((s) => found.has(s));
 }

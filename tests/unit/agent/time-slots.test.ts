@@ -19,6 +19,10 @@ describe("phraseToSlots", () => {
     expect(phraseToSlots(phrase)).toEqual(expected);
   });
 
+  it("binds time-of-day words to the day in the same clause", () => {
+    expect(phraseToSlots("Monday nights, and Saturday afternoons")).toEqual(["mon_eve", "sat_day"]);
+  });
+
   it("returns nothing for phrases with no day", () => {
     expect(phraseToSlots("whenever I'm free")).toEqual([]);
     expect(phraseToSlots("I like pottery")).toEqual([]);
