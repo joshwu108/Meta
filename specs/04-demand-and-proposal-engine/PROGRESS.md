@@ -45,7 +45,7 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - [x] Integration: second run within 14 days creates 0 proposals
 - [x] Integration: business owner can read the proposal but gets 0 rows from `demand_cluster_members`
 - [x] Integration: run stats populated; notification delivered to owner
-- [ ] Prompt eval (manual, live key): 5 briefs, ≥ 4/5 pass validator first try
+- [ ] Prompt eval (manual, live key): 5 briefs, ≥ 4/5 pass validator first try — set + runner committed (`tests/evals/demand/`); live run blocked on a key
 - [x] E2E Scene 3: Generate → tracker completes → table shows the pottery proposal (`tests/e2e/demand-scene3.spec.ts`)
 
 ### Acceptance criteria (spec §10)
@@ -56,7 +56,7 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - [x] AC5 LLM failure on one cluster does not block others; reported in stats
 
 ### P1
-- [ ] `POST /api/ai/proposals/:id/revise` (05 asked for `{ note }`)
+- [x] `POST /api/ai/proposals/:id/revise`: body `{ note?, priceCents?, capacity?, slot? }` (≥ 1), owner-only via RLS, returns `{ proposalId, revision, revisionCount }`; versions in `business_edits.revisions[]`
 - [ ] Group-originated proposals (`source: 'group'`)
 - [ ] Demand confidence band ("6 people, likely 4-8 attendees")
 
@@ -84,6 +84,7 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - 02: export `getSharablePreferencesBatch(ids, 'demand')` from `@/features/agent` on main (exists on ws/02-agent).
 - 05: `findCandidateBusinesses` returns `BusinessMatch` only; 04 also needs capacity, hosting slots, price range, equipment tags and owner id to draft and validate. 04 reads them from `businesses` + `business_capabilities` with the service role until 05 exports a `getVenueForProposal(businessId)` (or similar).
 - 01: `vitest.config.ts` coverage `include` lists only `features/core/server` and `lib`; add `src/features/*/server/**` so each workstream's 80% bar is measured. ws04 measures it with `--coverage.include` (92% lines, unit + integration).
+- README §4 + 05: add `POST /ai/proposals/:id/revise` to the 04 routes row. Shape for 05's "Ask AI to revise": body `{ note?: string, priceCents?: int, capacity?: int, slot?: AvailabilitySlot }` (at least one), response `{ proposalId, revision: StoredProposal, revisionCount }`; latest version is `business_edits.revisions.at(-1).proposal`. 409 once the proposal is decided.
 - 01: keep `...DEMAND_PROMPTS` in `PROMPTS` when merging (prompt lives in `src/lib/ai/prompts/demand.ts`).
 
 ## Blocked
@@ -94,3 +95,4 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - 2026-10-24 17:35 · landed: 0400 migration (RLS, run lock, atomic store), Supabase wiring behind 01/02/05 stubs, 8 integration tests on local Supabase; 42 unit + 8 integration green. Next: API routes, cron route, operator page.
 - 2026-10-24 18:05 · landed: operator flag (0402), generate/status/cron routes, /admin/opportunities page; 56 unit + 10 integration green, build green. Next: Playwright Scene 3, then P1 revise endpoint for 05.
 - 2026-10-24 18:20 · landed: Playwright Scene 3 (green). Clean-state check on Node 22: db reset, 56 unit + 10 integration + 1 E2E green, typecheck + lint clean, 92% line coverage on features/demand/server. Next: prompt eval set, P1 revise endpoint for 05.
+- 2026-10-24 18:45 · landed: prompt eval set + live runner, P1 revise endpoint (unit + integration). 68 unit + 11 integration + 1 E2E green, build green. Next: P1 demand confidence band; wait for 01/02/05 on main to swap stubs.
