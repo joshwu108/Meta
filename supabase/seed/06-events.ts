@@ -6,7 +6,7 @@ import fixture from "./fixtures/events-06.json";
 
 export type SeedSummary = { rsvps: number; fullEventId: string | null; completedEventId: string | null };
 
-type SeedEvent = { id: string; capacity: number; starts_at: string };
+type SeedEvent = { id: string; capacity: number; starts_at: string; status?: string };
 
 function must<T>(result: { data: T; error: { message: string } | null }): T {
   if (result.error) throw new Error(result.error.message);
@@ -74,7 +74,7 @@ export async function seedEventsAndRsvps(
   admin: SupabaseClient, usersByEmail: Record<string, string>, now = new Date(),
 ): Promise<SeedSummary> {
   // Include `full` so a re-run sees the same events and plans the same (already inserted) RSVPs.
-  const events = must(await admin.from("events").select("id, capacity, starts_at").in("status", ["published", "full"])
+  const events = must(await admin.from("events").select("id, capacity, starts_at, status").in("status", ["published", "full"])
     .gte("starts_at", now.toISOString())) as SeedEvent[];
   const plan = planRsvps(events, rsvpCandidates(usersByEmail));
   const rows = plan.flatMap((p) => p.userIds.map((user_id, k) => ({
@@ -83,7 +83,11 @@ export async function seedEventsAndRsvps(
   const inserted = rows.length === 0 ? [] : must(await admin.from("rsvps")
     .upsert(rows, { onConflict: "event_id,user_id", ignoreDuplicates: true }).select("event_id")) as unknown[];
   const full = plan.find((p) => p.full);
-  if (full) must(await admin.from("events").update({ status: "full" }).eq("id", full.eventId).select("id"));
+  const fullStatus = full ? events.find((e) => e.id === full.eventId)?.status : undefined;
+  if (full && fullStatus === "published") {
+    // 05's guard only accepts status changes through its transition function.
+    must(await admin.rpc("transition_event_status", { p_event_id: full.eventId, p_to: "full" }));
+  }
 
   const completedEventId = await seedCompletedEvent(admin, usersByEmail, now);
   return { rsvps: inserted.length, fullEventId: full?.eventId ?? null, completedEventId };

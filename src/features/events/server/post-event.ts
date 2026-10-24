@@ -69,9 +69,11 @@ export async function completeEvent(userId: string, eventId: string): Promise<{ 
   if (!(await canComplete(admin, userId, event.business_id))) {
     throw new ApiError("FORBIDDEN", "Only the venue can complete this event");
   }
-  const { data, error } = await admin.from("events").update({ status: "completed" })
-    .eq("id", eventId).in("status", ["published", "full"]).select("id");
-  if (error) throw new ApiError("INTERNAL", "Could not complete the event");
-  if (!data || data.length === 0) throw new ApiError("CONFLICT", `Event is ${event.status}, not live`);
+  if (event.status !== "published" && event.status !== "full") {
+    throw new ApiError("CONFLICT", `Event is ${event.status}, not live`);
+  }
+  // 05's status guard only accepts changes made through its transition function.
+  const { error } = await admin.rpc("transition_event_status", { p_event_id: eventId, p_to: "completed" });
+  if (error) throw fromRpcError(error);
   return { status: "completed" };
 }

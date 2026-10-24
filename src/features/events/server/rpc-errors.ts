@@ -14,8 +14,15 @@ const RPC_ERRORS: ReadonlyArray<[string, ErrorCode, string]> = [
   ["VALIDATION", "VALIDATION", "Invalid request"],
 ];
 
-/** Converts a Postgres/PostgREST error from one of our functions into an ApiError. */
+const ENVELOPE_CODES: readonly ErrorCode[] = ["NOT_FOUND", "CONFLICT", "FORBIDDEN", "VALIDATION", "CAPACITY_FULL"];
+
+/**
+ * Converts a Postgres/PostgREST error from one of our functions into an ApiError. 05's RPCs
+ * raise "<CODE>: <message>"; those keep their code but never expose the database message.
+ */
 export function fromRpcError(error: { message: string }): ApiError {
   const match = RPC_ERRORS.find(([token]) => error.message.includes(token));
-  return match ? new ApiError(match[1], match[2]) : new ApiError("INTERNAL", "Something went wrong");
+  if (match) return new ApiError(match[1], match[2]);
+  const prefixed = ENVELOPE_CODES.find((code) => error.message.startsWith(`${code}:`));
+  return prefixed ? new ApiError(prefixed, "This event cannot change right now") : new ApiError("INTERNAL", "Something went wrong");
 }

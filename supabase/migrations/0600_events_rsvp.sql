@@ -1,5 +1,6 @@
 -- Workstream 06: RSVPs, post-event signals, follow-up suggestions, bookmarks.
--- Depends on 0100 (profiles, set_updated_at) and 0500 (events). 03's tables are optional at apply time.
+-- Depends on 0100 (profiles, set_updated_at) and 0500/0501 (events, transition_event_status).
+-- 03's tables are optional at apply time.
 
 create table rsvps (
   id uuid primary key default gen_random_uuid(),
@@ -109,8 +110,9 @@ begin
       event_version_seen = excluded.event_version_seen
     where rsvps.status = 'cancelled';
   if not found then raise exception 'ALREADY_RSVPED'; end if;
-  if v_status = 'confirmed' and v_confirmed + 1 >= v_event.capacity then
-    update events set status = 'full' where id = p_event_id and status = 'published';
+  -- Status changes go through 05's transition_event_status() (its guard rejects direct UPDATEs).
+  if v_status = 'confirmed' and v_confirmed + 1 >= v_event.capacity and v_event.status = 'published' then
+    perform transition_event_status(p_event_id, 'full');
   end if;
   return query select v_status, (select e.status from events e where e.id = p_event_id);
 end $$;
@@ -136,8 +138,10 @@ begin
       and (select count(*) from rsvps c where c.event_id = p_event_id and c.status = 'confirmed')
           < (select e.capacity from events e where e.id = p_event_id)
     returning user_id into v_promoted;
-  update events set status = 'published' where id = p_event_id and status = 'full'
-    and (select count(*) from rsvps where event_id = p_event_id and status = 'confirmed') < capacity;
+  if exists (select 1 from events e where e.id = p_event_id and e.status = 'full'
+             and (select count(*) from rsvps r where r.event_id = e.id and r.status = 'confirmed') < e.capacity) then
+    perform transition_event_status(p_event_id, 'published');
+  end if;
   return query select true, v_promoted, (select e.status from events e where e.id = p_event_id);
 end $$;
 
