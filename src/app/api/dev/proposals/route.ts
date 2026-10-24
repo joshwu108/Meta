@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import { fail, ok, parseBody, route, withBusinessOwner } from '@/lib/api/envelope';
+import { devRoutesEnabled } from '@/lib/api/dev-routes';
 import { ApiError } from '@/lib/api/errors';
 import { businessDeps } from '@/features/business/server/context';
 import { toProposalDetail } from '@/features/business/server/proposals';
@@ -21,7 +22,7 @@ const bodySchema = z.object({
 
 export const POST = route(
   withBusinessOwner(async (ctx, req) => {
-    if (process.env.NODE_ENV === 'production') {
+    if (!devRoutesEnabled()) {
       return fail('NOT_FOUND', 'not found');
     }
 

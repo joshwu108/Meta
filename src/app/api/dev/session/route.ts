@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { fail, ok, parseBody, route, withAuth } from '@/lib/api/envelope';
+import { devRoutesEnabled } from '@/lib/api/dev-routes';
 import { supabaseServer } from '@/lib/supabase/server';
 
 /**
@@ -18,7 +19,7 @@ const bodySchema = z.object({
 });
 
 export const POST = route<never>(async (_ctx, req) => {
-  if (process.env.NODE_ENV === 'production') {
+  if (!devRoutesEnabled()) {
     return fail('NOT_FOUND', 'not found');
   }
 
@@ -35,7 +36,7 @@ export const POST = route<never>(async (_ctx, req) => {
 /** Confirms the session landed, so a test can assert it before navigating. */
 export const GET = route(
   withAuth(async (ctx) => {
-    if (process.env.NODE_ENV === 'production') {
+    if (!devRoutesEnabled()) {
       return fail('NOT_FOUND', 'not found');
     }
     return ok({ userId: ctx.user.id, email: ctx.user.email ?? null });
