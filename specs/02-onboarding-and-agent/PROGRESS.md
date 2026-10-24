@@ -82,6 +82,7 @@ Read-only review of `origin/ws/01-core` @ 43d5910 (not merged; ws02 syncs from m
 5. Consider replacing `server/rate-limit.ts` with 01's `createRateLimiter({ limit: 30, windowMs: 600000 })`.
 6. Route tests: mock `@/lib/supabase/server` instead of `@supabase/ssr`; use 01's `EMPTY_CONTEXT`.
 7. Swap local `primitives.tsx` for `@/features/core/components/ui` and wrap agent pages in 01's AppShell.
+8. 01 ships a placeholder `src/app/(auth)/onboarding/page.tsx` ("owned by workstream 02") and an `AgentAside` rail stub: on conflict keep ws02's onboarding page, and point `AgentAside` at the agent's suggestions.
 - 2026-10-24: RLS is tested on PGlite (Postgres in WASM) with a stubbed `auth` schema (`auth.users`, `auth.uid()` from `request.jwt.claim.sub`, `authenticated` role). The test uses main's `0100_core.sql` when present, else a stand-in that follows 01's spec.
 
 ## Needs from others
