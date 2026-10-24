@@ -96,6 +96,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 18:05 — Check: main unchanged; all five branches moved. Added `demand.revise_proposal` (04). Re-verified all 13 branch migrations (0100–0600 incl. 0302/0303/0402–0404) apply together locally; seed + 17 integration tests pass. 03 and 06 have written merge plans against 01's registries. Next: watch main.
 - 2026-10-24 17:55 — Wakeup: main unchanged. Verified all six workstreams' real migrations (0100–0600) apply together locally; seed and 17 integration tests pass (not committed). Fixed the 320px TopBar overflow 03 reported (+ shell e2e), widened coverage include to src/features/*/server (04), seated 06's db setup/global-setup files. 79 unit + 17 integration + 16 e2e green. Next: watch main.
 - 2026-10-24 17:35 — Wakeup: main unchanged; read every branch's Needs-from-others for 01. Landed: shared types aligned to spec 02 (interestCategories, nullable groupSizePref, ExplainInput), prompt registry split per workstream (+agent.follow_up_suggestion, groups.plan_activities), seed loader registry (AFTER_USERS/AFTER_EVENTS/AFTER_ALL), jordan@ fixture, `db` vitest project. 79 unit + 17 integration + 14 e2e green. Next: watch main.
 - 2026-10-24 17:15 — Compared 02/03/05/06 branches' shared files against 01: enums/types/prompt registry are byte-equivalent in meaning (copied from README). Adopted 05's browser envelope client into `src/lib/api/client.ts` with tests; bell and onboarding button use it. 83 unit + 17 integration + 14 e2e green. Next: watch main.
