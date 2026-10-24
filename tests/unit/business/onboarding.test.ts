@@ -35,6 +35,16 @@ const ONBOARDING = {
   },
 };
 
+/** Shared by the suites below that assert on an ApiError code. */
+const codeOfTop = async (fn: () => Promise<unknown>): Promise<string | undefined> => {
+  try {
+    await fn();
+  } catch (err) {
+    return (err as ApiError).code;
+  }
+  return undefined;
+};
+
 describe('static geocoding', () => {
   it('finds a neighborhood from the address', () => {
     const geo = geocodeAddress('1 Valencia St, San Francisco');
@@ -229,5 +239,33 @@ describe('business onboarding', () => {
     const created = await createBusinessForOwner(deps, 'owner-1', businessOnboardingSchema.parse(ONBOARDING));
     await updateOwnerBusiness(deps, created.id, { isActive: false });
     expect(await codeOf(() => getBusinessPublicCardFor(deps, created.id))).toBe('NOT_FOUND');
+  });
+});
+
+describe('venue context', () => {
+  it('refuses to validate an event against a venue that is not fully set up', async () => {
+    const { requireVenueContext } = await import('@/features/business/server/context');
+    const bare = new MemoryBusinessStore();
+    const bareDeps = testDeps(bare);
+
+    // No business at all.
+    expect(await codeOfTop(() => requireVenueContext(bareDeps, 'biz-missing'))).toBe('NOT_FOUND');
+
+    // A business whose capabilities row never landed.
+    const seeded = bare.seedBusiness({ owner_id: 'owner-1' });
+    // @ts-expect-error reaching past the port on purpose to simulate the inconsistency
+    bare.capabilities = [];
+    expect(await codeOfTop(() => requireVenueContext(bareDeps, seeded.business.id))).toBe('NOT_FOUND');
+  });
+
+  it('returns the capabilities and hours an event is checked against', async () => {
+    const { requireVenueContext } = await import('@/features/business/server/context');
+    const store = new MemoryBusinessStore();
+    const deps = testDeps(store);
+    const seeded = store.seedBusiness({ owner_id: 'owner-1' });
+
+    const venue = await requireVenueContext(deps, seeded.business.id);
+    expect(venue.capabilities.capacity).toBe(12);
+    expect(venue.hours.thu).toEqual([['09:00', '21:00']]);
   });
 });
