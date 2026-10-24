@@ -79,6 +79,7 @@ export async function sendConnectionRequest(actor: Actor, input: { recipientId: 
     ...(input.message ? { body: input.message } : {}),
     connectionId: data.id,
     requesterId: actor.userId,
+    href: '/match?tab=requests',
   });
   invalidateMatches(actor.userId, input.recipientId);
   return toItem(data as ConnectionRow, actor.userId, recipient);
@@ -109,6 +110,7 @@ export async function respondToConnection(actor: Actor, connectionId: string, st
       title: `${me?.displayName ?? 'Someone'} accepted your request`,
       connectionId,
       userId: actor.userId,
+      href: '/match?tab=connections',
     });
   }
   invalidateMatches(actor.userId, row.requester_id);

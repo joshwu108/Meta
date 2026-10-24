@@ -126,6 +126,8 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 01: at 320px the consumer `TopBar` is 27px wider than the viewport on every page (theme toggle, bell, avatar and sign-out next to the wordmark and search), so pages scroll sideways (design-system §3: no horizontal scroll at 320px). 03's own content fits; this one is in `src/features/core/components/app-shell/TopBar.tsx`.
 
+- 01: 03's notifications carry `payload.href` (`/match?tab=requests`, `/match?tab=connections`, `/groups/<id>`); `NotificationList` could navigate there after marking read.
+
 ## Blocked
 
 ## Log

@@ -49,6 +49,7 @@ export async function inviteMembers(actor: Actor, groupId: string, userIds: read
         title: `${inviter?.displayName ?? 'Someone'} invited you to ${group.name}`,
         groupId,
         invitationId: row.invitation_id,
+        href: `/groups/${groupId}`,
       }),
     ),
   );
