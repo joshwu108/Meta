@@ -20,7 +20,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - [x] Reconnect + follow-up suggestion flow
 - [x] Route handlers: `GET /events`, `GET /events/recommended`, `GET /events/:id`, `POST|DELETE /events/:id/rsvp`, `POST /events/:id/reconfirm`, `GET /events/:id/attendees`, `POST /events/:id/invite-group`, `GET /activity`, `POST /events/:id/feedback`, `POST /events/:id/reconnect`, `PATCH /events/:id/complete`, `GET /businesses/nearby`
 - [x] UI: `/discover`, `/events`, `/events/:id`, `/activity` (builds; visual/E2E run pending, see Blocked)
-- [ ] Seed: RSVPs for seeded events, one full event, completed Ritual Grounds event with maya@ and jordan@ plus one reconnect row
+- [x] Seed: RSVPs for seeded events, one full event, completed Ritual Grounds event with maya@ and jordan@ plus one reconnect row
 
 ## Tests (spec §9)
 
@@ -88,6 +88,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Needs from others
 
+- 01: call `seedEventsAndRsvps(admin, usersByEmail)` from `supabase/seed/06-events.ts` after users, businesses and events load. It expects a "Ritual Grounds" business and users `maya@`, `jordan@`, `alex@`, `sam@`, `priya@`, `lee@commonground.test` (any missing attendee is skipped). Fixture: `supabase/seed/fixtures/events-06.json`.
 - 03: export a server function for Discover's people rail (top N matches with explanation); `getSuggestedPeople` is an empty stub, so the rail shows an empty state linking to /match.
 - 01: app shell `(consumer)/layout.tsx` with nav and the 680/320 frame; 06's pages render only their content column (Discover adds its own right rail).
 - 02: export `getAttendeeSharing(userIds)` → `{ interests, shareInterestsWithAttendees }` per user and `getRsvpConsentDefaults(userId)`. The RSVP sheet and shared-interest chips need them, and only 02 may read `agent_profiles` / `user_preferences`. Stubbed in `src/features/events/server/stubs/agent.ts`.
@@ -104,6 +105,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 15:52 PT: seed contribution with idempotent re-runs (110 tests). Next: never-idle list (coverage, edge cases, theme review).
 - 2026-10-24 15:50 PT: UI for Discover, Events (For you/All/This week), event detail (RSVP sheet, reconfirm, invite, feedback, reconnect) and Activity; `next build` passes. Next: seed contribution, then the never-idle list.
 - 2026-10-24 15:43 PT: all 13 route handlers plus PATCH /follow-ups/:id, route tests over Postgres (107 tests); fixed duplicate-vs-full RSVP error order. Next: UI for /discover, /events, /events/:id, /activity.
 - 2026-10-24 15:41 PT: invite, post-event, follow-up, activity and nearby services; Postgres-backed service tests; reconnect race and timestamp-ordering fixes (100 tests). AC2–AC5 covered at service level. Next: route handlers, then UI.
