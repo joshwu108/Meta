@@ -31,7 +31,10 @@ export default defineConfig({
     ? undefined
     : {
         command: 'pnpm dev',
-        url: baseURL,
+        // Not `/`: workstream 01 owns the root route and it does not exist yet, so probing
+        // it would 404 and the readiness wait would time out. This route answers 401
+        // without a session, which Playwright accepts as "server is up".
+        url: `${baseURL}/api/dev/session`,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
         env: { MOCK_AI: '1' },
