@@ -3,20 +3,20 @@ import type pg from "pg";
 
 type Queryable = Pick<pg.Pool, "query">;
 
-export async function createUser(db: Queryable, displayName = "Test User"): Promise<string> {
+export async function createUser(db: Queryable, displayName = "Test User", email?: string): Promise<string> {
   const id = randomUUID();
-  await db.query("insert into auth.users (id, email) values ($1, $2)", [id, `${id}@commonground.test`]);
+  await db.query("insert into auth.users (id, email) values ($1, $2)", [id, email ?? `${id}@commonground.test`]);
   await db.query("insert into profiles (id, display_name, is_discoverable) values ($1, $2, true)", [id, displayName]);
   return id;
 }
 
-export async function createBusiness(db: Queryable): Promise<string> {
+export async function createBusiness(db: Queryable, name = "Kiln & Cup", category = "creative"): Promise<string> {
   const owner = randomUUID();
   await db.query("insert into auth.users (id, email) values ($1, $2)", [owner, `owner.${owner}@commonground.test`]);
   const { rows } = await db.query<{ id: string }>(
     `insert into businesses (owner_id, name, slug, category, address, neighborhood, lat, lng)
-     values ($1, 'Kiln & Cup', $2, 'creative', '1 Valencia St', 'Mission', 37.76, -122.42) returning id`,
-    [owner, `kiln-${owner.slice(0, 8)}`],
+     values ($1, $3, $2, $4, '1 Valencia St', 'Mission', 37.76, -122.42) returning id`,
+    [owner, `biz-${owner.slice(0, 8)}`, name, category],
   );
   return rows[0]!.id;
 }
