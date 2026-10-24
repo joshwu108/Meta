@@ -5,10 +5,10 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 ## Acceptance criteria (P0)
 
 - [ ] AC1. A newly published pottery event appears in the demo user's recommendations within one page load, with a grounded explanation
-- [ ] AC2. Capacity is never exceeded under concurrent RSVPs; the event flips to `full` and back correctly
-- [ ] AC3. Attendee identities are shown only with consent and never across a block
-- [ ] AC4. Group event invitations never create RSVPs; each invitee confirms individually
-- [ ] AC5. Mutual reconnect interest after a completed event produces an AI follow-up suggestion visible to both users and nobody else
+- [x] AC2. Capacity is never exceeded under concurrent RSVPs; the event flips to `full` and back correctly
+- [x] AC3. Attendee identities are shown only with consent and never across a block
+- [x] AC4. Group event invitations never create RSVPs; each invitee confirms individually
+- [x] AC5. Mutual reconnect interest after a completed event produces an AI follow-up suggestion visible to both users and nobody else
 
 ## Build items (P0)
 
@@ -17,7 +17,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - [ ] Recommendation scoring (`server/recommend.ts`) with explanations via 02's `explainRecommendation`
 - [x] Attendee visibility function (single function used by every attendee-facing DTO)
 - [x] Invite-group filtering (skip RSVP'd and blocked members, never RSVP anyone)
-- [ ] Reconnect + follow-up suggestion flow
+- [x] Reconnect + follow-up suggestion flow
 - [ ] Route handlers: `GET /events`, `GET /events/recommended`, `GET /events/:id`, `POST|DELETE /events/:id/rsvp`, `POST /events/:id/reconfirm`, `GET /events/:id/attendees`, `POST /events/:id/invite-group`, `GET /activity`, `POST /events/:id/feedback`, `POST /events/:id/reconnect`, `PATCH /events/:id/complete`, `GET /businesses/nearby`
 - [ ] UI: `/discover`, `/events`, `/events/:id`, `/activity`
 - [ ] Seed: RSVPs for seeded events, one full event, completed Ritual Grounds event with maya@ and jordan@ plus one reconnect row
@@ -35,10 +35,10 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - [x] Cancel reopens a full event
 - [x] `ALREADY_RSVPED`
 - [x] RSVP rejected on draft, cancelled and past events
-- [x] Attendee endpoint forbidden without an RSVP (service level, mocked repo; Supabase-stack run pending, see Blocked)
-- [x] Non-consenting names hidden (service level, mocked repo; Supabase-stack run pending, see Blocked)
+- [x] Attendee endpoint forbidden without an RSVP (service against Postgres via query stand-in; Supabase-stack run pending, see Blocked)
+- [x] Non-consenting names hidden (service against Postgres via query stand-in; Supabase-stack run pending, see Blocked)
 - [x] Reconnect requires completion + attendance
-- [ ] Mutual reconnect creates one suggestion and two notifications
+- [x] Mutual reconnect creates one suggestion and two notifications
 - [x] Reconfirm flow
 
 ### E2E
@@ -74,6 +74,13 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: Feed cards return `friendsGoing` as `{ userId, displayName, avatarUrl }[]` (accepted connections, consented, confirmed, not blocked either way) so the UI can render avatars.
 - 2026-10-24: Explanations are cached in-process for 24h keyed by `(viewer, event, prefsHash)`; failures fall back to "Coming up soon near you." rather than failing the feed.
 - 2026-10-24: Routes and services read cross-user data (counts, attendees, friends) with the service-role client and filter it in `visibility.ts`; the user's own RSVP writes go through the RLS-bound client and the security-definer functions.
+- 2026-10-24: Services are integration-tested against Postgres through `tests/integration/support/fake-supabase.ts`, a test-only shim that runs the subset of supabase-js calls 06 uses as SQL (`row_to_json`, so JSON shapes match PostgREST). It does not enforce RLS; RLS and PostgREST behavior still need a `supabase start` run (see Blocked).
+- 2026-10-24: All event-time comparisons parse to instants (`server/time.ts`); ISO strings carry the session's UTC offset and are never compared as text.
+- 2026-10-24: `add_reconnect_interest` takes a per-pair advisory lock so two simultaneous taps always detect mutual interest (test fails without the lock).
+- 2026-10-24: Follow-up accept/dismiss needs a route the spec does not list: `PATCH /api/follow-ups/:id` with `{ action: 'accept' | 'dismiss' }`. Transitions: suggested → accepted_a/accepted_b → accepted_both; dismiss from anything but accepted_both.
+- 2026-10-24: Group event invitations notify with type `group_invite` and payload `{ kind: 'event', eventId, groupId, title }` (no dedicated event-invite type in NOTIFICATION_TYPE).
+- 2026-10-24: Event completion is allowed for the venue owner or anyone while `DEMO_MODE=1`; it goes through the service-role client because 05's RLS only lets owners write events.
+- 2026-10-24: Follow-up suggestions pick the nearest active business in the suggested category to the event venue as `businessId` (Scene 6 lands on Ritual Grounds).
 
 ## Needs from others
 
@@ -91,6 +98,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 15:41 PT: invite, post-event, follow-up, activity and nearby services; Postgres-backed service tests; reconnect race and timestamp-ordering fixes (100 tests). AC2–AC5 covered at service level. Next: route handlers, then UI.
 - 2026-10-24 15:34 PT: stubs for 01/02/03, repository, exported contracts, RSVP service, feed/recommendation/detail/attendee services (68 unit + 18 integration tests). Next: invite-group, activity, post-event services, route handlers.
 - 2026-10-24 15:27 PT: slot derivation, recommendation scorer, attendee visibility, invite selection (48 unit tests). Next: data access layer, exported contracts, route handlers.
 - 2026-10-24 15:23 PT: progress file, interim scaffold, 0600 migration with 18 passing integration tests. Next: domain logic (slots, scoring, visibility, invites) with unit tests.
