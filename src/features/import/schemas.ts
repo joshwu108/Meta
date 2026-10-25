@@ -141,3 +141,13 @@ export type ImportSettings = {
   pending: number;
   lastImportAt: string | null;
 };
+
+/** Labels the browser extracted from a Download-your-information export (Phase 3). Strict: nothing else is accepted. */
+export const ExportLabelsSchema = z
+  .object({
+    topics: z.array(z.string().trim().min(1).max(64)).max(300),
+    adInterests: z.array(z.string().trim().min(1).max(64)).max(300),
+  })
+  .strict()
+  .refine((v) => v.topics.length + v.adInterests.length > 0, { message: 'No topics or ad interests found' });
+export type ExportLabels = z.infer<typeof ExportLabelsSchema>;

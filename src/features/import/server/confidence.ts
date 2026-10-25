@@ -8,6 +8,7 @@ import {
   W_EXPLORE_CAP,
   W_EXPLORE_PER_TILE,
   W_SUMMARY,
+  W_AD_INTEREST,
   W_TOPIC,
 } from './weights';
 
@@ -15,6 +16,7 @@ import {
 export type Evidence =
   | { kind: 'topic'; label: string; state: 'listed' | 'see_more'; close: boolean }
   | { kind: 'summary'; label: string }
+  | { kind: 'ad_interest'; label: string; close: boolean }
   | { kind: 'explore'; label: string; tiles: number; close: boolean };
 
 /** Weight of one piece of evidence (spec 07 weights). */
@@ -22,6 +24,7 @@ export function evidenceWeight(e: Evidence): number {
   const factor = e.kind !== 'summary' && e.close ? CLOSE_FACTOR : 1;
   if (e.kind === 'topic') return W_TOPIC * factor;
   if (e.kind === 'summary') return W_SUMMARY;
+  if (e.kind === 'ad_interest') return W_AD_INTEREST * factor;
   return Math.min(W_EXPLORE_PER_TILE * e.tiles, W_EXPLORE_CAP) * factor;
 }
 
@@ -43,5 +46,6 @@ export function bandOf(confidence: number): Band | null {
 export function evidenceLine(e: Evidence): string {
   if (e.kind === 'topic') return e.state === 'see_more' ? `You asked Instagram for more "${e.label}"` : `In your Your Algorithm topics: "${e.label}"`;
   if (e.kind === 'summary') return 'Mentioned in your Your Algorithm summary';
+  if (e.kind === 'ad_interest') return `In your Instagram ad interests: "${e.label}"`;
   return `Seen in ${e.tiles} Explore ${e.tiles === 1 ? 'tile' : 'tiles'}: "${e.label}"`;
 }

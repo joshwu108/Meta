@@ -13,7 +13,8 @@ import { MAX_EVIDENCE_LINES, MAX_LEFTOVERS_FOR_MODEL, MAX_SUGGESTIONS_PER_RUN } 
 /** One label read off a screenshot. `id` is what the mapping model must cite. */
 export type Signal =
   | { id: string; kind: 'topic'; label: string; state: 'listed' | 'see_more' }
-  | { id: string; kind: 'explore'; label: string; tiles: number };
+  | { id: string; kind: 'explore'; label: string; tiles: number }
+  | { id: string; kind: 'ad_interest'; label: string };
 
 export type ScreenSignals = {
   signals: Signal[];
@@ -99,9 +100,23 @@ export type Candidate = {
 };
 
 function toEvidence({ signal, close }: Mapped): Evidence {
-  return signal.kind === 'topic'
-    ? { kind: 'topic', label: signal.label, state: signal.state, close }
-    : { kind: 'explore', label: signal.label, tiles: signal.tiles, close };
+  if (signal.kind === 'topic') return { kind: 'topic', label: signal.label, state: signal.state, close };
+  if (signal.kind === 'ad_interest') return { kind: 'ad_interest', label: signal.label, close };
+  return { kind: 'explore', label: signal.label, tiles: signal.tiles, close };
+}
+
+/** Labels from a Download-your-information export (topics and ad interests), sensitive ones dropped. */
+export function exportToSignals(topics: readonly string[], adInterests: readonly string[]): ScreenSignals {
+  const signals: Signal[] = [];
+  let droppedSensitive = 0;
+  const add = (label: string, kind: 'topic' | 'ad_interest') => {
+    if (isSensitive(label)) { droppedSensitive += 1; return; }
+    const id = `s${signals.length}`;
+    signals.push(kind === 'topic' ? { id, kind, label, state: 'listed' } : { id, kind, label });
+  };
+  [...new Set(topics)].forEach((l) => add(l, 'topic'));
+  [...new Set(adInterests)].forEach((l) => add(l, 'ad_interest'));
+  return { signals, seeLess: [], summaries: [], droppedSensitive };
 }
 
 /** One candidate per (field, tag), evidence merged, confidence computed, too-weak ones dropped. */

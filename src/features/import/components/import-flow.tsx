@@ -5,6 +5,8 @@ import { ApiClientError, apiGet, apiPost } from '@/lib/api/client';
 import type { DecideResult, ScreensRunResult, TraitSuggestion } from '../schemas';
 import type { PreparedImage } from './prepare-image';
 import { ReviewList, type Decision } from './review-list';
+import { ExportStep } from './export-step';
+import type { ExtractedLabels } from './export-labels';
 import { ShareStep, type ShareSource } from './share-step';
 
 type Stage = 'loading' | 'share' | 'reading' | 'review' | 'done';
@@ -62,6 +64,19 @@ export function ImportFlow({ after, onDecided }: Props) {
     }
   }
 
+  async function sendExport(labels: ExtractedLabels) {
+    setError(null);
+    setStage('reading');
+    try {
+      await apiPost<ScreensRunResult>('/api/import/export', labels);
+      await load();
+      setStage('review');
+    } catch (err) {
+      setError(message(err, 'Couldn’t use those labels. Try again.'));
+      setStage('share');
+    }
+  }
+
   async function done(decisions: Decision[]) {
     setError(null);
     if (decisions.length === 0) {
@@ -81,7 +96,14 @@ export function ImportFlow({ after, onDecided }: Props) {
   }
 
   if (stage === 'loading') return <p className="text-text-2">Loading…</p>;
-  if (stage === 'share') return <ShareStep sending={false} error={error} onSend={(images, sources) => void send(images, sources)} />;
+  if (stage === 'share') {
+    return (
+      <div className="flex flex-col gap-4">
+        <ShareStep sending={false} error={error} onSend={(images, sources) => void send(images, sources)} />
+        <ExportStep sending={false} onSend={(labels) => void sendExport(labels)} />
+      </div>
+    );
+  }
   if (stage === 'reading') {
     return (
       <Card aria-busy="true">

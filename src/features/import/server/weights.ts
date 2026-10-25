@@ -5,6 +5,8 @@
 
 /** A topic listed on Your Algorithm, or set to "see more". */
 export const W_TOPIC = 0.6;
+/** Listed among the ad interests in a Download-your-information export (Phase 3). */
+export const W_AD_INTEREST = 0.35;
 /** The tag is mentioned in the Your Algorithm AI summary. */
 export const W_SUMMARY = 0.3;
 /** Per Explore tile showing the theme, capped below. */
