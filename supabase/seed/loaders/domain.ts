@@ -1,5 +1,5 @@
 import { loadFixture, requireUser, skipIfForeignSchema, type SeedContext } from '../context';
-import { seedBusinessSchema, seedEventSchema, seedGroupSchema } from '../types';
+import { seedBusinessSchema, seedEventSchema, type SeedBusiness } from '../types';
 
 /**
  * Businesses, events and groups live in tables owned by workstreams 05, 06 and 03. The loaders
@@ -24,6 +24,7 @@ export async function loadBusinesses(ctx: SeedContext): Promise<number> {
         description: business.description,
         lat: business.lat,
         lng: business.lng,
+        ...(business.hours ? { hours: business.hours } : {}),
       })
       .select('id')
       .single();
@@ -33,17 +34,30 @@ export async function loadBusinesses(ctx: SeedContext): Promise<number> {
     }
     const businessId = (data as { id: string }).id;
     ctx.businessesBySlug.set(business.slug, businessId);
-    await loadCapabilities(ctx, businessId, business.capacity, business.category);
+    await loadCapabilities(ctx, businessId, business);
     inserted += 1;
   }
   return inserted;
 }
 
-/** Capacity and hostable categories live in business_capabilities (workstream 05). */
-async function loadCapabilities(ctx: SeedContext, businessId: string, capacity: number, category: string): Promise<void> {
-  const { error } = await ctx.admin
-    .from('business_capabilities')
-    .insert({ business_id: businessId, capacity, event_categories: [category] });
+/**
+ * What a venue can host lives in `business_capabilities` (workstream 05). A fixture that
+ * carries no `capabilities` block still seeds a usable row from the base fields.
+ */
+async function loadCapabilities(ctx: SeedContext, businessId: string, business: SeedBusiness): Promise<void> {
+  const c = business.capabilities;
+  const { error } = await ctx.admin.from('business_capabilities').insert({
+    business_id: businessId,
+    capacity: business.capacity,
+    event_categories: c?.event_categories ?? [business.category],
+    min_price_cents: c?.min_price_cents ?? null,
+    max_price_cents: c?.max_price_cents ?? null,
+    hosting_slots: c?.hosting_slots ?? [],
+    equipment_tags: c?.equipment_tags ?? [],
+    formats: c?.formats ?? [],
+    notes: c?.notes ?? null,
+    accepts_ai_proposals: c?.accepts_ai_proposals ?? true,
+  });
   if (error && !skipIfForeignSchema(ctx, 'business_capabilities', error)) {
     throw new Error(`business_capabilities insert failed: ${error.message}`);
   }
@@ -89,31 +103,5 @@ export async function loadEvents(ctx: SeedContext): Promise<number> {
   return rows.length;
 }
 
-export async function loadGroups(ctx: SeedContext): Promise<number> {
-  const groups = await loadFixture('groups', seedGroupSchema);
-  let inserted = 0;
-  for (const group of groups) {
-    const ownerId = requireUser(ctx, group.owner);
-    const { data, error } = await ctx.admin
-      .from('groups')
-      .insert({ name: group.name, description: group.description, visibility: group.visibility, creator_id: ownerId })
-      .select('id')
-      .single();
-    if (error) {
-      if (skipIfForeignSchema(ctx, 'groups', error)) return inserted;
-      throw new Error(`groups insert (${group.slug}) failed: ${error.message}`);
-    }
-    const groupId = (data as { id: string }).id;
-    const joinedAt = new Date().toISOString();
-    const members = [
-      { group_id: groupId, user_id: ownerId, role: 'owner', status: 'active', joined_at: joinedAt },
-      ...group.members.map((email) => ({ group_id: groupId, user_id: requireUser(ctx, email), role: 'member', status: 'active', joined_at: joinedAt })),
-    ];
-    const { error: memberError } = await ctx.admin.from('group_members').insert(members);
-    if (memberError && !skipIfForeignSchema(ctx, 'group_members', memberError)) {
-      throw new Error(`group_members insert (${group.slug}) failed: ${memberError.message}`);
-    }
-    inserted += 1;
-  }
-  return inserted;
-}
+/** Groups are seeded by workstream 03's loader: it also writes `kind`, `interests` and pending invitations. */
+export { loadGroups } from './social';

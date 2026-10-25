@@ -1,5 +1,6 @@
 import type { SeedContext } from '../context';
 import { loadAgentPreferences } from '../agent';
+import { loadBlocks, loadConnections } from './social';
 
 /**
  * Extension points for loaders owned by other workstreams. Each workstream imports its loader
@@ -17,4 +18,7 @@ export const AFTER_USERS: ReadonlyArray<ExtraLoader> = [
 export const AFTER_EVENTS: ReadonlyArray<ExtraLoader> = [];
 
 /** Runs last (03: connections, invitations; anything that needs every other table). */
-export const AFTER_ALL: ReadonlyArray<ExtraLoader> = [];
+export const AFTER_ALL: ReadonlyArray<ExtraLoader> = [
+  { name: 'connections', run: loadConnections },
+  { name: 'blocks', run: loadBlocks },
+];
