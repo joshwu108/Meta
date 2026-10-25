@@ -1,0 +1,27 @@
+[
+  {
+    "name": "scene3-pottery",
+    "venue": "kiln",
+    "brief": { "category": "creative", "slot": "thu_eve", "neighborhoodLabel": "Mission District", "demandBand": "6-9", "topInterests": [{ "tag": "coffee", "count": 4 }, { "tag": "pottery", "count": 2 }], "groupSizeMode": "small", "budgetP50Cents": 2500, "activityPrefs": ["beginner-friendly", "hands-on"] }
+  },
+  {
+    "name": "board-games-friday",
+    "venue": "meeple",
+    "brief": { "category": "games", "slot": "fri_eve", "neighborhoodLabel": "SoMa", "demandBand": "4-5", "topInterests": [{ "tag": "board-games", "count": 5 }], "groupSizeMode": "small", "budgetP50Cents": 1500, "activityPrefs": ["strategy"] }
+  },
+  {
+    "name": "coffee-tasting-thursday",
+    "venue": "ritual",
+    "brief": { "category": "food_drink", "slot": "thu_eve", "neighborhoodLabel": "Mission District", "demandBand": "4-5", "topInterests": [{ "tag": "coffee", "count": 4 }], "groupSizeMode": "small", "budgetP50Cents": 1200, "activityPrefs": [] }
+  },
+  {
+    "name": "trap-big-crowd-small-room",
+    "venue": "kiln",
+    "brief": { "category": "creative", "slot": "sat_day", "neighborhoodLabel": "Castro", "demandBand": "20+", "topInterests": [{ "tag": "painting", "count": 9 }], "groupSizeMode": "large", "budgetP50Cents": 4000, "activityPrefs": [] }
+  },
+  {
+    "name": "trap-no-budget",
+    "venue": "meeple",
+    "brief": { "category": "games", "slot": "sun_day", "neighborhoodLabel": "SoMa", "demandBand": "6-9", "topInterests": [{ "tag": "trivia", "count": 3 }], "groupSizeMode": null, "budgetP50Cents": null, "activityPrefs": [] }
+  }
+]

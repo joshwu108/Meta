@@ -8,8 +8,10 @@ type Tables = Database['public']['Tables'];
 
 describe('Zod row schemas match generated DB row types', () => {
   it('profiles', () => {
-    expectTypeOf<ProfileRow>().toMatchTypeOf<Omit<Tables['profiles']['Row'], 'coarse_lat' | 'coarse_lng'> & { coarse_lat: number | null; coarse_lng: number | null }>();
-    expectTypeOf<keyof ProfileRow>().toEqualTypeOf<keyof Tables['profiles']['Row']>();
+    // `is_operator` (04) is server-only: routes read it straight from the table, never via ProfileRow.
+    type Row = Omit<Tables['profiles']['Row'], 'is_operator'>;
+    expectTypeOf<ProfileRow>().toMatchTypeOf<Omit<Row, 'coarse_lat' | 'coarse_lng'> & { coarse_lat: number | null; coarse_lng: number | null }>();
+    expectTypeOf<keyof ProfileRow>().toEqualTypeOf<keyof Row>();
   });
   it('notifications', () => {
     expectTypeOf<keyof NotificationRow>().toEqualTypeOf<keyof Tables['notifications']['Row']>();

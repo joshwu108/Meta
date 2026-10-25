@@ -1,20 +1,10 @@
-import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import { AuthCard } from '@/features/core/components/auth/AuthCard';
-import { getCurrentUser } from '@/features/core/server/current-user';
+import { OnboardingWizard } from '@/features/business/components/OnboardingWizard';
+import { requireOnboardingPage } from '@/features/business/server/page-data';
 
-export const metadata = { title: 'Business onboarding' };
+export const dynamic = 'force-dynamic';
 
-/** Placeholder owned by workstream 05. */
+/** Business Screen 1 — onboarding. The only business page reachable without a business. */
 export default async function BusinessOnboardingPage() {
-  const user = await getCurrentUser();
-  if (!user) redirect('/login?next=/business/onboarding');
-  if (user.businessId) redirect('/business');
-  return (
-    <AuthCard title="Set up your venue" subtitle="The business onboarding flow is being built by the business workstream.">
-      <p className="text-text-2">
-        Once it lands you will describe your space, hours and the kinds of events you can host. <Link href="/discover">Go to the consumer app</Link> in the meantime.
-      </p>
-    </AuthCard>
-  );
+  await requireOnboardingPage();
+  return <OnboardingWizard />;
 }

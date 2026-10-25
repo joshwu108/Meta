@@ -1,0 +1,21 @@
+{
+  "title": "Beginner Pottery & Coffee Night",
+  "description": "A relaxed, beginner-friendly evening at the wheel. A guided intro to throwing your first bowl, then time to glaze, sip coffee and swap stories with neighbors who are new to clay too. No experience needed and everything is provided.",
+  "category": "creative",
+  "format": "Guided 60-min beginner wheel session, then 60 min of glazing and open conversation over coffee",
+  "intendedSocialExperience": "Small tables of 3-4 so strangers naturally chat while their hands are busy",
+  "suggestedSlot": "thu_eve",
+  "suggestedStartTimeLocal": "18:00",
+  "estimatedDurationMinutes": 120,
+  "suggestedCapacity": 10,
+  "suggestedPriceCents": 2000,
+  "priceRangeCents": { "min": 1500, "max": 2500 },
+  "demand": { "band": "6-9", "neighborhoodLabel": "Mission District", "topInterests": ["pottery", "coffee"] },
+  "whySuggested": "Several people nearby are interested in pottery and coffee and are free on Thursday evenings. Interest is an estimate, not a commitment.",
+  "assumptionsToValidate": [
+    "The studio has enough wheels for about 10 beginners",
+    "Staff are available Thursday 6-8pm",
+    "Coffee can be served in the studio"
+  ],
+  "disclaimers": ["demand_is_estimate"]
+}

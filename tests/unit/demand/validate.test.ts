@@ -1,0 +1,82 @@
+import { describe, expect, it } from 'vitest';
+import { thresholdAndRank } from '@/features/demand/server/aggregate';
+import { clusterUsers, filterUsers } from '@/features/demand/server/cluster';
+import { DEMAND_CONFIG } from '@/features/demand/server/config';
+import { localTimeInZone, nextSlotStart, weekdayInZone } from '@/features/demand/server/time';
+import { findForbiddenPhrases, validateProposal } from '@/features/demand/server/validate';
+import { ProposalDocument } from '@/features/demand/schemas';
+import fixture from '@/lib/ai/fixtures/demand.generate_proposal.json';
+import { consentingUsers, NOW, VENUES } from './harness';
+
+const { kept } = thresholdAndRank(clusterUsers(filterUsers(consentingUsers()), DEMAND_CONFIG), DEMAND_CONFIG);
+const creative = kept.find((c) => c.category === 'creative' && c.slot === 'thu_eve')!;
+const kiln = VENUES[0]!;
+const doc = ProposalDocument.parse(fixture);
+
+const validate = (overrides: Partial<ProposalDocument> = {}, venue = kiln) =>
+  validateProposal({ ...doc, ...overrides }, creative, venue, NOW, DEMAND_CONFIG);
+
+describe('validateProposal', () => {
+  it('accepts the Scene 3 fixture and stores a concrete start', () => {
+    const result = validate();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.proposal.disclaimers).toEqual(['demand_is_estimate']);
+    expect(result.proposal.assumptionsToValidate.length).toBeGreaterThan(0);
+  });
+
+  it('overwrites the band and demand fields from the cluster, never trusting the model', () => {
+    const result = validate({ demand: { band: '20+', neighborhoodLabel: 'Somewhere', topInterests: ['invented'] } });
+    expect(result.ok && result.proposal.demand).toEqual({ band: '6-9', neighborhoodLabel: creative.neighborhoodLabel, topInterests: creative.topInterests.map((t) => t.tag) });
+  });
+
+  it.each([
+    [{ suggestedCapacity: 13 }, 'over_capacity'],
+    [{ suggestedPriceCents: 4000 }, 'price_out_of_range'],
+    [{ suggestedPriceCents: 1000 }, 'price_out_of_range'],
+    [{ suggestedSlot: 'sat_day' as const }, 'slot_mismatch'],
+    [{ category: 'games' as const }, 'category_mismatch'],
+    [{ description: `${doc.description} Six people are confirmed.` }, 'forbidden_phrase'],
+    [{ whySuggested: 'Everyone will attend.' }, 'forbidden_phrase'],
+  ])('rejects %o', (overrides, issue) => {
+    const result = validate(overrides);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.issues).toContain(issue);
+  });
+
+  it('rejects a slot the venue does not host', () => {
+    const noThursday = { ...kiln, capabilities: { ...kiln.capabilities, hostingSlots: ['sat_day' as const] } };
+    const result = validate({}, noThursday);
+    expect(!result.ok && result.issues).toContain('slot_not_hosted');
+  });
+
+  it('falls back to 1.5x the cluster budget when the venue has no price range', () => {
+    const open = { ...kiln, capabilities: { ...kiln.capabilities, minPriceCents: null, maxPriceCents: null } };
+    const ceiling = Math.round((creative.budgetP50Cents ?? 0) * 1.5);
+    expect(validate({ suggestedPriceCents: ceiling }, open).ok).toBe(true);
+    expect(validate({ suggestedPriceCents: ceiling + 1 }, open).ok).toBe(false);
+  });
+});
+
+describe('findForbiddenPhrases', () => {
+  it('matches whole words only', () => {
+    expect(findForbiddenPhrases('Unconfirmed interest, nothing booked')).toEqual(['booked']);
+  });
+});
+
+describe('nextSlotStart', () => {
+  it('is at least 5 days out, on the slot weekday, at venue-local time', () => {
+    const start = nextSlotStart('thu_eve', '18:00', NOW, 5);
+    expect(start.getTime() - NOW.getTime()).toBeGreaterThanOrEqual(5 * 86_400_000 - 86_400_000);
+    expect(weekdayInZone(start)).toBe(4);
+    expect(localTimeInZone(start)).toBe('18:00');
+    // Thu 5 Nov 18:00 PST (DST ended 1 Nov) = 02:00Z on the 6th
+    expect(start.toISOString()).toBe('2026-11-06T02:00:00.000Z');
+  });
+
+  it('handles weekend day slots and DST', () => {
+    const start = nextSlotStart('sat_day', '11:00', new Date('2026-10-28T12:00:00Z'), 5);
+    expect(weekdayInZone(start)).toBe(6);
+    expect(start.toISOString()).toBe('2026-11-07T19:00:00.000Z');
+  });
+});
