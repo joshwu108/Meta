@@ -26,7 +26,6 @@ const { getRecommendedEvents } = await import('@/features/events/server/recommen
 const { PATCH: decideProposal } = await import('@/app/api/business/proposals/[id]/route');
 const { POST: publishEvent } = await import('@/app/api/business/events/[id]/publish/route');
 
-const db = (client: unknown) => client as SupabaseClient;
 const admin = adminClient() as unknown as SupabaseClient;
 
 type World = Awaited<ReturnType<typeof seedScene3>>;
