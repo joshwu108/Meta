@@ -107,6 +107,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: ws/01-core landed on main (integration PR #3). Merged main into ws/06-events (`422ecf3`) per `MERGE_01.md`: 01's scaffold, configs, layout and tokens; 06's pages and `tests/db/support/*`; 06's client/API stubs now re-export `@/lib/api`, `@/lib/supabase/*` and `@/features/core`; db tests mock 01's clients; `loadRsvps` registered in `AFTER_EVENTS`.
 - 2026-10-24: UI moved onto 01's primitives (`@/features/core/components/ui`) and API client (`@/lib/api/client`); 06's own stand-ins are gone. `components/local-ui.tsx` keeps only what 01 does not provide: link-styled buttons, the "Needs reconfirm" (amber, `--color-warning-ink`) and "New" pills, and the spec's "7 of 10 spots" label on 01's meter.
 - 2026-10-24: Pages render inside 01's AppShell feed column. With 01's `@aside` slot on main, `@aside/discover` (agent strip) and `@aside/events` (filters) fill the right rail at >=1024px; below that the same pieces stay in the feed (`.belowRail`). Discover's page and rail share one ranking per request through `getRecommendedEventsCached` (React `cache`).
+- 2026-10-24: Every `.in(...)` id-list read in 06's repository and Activity goes through `inChunks` (100 ids per request, run in parallel), because PostgREST puts the list in the URL and a few hundred UUIDs overflow it (ws/03-matching hit this). The 06 stand-ins in `stubs/social.ts` are left as is; 03's real exports, which replace them on merge, already chunk.
 
 ## Needs from others
 
@@ -126,6 +127,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 21:45 PT: main unchanged. Chunked every id-list read after 03 reported PostgREST URL overflow (unit + 130-event DB test). 05 verified its attendee path against 06's real table. 182 unit + 62 db tests.
 - 2026-10-24 21:25 PT: main moved (01's @aside slot, Switch labels, vitest server-only stub); merged cleanly. Discover and Events now use the right-rail slot. 177 unit + 61 db tests, typecheck, lint, build green.
 - 2026-10-24 21:05 PT: main unchanged. 02 now returns `interestCategories` (ask closed); the explain fixture ask is still open. Rehearsed merging ws/05-business into this branch: no conflicts, frozen lockfile installs, typecheck/lint clean, 432 unit + 61 db tests, build green; the 0100+0500+0501+0600 subset (what main will hold after 05 and 06) applies and the attendee smoke passes.
 - 2026-10-24 20:50 PT: main unchanged. 01 built the `@aside` slot 06 asked for (not on main yet; adding 06's rail pages before 01's `@aside/default.tsx` is on main would 404 hard loads). 03, 04, 05 have merged main; nothing in their changes touches 06.
