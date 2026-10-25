@@ -34,7 +34,9 @@ beforeAll(async () => {
   restoreVenues = await onlyTheseVenues(admin, [...world.owners.values()].map((o) => o.businessId));
   await runPipeline(supabaseDeps(admin), { triggeredBy: 'manual' });
   const owner = world.owners.get('Kiln & Cup')!;
-  const { data } = await admin.from('event_proposals').select('id').eq('business_id', owner.businessId).eq('status', 'pending').single();
+  // Kiln also hosts food_drink, so it can get more than one proposal; take the Scene 3 pottery one.
+  const { data } = await admin.from('event_proposals').select('id').eq('business_id', owner.businessId).eq('status', 'pending')
+    .eq('proposal->>category', 'creative').eq('proposal->>suggestedSlot', 'thu_eve').single();
   potteryId = (data as { id: string }).id;
 }, 120_000);
 
