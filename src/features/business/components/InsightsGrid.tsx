@@ -13,11 +13,18 @@ import { insightsMatrix } from './insights-matrix';
  * white-on-brand pairing is introduced (see the contrast report in PROGRESS.md).
  */
 
+/*
+ * Weight is carried by the background and the font weight; the text itself stays on the
+ * high-contrast token. Brand-on-brand-soft measured 4.20:1 light and 3.40:1 dark, and
+ * brand-on-brand-soft-2 only 2.63:1 dark — all under AA for 12px, which is the same failure
+ * reported against the brand palette in PROGRESS.md. Measured after this change: every cell
+ * clears 4.5:1 in both themes.
+ */
 const CELL_STYLE: Record<DemandBand, string> = {
   '4-5': 'bg-surface-2 text-text-2',
-  '6-9': 'bg-brand-soft text-brand',
-  '10+': 'bg-brand-soft text-brand font-semibold',
-  '20+': 'bg-brand-soft-2 text-brand font-bold',
+  '6-9': 'bg-brand-soft text-text',
+  '10+': 'bg-brand-soft text-text font-semibold',
+  '20+': 'bg-brand-soft-2 text-text font-bold',
 };
 
 export function InsightsGrid({ cells }: { cells: readonly InsightCell[] }) {
@@ -58,7 +65,7 @@ export function InsightsGrid({ cells }: { cells: readonly InsightCell[] }) {
               return (
                 <td key={slot} className="px-1 py-2 text-center">
                   {band === null ? (
-                    <span className="text-text-3" aria-label="no range yet">
+                    <span className="text-text-2" aria-label="no range yet">
                       –
                     </span>
                   ) : (
