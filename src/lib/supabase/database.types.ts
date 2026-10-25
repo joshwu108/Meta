@@ -31,6 +31,78 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"agent_conversations": {
+                  Row: {
+                    "created_at": string,"id": string,"kind": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"kind": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"kind"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "agent_conversations_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "agent_conversations_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"agent_messages": {
+                  Row: {
+                    "content": string,"conversation_id": string,"created_at": string,"id": string,"role": string,"suggestions": Json | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "content": string,"conversation_id": string,"created_at"?: string,"id"?: string,"role": string,"suggestions"?: Json | null
+                  }
+                  Update: {
+                    "content"?: string,"conversation_id"?: string,"created_at"?: string,"id"?: string,"role"?: string,"suggestions"?: Json | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "agent_messages_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: false
+      referencedRelation: "agent_conversations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"agent_profiles": {
+                  Row: {
+                    "consent": NonNullable<Json>,"consent_updated_at": string | null,"feedback_notes": NonNullable<Json>,"summary": string | null,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "consent"?: NonNullable<Json>,"consent_updated_at"?: string | null,"feedback_notes"?: NonNullable<Json>,"summary"?: string | null,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "consent"?: NonNullable<Json>,"consent_updated_at"?: string | null,"feedback_notes"?: NonNullable<Json>,"summary"?: string | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "agent_profiles_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "agent_profiles_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"notifications": {
                   Row: {
                     "created_at": string,"id": string,"payload": NonNullable<Json>,"read_at": string | null,"type": string,"user_id": string
@@ -70,6 +142,32 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"user_preferences": {
+                  Row: {
+                    "activity_prefs": (string)[],"availability_slots": (string)[],"budget_max_cents": number | null,"budget_min_cents": number | null,"dealbreakers": (string)[],"field_sources": NonNullable<Json>,"group_size_pref": string | null,"interest_categories": (string)[],"interests": (string)[],"social_goals": (string)[],"travel_radius_km": number,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "activity_prefs"?: (string)[],"availability_slots"?: (string)[],"budget_max_cents"?: number | null,"budget_min_cents"?: number | null,"dealbreakers"?: (string)[],"field_sources"?: NonNullable<Json>,"group_size_pref"?: string | null,"interest_categories"?: (string)[],"interests"?: (string)[],"social_goals"?: (string)[],"travel_radius_km"?: number,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "activity_prefs"?: (string)[],"availability_slots"?: (string)[],"budget_max_cents"?: number | null,"budget_min_cents"?: number | null,"dealbreakers"?: (string)[],"field_sources"?: NonNullable<Json>,"group_size_pref"?: string | null,"interest_categories"?: (string)[],"interests"?: (string)[],"social_goals"?: (string)[],"travel_radius_km"?: number,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "user_preferences_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_preferences_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 }
           }
