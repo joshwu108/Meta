@@ -179,6 +179,58 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"demand_cluster_members": {
+                  Row: {
+                    "cluster_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cluster_id": string,"user_id": string
+                  }
+                  Update: {
+                    "cluster_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "demand_cluster_members_cluster_id_fkey"
+      columns: ["cluster_id"]
+isOneToOne: false
+      referencedRelation: "demand_clusters"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "demand_cluster_members_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "demand_cluster_members_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"demand_clusters": {
+                  Row: {
+                    "activity_prefs": NonNullable<Json>,"budget_p50_cents": number | null,"category": string,"center_lat": number,"center_lng": number,"created_at": string,"geocell": string,"group_size_mode": string | null,"id": string,"member_count": number,"run_id": string,"signature": string,"slot": string,"top_interests": NonNullable<Json>
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "activity_prefs"?: NonNullable<Json>,"budget_p50_cents"?: number | null,"category": string,"center_lat": number,"center_lng": number,"created_at"?: string,"geocell": string,"group_size_mode"?: string | null,"id"?: string,"member_count": number,"run_id": string,"signature": string,"slot": string,"top_interests": NonNullable<Json>
+                  }
+                  Update: {
+                    "activity_prefs"?: NonNullable<Json>,"budget_p50_cents"?: number | null,"category"?: string,"center_lat"?: number,"center_lng"?: number,"created_at"?: string,"geocell"?: string,"group_size_mode"?: string | null,"id"?: string,"member_count"?: number,"run_id"?: string,"signature"?: string,"slot"?: string,"top_interests"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "demand_clusters_run_id_fkey"
+      columns: ["run_id"]
+isOneToOne: false
+      referencedRelation: "opportunity_runs"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"direct_messages": {
                   Row: {
                     "body": string,"connection_id": string,"created_at": string,"id": string,"sender_id": string
@@ -208,6 +260,38 @@ isOneToOne: false
       columns: ["sender_id"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"event_proposals": {
+                  Row: {
+                    "business_edits": Json | null,"business_id": string,"cluster_id": string | null,"created_at": string,"decided_at": string | null,"decision_note": string | null,"expires_at": string,"id": string,"proposal": NonNullable<Json>,"resulting_event_id": string | null,"revision": number,"revision_request": Json | null,"run_id": string | null,"source": string,"source_group_id": string | null,"source_plan_id": string | null,"source_suggestion_index": number | null,"status": string,"supersedes_id": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_edits"?: Json | null,"business_id": string,"cluster_id"?: string | null,"created_at"?: string,"decided_at"?: string | null,"decision_note"?: string | null,"expires_at"?: string,"id"?: string,"proposal": NonNullable<Json>,"resulting_event_id"?: string | null,"revision"?: number,"revision_request"?: Json | null,"run_id"?: string | null,"source"?: string,"source_group_id"?: string | null,"source_plan_id"?: string | null,"source_suggestion_index"?: number | null,"status"?: string,"supersedes_id"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "business_edits"?: Json | null,"business_id"?: string,"cluster_id"?: string | null,"created_at"?: string,"decided_at"?: string | null,"decision_note"?: string | null,"expires_at"?: string,"id"?: string,"proposal"?: NonNullable<Json>,"resulting_event_id"?: string | null,"revision"?: number,"revision_request"?: Json | null,"run_id"?: string | null,"source"?: string,"source_group_id"?: string | null,"source_plan_id"?: string | null,"source_suggestion_index"?: number | null,"status"?: string,"supersedes_id"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "event_proposals_cluster_id_fkey"
+      columns: ["cluster_id"]
+isOneToOne: false
+      referencedRelation: "demand_clusters"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "event_proposals_run_id_fkey"
+      columns: ["run_id"]
+isOneToOne: false
+      referencedRelation: "opportunity_runs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "event_proposals_supersedes_id_fkey"
+      columns: ["supersedes_id"]
+isOneToOne: false
+      referencedRelation: "event_proposals"
       referencedColumns: ["id"]
     }
                   ]
@@ -403,16 +487,30 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"profiles": {
+                },"opportunity_runs": {
                   Row: {
-                    "avatar_url": string | null,"bio": string | null,"coarse_lat": number | null,"coarse_lng": number | null,"created_at": string,"display_name": string,"id": string,"is_adult_confirmed": boolean,"is_discoverable": boolean,"neighborhood": string | null,"onboarding_completed_at": string | null,"updated_at": string
+                    "error": string | null,"finished_at": string | null,"id": string,"started_at": string,"stats": NonNullable<Json>,"status": string,"triggered_by": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "avatar_url"?: string | null,"bio"?: string | null,"coarse_lat"?: number | null,"coarse_lng"?: number | null,"created_at"?: string,"display_name": string,"id": string,"is_adult_confirmed"?: boolean,"is_discoverable"?: boolean,"neighborhood"?: string | null,"onboarding_completed_at"?: string | null,"updated_at"?: string
+                    "error"?: string | null,"finished_at"?: string | null,"id"?: string,"started_at"?: string,"stats"?: NonNullable<Json>,"status"?: string,"triggered_by": string
                   }
                   Update: {
-                    "avatar_url"?: string | null,"bio"?: string | null,"coarse_lat"?: number | null,"coarse_lng"?: number | null,"created_at"?: string,"display_name"?: string,"id"?: string,"is_adult_confirmed"?: boolean,"is_discoverable"?: boolean,"neighborhood"?: string | null,"onboarding_completed_at"?: string | null,"updated_at"?: string
+                    "error"?: string | null,"finished_at"?: string | null,"id"?: string,"started_at"?: string,"stats"?: NonNullable<Json>,"status"?: string,"triggered_by"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"profiles": {
+                  Row: {
+                    "avatar_url": string | null,"bio": string | null,"coarse_lat": number | null,"coarse_lng": number | null,"created_at": string,"display_name": string,"id": string,"is_adult_confirmed": boolean,"is_discoverable": boolean,"is_operator": boolean,"neighborhood": string | null,"onboarding_completed_at": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "avatar_url"?: string | null,"bio"?: string | null,"coarse_lat"?: number | null,"coarse_lng"?: number | null,"created_at"?: string,"display_name": string,"id": string,"is_adult_confirmed"?: boolean,"is_discoverable"?: boolean,"is_operator"?: boolean,"neighborhood"?: string | null,"onboarding_completed_at"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "avatar_url"?: string | null,"bio"?: string | null,"coarse_lat"?: number | null,"coarse_lng"?: number | null,"created_at"?: string,"display_name"?: string,"id"?: string,"is_adult_confirmed"?: boolean,"is_discoverable"?: boolean,"is_operator"?: boolean,"neighborhood"?: string | null,"onboarding_completed_at"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -513,6 +611,9 @@ isOneToOne: true
 "create_group_with_owner":
 { Args: { "p_creator": string,"p_description"?: string,"p_interests"?: (string)[],"p_name": string,"p_visibility": string }; Returns: string
                            },
+"demand_owns_business":
+{ Args: { "target": string }; Returns: boolean
+                           },
 "invite_to_group":
 { Args: { "p_group": string,"p_recipients": (string)[],"p_sender": string }; Returns: {
               "invitation_id": string,"invitee_id": string
@@ -532,6 +633,15 @@ isOneToOne: true
                            },
 "remove_group_member":
 { Args: { "p_group": string,"p_user": string }; Returns: undefined
+                           },
+"save_demand_proposal":
+{ Args: { "p_business_id": string,"p_cluster": Json,"p_member_ids": (string)[],"p_proposal": Json,"p_run_id": string }; Returns: string
+                           },
+"save_proposal_revision":
+{ Args: { "p_parent_id": string,"p_proposal": Json,"p_request": Json }; Returns: string
+                           },
+"start_opportunity_run":
+{ Args: { "trigger_source": string }; Returns: string
                            },
 "tables_without_rls":
 { Args: Record<PropertyKey, never>; Returns: string[]
