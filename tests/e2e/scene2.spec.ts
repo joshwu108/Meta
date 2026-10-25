@@ -4,6 +4,9 @@ import { config as loadEnv } from 'dotenv';
 import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { NEW_USER, login, reseed } from './helpers';
 
+// The first request to a route compiles it in dev mode, which can take longer than 5s in CI.
+const FIRST_REQUEST = { timeout: 20_000 };
+
 loadEnv({ path: '.env.local' });
 loadEnv({ path: '.env' });
 
@@ -65,7 +68,7 @@ test('Scene 2: matches with explanations, connect, create a private group, invit
   await expect(connect.getByLabel('Add a note (optional)')).toBeFocused();
   await connect.getByLabel('Add a note (optional)').fill('Pottery on Thursday?');
   await connect.getByRole('button', { name: 'Send request' }).click();
-  await expect(page.getByText('Request sent to Maya Chen')).toBeVisible();
+  await expect(page.getByText('Request sent to Maya Chen')).toBeVisible(FIRST_REQUEST);
   await expect(page.getByRole('article', { name: /Maya Chen/ })).toHaveCount(0);
   await expect(page.getByRole('tabpanel', { name: 'Recommended' })).toBeFocused();
   await openRequestFromBell(browser);
@@ -84,7 +87,7 @@ test('Scene 2: matches with explanations, connect, create a private group, invit
   await page.getByLabel('Invite Maya Chen').check();
   await page.getByLabel('Invite Yuki Tanaka').check();
   await page.getByRole('button', { name: 'Invite 2' }).click();
-  await expect(page.getByText('Invited 2 people')).toBeVisible();
+  await expect(page.getByText('Invited 2 people')).toBeVisible(FIRST_REQUEST);
 
   await acceptInvitationAs(browser, 'yuki@commonground.test');
 

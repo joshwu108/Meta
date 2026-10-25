@@ -4,6 +4,9 @@ import { config as loadEnv } from 'dotenv';
 import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { CONSUMER, login, reseed } from './helpers';
 
+// The first request to a route compiles it in dev mode, which can take longer than 5s in CI.
+const FIRST_REQUEST = { timeout: 20_000 };
+
 loadEnv({ path: '.env.local' });
 loadEnv({ path: '.env' });
 
@@ -33,7 +36,7 @@ test('P1: a voted venue idea goes to 04 as a group-originated proposal', async (
   await page.goto(`/groups/${groupId}`);
   await page.getByRole('button', { name: 'Plan something for us' }).click();
   const idea = page.getByRole('region', { name: 'Suggestions' }).getByRole('article').filter({ hasText: IDEA });
-  await expect(idea).toBeVisible();
+  await expect(idea).toBeVisible(FIRST_REQUEST);
   await idea.getByRole('button', { name: /0 votes/ }).click();
   await expect(idea.getByRole('button', { name: /1 vote/ })).toHaveAttribute('aria-pressed', 'true');
 
@@ -43,7 +46,7 @@ test('P1: a voted venue idea goes to 04 as a group-originated proposal', async (
 
   await page.reload();
   await idea.getByRole('button', { name: 'Request venue' }).click();
-  await expect(page.getByText(/^Sent to .+\. They’ll decide whether to host it\.$/)).toBeVisible();
+  await expect(page.getByText(/^Sent to .+\. They’ll decide whether to host it\.$/)).toBeVisible(FIRST_REQUEST);
   const { data: proposals } = await admin()
     .from('event_proposals')
     .select('id, source, business_id')

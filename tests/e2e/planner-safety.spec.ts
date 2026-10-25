@@ -4,6 +4,9 @@ import { config as loadEnv } from 'dotenv';
 import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { NEW_USER, login, reseed } from './helpers';
 
+// The first request to a route compiles it in dev mode, which can take longer than 5s in CI.
+const FIRST_REQUEST = { timeout: 20_000 };
+
 loadEnv({ path: '.env.local' });
 loadEnv({ path: '.env' });
 
@@ -21,7 +24,7 @@ test('AC4: the group planner suggests 2–4 activities in the shared slot and me
   await page.getByRole('link', { name: /Mission Makers/ }).first().click();
   await page.getByRole('textbox', { name: 'What should we do?' }).fill('Something creative on a weeknight with Leo');
   await page.getByRole('button', { name: 'Plan something for us' }).click();
-  await expect(page.getByText('Based on 4 of 4 members who allow group planning')).toBeVisible();
+  await expect(page.getByText('Based on 4 of 4 members who allow group planning')).toBeVisible(FIRST_REQUEST);
   const suggestions = page.getByRole('region', { name: 'Suggestions' }).getByRole('article');
   await expect(suggestions.first()).toBeVisible();
   const count = await suggestions.count();
@@ -58,12 +61,12 @@ test('Block and Report from a match card', async ({ page }) => {
   await expect(report.getByRole('radio', { checked: true })).toBeFocused();
   await report.getByRole('radio', { name: 'Spam' }).check();
   await report.getByRole('button', { name: 'Send report' }).click();
-  await expect(page.getByText('Thanks. Your report was sent.')).toBeVisible();
+  await expect(page.getByText('Thanks. Your report was sent.')).toBeVisible(FIRST_REQUEST);
 
   await trigger.click();
   await page.getByRole('menuitem', { name: 'Block' }).click();
   await page.getByRole('dialog', { name: 'Block Yuki Tanaka?' }).getByRole('button', { name: 'Block' }).click();
-  await expect(page.getByText('Yuki Tanaka is blocked')).toBeVisible();
+  await expect(page.getByText('Yuki Tanaka is blocked')).toBeVisible(FIRST_REQUEST);
   await expect(page.getByRole('article', { name: /^Yuki Tanaka/ })).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole('list', { name: 'Recommended people' }).getByRole('article').first()).toBeVisible();

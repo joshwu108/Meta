@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { login, reseed } from './helpers';
 
+// The first request to a route compiles it in dev mode, which can take longer than 5s in CI.
+const FIRST_REQUEST = { timeout: 20_000 };
+
 test('a public group found on /groups/discover can be joined from its page', async ({ page }) => {
   test.setTimeout(60_000);
   await reseed(page);
@@ -12,7 +15,7 @@ test('a public group found on /groups/discover can be joined from its page', asy
   await expect(page.getByRole('tab', { name: /Members/ })).toHaveAttribute('aria-selected', 'true');
 
   await page.getByRole('button', { name: 'Join group' }).click();
-  await expect(page.getByText('You joined Mission Makers')).toBeVisible();
+  await expect(page.getByText('You joined Mission Makers')).toBeVisible(FIRST_REQUEST);
   await expect(page.getByText('You’re a member')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Join group' })).toHaveCount(0);
   await expect(page.getByRole('tab', { name: /Plans/ })).toHaveAttribute('aria-selected', 'true');

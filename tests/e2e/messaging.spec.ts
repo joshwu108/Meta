@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { login, reseed } from './helpers';
 
+// The first request to a route compiles it in dev mode, which can take longer than 5s in CI.
+const FIRST_REQUEST = { timeout: 20_000 };
+
 test('accepted connections can message each other (P1, polled)', async ({ page, browser }) => {
   test.setTimeout(90_000);
   await reseed(page);
@@ -11,7 +14,7 @@ test('accepted connections can message each other (P1, polled)', async ({ page, 
   const chat = page.getByRole('dialog', { name: 'Leo Park' });
   await chat.getByRole('textbox', { name: 'Message' }).fill('Wheel night on Thursday?');
   await chat.getByRole('button', { name: 'Send' }).click();
-  await expect(chat.getByRole('list', { name: 'Messages with Leo Park' })).toContainText('Wheel night on Thursday?');
+  await expect(chat.getByRole('list', { name: 'Messages with Leo Park' })).toContainText('Wheel night on Thursday?', FIRST_REQUEST);
 
   const leo = await browser.newContext();
   const leoPage = await leo.newPage();
