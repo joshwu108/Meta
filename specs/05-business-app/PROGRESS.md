@@ -2,14 +2,16 @@
 
 Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../README.md`](../README.md)
 
-## Status: three fixes still to pull into main
+## Status: PR #4 open with five fixes for main
 
 All six workstreams are merged into `main`, and the whole product is green there:
 **800 unit, 213 integration, 62 db and 59 e2e tests pass with nothing skipped**, plus
 typecheck, lint and build (verified 2026-10-25 01:30 on a fresh `db reset` + `db:seed`).
 
-**Three 05 bug fixes are still only on `ws/05-business`.** They landed after the branch was
-merged, so the integrator needs to merge it once more:
+**Five 05 bug fixes are still only on `ws/05-business`** — they landed after the branch was
+first merged. **https://github.com/joshwu108/Meta/pull/4** is open for them, with the full
+write-up and a test plan; merging it is all that is needed. The three originally listed here
+plus the insights scope fix (`c91d1b9`) and the onboarding dead-end warning (`39c213f`):
 
 - `e3f960e` + `cf29fb6` — **every time on the business screens is the venue's wall clock.**
   The editor read and wrote `datetime-local` in the browser's zone, and the display
@@ -284,8 +286,8 @@ either side of 04. Both were confirmed present in the 13-migration run.
 
 ## Needs from others
 
-- **Integrator — merge `ws/05-business` once more.** Three bug fixes landed after the branch
-  was merged and are **not on `main`**: `e3f960e` and `cf29fb6` (every time on the business
+- **Integrator — merge PR #4** (https://github.com/joshwu108/Meta/pull/4). Five bug fixes
+  landed after the branch was first merged and are **not on `main`**: `e3f960e` and `cf29fb6` (every time on the business
   screens is the venue's wall clock, not the viewer's) and `bd003d3` (the agent audit log
   recorded a business id where a profile id belongs, so every row was silently rejected).
   Repeated here because the worker prompt points integrators at this section; the full
@@ -415,6 +417,14 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 05:35` — **opened PR #4 so the five pending fixes are actually actionable.**
+  `main` has not moved in hours, every workstream is merged, and the only thing left outside
+  it is 05's catch-up work — so if nothing prompts another merge the build ships with times
+  in the viewer's zone, an empty audit log and the insights stat that cannot be true. Two
+  notes in a spec file were not going to carry that; 06 had already opened PR #2, so a pull
+  request is this team's actual merge mechanism. #4 describes each fix, what it looked like
+  from the outside, how it was verified, and the two seed defects that belong to 01 and are
+  deliberately not in it. No AI attribution, per the commit skill.
 - `2026-10-25 05:05` — **audited my own suite for tests that pass without testing.** Three
   had already turned up that way, so I went looking deliberately: grepped for early returns
   inside tests, skips that never un-skip, and assertions that cannot fail. Found two of the
