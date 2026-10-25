@@ -279,6 +279,19 @@ either side of 04. Both were confirmed present in the 13-migration run.
     this branch's copy (`DemandBand`, `WeeklyHours`, `BusinessCapabilities`,
     `BusinessOwnerView`, `BusinessEvent`, `EventEdits`, `ProposalDocument`,
     `ProposalSummary`, `ProposalDetail`, `AttendeeList`, `BusinessInsights`).
+- **03 + 06 + integrator** — **two of 03's tests will fail the moment 06 merges**, found by
+  applying every branch's migrations together. 06's `0600` adds
+  `invitations_event_fk foreign key (event_id) references events(id)`, and 03's
+  `tests/integration/social/contracts.test.ts` and `planner-routes.test.ts` invite people to
+  a hardcoded `EVENT_ID` (`3b1d6c1a-…`) that no row has, so
+  `createEventInvitations` fails with "Could not create event invitations". Nothing is wrong
+  with either side — the FK is right and 03's fixture simply predates it. The fix is one
+  line in 03's fixtures: use a seeded event id (05's seed creates six) instead of a literal.
+  This does **not** affect `main` today; it appears only once 03 and 06 are both in.
+- **01** — the seed occasionally fails the first row right after `supabase db reset` with
+  "profile update for demo.new@… failed: Database client error. Retrying the connection."
+  Re-running `pnpm db:seed` succeeds. A short wait or a retry around the first write would
+  save the next person thinking they have a regression; it briefly looked like one here.
 - **01 / integrator** — **regenerate `src/lib/supabase/database.types.ts` after 05 merges.**
   It was generated before 05 existed, so the typed client does not know `businesses`,
   `business_capabilities` or `events`. 05's store takes an untyped `SupabaseClient` and is
@@ -341,6 +354,17 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 23:15` — **re-ran the six-way check against the new main; 05 is clean, and it
+  surfaced a 03↔06 collision.** With 01+02+03 now on main, grafted 04's and 06's migrations
+  so all 13 applied together again. **05's own suites pass completely**: `business-rls`
+  13/13 (including the 06 attendee case), `proposal-decision` 8/8 (including Scene 4's
+  path), 424 unit, 40 e2e. Two failures, both in **03's** tests and not caused by 05: 06's
+  `0600` adds a foreign key from `invitations.event_id` to `events`, and 03's fixtures
+  invite people to a hardcoded event id that no row has. Recorded under Needs from others
+  with the one-line fix, since it bites only when 03 and 06 are both merged and is not
+  mine to change speculatively. Also noted a transient seed failure right after
+  `db reset` that briefly looked like a regression on my side. Grafts removed; the branch
+  reports 113 integration (9 skipped) on main's schema.
 - `2026-10-24 22:45` — **03 merged into main; integrated it.** One conflict, an import line
   in the seed loader where main dropped `seedGroupSchema` and 05 had added `SeedBusiness`
   for its hours and capabilities loading; both kept. Re-read 03's changed spec — their edits
