@@ -141,6 +141,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"bookmarks": {
+                  Row: {
+                    "created_at": string,"target_id": string,"target_type": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"target_id": string,"target_type": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"target_id"?: string,"target_type"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "bookmarks_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "bookmarks_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"business_capabilities": {
                   Row: {
                     "accepts_ai_proposals": boolean,"business_id": string,"capacity": number,"equipment_tags": (string)[],"event_categories": (string)[],"formats": (string)[],"hosting_slots": (string)[],"max_price_cents": number | null,"min_price_cents": number | null,"notes": string | null,"updated_at": string
@@ -297,6 +323,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"event_feedback": {
+                  Row: {
+                    "comment": string | null,"created_at": string,"event_id": string,"met_someone": boolean | null,"rating": number,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "comment"?: string | null,"created_at"?: string,"event_id": string,"met_someone"?: boolean | null,"rating": number,"user_id": string
+                  }
+                  Update: {
+                    "comment"?: string | null,"created_at"?: string,"event_id"?: string,"met_someone"?: boolean | null,"rating"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "event_feedback_event_id_fkey"
+      columns: ["event_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "event_feedback_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "event_feedback_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"event_proposals": {
                   Row: {
                     "business_edits": Json | null,"business_id": string,"cluster_id": string | null,"created_at": string,"decided_at": string | null,"decision_note": string | null,"expires_at": string,"id": string,"proposal": NonNullable<Json>,"resulting_event_id": string | null,"revision": number,"revision_request": Json | null,"run_id": string | null,"source": string,"source_group_id": string | null,"source_plan_id": string | null,"source_suggestion_index": number | null,"status": string,"supersedes_id": string | null,"updated_at": string
@@ -358,6 +416,50 @@ isOneToOne: false
       columns: ["proposal_id"]
 isOneToOne: false
       referencedRelation: "event_proposals"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"follow_up_suggestions": {
+                  Row: {
+                    "created_at": string,"event_id": string,"id": string,"status": string,"suggestion": NonNullable<Json>,"user_a": string,"user_b": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"event_id": string,"id"?: string,"status"?: string,"suggestion": NonNullable<Json>,"user_a": string,"user_b": string
+                  }
+                  Update: {
+                    "created_at"?: string,"event_id"?: string,"id"?: string,"status"?: string,"suggestion"?: NonNullable<Json>,"user_a"?: string,"user_b"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "follow_up_suggestions_event_id_fkey"
+      columns: ["event_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_up_suggestions_user_a_fkey"
+      columns: ["user_a"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_up_suggestions_user_a_fkey"
+      columns: ["user_a"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_up_suggestions_user_b_fkey"
+      columns: ["user_b"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follow_up_suggestions_user_b_fkey"
+      columns: ["user_b"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -481,6 +583,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "groups_event_fk"
+      columns: ["event_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id"]
     }
                   ]
                 },"invitations": {
@@ -496,6 +604,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "invitations_event_fk"
+      columns: ["event_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "invitations_group_id_fkey"
       columns: ["group_id"]
 isOneToOne: false
@@ -581,6 +695,50 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"reconnect_interest": {
+                  Row: {
+                    "created_at": string,"event_id": string,"from_user_id": string,"to_user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"event_id": string,"from_user_id": string,"to_user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"event_id"?: string,"from_user_id"?: string,"to_user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reconnect_interest_event_id_fkey"
+      columns: ["event_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reconnect_interest_from_user_id_fkey"
+      columns: ["from_user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reconnect_interest_from_user_id_fkey"
+      columns: ["from_user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reconnect_interest_to_user_id_fkey"
+      columns: ["to_user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "reconnect_interest_to_user_id_fkey"
+      columns: ["to_user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"reports": {
                   Row: {
                     "created_at": string,"details": string | null,"id": string,"reason": string,"reported_id": string,"reporter_id": string
@@ -614,6 +772,38 @@ isOneToOne: false
     },{
       foreignKeyName: "reports_reporter_id_fkey"
       columns: ["reporter_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"rsvps": {
+                  Row: {
+                    "created_at": string,"event_id": string,"event_version_seen": string | null,"id": string,"needs_reconfirm": boolean,"share_with_attendees": boolean,"share_with_business": boolean,"status": string,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"event_id": string,"event_version_seen"?: string | null,"id"?: string,"needs_reconfirm"?: boolean,"share_with_attendees"?: boolean,"share_with_business"?: boolean,"status"?: string,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"event_id"?: string,"event_version_seen"?: string | null,"id"?: string,"needs_reconfirm"?: boolean,"share_with_attendees"?: boolean,"share_with_business"?: boolean,"status"?: string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rsvps_event_id_fkey"
+      columns: ["event_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rsvps_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rsvps_user_id_fkey"
+      columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -665,7 +855,10 @@ isOneToOne: true
                 }
           }
           Functions: {
-            "block_user":
+            "add_reconnect_interest":
+{ Args: { "p_event_id": string,"p_to_user": string }; Returns: boolean
+                           },
+"block_user":
 { Args: { "p_blocked": string,"p_blocker": string }; Returns: undefined
                            },
 "business_candidates":
@@ -684,6 +877,11 @@ isOneToOne: true
                            },
 "cancel_event":
 { Args: { "p_event_id": string,"p_reason": string }; Returns: Json
+                           },
+"cancel_rsvp":
+{ Args: { "p_event_id": string }; Returns: {
+              "cancelled": boolean,"event_status": string,"promoted_user_id": string
+            }[]
                            },
 "create_group_with_owner":
 { Args: { "p_creator": string,"p_description"?: string,"p_interests"?: (string)[],"p_name": string,"p_visibility": string }; Returns: string
@@ -723,8 +921,16 @@ isOneToOne: true
 "publish_event":
 { Args: { "p_event_id": string }; Returns: Json
                            },
+"reconfirm_rsvp":
+{ Args: { "p_event_id": string }; Returns: undefined
+                           },
 "remove_group_member":
 { Args: { "p_group": string,"p_user": string }; Returns: undefined
+                           },
+"rsvp_event":
+{ Args: { "p_allow_waitlist"?: boolean,"p_event_id": string,"p_share_attendees": boolean,"p_share_business": boolean }; Returns: {
+              "event_status": string,"rsvp_status": string
+            }[]
                            },
 "save_demand_proposal":
 { Args: { "p_business_id": string,"p_cluster": Json,"p_member_ids": (string)[],"p_proposal": Json,"p_run_id": string }; Returns: string
@@ -734,6 +940,9 @@ isOneToOne: true
                            },
 "start_opportunity_run":
 { Args: { "trigger_source": string }; Returns: string
+                           },
+"sync_event_capacity_status":
+{ Args: { "p_event_id": string }; Returns: string
                            },
 "tables_without_rls":
 { Args: Record<PropertyKey, never>; Returns: string[]

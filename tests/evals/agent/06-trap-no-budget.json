@@ -1,0 +1,20 @@
+{
+  "id": "06-trap-no-budget",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Cooking classes sound fun, Tuesday or Wednesday evenings, small groups please."
+    }
+  ],
+  "expected": {
+    "interests": [
+      "cooking"
+    ],
+    "availabilitySlots": [
+      "tue_eve",
+      "wed_eve"
+    ],
+    "groupSizePref": "small",
+    "budgetMaxCents": null
+  }
+}

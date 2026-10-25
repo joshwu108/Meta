@@ -1,0 +1,15 @@
+{
+  "id": "10-trap-vague",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Honestly I just want to get out of the house more."
+    }
+  ],
+  "expected": {
+    "interests": [],
+    "availabilitySlots": [],
+    "groupSizePref": null,
+    "budgetMaxCents": null
+  }
+}

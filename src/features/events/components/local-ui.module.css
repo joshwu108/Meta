@@ -1,0 +1,22 @@
+/* 06-only pieces 01's primitives do not cover: links styled as buttons, two 06 status labels. */
+
+.button {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  height: 36px; padding: 0 var(--space-4); border-radius: var(--radius-md);
+  font-weight: var(--weight-semibold); text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.button:hover { text-decoration: none; }
+.primary { background: var(--color-brand); color: var(--color-text-on-brand); }
+.primary:hover { background: var(--color-brand-hover); }
+.secondary { background: var(--color-pressed); color: var(--color-text); }
+.secondary:hover { background: var(--color-divider); }
+
+.pill {
+  display: inline-flex; align-items: center; height: 24px; padding: 0 var(--space-2); border-radius: var(--radius-pill);
+  font-size: var(--text-xs); font-weight: var(--weight-semibold); white-space: nowrap;
+}
+.warning { background: var(--color-warning-soft); color: var(--color-warning-ink); }
+.brand { background: var(--color-brand-soft); color: var(--color-brand-ink, var(--color-brand)); } /* ink: AA on brand-soft */
+
+.meter { display: grid; gap: var(--space-1); font-size: var(--text-sm); color: var(--color-text-2); }
