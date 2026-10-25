@@ -12,11 +12,22 @@ type Parts = { year: number; month: number; day: number; hour: number; minute: n
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function zonedParts(instant: Date, timeZone: string): Parts {
+/** Building an Intl formatter is far costlier than using one, so keep one per zone. */
+const FORMATTERS = new Map<string, Intl.DateTimeFormat>();
+
+function formatterFor(timeZone: string): Intl.DateTimeFormat {
+  const cached = FORMATTERS.get(timeZone);
+  if (cached) return cached;
   const fmt = new Intl.DateTimeFormat('en-US', {
     timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', weekday: 'short', hourCycle: 'h23',
   });
-  const get = (type: string) => fmt.formatToParts(instant).find((p) => p.type === type)?.value ?? '';
+  FORMATTERS.set(timeZone, fmt);
+  return fmt;
+}
+
+function zonedParts(instant: Date, timeZone: string): Parts {
+  const parts = formatterFor(timeZone).formatToParts(instant);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
   return {
     year: Number(get('year')), month: Number(get('month')), day: Number(get('day')),
     hour: Number(get('hour')), minute: Number(get('minute')), weekday: WEEKDAYS.indexOf(get('weekday')),
@@ -38,15 +49,18 @@ export function zonedTimeToUtc(year: number, month: number, day: number, hour: n
 /**
  * Spec §5.8: first occurrence of `slot`'s weekday at `hhmm` venue-local time that starts at least
  * `minDaysOut` full days (minDaysOut × 24h) after `now`, so the venue always gets that much lead time.
+ * Candidates are venue-local calendar dates, never `now + n × 24h`: across a DST change fixed
+ * 24-hour steps land on the same local date twice or skip one.
  */
 export function nextSlotStart(slot: AvailabilitySlot, hhmm: string, now: Date, minDaysOut: number, timeZone = VENUE_TIME_ZONE): Date {
   const [hour, minute] = hhmm.split(':').map(Number) as [number, number];
   const target = SLOT_WEEKDAY[slot];
   const earliest = now.getTime() + minDaysOut * DAY_MS;
+  const today = zonedParts(now, timeZone);
   for (let offset = minDaysOut; offset <= minDaysOut + 7; offset += 1) {
-    const p = zonedParts(new Date(now.getTime() + offset * DAY_MS), timeZone);
-    if (p.weekday !== target) continue;
-    const start = zonedTimeToUtc(p.year, p.month, p.day, hour, minute, timeZone);
+    const date = new Date(Date.UTC(today.year, today.month - 1, today.day + offset)); // calendar arithmetic only
+    if (date.getUTCDay() !== target) continue;
+    const start = zonedTimeToUtc(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), hour, minute, timeZone);
     if (start.getTime() >= earliest) return start;
   }
   throw new Error(`no ${slot} within a week of ${minDaysOut} days out`);

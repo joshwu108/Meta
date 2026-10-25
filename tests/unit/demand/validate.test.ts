@@ -87,6 +87,29 @@ describe('nextSlotStart', () => {
     expect(nextSlotStart('thu_eve', '18:00', new Date('2026-10-24T17:00:00Z'), 5).toISOString()).toBe('2026-10-30T01:00:00.000Z');
   });
 
+  it.each([
+    ['fall-back (1 Nov 2026)', '2026-10-20T00:00:00Z', '2026-11-03T00:00:00Z'],
+    ['spring-forward (8 Mar 2026)', '2026-02-28T00:00:00Z', '2026-03-12T00:00:00Z'],
+  ])('finds every slot from any hour around %s', (_label, from, to) => {
+    const slots = ['mon_eve', 'tue_eve', 'wed_eve', 'thu_eve', 'fri_eve', 'sat_day', 'sat_eve', 'sun_day', 'sun_eve'] as const;
+    const weekday = { mon_eve: 1, tue_eve: 2, wed_eve: 3, thu_eve: 4, fri_eve: 5, sat_day: 6, sat_eve: 6, sun_day: 0, sun_eve: 0 } as const;
+    for (let t = Date.parse(from); t < Date.parse(to); t += 3 * 3_600_000 + 17 * 60_000) {
+      const now = new Date(t);
+      for (const slot of slots) {
+        const start = nextSlotStart(slot, '18:00', now, 5);
+        const lead = start.getTime() - t;
+        expect(weekdayInZone(start), `${slot} from ${now.toISOString()}`).toBe(weekday[slot]);
+        expect(localTimeInZone(start)).toBe('18:00');
+        expect(lead).toBeGreaterThanOrEqual(5 * 86_400_000);
+        expect(lead).toBeLessThan(12 * 86_400_000 + 3_600_000);
+      }
+    }
+  });
+
+  it('works today (05 report: threw for thu_eve on 2026-10-25)', () => {
+    expect(() => nextSlotStart('thu_eve', '18:00', new Date('2026-10-25T07:30:00Z'), 5)).not.toThrow();
+  });
+
   it('handles weekend day slots and DST', () => {
     const start = nextSlotStart('sat_day', '11:00', new Date('2026-10-28T12:00:00Z'), 5);
     expect(weekdayInZone(start)).toBe(6);
