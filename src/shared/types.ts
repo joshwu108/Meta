@@ -87,6 +87,7 @@ export type BusinessPublicCard = {
 export type EventSummary = {
   id: string;
   title: string;
+  category: EventCategory;
   startsAt: string;
   status: EventStatus;
   business: BusinessPublicCard;
@@ -96,7 +97,6 @@ export type EventSummary = {
 /** Owned by 06. */
 export type EventPublic = EventSummary & {
   description: string;
-  category: EventCategory;
   endsAt: string;
   capacity: number;
   confirmedCount: number;
