@@ -46,29 +46,43 @@ function useConversation(connectionId: string | null) {
   return { messages, error, append: (m: DirectMessage) => setMessages((current) => mergeMessages(current, [m])), setError };
 }
 
-export function ChatSheet({ connection, onClose }: Props) {
-  const { messages, error, append, setError } = useConversation(connection?.id ?? null);
+/** Text box and Send button. Mounted only while a chat is open, so a draft never carries over to another person. */
+function Composer({ connectionId, onSent, onError }: { connectionId: string; onSent: (m: DirectMessage) => void; onError: (message: string) => void }) {
   const [draft, setDraft] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const endRef = useRef<HTMLLIElement>(null);
   const inputId = useId();
-  useEffect(() => endRef.current?.scrollIntoView({ block: 'end' }), [messages.length]);
-  if (!connection) return null;
-
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const body = draft.trim();
     if (!body) return;
     setIsSending(true);
     try {
-      append(await apiPost<DirectMessage>(`/api/connections/${connection.id}/messages`, { body }));
+      onSent(await apiPost<DirectMessage>(`/api/connections/${connectionId}/messages`, { body }));
       setDraft('');
     } catch (cause) {
-      setError(errorMessage(cause));
+      onError(errorMessage(cause));
     } finally {
       setIsSending(false);
     }
   };
+  return (
+    <form onSubmit={submit} className="mt-3 flex items-center gap-2">
+      <label htmlFor={inputId} className="sr-only">
+        Message
+      </label>
+      <input id={inputId} autoFocus value={draft} maxLength={1000} onChange={(e) => setDraft(e.target.value)} placeholder="Write a message" className="h-10 min-w-0 flex-1 rounded-pill border border-divider bg-surface-2 px-4 text-text placeholder:text-text-3 focus:border-brand focus:outline-none" />
+      <Button type="submit" aria-label="Send" isLoading={isSending} disabled={!draft.trim()} leadingIcon={<Send size={16} aria-hidden />}>
+        Send
+      </Button>
+    </form>
+  );
+}
+
+export function ChatSheet({ connection, onClose }: Props) {
+  const { messages, error, append, setError } = useConversation(connection?.id ?? null);
+  const endRef = useRef<HTMLLIElement>(null);
+  useEffect(() => endRef.current?.scrollIntoView({ block: 'end' }), [messages.length]);
+  if (!connection) return null;
 
   return (
     <Sheet isOpen onClose={onClose} title={connection.displayName}>
@@ -87,15 +101,7 @@ export function ChatSheet({ connection, onClose }: Props) {
           {error}
         </p>
       )}
-      <form onSubmit={submit} className="mt-3 flex items-center gap-2">
-        <label htmlFor={inputId} className="sr-only">
-          Message
-        </label>
-        <input id={inputId} autoFocus value={draft} maxLength={1000} onChange={(e) => setDraft(e.target.value)} placeholder="Write a message" className="h-10 min-w-0 flex-1 rounded-pill border border-divider bg-surface-2 px-4 text-text placeholder:text-text-3 focus:border-brand focus:outline-none" />
-        <Button type="submit" aria-label="Send" isLoading={isSending} disabled={!draft.trim()} leadingIcon={<Send size={16} aria-hidden />}>
-          Send
-        </Button>
-      </form>
+      <Composer connectionId={connection.id} onSent={append} onError={setError} />
     </Sheet>
   );
 }

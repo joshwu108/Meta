@@ -1,6 +1,6 @@
 'use client';
 import { Ban, Flag, MoreHorizontal } from 'lucide-react';
-import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Button, Sheet } from '@/features/core/components/ui';
 import type { ReportReason } from '@/shared/schemas/social';
 import { REPORT_REASON_LABELS } from '../labels';
@@ -22,62 +22,61 @@ function moveMenuFocus(event: ReactKeyboardEvent<HTMLDivElement>) {
   items[(next + items.length) % items.length]?.focus();
 }
 
-/** Overflow menu on a person card: Block and Report (spec §7, Section 12.3 social safety). */
-export function SafetyMenu({ person, onBlock, onReport }: { person: Person; onBlock: (p: Person) => void; onReport: (p: Person) => void }) {
+/** Menu button state: an outside click closes it; Escape and Tab close it with focus back on the trigger. */
+function useMenuButton() {
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  // Closing from the keyboard puts focus back on the trigger; Tab then continues from there.
-  const closeToTrigger = () => {
+  const closeToTrigger = useCallback(() => {
     setIsOpen(false);
     triggerRef.current?.focus();
-  };
+  }, []);
   useEffect(() => {
     if (!isOpen) return;
-    const close = (event: MouseEvent) => !rootRef.current?.contains(event.target as Node) && setIsOpen(false);
-    const escape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      setIsOpen(false);
-      triggerRef.current?.focus();
-    };
-    document.addEventListener('mousedown', close);
+    const outside = (event: MouseEvent) => !rootRef.current?.contains(event.target as Node) && setIsOpen(false);
+    const escape = (event: KeyboardEvent) => event.key === 'Escape' && closeToTrigger();
+    document.addEventListener('mousedown', outside);
     document.addEventListener('keydown', escape);
     return () => {
-      document.removeEventListener('mousedown', close);
+      document.removeEventListener('mousedown', outside);
       document.removeEventListener('keydown', escape);
     };
-  }, [isOpen]);
+  }, [isOpen, closeToTrigger]);
+  return { isOpen, setIsOpen, rootRef, triggerRef, closeToTrigger };
+}
+
+/** Overflow menu on a person card: Block and Report (spec §7, Section 12.3 social safety). */
+export function SafetyMenu({ person, onBlock, onReport }: { person: Person; onBlock: (p: Person) => void; onReport: (p: Person) => void }) {
+  const menu = useMenuButton();
+  const choose = (action: (p: Person) => void) => () => {
+    menu.setIsOpen(false);
+    action(person);
+  };
   const item = 'flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left hover:bg-hover focus-visible:bg-hover';
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={menu.rootRef} className="relative">
       <button
-        ref={triggerRef}
+        ref={menu.triggerRef}
         type="button"
         aria-label={`More options for ${person.displayName}`}
         aria-haspopup="menu"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
+        aria-expanded={menu.isOpen}
+        onClick={() => menu.setIsOpen((open) => !open)}
         className="inline-flex h-9 w-9 items-center justify-center rounded-pill text-text-2 hover:bg-hover active:bg-pressed"
       >
         <MoreHorizontal size={20} strokeWidth={1.75} aria-hidden />
       </button>
-      {isOpen && (
+      {menu.isOpen && (
         <div
           role="menu"
           aria-label={`Options for ${person.displayName}`}
-          onKeyDown={(event) => (event.key === 'Tab' ? closeToTrigger() : moveMenuFocus(event))}
+          onKeyDown={(event) => (event.key === 'Tab' ? menu.closeToTrigger() : moveMenuFocus(event))}
           className="rise-in absolute right-0 bottom-11 z-40 w-44 rounded-md bg-surface p-1 shadow-[var(--shadow-3)]"
         >
-          <button role="menuitem" type="button" autoFocus className={item} onClick={() => {
-              setIsOpen(false);
-              onBlock(person);
-            }}>
+          <button role="menuitem" type="button" autoFocus className={item} onClick={choose(onBlock)}>
             <Ban size={16} aria-hidden /> Block
           </button>
-          <button role="menuitem" type="button" className={`${item} text-danger`} onClick={() => {
-              setIsOpen(false);
-              onReport(person);
-            }}>
+          <button role="menuitem" type="button" className={`${item} text-danger`} onClick={choose(onReport)}>
             <Flag size={16} aria-hidden /> Report
           </button>
         </div>
