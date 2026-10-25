@@ -5,7 +5,8 @@
     "description": "Creative neighbors who meet to make things.",
     "visibility": "public",
     "owner": "maya@commonground.test",
-    "members": ["leo@commonground.test", "yuki@commonground.test", "ana@commonground.test"]
+    "members": ["leo@commonground.test", "yuki@commonground.test", "ana@commonground.test"],
+    "interests": ["pottery", "painting", "zines"]
   },
   {
     "slug": "thursday-night-crew",
@@ -13,6 +14,8 @@
     "description": "Free on Thursdays. Up for anything.",
     "visibility": "private",
     "owner": "sam@commonground.test",
-    "members": ["theo@commonground.test", "omar@commonground.test"]
+    "members": ["theo@commonground.test", "omar@commonground.test"],
+    "interests": ["board-games", "trivia"],
+    "invited": ["maya@commonground.test"]
   }
 ]

@@ -49,8 +49,22 @@ export const seedGroupSchema = z.object({
   visibility: visibilitySchema,
   owner: z.string().email(),
   members: z.array(z.string().email()),
+  interests: z.array(z.string()).default([]),
+  /** Users with a pending invitation from the owner (workstream 03). */
+  invited: z.array(z.string().email()).default([]),
 });
 export type SeedGroup = z.infer<typeof seedGroupSchema>;
+
+export const seedConnectionSchema = z.object({
+  requester: z.string().email(),
+  recipient: z.string().email(),
+  status: z.enum(['pending', 'accepted', 'declined']),
+  message: z.string().max(280).optional(),
+});
+export type SeedConnection = z.infer<typeof seedConnectionSchema>;
+
+export const seedBlockSchema = z.object({ blocker: z.string().email(), blocked: z.string().email() });
+export type SeedBlock = z.infer<typeof seedBlockSchema>;
 
 export const seedNotificationSchema = z.object({
   user: z.string().email(),

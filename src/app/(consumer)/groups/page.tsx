@@ -1,8 +1,16 @@
-import { UsersRound } from 'lucide-react';
-import { PlaceholderPage } from '@/features/core/components/PlaceholderPage';
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/features/core';
+import { listMyGroups } from '@/features/groups';
+import { GroupsScreen } from '@/features/groups/components/GroupsScreen';
+import { createServerClient } from '@/lib/supabase/server';
 
 export const metadata = { title: 'Groups' };
 
-export default function GroupsPage() {
-  return <PlaceholderPage title="Groups" owner="matching" icon={UsersRound} lead="Small groups you belong to and plans you're voting on." />;
+/** Screen 4: invitations, my groups and "Create group". */
+export default async function GroupsPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect('/login');
+  const supabase = await createServerClient();
+  const groups = await listMyGroups({ userId: user.id, supabase });
+  return <GroupsScreen groups={groups} />;
 }
