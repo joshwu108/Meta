@@ -82,10 +82,9 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - [x] **T-I7** `proposals_business_fk` exists after a full reset (spec §12)
 
 ### E2E
-- [~] **T-E1** Scene 4: Kiln & Cup owner → dashboard → pending pottery proposal → edit &
-  approve ($20→$25, 18:30) → publish → list shows Published — written and runnable, but
-  **skips** until 04 migrates `event_proposals`; everything it depends on besides the
-  proposal itself is covered by the event lifecycle spec, which passes
+- [x] **T-E1** Scene 4: Kiln & Cup owner → dashboard → pending pottery proposal → edit &
+  approve ($20→$25, 18:30) → publish → list shows Published — **passes end to end** against
+  04's real migrations (verified locally, see Decisions); skips on `main` until 04 merges
 - [x] **T-E2** Manual event lifecycle in a browser: create draft → edit → publish →
   attendees → cancel, plus the two refusals and another venue's event being unreachable
 - [x] **T-E3** Theme matrix: both themes at 320 / 768 / 1024 / 1440, no horizontal scroll
@@ -101,6 +100,25 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 ---
 
 ## Decisions
+
+- **2026-10-24 — Verified against workstream 04's real branch, and it found two bugs.**
+  04's branch carries its migrations, so rather than keep guessing from their spec I applied
+  `0400`/`0402`/`0403`/`0404` locally (never committed), reset, seeded and ran everything.
+  All seven migrations apply together and **both cross-workstream foreign keys appear**, so
+  the `if exists` block in `0500` does its job. The 9 integration cases and 3 Scene 4 cases
+  that had been skipping all ran, and two real bugs fell out:
+  1. **`decide_proposal` read camelCase keys while the store sends an `events` row.** Every
+     approval inserted `starts_at = null` and 500'd — Scene 4 would have failed in the demo.
+     Neither suite could catch it: the in-memory store consumes the object directly without
+     touching SQL key names, and the integration tests hand-wrote the RPC payload in
+     camelCase, so both sides were self-consistently wrong. The seam only exists in the
+     real stack. The tests now send exactly what the store sends.
+  2. **The dev fixture route inserted as the owner**, which 04's RLS refuses with `42501` —
+     correctly, since a venue must never be able to fabricate demand for itself. It stands
+     in for 04's pipeline, so it runs as the service role now. Its error also blamed "04 has
+     not merged" for any failure, and the e2e skip check matched any mention of the table,
+     so a genuine error read as a skip. Only a missing relation means that now.
+  Both are committed; 04's migrations were removed again afterwards.
 
 - **2026-10-24 — Merged workstream 01 (37 conflicts).** Main wins on every file 05 stubbed:
   scaffold, `src/shared/enums.ts` and `types.ts`, `src/lib/api/*`, `src/lib/supabase/*`, the
@@ -278,6 +296,17 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 20:15` — **Scene 4 passes end to end for the first time, and getting there
+  found two real bugs.** 04 has not merged, but its branch carries its migrations, so I
+  applied them locally (not committed), reset, seeded and ran the suites that had been
+  skipping for hours. All seven migrations apply together, both cross-workstream FKs
+  appear, and **37 integration (1 skipped) and 32 e2e tests pass** including the full
+  Scene 4 flow: open the pottery proposal, edit & approve with the price $20 → $25, publish,
+  and see Published in the events list. The two bugs are written up under Decisions; the
+  first would have failed the demo. Removed 04's migrations again afterwards, so on `main`
+  the suite honestly reports 29 integration + 29 e2e with the 04-dependent cases skipped.
+  Also stopped committing 32 theme screenshots that were landing in 01's snapshot
+  directory. **335 unit tests**; typecheck, lint and build clean.
 - `2026-10-24 19:45` — **post-merge design-system and coverage pass.** Re-read the changed
   `design-system.md`: 01 added `--color-warning-ink` because `--color-warning` fails AA on
   `--color-warning-soft`, so the reconfirm banner now uses it. Also found `src/app/globals.css`
