@@ -6,10 +6,11 @@ import type { PipelineDeps } from './deps';
 import { generateProposal } from './generate';
 import * as store from './store-supabase';
 import { logActions, notifyOwner } from './core-adapters';
+import { getSharablePreferencesBatch } from '@/features/agent';
 import { findCandidateBusinesses } from '@/features/business';
-import { stubLoadVenue, stubSharableBatch } from './stubs';
+import { stubLoadVenue } from './stubs';
 
-/** Production dependencies: service-role Supabase, the real prompt, and stubs for unmerged contracts. */
+/** Production dependencies: service-role Supabase, the real prompt, other workstreams' exports, and the venue stub. */
 export function supabaseDeps(admin: SupabaseClient = createAdminClient() as unknown as SupabaseClient): PipelineDeps {
   return {
     config: DEMAND_CONFIG,
@@ -17,7 +18,7 @@ export function supabaseDeps(admin: SupabaseClient = createAdminClient() as unkn
     startRun: (by) => store.startRun(admin, by),
     updateRun: store.runUpdater(admin),
     listEligibleUserIds: () => store.listEligibleUserIds(admin, DEMAND_CONFIG.pageSize),
-    getSharableBatch: (ids) => stubSharableBatch(admin, ids),
+    getSharableBatch: (ids) => getSharablePreferencesBatch(ids, 'demand'),
     logActions,
     findCandidates: (criteria) => findCandidateBusinesses(criteria, admin),
     loadVenue: (match) => stubLoadVenue(admin, match),

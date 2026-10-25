@@ -13,7 +13,9 @@ setTestOrigin('contracts');
 const admin = adminClient();
 let alice: TestUser, bob: TestUser, carol: TestUser, dave: TestUser;
 let publicId: string, privateId: string, archivedId: string;
+/** An id no event has. Invitations use `seededEventId`: 06's invitations_event_fk needs a real row. */
 const EVENT_ID = '3b1d6c1a-9f2e-4c3b-8a7d-5e6f7a8b9c0d';
+let seededEventId: string;
 
 async function group(owner: TestUser, name: string, visibility: 'public' | 'private', members: TestUser[] = []): Promise<string> {
   const { data } = await admin.rpc('create_group_with_owner', { p_creator: owner.id, p_name: name, p_visibility: visibility });
@@ -24,6 +26,9 @@ async function group(owner: TestUser, name: string, visibility: 'public' | 'priv
 }
 
 beforeAll(async () => {
+  const seeded = await admin.from('events').select('id').limit(1).single();
+  if (seeded.error) throw new Error(`seeded event missing (run pnpm db:seed): ${seeded.error.message}`);
+  seededEventId = seeded.data.id;
   [alice, bob, carol, dave] = await Promise.all([
     createTestUser(admin, 'contract-alice'),
     createTestUser(admin, 'contract-bob'),
@@ -69,13 +74,13 @@ describe('getPublicGroups', () => {
 
 describe('event invitations for 06', () => {
   it('creates, finds and lists pending event invitations without touching memberships', async () => {
-    const ids = await groups.createEventInvitations({ senderId: alice.id, groupId: publicId, eventId: EVENT_ID, recipientIds: [bob.id, carol.id] });
+    const ids = await groups.createEventInvitations({ senderId: alice.id, groupId: publicId, eventId: seededEventId, recipientIds: [bob.id, carol.id] });
     expect(ids).toHaveLength(2);
-    expect(await groups.createEventInvitations({ senderId: alice.id, groupId: publicId, eventId: EVENT_ID, recipientIds: [] })).toEqual([]);
-    expect(await groups.getPendingEventInviteeIds(EVENT_ID, [bob.id, carol.id, dave.id])).toEqual(new Set([bob.id, carol.id]));
-    expect(await groups.getPendingEventInviteeIds(EVENT_ID, [])).toEqual(new Set());
+    expect(await groups.createEventInvitations({ senderId: alice.id, groupId: publicId, eventId: seededEventId, recipientIds: [] })).toEqual([]);
+    expect(await groups.getPendingEventInviteeIds(seededEventId, [bob.id, carol.id, dave.id])).toEqual(new Set([bob.id, carol.id]));
+    expect(await groups.getPendingEventInviteeIds(seededEventId, [])).toEqual(new Set());
     const forBob = await groups.getPendingEventInvitations(bob.id);
-    expect(forBob).toEqual([expect.objectContaining({ eventId: EVENT_ID, groupId: publicId, senderId: alice.id })]);
+    expect(forBob).toEqual([expect.objectContaining({ eventId: seededEventId, groupId: publicId, senderId: alice.id })]);
     expect(await groups.getGroupMemberIds(publicId)).toHaveLength(3);
   });
 });
