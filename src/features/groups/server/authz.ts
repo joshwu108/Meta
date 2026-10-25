@@ -1,4 +1,5 @@
 import type { MemberRole, MembershipStatus, Visibility } from '@/shared/enums';
+import type { GroupRow } from '@/shared/schemas/social';
 
 /**
  * Pure authorization rules for groups (specs/03-matching-and-groups/specs.md §5–§6). Services
@@ -6,8 +7,8 @@ import type { MemberRole, MembershipStatus, Visibility } from '@/shared/enums';
  */
 
 export type Membership = { role: MemberRole; status: MembershipStatus };
-export type GroupFacts = { visibility: Visibility; creatorId: string; archived: boolean };
-export type Denial = { ok: false; code: 'FORBIDDEN' | 'NOT_FOUND' | 'VALIDATION'; message: string };
+export type GroupFacts = { visibility: Visibility; kind: GroupRow['kind']; creatorId: string; archived: boolean };
+export type Denial = { ok: false; code: 'FORBIDDEN' | 'NOT_FOUND' | 'VALIDATION' | 'CONFLICT'; message: string };
 export type Decision = { ok: true } | Denial;
 
 const isActive = (m: Membership | null): m is Membership => m?.status === 'active';
@@ -22,6 +23,20 @@ export function canView(group: GroupFacts, m: Membership | null): boolean {
 /** Name, description, interests and visibility: active owners and admins. */
 export function canEdit(m: Membership | null): boolean {
   return isAdmin(m);
+}
+
+/**
+ * Anyone signed in may join a public interest group (not 06's event groups). Someone who left can
+ * rejoin; someone an admin removed needs a new invitation, and an invitee answers their invitation.
+ */
+export function canJoin(group: GroupFacts, m: Membership | null): Decision {
+  if (m?.status === 'active') return { ok: false, code: 'CONFLICT', message: 'You’re already in this group' };
+  if (m?.status === 'invited') return { ok: false, code: 'VALIDATION', message: 'Accept your invitation to join this group' };
+  if (group.archived || group.visibility !== 'public' || group.kind !== 'interest') {
+    return { ok: false, code: 'FORBIDDEN', message: 'This group is invite-only' };
+  }
+  if (m?.status === 'removed') return { ok: false, code: 'FORBIDDEN', message: 'An admin removed you from this group. Ask them to invite you back.' };
+  return { ok: true };
 }
 
 /** Admins, or any active member of a public group. */

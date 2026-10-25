@@ -33,6 +33,7 @@ export type GroupPermissions = {
   canVote: boolean;
   canTransfer: boolean;
   canLeave: boolean;
+  canJoin: boolean;
 };
 
 export type PlanVotes = { counts: number[]; mine: number[] };

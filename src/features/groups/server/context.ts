@@ -8,7 +8,7 @@ import type { GroupFacts, Membership } from './authz';
 export type GroupContext = { group: GroupRow; membership: Membership | null; facts: GroupFacts };
 
 export function factsOf(group: GroupRow): GroupFacts {
-  return { visibility: group.visibility, creatorId: group.creator_id, archived: group.archived_at !== null };
+  return { visibility: group.visibility, kind: group.kind, creatorId: group.creator_id, archived: group.archived_at !== null };
 }
 
 export function toMembership(row: { role: string; status: string } | null | undefined): Membership | null {

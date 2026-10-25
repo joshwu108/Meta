@@ -12,6 +12,7 @@ import { EditGroupSheet } from './EditGroupSheet';
 import { EventsPanel } from './EventsPanel';
 import { VisibilityBadge } from './GroupsScreen';
 import { InvitationButtons } from './InvitationButtons';
+import { JoinButton } from './JoinButton';
 import type { InviteCandidate } from './InvitePicker';
 import { MembersPanel } from './MembersPanel';
 import { PlansPanel } from './PlansPanel';
@@ -40,6 +41,7 @@ function GroupHeader({ group, onEdit, editRef }: { group: GroupDetail; onEdit: (
             Edit
           </Button>
         )}
+        {group.permissions.canJoin && <JoinButton groupId={group.id} groupName={group.name} />}
       </div>
       {group.description && <p className="text-text-2">{group.description}</p>}
       {group.interests.length > 0 && (
