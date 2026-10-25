@@ -1,5 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
+import { cache } from "react";
 import type { AvailabilitySlot } from "@/shared/enums";
 import type { SharablePreferences } from "@/shared/types";
 import type { EventRow } from "../schemas";
@@ -91,3 +92,6 @@ export async function getRecommendedEvents(viewerId: string, limit: number): Pro
     })),
   );
 }
+
+/** Per-request memo so a page and its `@aside` rail share one ranking. */
+export const getRecommendedEventsCached = cache(getRecommendedEvents);

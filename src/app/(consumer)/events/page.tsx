@@ -1,16 +1,15 @@
 import { CalendarX } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 import { EventCard } from "@/features/events/components/EventCard";
 import { EventFilters } from "@/features/events/components/EventFilters";
 import { EmptyState } from "@/features/core/components/ui";
 import s from "@/features/events/components/events.module.css";
+import { EventsPageFilters } from "@/features/events/schemas";
 import type { EventCard as EventCardData } from "@/features/events/server/cards";
 import { listEventFeed } from "@/features/events/server/feed";
 import { getRecommendedEvents } from "@/features/events/server/recommended";
 import { getCurrentUserId } from "@/features/events/server/stubs";
-import { EVENT_CATEGORY } from "@/shared/enums";
 
 export const dynamic = "force-dynamic";
 
@@ -20,14 +19,8 @@ const TABS = [
   { key: "week", label: "This week" },
 ] as const;
 
-const Filters = z.object({
-  tab: z.enum(["for-you", "all", "week"]).catch("for-you"),
-  category: z.enum(EVENT_CATEGORY).optional().catch(undefined),
-  radiusKm: z.coerce.number().positive().max(100).optional().catch(undefined),
-});
-type Filters = z.infer<typeof Filters>;
 
-async function load(userId: string, { tab, category, radiusKm }: Filters): Promise<Array<{ event: EventCardData; explanation: string | null }>> {
+async function load(userId: string, { tab, category, radiusKm }: EventsPageFilters): Promise<Array<{ event: EventCardData; explanation: string | null }>> {
   if (tab === "for-you") {
     const recs = await getRecommendedEvents(userId, 20);
     return recs.map((r) => ({ event: r.event, explanation: r.score === null ? null : r.explanation }));
@@ -40,7 +33,7 @@ async function load(userId: string, { tab, category, radiusKm }: Filters): Promi
 export default async function EventsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const userId = await getCurrentUserId();
   if (!userId) redirect("/login");
-  const filters = Filters.parse(await searchParams);
+  const filters = EventsPageFilters.parse(await searchParams);
   const items = await load(userId, filters);
 
   return (
@@ -53,7 +46,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
           </Link>
         ))}
       </nav>
-      {filters.tab === "for-you" ? null : <EventFilters values={filters} />}
+      {filters.tab === "for-you" ? null : <div className={s.belowRail}><EventFilters values={filters} /></div>}
       {items.length === 0 ? (
         <div className={s.card}><EmptyState icon={<CalendarX size={20} aria-hidden />} title="Nothing scheduled here yet." /></div>
       ) : (

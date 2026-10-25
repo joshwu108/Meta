@@ -8,6 +8,9 @@ import { AiRing, AiTag, Avatar, EmptyState } from "@/features/core/components/ui
 import { buttonClass } from "./local-ui";
 import s from "./events.module.css";
 
+/** Recommendations Discover shows; its page and `@aside` rail must ask for the same number to share the memo. */
+export const DISCOVER_RECOMMENDATIONS = 6;
+
 export function PeopleRail({ people }: { people: SuggestedPerson[] }) {
   return (
     <section className={s.section} aria-labelledby="people-title">

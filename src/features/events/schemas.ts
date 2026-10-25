@@ -77,3 +77,11 @@ export const EVENT_SELECT =
 
 export const FollowUpIdParams = z.object({ id });
 export const FollowUpActionBody = z.object({ action: z.enum(["accept", "dismiss"]) });
+
+/** `/events` page search params (tab + P1 filters), shared by the page and its `@aside` rail. */
+export const EventsPageFilters = z.object({
+  tab: z.enum(["for-you", "all", "week"]).catch("for-you"),
+  category: z.enum(EVENT_CATEGORY).optional().catch(undefined),
+  radiusKm: z.coerce.number().positive().max(100).optional().catch(undefined),
+});
+export type EventsPageFilters = z.infer<typeof EventsPageFilters>;

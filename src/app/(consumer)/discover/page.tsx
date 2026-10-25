@@ -1,13 +1,13 @@
 import { CalendarSearch } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AgentStrip, GroupsSection, NearbyBand, PeopleRail } from "@/features/events/components/DiscoverSections";
+import { AgentStrip, DISCOVER_RECOMMENDATIONS, GroupsSection, NearbyBand, PeopleRail } from "@/features/events/components/DiscoverSections";
 import { EventCard } from "@/features/events/components/EventCard";
 import { LeadEventCard } from "@/features/events/components/LeadEventCard";
 import { EmptyState } from "@/features/core/components/ui";
 import s from "@/features/events/components/events.module.css";
 import { getNearbyBusinesses } from "@/features/events/server/nearby";
-import { getRecommendedEvents } from "@/features/events/server/recommended";
+import { getRecommendedEventsCached } from "@/features/events/server/recommended";
 import { getCurrentUserId, getPublicGroups, getSuggestedPeople } from "@/features/events/server/stubs";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export default async function DiscoverPage() {
   const userId = await getCurrentUserId();
   if (!userId) redirect("/login");
   const [recommended, nearby, groups, people] = await Promise.all([
-    getRecommendedEvents(userId, 6),
+    getRecommendedEventsCached(userId, DISCOVER_RECOMMENDATIONS),
     getNearbyBusinesses(userId, 5),
     getPublicGroups(3),
     getSuggestedPeople(userId, 3),
@@ -44,7 +44,9 @@ export default async function DiscoverPage() {
       ) : null}
       <NearbyBand businesses={nearby} />
       <GroupsSection groups={groups} />
-      <AgentStrip recommendations={recommended} />
+      <div className={s.belowRail}>
+        <AgentStrip recommendations={recommended} />
+      </div>
     </div>
   );
 }
