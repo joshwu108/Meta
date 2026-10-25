@@ -42,7 +42,8 @@ test('a user without onboarding is sent to /onboarding and can continue', async 
 test('a seeded business owner is routed to the business side', async ({ page }) => {
   await login(page, OWNER.email);
   // /business once workstream 05's businesses table exists; /business/onboarding until then.
-  await expect(page).toHaveURL(/\/business(\/onboarding)?$/);
+  // Dev-mode compile of /business/onboarding can exceed the default 5s after other specs ran.
+  await expect(page).toHaveURL(/\/business(\/onboarding)?$/, { timeout: 20_000 });
 });
 
 test('unauthenticated API calls get the UNAUTHENTICATED envelope', async ({ request }) => {
