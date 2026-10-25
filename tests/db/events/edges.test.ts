@@ -104,7 +104,7 @@ describe.skipIf(!available)("06 edge cases against Postgres", () => {
 
     const { rows } = await db.pool.query(
       `select f.event_id, f.suggestion->>'suggestedSlot' as slot,
-              (select count(*)::int from agent_action_log l where l.user_id in (f.user_a, f.user_b)) as logs
+              (select count(*)::int from agent_action_log l where l.user_id in (f.user_a, f.user_b) and l.action = 'follow_up_suggestion') as logs
        from follow_up_suggestions f where f.event_id = any($1)`,
       [[consenting.eventId, private_.eventId]],
     );

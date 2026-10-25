@@ -46,22 +46,30 @@ create table agent_action_log (
 create or replace function set_updated_at() returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end $$;
 
--- 02 agent
+-- 02 agent: table DDL copied from main's 0200_agent.sql (policies and functions omitted)
 create table user_preferences (
   user_id uuid primary key references profiles(id) on delete cascade,
-  interests text[] not null default '{}',
-  interest_categories text[] not null default '{}',
-  availability_slots text[] not null default '{}',
-  social_goals text[] not null default '{}',
-  group_size_pref text,
-  budget_min_cents int,
-  budget_max_cents int,
-  travel_radius_km numeric(4,1) not null default 5,
-  activity_prefs text[] not null default '{}'
+  interests text[] not null default '{}',             -- lowercase kebab tags, e.g. 'pottery','board-games'
+  interest_categories text[] not null default '{}',   -- EVENT_CATEGORY values derived from interests
+  availability_slots text[] not null default '{}',    -- AVAILABILITY_SLOT values
+  social_goals text[] not null default '{}',          -- SOCIAL_GOAL values
+  group_size_pref text check (group_size_pref in ('one_on_one','small','medium','large')),
+  budget_min_cents int check (budget_min_cents >= 0),
+  budget_max_cents int check (budget_max_cents >= 0),
+  travel_radius_km numeric(4,1) not null default 5 check (travel_radius_km between 1 and 25),
+  activity_prefs text[] not null default '{}',
+  dealbreakers text[] not null default '{}',
+  field_sources jsonb not null default '{}',          -- { "interests": "ai_inferred" | "user_set", ... }
+  updated_at timestamptz not null default now(),
+  check (budget_min_cents is null or budget_max_cents is null or budget_min_cents <= budget_max_cents)
 );
 create table agent_profiles (
   user_id uuid primary key references profiles(id) on delete cascade,
-  consent jsonb not null default '{"allow_matching": false, "allow_demand_aggregation": false, "allow_group_planning": false, "share_interests_with_attendees": false, "share_name_with_business": false}'
+  summary text,
+  consent jsonb not null default '{"allow_matching": false, "allow_demand_aggregation": false, "allow_group_planning": false, "share_interests_with_attendees": false, "share_name_with_business": false}',
+  consent_updated_at timestamptz,
+  feedback_notes jsonb not null default '[]',
+  updated_at timestamptz not null default now()
 );
 
 -- 03 social: table DDL copied from main's 0300_social.sql (policies and functions omitted)
