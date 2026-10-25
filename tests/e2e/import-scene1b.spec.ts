@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { NEW_USER, login, reseed } from "./helpers";
+import { CONSUMER, NEW_USER, login, reseed } from "./helpers";
 
 /**
  * Scene 1b (workstream 07), full stack with MOCK_AI: onboarding chat → "Bring in your Instagram
@@ -94,3 +94,17 @@ test("Skip leaves onboarding unchanged", async ({ page }) => {
   const pending = await page.request.get("/api/import/suggestions");
   expect((await pending.json()).data).toEqual([]);
 });
+
+test("adding a second screenshot keeps the first preview, and Remove takes one out", async ({ page }) => {
+  await login(page, CONSUMER.email);
+  await page.goto("/agent/import");
+  await page.locator("#import-files").setInputFiles(SCREENSHOT);
+  await page.locator("#import-files").setInputFiles(SCREENSHOT);
+  const previews = page.getByRole("img", { name: /Preview of/ });
+  await expect(previews).toHaveCount(2);
+  await expect.poll(() => previews.evaluateAll((imgs) => imgs.map((i) => (i as HTMLImageElement).naturalWidth > 0))).toEqual([true, true]);
+  await page.getByRole("button", { name: /^Remove / }).first().click();
+  await expect(previews).toHaveCount(1);
+  await expect.poll(() => previews.evaluateAll((imgs) => (imgs[0] as HTMLImageElement).naturalWidth > 0)).toBe(true);
+});
+

@@ -33,7 +33,10 @@ export function ShareStep({ sending, error, onSend }: Props) {
   const input = useRef<HTMLInputElement>(null);
   const chosen = (Object.keys(sources) as ShareSource[]).filter((k) => sources[k]);
 
-  useEffect(() => () => images.forEach((image) => URL.revokeObjectURL(image.url)), [images]);
+  // Preview URLs are freed when an image is removed and when the step unmounts, never while shown.
+  const live = useRef<PreparedImage[]>([]);
+  live.current = images;
+  useEffect(() => () => live.current.forEach((image) => URL.revokeObjectURL(image.url)), []);
 
   async function pick(files: FileList | null) {
     setPickError(null);
@@ -50,6 +53,8 @@ export function ShareStep({ sending, error, onSend }: Props) {
   }
 
   function remove(id: string) {
+    const gone = images.find((image) => image.id === id);
+    if (gone) URL.revokeObjectURL(gone.url);
     setImages((current) => current.filter((image) => image.id !== id));
   }
 
