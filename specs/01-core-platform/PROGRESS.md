@@ -104,6 +104,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 21:05 — 03 landed on main (e88e93f); merged it cleanly. My `EventSummary.category` broke 03's code at three sites; filled them in (03 already selected the column). Clean state on 0100–0303: 256 vitest + 25 e2e green, typecheck + lint clean. Next: watch for 05/06/04/02 on main.
 - 2026-10-24 20:45 — Wakeup: main still 808078c. Added `category` to `EventSummary` (03 + 06 ask). Next: watch main.
 - 2026-10-24 20:25 — Wakeup: main at 808078c (contrast + Sheet work still only on ws/01-core). Landed 03's Sheet focus ask (`useFocusTrap`, e2e on /dev/theme). 80 unit + 17 integration + 18 e2e green. Next: watch main.
 - 2026-10-24 20:05 — Wakeup: main fast-forwarded to 808078c by the integrator (01 fully on main); 02/03/04/06 merged it, 06 uses the @aside slot, 03 reports CI green. Landed 03's contrast ask (ink tokens, dark fill #1A6FE8, every pair ≥ 4.5:1) and 02's flaky-timeout ask. 80 unit + 17 integration + 17 e2e green. Next: watch main.
