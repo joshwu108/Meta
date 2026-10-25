@@ -3,6 +3,9 @@ import { defineConfig, devices } from '@playwright/test';
 // 3100 by default: port 3000 is commonly taken by other local tools (Docker, other dev servers).
 const port = Number(process.env.PORT ?? 3100);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`;
+// E2E_SERVER=prod serves a production build (`next start`): no first-request compiles and no
+// dev-only render errors. CI sets it; locally `pnpm test:e2e:prod` does the same.
+const isProdServer = process.env.E2E_SERVER === 'prod';
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -22,10 +25,10 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: `pnpm dev -p ${port}`,
+    command: isProdServer ? `pnpm build && pnpm start -p ${port}` : `pnpm dev -p ${port}`,
     url: `${baseURL}/api/health`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    reuseExistingServer: !process.env.CI && !isProdServer,
+    timeout: isProdServer ? 420_000 : 120_000,
     // ENABLE_DEV_ROUTES lets 05's suite seed a fixture proposal; the route refuses
     // without it and on any production deployment.
     env: { MOCK_AI: '1', DEMO_MODE: '1', NEXT_PUBLIC_SITE_URL: baseURL, ENABLE_DEV_ROUTES: '1' },
