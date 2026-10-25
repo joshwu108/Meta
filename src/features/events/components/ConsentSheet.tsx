@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api/client";
-import { Button, Switch } from "@/features/core/components/ui";
+import { Button, Sheet, Switch } from "@/features/core/components/ui";
 import s from "./events.module.css";
 
 type Choices = { shareWithAttendees: boolean; shareWithBusiness: boolean };
@@ -18,8 +18,9 @@ type Props = {
 };
 
 /**
- * Sharing choices shown before an RSVP, prefilled from the agent's permissions (02's
- * GET /api/agent/permissions). Both start off and stay off if the permissions cannot be read.
+ * Sharing choices shown before an RSVP in 01's Sheet (Escape closes, focus returns to the trigger),
+ * prefilled from the agent's permissions (02's GET /api/agent/permissions). Both start off and stay
+ * off if the permissions cannot be read.
  */
 export function ConsentSheet({ title, confirmLabel, pending, error, onConfirm, onClose }: Props) {
   const [shareWithAttendees, setShareAttendees] = useState(false);
@@ -46,18 +47,21 @@ export function ConsentSheet({ title, confirmLabel, pending, error, onConfirm, o
   };
 
   return (
-    <div className={s.sheetBackdrop} onClick={onClose}>
-      <div className={s.sheet} role="dialog" aria-modal="true" aria-labelledby="rsvp-title" onClick={(e) => e.stopPropagation()}>
-        <h2 id="rsvp-title" className={s.sectionTitle}>{title}</h2>
-        <Switch label="Share my name with other attendees" checked={shareWithAttendees} onChange={choose(setShareAttendees)} />
-        <Switch label="Share my name with the venue" checked={shareWithBusiness} onChange={choose(setShareBusiness)} />
-        <p className={s.meta}>You can change this by cancelling and RSVPing again.</p>
-        {error ? <p className={s.error} role="alert">{error}</p> : null}
-        <div className={s.row}>
-          <Button size="lg" disabled={pending} onClick={() => onConfirm({ shareWithAttendees, shareWithBusiness })}>{confirmLabel}</Button>
+    <Sheet
+      isOpen
+      onClose={onClose}
+      title={title}
+      footer={
+        <>
           <Button variant="ghost" onClick={onClose}>Not now</Button>
-        </div>
-      </div>
-    </div>
+          <Button disabled={pending} onClick={() => onConfirm({ shareWithAttendees, shareWithBusiness })}>{confirmLabel}</Button>
+        </>
+      }
+    >
+      <Switch label="Share my name with other attendees" checked={shareWithAttendees} onChange={choose(setShareAttendees)} />
+      <Switch label="Share my name with the venue" checked={shareWithBusiness} onChange={choose(setShareBusiness)} />
+      <p className={s.meta}>You can change this by cancelling and RSVPing again.</p>
+      {error ? <p className={s.error} role="alert">{error}</p> : null}
+    </Sheet>
   );
 }
