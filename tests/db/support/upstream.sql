@@ -64,46 +64,61 @@ create table agent_profiles (
   consent jsonb not null default '{"allow_matching": false, "allow_demand_aggregation": false, "allow_group_planning": false, "share_interests_with_attendees": false, "share_name_with_business": false}'
 );
 
--- 03 social
+-- 03 social: table DDL copied from main's 0300_social.sql (policies and functions omitted)
 create table connections (
   id uuid primary key default gen_random_uuid(),
   requester_id uuid not null references profiles(id) on delete cascade,
   recipient_id uuid not null references profiles(id) on delete cascade,
   status text not null default 'pending' check (status in ('pending','accepted','declined')),
-  message text,
-  created_at timestamptz not null default now()
+  message text check (char_length(message) <= 280),
+  created_at timestamptz not null default now(),
+  responded_at timestamptz,
+  updated_at timestamptz not null default now(),
+  constraint connections_distinct check (requester_id <> recipient_id)
 );
 create table blocks (
   blocker_id uuid not null references profiles(id) on delete cascade,
   blocked_id uuid not null references profiles(id) on delete cascade,
-  primary key (blocker_id, blocked_id)
+  created_at timestamptz not null default now(),
+  primary key (blocker_id, blocked_id),
+  constraint blocks_distinct check (blocker_id <> blocked_id)
 );
 create table groups (
   id uuid primary key default gen_random_uuid(),
-  name text not null,
-  description text,
+  name text not null check (char_length(name) between 2 and 80),
+  description text check (char_length(description) <= 1000),
   interests text[] not null default '{}',
-  visibility text not null default 'private',
-  kind text not null default 'interest',
-  event_id uuid,
-  creator_id uuid not null references profiles(id)
+  visibility text not null default 'private' check (visibility in ('public','private')),
+  kind text not null default 'interest' check (kind in ('interest','private','event')),
+  event_id uuid,                                     -- set for kind = 'event' (FK added by 06)
+  creator_id uuid not null references profiles(id) on delete cascade,
+  archived_at timestamptz,                           -- set when the last member (the owner) leaves
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 create table group_members (
   group_id uuid not null references groups(id) on delete cascade,
   user_id uuid not null references profiles(id) on delete cascade,
-  role text not null default 'member',
-  status text not null default 'invited',
+  role text not null default 'member' check (role in ('owner','admin','member')),
+  status text not null default 'invited' check (status in ('invited','active','removed','left')),
+  joined_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   primary key (group_id, user_id)
 );
 create table invitations (
   id uuid primary key default gen_random_uuid(),
   kind text not null check (kind in ('group','event')),
   group_id uuid references groups(id) on delete cascade,
-  event_id uuid,
-  sender_id uuid not null references profiles(id),
+  event_id uuid,                                     -- FK added by 06
+  sender_id uuid not null references profiles(id) on delete cascade,
   recipient_id uuid not null references profiles(id) on delete cascade,
-  status text not null default 'pending',
-  created_at timestamptz not null default now()
+  status text not null default 'pending' check (status in ('pending','accepted','declined','expired')),
+  created_at timestamptz not null default now(),
+  responded_at timestamptz,
+  updated_at timestamptz not null default now(),
+  constraint invitations_target check (
+    (kind = 'group' and group_id is not null) or (kind = 'event' and event_id is not null))
 );
 
 -- 05 business

@@ -112,6 +112,10 @@ class Query implements PromiseLike<Result> {
   gte(col: string, v: unknown) { return this.where(`t.${ident(col)} >= ?`, v); }
   lte(col: string, v: unknown) { return this.where(`t.${ident(col)} <= ?`, v); }
   in(col: string, v: readonly unknown[]) { return this.where(`t.${ident(col)} = any(?)`, [...v]); }
+  is(col: string, v: null | boolean) {
+    this.filters.push({ sql: `t.${ident(col)} is ${v === null ? "null" : v ? "true" : "false"}`, values: [] });
+    return this;
+  }
   or(expr: string) {
     this.filters.push(parseOr(expr));
     return this;
