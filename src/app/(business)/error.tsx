@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { AlertTriangle } from 'lucide-react';
 import { Button, Card } from '@/features/core/components/ui';
 import { ButtonLink } from '@/features/business/components/form';
+import { recoverFromError } from '@/features/business/components/recover';
 
 /**
  * A business owner is mid-decision when this appears, so it says what is safe to assume
@@ -16,6 +18,9 @@ export default function BusinessError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+
   useEffect(() => {
     console.error('[ws05] business screen failed', { digest: error.digest, message: error.message });
   }, [error]);
@@ -35,7 +40,7 @@ export default function BusinessError({
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button onClick={reset}>Try again</Button>
+        <Button onClick={() => recoverFromError(startTransition, reset, router)}>Try again</Button>
         <ButtonLink href="/business" variant="secondary">
           Back to dashboard
         </ButtonLink>
