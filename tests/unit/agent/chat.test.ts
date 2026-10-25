@@ -10,6 +10,16 @@ vi.mock("@/features/core", () => ({
   },
 }));
 vi.mock("@/lib/ai", async () => (await import("./mock-ai")).mockAi);
+vi.mock("@/features/agent/server/people", () => ({
+  suggestPeople: async () => [{
+    id: "00000000-0000-4000-8000-000000000101", displayName: "Maya", neighborhood: "Mission",
+    preferences: {
+      userId: "00000000-0000-4000-8000-000000000101", interests: ["pottery", "coffee", "painting"], interestCategories: ["creative"],
+      availabilitySlots: ["thu_eve"], socialGoals: ["make_friends"], groupSizePref: "small", budgetMin: null, budgetMax: 2500,
+      travelRadiusKm: 5, activityPrefs: [], coarseLat: 37.76, coarseLng: -122.42, neighborhood: "Mission",
+    },
+  }],
+}));
 
 const { handleChatMessage, runCapabilities, selfView } = await import("@/features/agent/server/chat");
 const { EMPTY_PREFERENCES } = await import("@/features/agent/schemas");
@@ -71,9 +81,9 @@ describe("handleChatMessage (MOCK_AI)", () => {
     expect(logs).toContainEqual(expect.objectContaining({ action: "chat_suggestions" }));
   });
 
-  it("defaults to event suggestions", async () => {
+  it("defaults to people and event suggestions", async () => {
     const res = await handleChatMessage(SB, "u1", "anything fun this week?");
-    expect(res.suggestions?.every((s) => s.kind === "event")).toBe(true);
+    expect(new Set(res.suggestions?.map((s) => s.kind))).toEqual(new Set(["person", "event"]));
   });
 });
 

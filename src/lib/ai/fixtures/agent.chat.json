@@ -1,6 +1,9 @@
 {
-  "reply": "Here are a couple of events this week that match what you told me.",
+  "reply": "Here are a few people nearby who share your interests, and an event this week that fits.",
   "capabilities": [
+    {
+      "name": "suggest_people"
+    },
     {
       "name": "suggest_events"
     }
