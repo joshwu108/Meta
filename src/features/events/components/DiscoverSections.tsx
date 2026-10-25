@@ -88,9 +88,13 @@ export function AgentStrip({ recommendations }: { recommendations: RecommendedEv
     if (slot) slotCounts.set(slot, (slotCounts.get(slot) ?? 0) + 1);
   }
   const [topSlot, count] = [...slotCounts].sort((a, b) => b[1] - a[1])[0] ?? [null, 0];
+  // No breakdowns at all means the ranking ran without matching consent, not without availability.
+  const unconsented = recommendations.length > 0 && recommendations.every((r) => r.breakdown === null);
   const line = topSlot
     ? `${count} ${count === 1 ? "event fits" : "events fit"} your ${SLOT_PHRASES[topSlot]}s in the next three weeks.`
-    : "Tell your agent when you're free to get sharper picks.";
+    : unconsented
+      ? "Turn on “Match me with people” in your agent's permissions for picks that fit your week."
+      : "Tell your agent when you're free to get sharper picks.";
   return (
     <aside className={s.card} aria-label="Agent suggestion">
       <div className={s.row}>
@@ -98,7 +102,11 @@ export function AgentStrip({ recommendations }: { recommendations: RecommendedEv
         <strong>Your agent noticed…</strong>
       </div>
       <p className={s.explain}><AiTag /> <span>{line}</span></p>
-      <Link href="/agent" className={buttonClass("secondary")}>Ask your agent</Link>
+      {unconsented ? (
+        <Link href="/agent/permissions" className={buttonClass("secondary")}>Review permissions</Link>
+      ) : (
+        <Link href="/agent" className={buttonClass("secondary")}>Ask your agent</Link>
+      )}
     </aside>
   );
 }
