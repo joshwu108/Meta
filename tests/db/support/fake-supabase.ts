@@ -9,7 +9,6 @@ import type pg from "pg";
 type Result = { data: unknown; error: { message: string } | null; count?: number | null };
 type Filter = { sql: string; values: unknown[] };
 
-// Embedded resource -> the foreign-key column on the parent row that points at its `id`.
 const EMBED_FK: Record<string, string> = { businesses: "business_id", profiles: "user_id" };
 const ident = (name: string) => {
   if (!/^[a-z_][a-z0-9_]*$/.test(name)) throw new Error(`Unsupported identifier: ${name}`);

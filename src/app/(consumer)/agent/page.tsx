@@ -1,8 +1,7 @@
-import { Bot } from 'lucide-react';
-import { PlaceholderPage } from '@/features/core/components/PlaceholderPage';
+import { AgentHome } from "@/features/agent/components/agent-home";
 
-export const metadata = { title: 'Agent' };
+export const metadata = { title: "My AI agent · CommonGround" };
 
 export default function AgentPage() {
-  return <PlaceholderPage title="Agent" owner="agent" icon={Bot} lead="Chat with your agent and manage what it may share." />;
+  return <AgentHome />;
 }

@@ -1,0 +1,18 @@
+{
+  "id": "05-trap-no-time",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "I love jazz and wine bars."
+    }
+  ],
+  "expected": {
+    "interests": [
+      "jazz",
+      "wine"
+    ],
+    "availabilitySlots": [],
+    "groupSizePref": null,
+    "budgetMaxCents": null
+  }
+}

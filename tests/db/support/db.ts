@@ -88,8 +88,7 @@ export type RlsRole = {
 export async function createRlsRole(db: TestDb): Promise<RlsRole> {
   const role = `cg06_rls_${randomUUID().replaceAll("-", "").slice(0, 12)}`;
   await db.pool.query(`create role ${role} nologin`);
-  // Supabase's `postgres` is not a superuser, and since Postgres 16 creating a role does not make
-  // the creator a member, so SET ROLE needs an explicit grant (harmless for a real superuser).
+  // Not a superuser on Supabase's Postgres: SET ROLE needs membership in the role.
   await db.pool.query(`grant ${role} to current_user`);
   await db.pool.query(`grant usage on schema public, auth to ${role}`);
   await db.pool.query(`grant select, insert, update, delete on all tables in schema public to ${role}`);

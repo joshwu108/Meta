@@ -1,0 +1,17 @@
+{
+  "id": "08-daytime-weekday",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "I'm free weekday mornings only. I like yoga."
+    }
+  ],
+  "expected": {
+    "interests": [
+      "yoga"
+    ],
+    "availabilitySlots": [],
+    "groupSizePref": null,
+    "budgetMaxCents": null
+  }
+}

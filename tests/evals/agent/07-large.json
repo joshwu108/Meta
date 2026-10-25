@@ -1,0 +1,21 @@
+{
+  "id": "07-large",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Big crowds don't bother me \u2014 concerts and dancing on Friday and Saturday nights."
+    }
+  ],
+  "expected": {
+    "interests": [
+      "concerts",
+      "dancing"
+    ],
+    "availabilitySlots": [
+      "fri_eve",
+      "sat_eve"
+    ],
+    "groupSizePref": "large",
+    "budgetMaxCents": null
+  }
+}
