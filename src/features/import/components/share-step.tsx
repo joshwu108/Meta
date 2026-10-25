@@ -40,11 +40,14 @@ export function ShareStep({ sending, error, onSend }: Props) {
 
   async function pick(files: FileList | null) {
     setPickError(null);
-    const list = Array.from(files ?? []).slice(0, MAX_FILES - images.length);
     try {
-      const prepared = await Promise.all(list.map(prepareImage));
-      const next = [...images, ...prepared];
+      const prepared = await Promise.all(Array.from(files ?? []).map(prepareImage));
+      // Preparing an image is async, so two picks in quick succession both resume after their
+      // await. Reading the list from the closure means each sees it as it was before either
+      // started, and the second overwrites the first; `live` is the list as it stands now.
+      const next = [...live.current, ...prepared].slice(0, MAX_FILES);
       if (totalBytes(next) > MAX_TOTAL_BYTES) throw new Error('Those screenshots are over 4 MB together. Remove one.');
+      live.current = next;
       setImages(next);
     } catch (err) {
       setPickError(err instanceof Error ? err.message : 'Couldn’t read that file.');
@@ -53,9 +56,10 @@ export function ShareStep({ sending, error, onSend }: Props) {
   }
 
   function remove(id: string) {
-    const gone = images.find((image) => image.id === id);
+    const gone = live.current.find((image) => image.id === id);
     if (gone) URL.revokeObjectURL(gone.url);
-    setImages((current) => current.filter((image) => image.id !== id));
+    live.current = live.current.filter((image) => image.id !== id);
+    setImages(live.current);
   }
 
   return (

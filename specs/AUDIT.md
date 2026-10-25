@@ -137,28 +137,42 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 
 | Suite | Result |
 |---|---|
-| `pnpm test` (unit) | 1019 passed |
-| `pnpm test:integration` (integration + db) | 268 passed |
-| `pnpm test:e2e` (Playwright, bundled Chromium) | 87 passed |
+| `pnpm test` (unit) | 1095 passed |
+| `pnpm test:integration` (integration + db) | 285 passed |
+| `pnpm test:e2e` (Playwright, bundled Chromium) | 90 passed |
 | `tests/audit/core-flows-chrome.ts` (real Chrome) | 8/8 steps |
 
 ## Still open
 
-### Profile import is built, but not integrated
+### Profile import: merged here, with three things the merge needed
 
-`specs/07-profile-import/specs.md` is on this branch; none of the implementation is. The work lives
-on `ws/07-import` — around twenty commits covering the API routes, the Web Worker that reads an
-Instagram export in the browser, the review and settings screens, the onboarding step and tests —
-and is on neither `main` nor the integration branch, so none of it runs in the app audited here.
+`ws/07-import` is now merged into this branch, so the feature runs and is tested. Three things the
+merge needed, which whoever lands this on `main` should know about:
 
-A trial merge produces seven ordinary textual conflicts (`README.md`, `playwright.config.ts`,
-`src/lib/ai/{generate-structured,index}.ts`, `src/lib/ai/prompts/index.ts`,
-`src/features/agent/components/onboarding-flow.tsx`, and add/add on the spec). Nothing
-architectural. Two notes for whoever merges it:
+**The migration number collided.** Both `0700_graph_edge_events.sql` and `0700_import.sql` claim
+version `0700`, and Supabase keys `schema_migrations` on that number, so `supabase db reset` fails
+outright with a duplicate key — not a warning, a hard stop. The import migration is renumbered to
+`0703` here, since the graph one is already on the main line and this one had not merged anywhere.
 
-- That branch ships fixtures for all three of its prompts, so `tests/unit/ai/prompt-registry.test.ts`
-  will accept them.
-- It still carries the two dead prompt ids removed here. Keep this branch's removal.
+**The vision support needed porting.** 07 added images to `generateStructured` against the raw
+Anthropic client; `main` has since moved to a provider abstraction (`resolveProvider`, with Llama
+and Muse behind an OpenAI-compatible transport), whose `AiMessage.content` was text-only. Images
+now travel as content parts: `AiContentPart` carries text or a base64 image, the Anthropic provider
+maps parts to its own blocks, and the OpenAI-compatible providers refuse a message carrying images
+with a clear `AI_UNAVAILABLE` rather than silently dropping the pictures and answering from the
+text alone. That keeps 07's actual capability — it was Anthropic-only — without inventing a vision
+mapping for Llama or Muse, which is their owners' call.
+
+**One real bug, found by their own e2e test.** Choosing two screenshots in quick succession kept
+only the second. `pick()` is async because preparing an image resizes it, so two picks both resume
+after their await having read the list from the closure as it was before either started, and the
+second overwrite the first. Measured directly: back-to-back picks produced 1 preview, the same two
+picks 1200 ms apart produced 2. It appends through the existing `live` ref now, and both cases
+produce 2. A person hitting this would watch a screenshot they just chose silently disappear.
+
+The merge also kept this branch's removal of the two dead prompt ids while taking 07's three new
+ones, which `tests/unit/ai/prompt-registry.test.ts` then held to the fixture contract — the
+guardrail doing its job on a merge it was written before.
 
 ### Smaller things
 
