@@ -44,7 +44,15 @@ export async function AppShell({ mode, children, aside, proposalsBadge }: AppShe
         initialUnread={unread}
         switchLink={switchLink}
       />
-      <div className="mx-auto flex max-w-[1400px] gap-4 px-0 lg:px-4">
+      <div
+        className={cn(
+          'mx-auto flex gap-4 px-0 lg:px-4',
+          // The outer cap has to clear rail + gap + column + padding, or --business-width is
+          // never reached: at 1400 the business column stopped at 1072px however wide the
+          // token said it was.
+          mode === 'business' ? 'max-w-[1560px]' : 'max-w-[1400px]',
+        )}
+      >
         <nav aria-label="Main navigation" className={cn('sticky top-[var(--topbar-height)] hidden h-[calc(100dvh-var(--topbar-height))] w-[var(--rail-left)] shrink-0 py-4', railBreakpoint)}>
           <ul className="flex flex-col gap-1 px-2">
             {nav.map((item) => (
@@ -57,7 +65,7 @@ export async function AppShell({ mode, children, aside, proposalsBadge }: AppShe
         <main
           id="main"
           className={cn(
-            'w-full min-w-0 flex-1 px-4 pb-[calc(var(--tabbar-height)+24px)] pt-4 md:pb-8',
+            'w-full min-w-0 flex-1 px-4 pb-[calc(var(--tabbar-height)+var(--safe-bottom)+24px)] pt-4 md:pb-8',
             mode === 'consumer' ? 'mx-auto max-w-[var(--feed-width)]' : 'mx-auto max-w-[var(--business-width)]',
           )}
         >
@@ -69,7 +77,7 @@ export async function AppShell({ mode, children, aside, proposalsBadge }: AppShe
           </aside>
         )}
       </div>
-      <nav aria-label="Primary" className={cn('fixed inset-x-0 bottom-0 z-40 flex h-[var(--tabbar-height)] border-t border-border-subtle bg-surface', tabBreakpoint)}>
+      <nav aria-label="Primary" className={cn('fixed inset-x-0 bottom-0 z-40 flex h-[calc(var(--tabbar-height)+var(--safe-bottom))] items-start border-t border-border-subtle bg-surface pb-[var(--safe-bottom)]', tabBreakpoint)}>
         {tabItems.map((item) => (
           <NavLink key={item.href} href={item.href} label={item.label} icon={<item.icon size={22} strokeWidth={1.75} aria-hidden />} layout="tab" />
         ))}

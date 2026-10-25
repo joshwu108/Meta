@@ -20,3 +20,17 @@
 .brand { background: var(--color-brand-soft); color: var(--color-brand-ink, var(--color-brand)); } /* ink: AA on brand-soft */
 
 .meter { display: grid; gap: var(--space-1); font-size: var(--text-sm); color: var(--color-text-2); }
+
+/*
+ * Touch targets: these buttons fix a 36/40px height, which is the design system's desktop
+ * density (design-system.md section 4) but under the 44px every touch platform asks for.
+ * global.css raises the Tailwind-styled controls; a CSS module's own `height` is invisible
+ * to that rule, so it is raised here too. Coarse pointers only, so desktop is unchanged.
+ */
+@media (pointer: coarse) {
+  .button,
+  .primary,
+  .secondary {
+    min-height: 44px;
+  }
+}
