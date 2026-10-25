@@ -284,6 +284,18 @@ either side of 04. Both were confirmed present in the 13-migration run.
 
 ## Needs from others
 
+- **Integrator — merge `ws/05-business` once more.** Three bug fixes landed after the branch
+  was merged and are **not on `main`**: `e3f960e` and `cf29fb6` (every time on the business
+  screens is the venue's wall clock, not the viewer's) and `bd003d3` (the agent audit log
+  recorded a business id where a profile id belongs, so every row was silently rejected).
+  Repeated here because the worker prompt points integrators at this section; the full
+  explanation is in the status block at the top of this file.
+  Verified 2026-10-25 02:55 with three zones in play at once — server `TZ=UTC`, browser
+  `Asia/Tokyo`, venue `America/Los_Angeles`: the proposal header, its assumptions text and
+  the editor field all read 18:30 venue time. Without these commits that same configuration
+  shows 1:30 AM in the header, 10:30 in the editor and 18:30 in the assumption — three
+  different times for one event, on the machine whoever presents happens to use.
+
 - **01** — scaffold, `envelope.ts` with `withBusinessOwner`, `notify()`, `logAgentAction()`,
   `src/shared/types.ts`. 05 stubs all of them meanwhile; nothing is blocked. Two asks:
   - **`/login` and `/signup?as=business`.** The Scene 4 Playwright test signs in through
@@ -403,6 +415,15 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 02:55` — **closed a gap in my own verification, and moved the merge request
+  where integrators actually look.** Every timezone check so far had the browser in a
+  foreign zone but the *server* in the venue's — and the dashboard and proposal detail are
+  server components, so `formatDateTime` runs server-side there. Re-ran with three zones at
+  once (server `TZ=UTC`, browser `Asia/Tokyo`, venue `America/Los_Angeles`): header, the
+  assumptions text and the editor field all read 18:30 venue time, and the field hint says
+  "Venue time (PDT)". Also repeated the "merge `ws/05-business` again" request under Needs
+  from others, since that is the section the worker prompt tells the integrator to read and
+  it was only in the status block.
 - `2026-10-25 02:30` — **demo rehearsal of Scene 4 end to end against all six workstreams,
   with proposals 04 actually generated.** Ran `POST /api/ai/generate-opportunities`, then
   walked the owner's path and read every screen rather than trusting assertions:
