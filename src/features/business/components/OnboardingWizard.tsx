@@ -40,7 +40,10 @@ export function OnboardingWizard() {
   const isLast = step === ONBOARDING_STEPS.length - 1;
 
   return (
-    <div className="mx-auto flex w-full max-w-[720px] flex-col gap-5 px-4 py-8">
+    <main className="mx-auto flex w-full max-w-[720px] flex-col gap-5 px-4 py-10">
+      {/* Matches 01's AuthCard frame: this is reached straight after signup, before the
+          business shell exists, so it needs its own landmark and wordmark. */}
+      <p className="text-[length:var(--text-lg)] font-bold text-brand">CommonGround</p>
       <header>
         <h1 className="text-2xl font-bold leading-tight">Set up your venue</h1>
         <p className="mt-1 text-sm text-text-2">Four short steps. You can change any of it later.</p>
@@ -97,6 +100,6 @@ export function OnboardingWizard() {
           )}
         </CardFooter>
       </Card>
-    </div>
+    </main>
   );
 }

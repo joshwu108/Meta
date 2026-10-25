@@ -5,6 +5,7 @@ import {
   ONBOARDING_STEPS,
   canLeaveStep,
   dollarsToCents,
+  slotsOutsideHours,
   toOnboardingBody,
   type OnboardingDraft,
 } from '@/features/business/components/onboarding/draft';
@@ -77,5 +78,44 @@ describe('onboarding draft', () => {
 
   it('starts with the AI proposal toggle on, as the spec requires', () => {
     expect(EMPTY_DRAFT.acceptsAiProposals).toBe(true);
+  });
+});
+
+describe('hosting slots against opening hours', () => {
+  it('flags a slot on a day the venue is closed', () => {
+    expect(
+      slotsOutsideHours({
+        ...EMPTY_DRAFT,
+        hours: { mon: [['10:00', '18:00']] },
+        hostingSlots: ['thu_eve', 'mon_eve'],
+      }),
+    ).toEqual(['thu_eve']);
+  });
+
+  it('says nothing when every slot has hours', () => {
+    expect(
+      slotsOutsideHours({
+        ...EMPTY_DRAFT,
+        hours: { thu: [['09:00', '21:00']], sat: [['10:00', '18:00']] },
+        hostingSlots: ['thu_eve', 'sat_day'],
+      }),
+    ).toEqual([]);
+  });
+
+  it('says nothing when the venue published no hours at all', () => {
+    // Hours are optional in onboarding, and a venue that gave none is not held to any.
+    expect(slotsOutsideHours({ ...EMPTY_DRAFT, hostingSlots: ['thu_eve'] })).toEqual([]);
+  });
+
+  it('treats a day present but empty as closed', () => {
+    expect(
+      slotsOutsideHours({ ...EMPTY_DRAFT, hours: { thu: [], mon: [['10:00', '18:00']] }, hostingSlots: ['thu_eve'] }),
+    ).toEqual(['thu_eve']);
+  });
+
+  it('maps both weekend slots to their weekday', () => {
+    expect(
+      slotsOutsideHours({ ...EMPTY_DRAFT, hours: { sat: [['10:00', '18:00']] }, hostingSlots: ['sat_day', 'sat_eve', 'sun_eve'] }),
+    ).toEqual(['sun_eve']);
   });
 });
