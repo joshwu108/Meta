@@ -87,7 +87,7 @@ export function RequestsSection({ requests }: { requests: Activity["connectionRe
         {requests.map((r) => (
           <li key={r.id} className={`${s.card} ${s.spread}`}>
             <span className={s.row}><Avatar name={r.requester?.displayName ?? "?"} src={r.requester?.avatarUrl} /> {r.requester?.displayName ?? "Someone"}</span>
-            <Link href="/match">Respond</Link>
+            <Link href="/match?tab=requests">Respond</Link>
           </li>
         ))}
       </ul>

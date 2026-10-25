@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { Button } from "@/features/core/components/ui";
+import { invitableGroups, type MyGroup } from "./invite-groups";
 import s from "./events.module.css";
 
 type Group = { id: string; name: string };
@@ -15,8 +16,8 @@ export function InviteGroupPicker({ eventId }: { eventId: string }) {
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    apiGet<Group[]>("/api/groups")
-      .then((list) => setGroups(list.map((g) => ({ id: g.id, name: g.name }))))
+    apiGet<MyGroup[]>("/api/groups")
+      .then((list) => setGroups(invitableGroups(list)))
       .catch(() => setGroups([]));
   }, []);
 
