@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+import type { PromptId } from '@/lib/ai/prompts';
 
 vi.mock('server-only', () => ({}));
 
@@ -40,9 +41,12 @@ describe('generateStructured with MOCK_AI=1', () => {
   });
 
   it('throws AI_UNAVAILABLE when no fixture exists', async () => {
-    const error = (await generateStructured({ prompt: 'events.reconnect_followup', input: {}, schema }).catch((e: unknown) => e)) as InstanceType<typeof ApiError>;
+    // Every registered prompt ships a fixture (see prompt-registry.test.ts), so this reaches for
+    // an id that was never registered rather than relying on one being left broken.
+    const unregistered = 'nobody.registered_this' as PromptId;
+    const error = (await generateStructured({ prompt: unregistered, input: {}, schema }).catch((e: unknown) => e)) as InstanceType<typeof ApiError>;
     expect(error.code).toBe('AI_UNAVAILABLE');
-    expect(error.message).toContain('events.reconnect_followup');
+    expect(error.message).toContain('nobody.registered_this');
   });
 
   it('chat() returns fixture text', async () => {

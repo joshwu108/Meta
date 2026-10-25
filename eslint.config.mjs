@@ -14,7 +14,8 @@ const config = [
     },
   },
   {
-    files: ['supabase/seed/**/*.ts', 'scripts/**/*.ts', 'tests/evals/**/*.ts', 'src/lib/log.ts'],
+    // Command-line scripts whose output *is* the product of running them.
+    files: ['supabase/seed/**/*.ts', 'scripts/**/*.ts', 'tests/evals/**/*.ts', 'tests/audit/**/*.ts', 'src/lib/log.ts'],
     rules: { 'no-console': 'off' },
   },
   {

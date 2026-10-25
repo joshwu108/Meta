@@ -17,14 +17,12 @@ export const PROMPT_IDS = [
   'agent.chat',
   'agent.explain_recommendation',
   'agent.follow_up_suggestion',
-  // 03 matching / groups
-  'matching.explain_match',
+  // 03 matching / groups (matching asks 02 for explanations, so it registers no prompt of its own)
   'groups.plan_activities',
   // 04 demand
   'demand.generate_proposal',
   'demand.revise_proposal',
-  // 06 events
-  'events.reconnect_followup',
+  // 06 events asks 02 for follow-ups, so it registers no prompt of its own
 ] as const;
 
 export type PromptId = (typeof PROMPT_IDS)[number];
