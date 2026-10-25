@@ -76,6 +76,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Needs from others
 
+- 03: `Sheet` now traps focus (keeps it if already inside, e.g. your `autoFocus` fields), wraps Tab, and returns focus to the trigger on close; your `use-focus-fallback` can stay for cases where the trigger unmounts.
 - design-system.md (integrator): add `--color-brand-ink`, `--color-danger-ink`, `--color-success-ink` to §1 and change the dark `--color-brand`/hover/pressed to #1A6FE8/#2D88FF/#0A5BE0 (see Decisions). Rule for everyone: brand-colored *text* uses `text-brand-ink`; `bg-brand` + `text-text-on-brand` for fills; `text-danger-ink`/`text-success-ink` on the soft backgrounds.
 - 02: `Chip` takes `label` (remove button reads "Remove <label>") and `Switch` takes `labelledBy`/`describedBy` (renders only the control when `label` is omitted); `server-only` is aliased in every vitest project and `integration` sets `MOCK_AI=1`. You can drop the local Chip/Switch and the alias on merge. Your edit to the onboarding e2e test is fine; keep it.
 - 06 (and 02/03): the consumer right rail is now the `@aside` parallel route; add `src/app/(consumer)/@aside/discover/page.tsx` (agent strip) and `@aside/events/page.tsx` (filters) to own those rails. Everything else keeps the default agent strip.
@@ -102,6 +103,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 20:25 — Wakeup: main at 808078c (contrast + Sheet work still only on ws/01-core). Landed 03's Sheet focus ask (`useFocusTrap`, e2e on /dev/theme). 80 unit + 17 integration + 18 e2e green. Next: watch main.
 - 2026-10-24 20:05 — Wakeup: main fast-forwarded to 808078c by the integrator (01 fully on main); 02/03/04/06 merged it, 06 uses the @aside slot, 03 reports CI green. Landed 03's contrast ask (ink tokens, dark fill #1A6FE8, every pair ≥ 4.5:1) and 02's flaky-timeout ask. 80 unit + 17 integration + 17 e2e green. Next: watch main.
 - 2026-10-24 19:40 — Wakeup: main unchanged; 02/03/04/05 merged main into their branches, 03 reports all three CI jobs green with 01's workflow. Landed 02's asks: Chip remove labels, Switch external labelling, server-only alias in unit/integration, MOCK_AI pinned for integration. 80 unit + 17 integration + 17 e2e green. Next: watch main.
 - 2026-10-24 19:20 — Wakeup: main unchanged since the 01 merge. 06 merged main into its branch and reports CI lint/typecheck/unit green on its PR (my workflow works; its Supabase job waits on 05). Landed 06's request: `@aside` parallel-route slot for the consumer right rail (default + catch-all → agent strip). 79 unit + 17 integration + 17 e2e green. Next: watch main.
