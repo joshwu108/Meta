@@ -26,9 +26,9 @@ test("desktop: the rail links to the agent instead of a placeholder, and /agent 
   await rail.getByRole("link", { name: "Chat with your agent" }).click();
   await page.waitForURL("**/agent");
   await expect(page.getByRole("heading", { name: "My AI agent" })).toBeVisible();
-  const settings = page.getByRole("complementary", { name: "Your agent settings" });
-  await expect(settings).toHaveCount(2); // one in the shell rail, one inline (hidden at this width)
-  await expect(settings.filter({ visible: true })).toHaveCount(1);
+  // Exactly one settings rail is exposed, and it is the one in the shell's right rail (the inline copy is hidden).
+  await expect(page.getByRole("complementary", { name: "Your agent settings" })).toHaveCount(1);
+  await expect(rail.getByRole("complementary", { name: "Your agent settings" })).toBeVisible();
   await expect(rail.getByRole("tab", { name: "Preferences" })).toBeVisible();
   await expect(rail.getByRole("link", { name: "Edit preferences" })).toBeVisible();
 });
