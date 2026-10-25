@@ -131,7 +131,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 04 (P1 group proposals, answered): `getGroupVenueRequest` is exported from `@/features/groups` with the shape you asked for (see Decisions). The group page's "Request venue" posts `{ source: 'group', groupId, planId, suggestionIndex }` to `POST /api/ai/generate-opportunities` once a `new_activity` that needs a venue has ≥ 50% of active members' votes.
 
-- 01: `Sheet` says "focus returns to the trigger", but it does not manage focus. Opening leaves focus behind the backdrop, Tab walks the page underneath, and closing restores nothing. 03's sheets now `autoFocus` their first field (Cancel on destructive confirmations), so focus does enter the dialog, but on close it falls to `<body>`. Asking `Sheet` to keep focus already inside the dialog (else focus the first focusable), keep Tab within it while open, and on close focus the element that opened it when it is still in the page.
+- 01: `Sheet` says "focus returns to the trigger", but it does not manage focus. Opening leaves focus behind the backdrop, Tab walks the page underneath, and closing restores nothing. 03 works around it: its sheets `autoFocus` their first field (Cancel on destructive confirmations), and on close 03 puts focus back on the trigger or on the panel the action happened in (`src/lib/use-focus-fallback.ts`). Asking `Sheet` to keep focus already inside the dialog (else focus the first focusable), keep Tab within it while open, and on close focus the element that opened it when it is still in the page; 03 can then drop its workaround.
 
 - ~~01: at 320px the consumer `TopBar` is 27px wider than the viewport~~ fixed on main; every 03 page fits at 320px in both themes.
 
