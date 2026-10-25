@@ -83,7 +83,17 @@ patch touches one of the three `allow_*` flags; consent changes are rare and the
 optimisations, so clearing is cheap and certainly right.
 `tests/integration/social/consent-revocation.test.ts` covers it.
 
-### 9. Two prompt ids promised a fixture that was never written
+### 9. Blocking someone did not reach the graph
+
+The same shape as the one above, on the strongest safety action in the product. `blockUser` drops
+both people's cached match lists but nothing dropped their graph snapshots, so each stayed in the
+other's graph — name, avatar, and the edge describing how they knew each other — until the entry
+expired. The graph's read side cannot be imported from `matching` without a cycle, so the route
+drops the pair's snapshots, the same place `/api/me` and `/api/agent/permissions` do their
+invalidation. `tests/integration/social/block-propagation.test.ts` covers it, and also checks the
+block lands in both directions and leaves everyone else alone.
+
+### 10. Two prompt ids promised a fixture that was never written
 
 `matching.explain_match` and `events.reconnect_followup` sat in the registry with no definition, no
 fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Removed.
@@ -114,7 +124,7 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 | Suite | Result |
 |---|---|
 | `pnpm test` (unit) | 1019 passed |
-| `pnpm test:integration` (integration + db) | 262 passed |
+| `pnpm test:integration` (integration + db) | 265 passed |
 | `pnpm test:e2e` (Playwright, bundled Chromium) | 87 passed |
 | `tests/audit/core-flows-chrome.ts` (real Chrome) | 8/8 steps |
 
