@@ -26,6 +26,22 @@ async function acceptInvitationAs(browser: Browser, email: string): Promise<void
   await context.close();
 }
 
+/** The request reaches Maya through 01's bell; opening it while `/match` is already open selects the Requests tab. */
+async function openRequestFromBell(browser: Browser): Promise<void> {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await login(page, 'maya@commonground.test');
+  await page.goto('/match');
+  await expect(page.getByRole('tab', { name: /Recommended/ })).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('button', { name: /^Notifications/ }).click();
+  await page.getByRole('dialog', { name: 'Notifications' }).getByRole('link', { name: new RegExp(`${NEW_USER.name} wants to connect`) }).click();
+  await page.waitForURL(/\/match\?tab=requests$/);
+  await expect(page.getByRole('tab', { name: /Requests/ })).toHaveAttribute('aria-selected', 'true');
+  const request = page.getByRole('region', { name: 'Incoming' }).getByRole('listitem').filter({ hasText: NEW_USER.name });
+  await expect(request.getByRole('button', { name: 'Accept' })).toBeVisible();
+  await context.close();
+}
+
 test('Scene 2: matches with explanations, connect, create a private group, invite, accept', async ({ page, browser }) => {
   test.setTimeout(120_000);
   await reseed(page);
@@ -51,6 +67,7 @@ test('Scene 2: matches with explanations, connect, create a private group, invit
   await connect.getByRole('button', { name: 'Send request' }).click();
   await expect(page.getByText('Request sent to Maya Chen')).toBeVisible();
   await expect(page.getByRole('article', { name: /Maya Chen/ })).toHaveCount(0);
+  await openRequestFromBell(browser);
 
   await page.goto('/groups');
   await page.getByRole('button', { name: 'Create group' }).click();

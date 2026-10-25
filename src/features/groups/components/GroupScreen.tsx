@@ -3,6 +3,7 @@ import { ArrowLeft, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { AvatarStack, Button, Card, Chip, Tabs } from '@/features/core/components/ui';
+import { useUrlTab } from '@/lib/use-url-tab';
 import { chipLabel } from '@/shared/labels';
 import type { GroupDetail } from '../server/types';
 import { ROLE_LABELS } from '../labels';
@@ -15,6 +16,8 @@ import { MembersPanel } from './MembersPanel';
 import { PlansPanel } from './PlansPanel';
 
 export type GroupTab = 'plans' | 'events' | 'members';
+
+const GROUP_TABS: readonly GroupTab[] = ['plans', 'events', 'members'];
 
 function GroupHeader({ group, onEdit }: { group: GroupDetail; onEdit: () => void }) {
   const people = group.members.map((m) => ({ name: m.user.displayName, src: m.user.avatarUrl }));
@@ -65,11 +68,11 @@ function InvitedBanner({ group }: { group: GroupDetail }) {
   );
 }
 
-/** Screen 5 `/groups/:id`: header, then Plans (planner is the lead), Events and Members tabs. */
-export function GroupScreen({ group, candidates, initialTab }: { group: GroupDetail; candidates: InviteCandidate[]; initialTab: GroupTab }) {
-  const [tab, setTab] = useState<GroupTab>(initialTab);
-  const [isEditing, setIsEditing] = useState(false);
+/** Screen 5 `/groups/:id`: header, then Plans (planner is the lead), Events and Members tabs; `?tab=` picks one. */
+export function GroupScreen({ group, candidates }: { group: GroupDetail; candidates: InviteCandidate[] }) {
   const isMember = group.myStatus === 'active';
+  const [tab, setTab] = useUrlTab(GROUP_TABS, isMember ? 'plans' : 'members');
+  const [isEditing, setIsEditing] = useState(false);
   const items = [
     ...(isMember ? [{ value: 'plans' as const, label: 'Plans' }] : []),
     { value: 'events' as const, label: 'Events', count: group.upcomingEvents.length || undefined },

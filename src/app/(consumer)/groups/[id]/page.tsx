@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { getCurrentUser } from '@/features/core';
-import { GroupScreen, type GroupTab } from '@/features/groups/components/GroupScreen';
+import { GroupScreen } from '@/features/groups/components/GroupScreen';
 import type { InviteCandidate } from '@/features/groups/components/InvitePicker';
 import { getGroupDetail } from '@/features/groups/server/detail';
 import type { GroupDetail } from '@/features/groups';
@@ -11,9 +11,7 @@ import { uuidSchema } from '@/shared/schemas/common';
 
 export const metadata = { title: 'Group' };
 
-type Props = { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
-
-const TABS: readonly GroupTab[] = ['plans', 'events', 'members'];
+type Props = { params: Promise<{ id: string }> };
 
 /** People the viewer can invite: connections and open requests first, then matches. */
 async function inviteCandidates(actor: Actor, group: GroupDetail): Promise<InviteCandidate[]> {
@@ -39,7 +37,7 @@ async function loadGroup(actor: Actor, id: string): Promise<GroupDetail> {
 }
 
 /** Screen 5: group header, Plans (AI planner), Events (from 06) and Members. */
-export default async function GroupPage({ params, searchParams }: Props) {
+export default async function GroupPage({ params }: Props) {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
   const { id } = await params;
@@ -47,7 +45,5 @@ export default async function GroupPage({ params, searchParams }: Props) {
   const actor = { userId: user.id, supabase: await createServerClient() };
   const group = await loadGroup(actor, id);
   const candidates = await inviteCandidates(actor, group);
-  const requested = (await searchParams).tab;
-  const tab = TABS.find((t) => t === requested) ?? (group.myStatus === 'active' ? 'plans' : 'members');
-  return <GroupScreen group={group} candidates={candidates} initialTab={tab} />;
+  return <GroupScreen group={group} candidates={candidates} />;
 }

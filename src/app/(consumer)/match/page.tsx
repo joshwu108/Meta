@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/features/core';
 import { getMatchesForViewer, listConnections, type MatchCard } from '@/features/matching';
-import { MatchScreen, type MatchTab } from '@/features/matching/components/MatchScreen';
+import { MatchScreen } from '@/features/matching/components/MatchScreen';
 import { createServerClient } from '@/lib/supabase/server';
 import { uuidSchema } from '@/shared/schemas/common';
 import { matchesQuerySchema, type MatchesQuery } from '@/shared/schemas/social';
@@ -12,7 +12,6 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 const MAX_FILTER_CHIPS = 6;
-const TABS: readonly MatchTab[] = ['recommended', 'requests', 'connections'];
 
 /** Most common shared interests across the unfiltered list, for the filter chips. */
 function interestOptions(matches: readonly MatchCard[]): string[] {
@@ -47,7 +46,6 @@ export default async function MatchPage({ searchParams }: { searchParams: Search
       outgoing={pending.filter((item) => item.direction === 'outgoing')}
       connected={connections.filter((item) => item.status === 'accepted')}
       filters={{ interest: query.interest, goal: query.goal, interestOptions: interestOptions((unfiltered ?? result).matches) }}
-      initialTab={TABS.find((tab) => tab === first(params.tab)) ?? 'recommended'}
       focusId={uuidSchema.safeParse(first(params.focus)).data}
     />
   );

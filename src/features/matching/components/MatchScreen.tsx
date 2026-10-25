@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
 import { Button, Tabs } from '@/features/core/components/ui';
+import { useUrlTab } from '@/lib/use-url-tab';
 import type { ConnectionItem } from '../server/connections';
 import type { MatchCard, MatchesStatus } from '../server/matches';
 import { ConnectSheet } from './ConnectSheet';
@@ -20,12 +20,12 @@ export type MatchScreenProps = {
   outgoing: ConnectionItem[];
   connected: ConnectionItem[];
   filters: MatchFilterState;
-  initialTab: MatchTab;
   /** Deep link from an agent suggestion card (`/match?focus=<userId>`): shown first. */
   focusId?: string;
 };
 
 const TAB_LABELS: Record<MatchTab, string> = { recommended: 'Recommended', requests: 'Requests', connections: 'Connections' };
+const MATCH_TABS = Object.keys(TAB_LABELS) as MatchTab[];
 
 const countOf = (items: readonly unknown[]) => (items.length > 0 ? items.length : undefined);
 
@@ -36,9 +36,9 @@ function orderMatches(matches: readonly MatchCard[], hidden: ReadonlySet<string>
   return [...visible.filter((m) => m.user.id === focusId), ...visible.filter((m) => m.user.id !== focusId)];
 }
 
-/** Screen 3 `/match`: recommended people, connection requests and (P1) connections. */
-export function MatchScreen({ status, matches, incoming, outgoing, connected, filters, initialTab, focusId }: MatchScreenProps) {
-  const [tab, setTab] = useState<MatchTab>(initialTab);
+/** Screen 3 `/match`: recommended people, connection requests and (P1) connections; `?tab=` picks the view. */
+export function MatchScreen({ status, matches, incoming, outgoing, connected, filters, focusId }: MatchScreenProps) {
+  const [tab, setTab] = useUrlTab(MATCH_TABS, 'recommended');
   const a = useMatchActions();
   const visible = orderMatches(matches, a.hidden, focusId);
   const actionsFor = (match: MatchCard) => {
