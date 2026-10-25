@@ -415,6 +415,24 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 04:00` — **rendered the onboarding wizard for the first time; it works, and
+  looking at it found two problems.** Business Screen 1 was the only screen of 05 that no
+  test and no rehearsal had ever rendered, because every spec signs in as an owner who
+  already has a venue. Walked all four steps against a real signup: the venue it creates is
+  correct — slug, geocoded neighborhood from the address, hours, capabilities, price range,
+  AI toggle.
+  Two issues. **Hosting slots and opening hours are entered independently**, so the wizard
+  accepted a venue that hosts Thursday evenings while Thursday is closed. Nothing rejects
+  that at the boundary, but it is a dead end: 04 matches proposals on the hosting slots and
+  05 then refuses to approve them because the venue is shut, so the owner finds out only at
+  the decision. The Review step now says so. And the page rendered as a bare `div` with **no
+  `main` landmark and no wordmark**, unlike 01's auth pages, on what is a business's first
+  screen.
+  One self-inflicted lesson: the first version of the new e2e spec signed in as the seeded
+  consumer and gave her a venue, which left her a business owner for every spec that ran
+  afterwards and emptied Scene 4's inbox. It passed alone and failed in the full run. It now
+  signs up a throwaway account through `/signup?as=business`, which is the real route in.
+  **805 unit, 213 integration, 61 e2e** green from a clean database.
 - `2026-10-25 03:25` — **opened the insights page with real data and found an incoherent
   stat.** It had never been viewed with 04's `demand_clusters` present. The banded demand
   renders correctly (Creative/Thursday evenings 6-9, Food & drink 4-5, Games 4-5, no raw
