@@ -28,6 +28,7 @@ export type MatchCard = {
 
 /** Why a list is empty, so the page can show the right empty state. */
 export type MatchesStatus = 'ok' | 'not_discoverable' | 'no_location' | 'no_candidates';
+/** A viewer's recommended people, best first, with the reason when the list is empty. */
 export type MatchesResult = { status: MatchesStatus; matches: MatchCard[] };
 
 export type RankedCandidate = { prefs: MatchingPreferences; result: CompatibilityResult };
