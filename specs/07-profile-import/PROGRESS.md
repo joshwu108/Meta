@@ -16,7 +16,7 @@ Branch: `ws/07-import`. Source of truth: the ws07 goal prompt (screenshots first
 - [x] `/agent/import`: what to share, how-to, preview, Send, review cards (Love it / Yes / Edit / Not me; Less of this: Keep as a dislike / Ignore), aria-live counter, Done for now
 - [x] Onboarding optional step (Skip first) and link from `/agent/preferences`
 - [x] `IMPORT_ENABLED` + `is_adult_confirmed` gate
-- [ ] CI green on the branch (integration + Scene 1b e2e)
+- [x] CI: lint/typecheck/unit, migrations/types/integration (incl. 07's DB tests) and Scene 1b + Skip e2e green; only 05's Scene 4 flake fails (see Blocked)
 
 ## Phase 2: the plan
 
@@ -75,6 +75,7 @@ Other decisions:
 ## Blocked
 
 - No Docker on this machine: integration and e2e run only in CI (push to `ws/07-import`). Local runs: typecheck, lint, unit, build.
+- 05's `scene4-business.spec.ts` (reject / edit & approve, button click timeouts) fails or flakes on this branch and on ws/03-matching's run of 10:19Z, which has no 07 code; ws/02 passed in the same window. Not caused by 07; owner 05 / integrator. 07's Scene 1b and Skip specs pass.
 
 ## Log
 
