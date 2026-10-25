@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { config as loadEnv } from 'dotenv';
 import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { NEW_USER, login, reseed } from './helpers';
-import { openSettled } from './support/social';
+import { openSettled, settle } from './support/social';
 
 // The first request to a route compiles it in dev mode, which can take longer than 5s in CI.
 const FIRST_REQUEST = { timeout: 20_000 };
@@ -24,9 +24,11 @@ test('AC4: the group planner suggests 2–4 activities in the shared slot and me
   const missionMakers = page.getByRole('link', { name: /Mission Makers/ }).first();
   await openSettled(page, '/groups', missionMakers);
   await missionMakers.click();
-  await page.getByRole('textbox', { name: 'What should we do?' }).fill('Something creative on a weeknight with Leo');
+  const request = page.getByRole('textbox', { name: 'What should we do?' });
+  await settle(page, request);
+  await request.fill('Something creative on a weeknight with Leo');
   await page.getByRole('button', { name: 'Plan something for us' }).click();
-  await expect(page.getByText('Based on 4 of 4 members who allow group planning')).toBeVisible(FIRST_REQUEST);
+  await settle(page, page.getByText('Based on 4 of 4 members who allow group planning'));
   const suggestions = page.getByRole('region', { name: 'Suggestions' }).getByRole('article');
   await expect(suggestions.first()).toBeVisible();
   const count = await suggestions.count();
@@ -37,6 +39,7 @@ test('AC4: the group planner suggests 2–4 activities in the shared slot and me
     await expect(suggestions.nth(i)).toContainText('Thursday evenings');
   }
   await suggestions.first().getByRole('button', { name: /0 votes/ }).click();
+  await settle(page, suggestions.first().getByRole('button', { name: /1 vote/ }));
   await expect(suggestions.first().getByRole('button', { name: /1 vote/ })).toHaveAttribute('aria-pressed', 'true');
 });
 
@@ -71,7 +74,7 @@ test('Block and Report from a match card', async ({ page }) => {
   await expect(page.getByText('Yuki Tanaka is blocked')).toBeVisible(FIRST_REQUEST);
   await expect(page.getByRole('article', { name: /^Yuki Tanaka/ })).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole('list', { name: 'Recommended people' }).getByRole('article').first()).toBeVisible();
+  await settle(page, page.getByRole('list', { name: 'Recommended people' }).getByRole('article').first());
   await expect(page.getByRole('article', { name: /^Yuki Tanaka/ })).toHaveCount(0);
 });
 

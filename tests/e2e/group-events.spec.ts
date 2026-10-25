@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { CONSUMER, login, reseed } from './helpers';
+import { openSettled } from './support/social';
 
 // The first request to a route compiles it in dev mode, which can take longer than 5s in CI.
 const FIRST_REQUEST = { timeout: 20_000 };
@@ -18,8 +19,8 @@ test('AC5: a group sees the events its members are going to and opens one', asyn
   const top = detail.upcomingEvents.find((e) => e.membersGoing > 0);
   expect(top, "06's seeded RSVPs give the group an event its members are going to").toBeDefined();
 
-  await page.goto(`/groups/${groupId}?tab=events`);
   const link = page.getByRole('region', { name: 'Upcoming events' }).getByRole('link', { name: new RegExp(escape(top!.event.title)) });
+  await openSettled(page, `/groups/${groupId}?tab=events`, link);
   await expect(link).toContainText(`${top!.membersGoing} ${top!.membersGoing === 1 ? 'member is' : 'members are'} going`);
   await link.click();
   await page.waitForURL(new RegExp(`/events/${top!.event.id}$`));

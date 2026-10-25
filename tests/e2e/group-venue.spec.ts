@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { config as loadEnv } from 'dotenv';
 import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { CONSUMER, login, reseed } from './helpers';
+import { openSettled, settle } from './support/social';
 
 // The first request to a route compiles it in dev mode, which can take longer than 5s in CI.
 const FIRST_REQUEST = { timeout: 20_000 };
@@ -33,19 +34,23 @@ test('P1: a voted venue idea goes to 04 as a group-originated proposal', async (
   const { data: groups } = (await (await page.request.get('/api/groups')).json()) as { data: Array<{ id: string; name: string }> };
   const groupId = groups.find((g) => g.name === 'Mission Makers')!.id;
 
-  await page.goto(`/groups/${groupId}`);
-  await page.getByRole('button', { name: 'Plan something for us' }).click();
+  const planButton = page.getByRole('button', { name: 'Plan something for us' });
+  await openSettled(page, `/groups/${groupId}`, planButton);
+  await planButton.click();
   const idea = page.getByRole('region', { name: 'Suggestions' }).getByRole('article').filter({ hasText: IDEA });
-  await expect(idea).toBeVisible(FIRST_REQUEST);
+  await settle(page, idea);
   await idea.getByRole('button', { name: /0 votes/ }).click();
+  await settle(page, idea.getByRole('button', { name: /1 vote/ }));
   await expect(idea.getByRole('button', { name: /1 vote/ })).toHaveAttribute('aria-pressed', 'true');
 
   const { data: detail } = (await (await page.request.get(`/api/groups/${groupId}`)).json()) as { data: { latestPlan: Plan } };
   const index = detail.latestPlan.suggestions.findIndex((s) => s.title === IDEA);
   await voteAs(browser, 'leo@commonground.test', groupId, detail.latestPlan.id, index);
 
+  const requestVenue = idea.getByRole('button', { name: 'Request venue' });
   await page.reload();
-  await idea.getByRole('button', { name: 'Request venue' }).click();
+  await settle(page, requestVenue);
+  await requestVenue.click();
   await expect(page.getByText(/^Sent to .+\. They’ll decide whether to host it\.$/)).toBeVisible(FIRST_REQUEST);
   const { data: proposals } = await admin()
     .from('event_proposals')
