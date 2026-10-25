@@ -11,6 +11,8 @@ import type { PersonCandidate } from "./suggestion-stubs";
  * allowed matching is never suggested. Ranked by shared interests, then shared slots.
  */
 export type PeopleDeps = {
+  /** AC3: someone who has not allowed matching is shown nobody (same rule as 03's /match). */
+  viewerAllowsMatching: (userId: string) => Promise<boolean>;
   publicCards: (excludeUserId: string, limit: number) => Promise<{ id: string; display_name: string; neighborhood: string | null }[]>;
   sharable: (userIds: readonly string[]) => Promise<Map<string, SharablePreferences>>;
 };
@@ -24,6 +26,7 @@ export async function suggestPeopleFrom(
   viewer: Pick<SharablePreferences, "userId" | "interests" | "availabilitySlots">,
   limit = 3,
 ): Promise<PersonCandidate[]> {
+  if (!(await deps.viewerAllowsMatching(viewer.userId))) return [];
   const cards = (await deps.publicCards(viewer.userId, POOL)).filter((c) => c.id !== viewer.userId);
   if (cards.length === 0) return [];
   const shared = await deps.sharable(cards.map((c) => c.id));
@@ -54,10 +57,14 @@ export async function adminPublicCards(admin: SupabaseClient, excludeUserId: str
 
 /** Production wiring. Loaded lazily so this module does not import the feature index at load time. */
 export async function suggestPeople(viewer: Pick<SharablePreferences, "userId" | "interests" | "availabilitySlots">, limit = 3): Promise<PersonCandidate[]> {
-  const [{ getSharablePreferencesBatch }, { createAdminClient }] = await Promise.all([import("../index"), import("@/lib/supabase/admin")]);
+  const [{ getConsent, getSharablePreferencesBatch }, { createAdminClient }] = await Promise.all([import("../index"), import("@/lib/supabase/admin")]);
   const admin = createAdminClient() as unknown as SupabaseClient;
   return suggestPeopleFrom(
-    { publicCards: (id, n) => adminPublicCards(admin, id, n), sharable: (ids) => getSharablePreferencesBatch(ids, "matching") },
+    {
+      viewerAllowsMatching: async (id) => (await getConsent(id)).allow_matching,
+      publicCards: (id, n) => adminPublicCards(admin, id, n),
+      sharable: (ids) => getSharablePreferencesBatch(ids, "matching"),
+    },
     viewer,
     limit,
   );

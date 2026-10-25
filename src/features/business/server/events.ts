@@ -149,6 +149,8 @@ async function notifyOriginatingCohort(deps: BusinessDeps, row: EventRow): Promi
       deps.notify(userId, 'event_published', {
         eventId: row.id,
         title: row.title,
+        body: 'New event near you',
+        href: `/events/${row.id}`,
         startsAt: row.starts_at,
       }),
     ),
@@ -201,6 +203,8 @@ export async function updateBusinessEvent(
         deps.notify(userId, 'event_updated', {
           eventId,
           title: updated.title,
+          body: 'Details changed. Please reconfirm your spot.',
+          href: `/events/${eventId}`,
           changed,
           startsAt: updated.starts_at,
         }),
@@ -229,7 +233,13 @@ export async function cancelBusinessEvent(
 
   await Promise.all(
     userIds.map((userId) =>
-      deps.notify(userId, 'event_cancelled', { eventId, title: cancelled.title, reason }),
+      deps.notify(userId, 'event_cancelled', {
+        eventId,
+        title: cancelled.title,
+        body: `Cancelled: ${reason}`,
+        href: `/events/${eventId}`,
+        reason,
+      }),
     ),
   );
 
