@@ -104,13 +104,17 @@ describe.skipIf(!available)("06 edge cases against Postgres", () => {
 
     const { rows } = await db.pool.query(
       `select f.event_id, f.suggestion->>'suggestedSlot' as slot,
-              (select count(*)::int from agent_action_log l where l.user_id in (f.user_a, f.user_b)) as logs
+              (select count(*)::int from agent_action_log l
+                where l.user_id in (f.user_a, f.user_b) and l.action = 'follow_up_suggestion') as logs,
+              (select count(*)::int from agent_action_log l
+                where l.user_id in (f.user_a, f.user_b) and l.action = 'share_preferences') as shares
        from follow_up_suggestions f where f.event_id = any($1)`,
       [[consenting.eventId, private_.eventId]],
     );
     const byEvent = new Map(rows.map((r) => [r.event_id, r]));
-    expect(byEvent.get(consenting.eventId)).toMatchObject({ slot: "sun_day", logs: 2 });
-    expect(byEvent.get(private_.eventId)).toMatchObject({ slot: "sat_day", logs: 0 });
+    // 02's consent boundary also records one share_preferences row per person it releases.
+    expect(byEvent.get(consenting.eventId)).toMatchObject({ slot: "sun_day", logs: 2, shares: 2 });
+    expect(byEvent.get(private_.eventId)).toMatchObject({ slot: "sat_day", logs: 0, shares: 0 });
   });
 
   it("keeps a second accept by the same person idempotent", async () => {
