@@ -290,15 +290,24 @@ either side of 04. Both were confirmed present once 04 landed.
     this branch's copy (`DemandBand`, `WeeklyHours`, `BusinessCapabilities`,
     `BusinessOwnerView`, `BusinessEvent`, `EventEdits`, `ProposalDocument`,
     `ProposalSummary`, `ProposalDetail`, `AttendeeList`, `BusinessInsights`).
-- **03 + 06 + integrator** — **two of 03's tests will fail the moment 06 merges**, found by
-  applying every branch's migrations together. 06's `0600` adds
-  `invitations_event_fk foreign key (event_id) references events(id)`, and 03's
-  `tests/integration/social/contracts.test.ts` and `planner-routes.test.ts` invite people to
-  a hardcoded `EVENT_ID` (`3b1d6c1a-…`) that no row has, so
-  `createEventInvitations` fails with "Could not create event invitations". Nothing is wrong
-  with either side — the FK is right and 03's fixture simply predates it. The fix is one
-  line in 03's fixtures: use a seeded event id (05's seed creates six) instead of a literal.
-  This does **not** affect `main` today; it appears only once 03 and 06 are both in.
+- **03 (+ 06, integrator) — two of 03's tests fail the moment 06 merges. Fix verified, not
+  applied.** 06's `0600` adds `invitations_event_fk foreign key (event_id) references
+  events(id)`, and 03's `contracts.test.ts` and `planner-routes.test.ts` invite people to a
+  hardcoded `EVENT_ID` that no row has, so `createEventInvitations` fails with "Could not
+  create event invitations". Neither side is wrong: the FK is right and the fixture predates
+  it. **I reproduced it (graft 06's migration onto main, reset, seed, `pnpm test:integration`)
+  and confirmed a fix takes the suite to 135/135 with nothing skipped**, but did not commit
+  it, because 03 is actively committing to those files and it would conflict.
+  The verified change, in both files:
+  1. `const EVENT_ID = '…'` becomes `let EVENT_ID = '…'`, and the first `beforeAll` replaces
+     it with a real id when the table exists:
+     `const existing = await admin.from('events').select('id').limit(1); if (existing.data?.[0]) EVENT_ID = existing.data[0].id;`
+     (cast `admin` for the lookup — `database.types.ts` predates 05, see the next item.)
+     The literal stays as the fallback so 03's branch alone is unaffected.
+  2. One dependent change in `contracts.test.ts`: the "06 stand-ins degrade" case asserts
+     `getEventPublic(EVENT_ID)` is null, which stops being true once `EVENT_ID` is a real
+     event. It should use a deliberately absent id
+     (`'00000000-0000-0000-0000-000000000000'`) instead.
 - **01** — the seed occasionally fails the first row right after `supabase db reset` with
   "profile update for demo.new@… failed: Database client error. Retrying the connection."
   Re-running `pnpm db:seed` succeeds. A short wait or a retry around the first write would
@@ -369,6 +378,16 @@ either side of 04. Both were confirmed present once 04 landed.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 00:35` — **full six-workstream state is reachable and green; handed 03 a
+  verified patch rather than editing their files.** Made the pending-fix status unmissable
+  at the top of this file, since "merged" read as "nothing left to pull" and two bug fixes
+  are still only on the branch. Then re-grafted 06 onto the integrated main (01–05) and
+  reproduced the `invitations_event_fk` collision I reported last tick — it is still there,
+  and 06 is the next merge, so it will turn main red. Worked out the fix and **confirmed it
+  takes the suite to 135/135 with nothing skipped**, including one dependent change to a
+  test of mine that lives in 03's file. Did not commit it: 03 committed two minutes ago and
+  06 seven minutes ago, so editing files they are actively working in would collide. The
+  exact change is written out under Needs from others for them to apply.
 - `2026-10-25 00:05` — **05 is merged into main (with 04), and verifying the integrated
   state found two real bugs of mine.** Main now carries 01–05; **532 unit, 134 integration
   (1 skipped, waiting on 06) and 42 e2e pass with nothing else skipped** — Scene 4, the AI
