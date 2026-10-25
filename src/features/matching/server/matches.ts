@@ -108,6 +108,16 @@ export function invalidateMatches(...userIds: string[]): void {
   cache.deleteWhere((key) => userIds.some((id) => key.startsWith(`${id}|`)));
 }
 
+/**
+ * Drop every cached list. Entries are keyed by who is looking, so there is no way to find the
+ * lists that *contain* a given person — which is exactly what withdrawing consent to matching
+ * has to reach. Consent changes are rare and the cache is a five-minute optimisation, so
+ * clearing it is both cheap and the only answer that is certainly right.
+ */
+export function clearMatchCache(): void {
+  cache.clear();
+}
+
 async function toMatchCards(viewer: MatchingPreferences, ranked: readonly RankedCandidate[]): Promise<MatchCard[]> {
   const cards = await getPublicCards(ranked.map((r) => r.prefs.userId));
   return mapLimit(ranked, EXPLAIN_CONCURRENCY, async ({ prefs, result }) => ({

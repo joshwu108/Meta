@@ -71,7 +71,19 @@ exclusion, because a cohort is the number of people interested, not the number w
 `business-rls.test.ts` still asserted that a 400-person cohort returns no venues. The test now
 asserts the intent that replaced it, and still checks that distance excludes.
 
-### 8. Two prompt ids promised a fixture that was never written
+### 8. Withdrawing consent did not reach the caches above it
+
+`getSharablePreferences` is the gate for every cross-user read, but match lists are cached per
+viewer for five minutes and graph snapshots for a minute, and both sit *above* that gate.
+`PATCH /api/agent/permissions` invalidated neither, so a member who turned off `allow_matching`
+stayed on other people's match lists — name, and an explanation derived from the preferences they
+had just withdrawn — until the entry expired. Invalidating their own entry cannot help: the cache
+is keyed by who is looking, not by who is in the list. The route now clears both caches when a
+patch touches one of the three `allow_*` flags; consent changes are rare and the caches are
+optimisations, so clearing is cheap and certainly right.
+`tests/integration/social/consent-revocation.test.ts` covers it.
+
+### 9. Two prompt ids promised a fixture that was never written
 
 `matching.explain_match` and `events.reconnect_followup` sat in the registry with no definition, no
 fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Removed.
@@ -102,7 +114,7 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 | Suite | Result |
 |---|---|
 | `pnpm test` (unit) | 1019 passed |
-| `pnpm test:integration` (integration + db) | 259 passed |
+| `pnpm test:integration` (integration + db) | 262 passed |
 | `pnpm test:e2e` (Playwright, bundled Chromium) | 87 passed |
 | `tests/audit/core-flows-chrome.ts` (real Chrome) | 8/8 steps |
 

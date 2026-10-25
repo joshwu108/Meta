@@ -7,6 +7,7 @@ export { normalizeTag, normalizeTags } from './server/similarity';
 export { resolveCategories } from './server/categories';
 export { centroid, haversineKm, toLatLng, type LatLng } from './server/geo';
 export {
+  clearMatchCache,
   getMatchesForViewer,
   invalidateMatches,
   type MatchCard,

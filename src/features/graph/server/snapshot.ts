@@ -29,6 +29,15 @@ export function invalidateGraph(...userIds: string[]): void {
   cache.deleteWhere((key) => userIds.some((id) => key.startsWith(`${id}|`)));
 }
 
+/**
+ * Drop every cached snapshot, for the same reason `clearMatchCache` exists: a snapshot is keyed
+ * by who is looking, and a member who withdraws consent has to leave other people's graphs, where
+ * the agent had put them as a suggestion.
+ */
+export function clearGraphCache(): void {
+  cache.clear();
+}
+
 export type GraphOptions = { includeSuggestions?: boolean };
 
 /**
