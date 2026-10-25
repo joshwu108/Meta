@@ -9,62 +9,20 @@ import type { Venue } from './venue';
 /**
  * Stand-ins for exports owned by other workstreams (README §5 "Stubs", spec §11).
  * Delete each when the real export reaches main:
- * - getSharableBatch      → 02 `getSharablePreferencesBatch(ids, 'demand')` from '@/features/agent'
  * - findCandidates        → 05 `findCandidateBusinesses(criteria)` from '@/features/business'
  * - loadVenue             → 05 venue/capabilities export (requested in PROGRESS "Needs from others")
- * These read other workstreams' tables with the service role only because their contracts
- * have not landed; they apply the same consent rule 02 does.
+ * The 05 stand-ins read 05's tables with the service role only because 05's venue export has not
+ * landed. Preferences already go through 02's real `getSharablePreferencesBatch` (below).
  */
 
-type PrefRow = {
-  user_id: string; interests: string[]; interest_categories: string[]; availability_slots: string[];
-  social_goals: string[]; group_size_pref: string | null; budget_min_cents: number | null;
-  budget_max_cents: number | null; travel_radius_km: number | string; activity_prefs: string[];
-};
-type ProfileRow = { id: string; neighborhood: string | null; coarse_lat: number | string | null; coarse_lng: number | string | null };
-
-const num = (v: number | string | null): number | null => (v == null ? null : Number(v));
-
-function toDemandUser(p: PrefRow, profile: ProfileRow): DemandUser {
-  return {
-    userId: p.user_id,
-    interests: p.interests,
-    interestCategories: p.interest_categories as EventCategory[],
-    availabilitySlots: p.availability_slots as AvailabilitySlot[],
-    socialGoals: p.social_goals as DemandUser['socialGoals'],
-    groupSizePref: p.group_size_pref as DemandUser['groupSizePref'],
-    budgetMin: p.budget_min_cents,
-    budgetMax: p.budget_max_cents,
-    travelRadiusKm: Number(p.travel_radius_km),
-    activityPrefs: p.activity_prefs,
-    coarseLat: num(profile.coarse_lat),
-    coarseLng: num(profile.coarse_lng),
-    neighborhood: profile.neighborhood,
-  };
-}
-
-/** Stub of 02's consent boundary for purpose 'demand': only users with allow_demand_aggregation. */
-export async function stubSharableBatch(admin: SupabaseClient, ids: readonly string[]): Promise<Map<string, DemandUser>> {
+/**
+ * 02 is on this branch: delegate to its consent boundary for purpose 'demand' (allow_demand_aggregation),
+ * so 04 never reads 02's private tables. Signature kept so wiring and tests are unchanged.
+ */
+export async function stubSharableBatch(_admin: SupabaseClient, ids: readonly string[]): Promise<Map<string, DemandUser>> {
   if (ids.length === 0) return new Map();
-  const list = [...ids];
-  const [agents, prefs, profiles] = await Promise.all([
-    admin.from('agent_profiles').select('user_id, consent').in('user_id', list),
-    admin.from('user_preferences').select('*').in('user_id', list),
-    admin.from('profiles').select('id, neighborhood, coarse_lat, coarse_lng').in('id', list),
-  ]);
-  const failed = agents.error ?? prefs.error ?? profiles.error;
-  if (failed) throw new Error(`demand collect failed: ${failed.message}`);
-  const consenting = new Set(
-    (agents.data as Array<{ user_id: string; consent: Record<string, unknown> | null }>)
-      .filter((a) => a.consent?.['allow_demand_aggregation'] === true)
-      .map((a) => a.user_id),
-  );
-  const byId = new Map((profiles.data as ProfileRow[]).map((p) => [p.id, p]));
-  return new Map(
-    (prefs.data as PrefRow[])
-      .filter((p) => consenting.has(p.user_id) && byId.has(p.user_id))
-      .map((p) => [p.user_id, toDemandUser(p, byId.get(p.user_id) as ProfileRow)]),
-  );
+  const { getSharablePreferencesBatch } = await import('@/features/agent');
+  return getSharablePreferencesBatch(ids, 'demand');
 }
 
 type VenueRow = {
