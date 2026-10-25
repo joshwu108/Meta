@@ -1,0 +1,6 @@
+// Public surface of workstream 06. Other features import only from here.
+export { getEventPublic, getUpcomingEventsForUser } from "./server/contracts";
+/** Ranked events with grounded explanations for a viewer (used by 02's `suggest_events`). */
+export { getRecommendedEvents } from "./server/recommended";
+export type { EventCard } from "./server/cards";
+export type { RecommendedEvent } from "./server/recommended";

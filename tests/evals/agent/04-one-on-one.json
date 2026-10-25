@@ -1,0 +1,19 @@
+{
+  "id": "04-one-on-one",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "I'd love a running buddy, just one person, Sunday mornings."
+    }
+  ],
+  "expected": {
+    "interests": [
+      "running"
+    ],
+    "availabilitySlots": [
+      "sun_day"
+    ],
+    "groupSizePref": "one_on_one",
+    "budgetMaxCents": null
+  }
+}
