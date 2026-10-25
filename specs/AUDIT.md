@@ -137,6 +137,11 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 - **The consent boundary holds.** No feature outside `src/features/agent/` reads 02's tables
   directly, and all six cross-user paths — matching, group planning, venue requests, event
   recommendations, follow-ups, demand — go through `getSharablePreferences*` with a purpose.
+- **Two migrations can no longer share a version.** Supabase keys `schema_migrations` on the
+  leading digits, so a clash stops `supabase db reset` partway and leaves the database half-built.
+  That happened once here when 07's graph and import migrations both arrived as `0700`, and it
+  will happen again — each workstream picks numbers on its own branch and nothing notices until
+  the branches meet. A unit test now catches it in seconds instead.
 - **"Delete my Instagram data" empties everything, and will keep doing so.** 07's own integration
   test already asserted zero rows left rather than trusting the counts the call reports, which is
   the right way round. The one weakness was that the list of tables lived in two places by hand, so
@@ -169,7 +174,7 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 
 | Suite | Result |
 |---|---|
-| `pnpm test` (unit) | 1095 passed |
+| `pnpm test` (unit) | 1099 passed |
 | `pnpm test:integration` (integration + db) | 291 passed |
 | `pnpm test:e2e:prod` (Playwright, production build) | 90 passed in 2.9 min |
 | `tests/audit/core-flows-chrome.ts` (real Chrome) | 8/8 steps |
@@ -181,7 +186,7 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 `ws/07-import` is now merged into this branch, so the feature runs and is tested. Three things the
 merge needed, which whoever lands this on `main` should know about:
 
-**The migration number collided.** Both `0700_graph_edge_events.sql` and `0700_import.sql` claim
+**The migration number collided** (now guarded by `tests/unit/migrations/numbering.test.ts`). Both `0700_graph_edge_events.sql` and `0700_import.sql` claim
 version `0700`, and Supabase keys `schema_migrations` on that number, so `supabase db reset` fails
 outright with a duplicate key — not a warning, a hard stop. The import migration is renumbered to
 `0703` here, since the graph one is already on the main line and this one had not merged anywhere.
