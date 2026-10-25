@@ -5,17 +5,6 @@ import Link from "next/link";
 import { Button, EmptyState } from "@/features/core/components/ui";
 import s from "./events.module.css";
 
-/** Route-level loading state: a title bar and a few card-shaped placeholders. */
-export function ListSkeleton({ label, rows = 3 }: { label: string; rows?: number }) {
-  return (
-    <div className={s.column} aria-busy="true" aria-live="polite">
-      <span className={s.visuallyHidden}>{label}</span>
-      <div className={s.skeletonTitle} />
-      {Array.from({ length: rows }, (_, i) => <div key={i} className={s.skeleton} />)}
-    </div>
-  );
-}
-
 /** Route-level error state with a retry that re-renders the segment. */
 export function ScreenError({ title, reset }: { title: string; reset: () => void }) {
   return (
