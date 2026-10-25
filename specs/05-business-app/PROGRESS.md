@@ -2,16 +2,17 @@
 
 Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../README.md`](../README.md)
 
-## Status: PR #4 open with five fixes for main
+## Status: PR #4 open with six fixes for main
 
 All six workstreams are merged into `main`, and the whole product is green there:
 **800 unit, 213 integration, 62 db and 59 e2e tests pass with nothing skipped**, plus
 typecheck, lint and build (verified 2026-10-25 01:30 on a fresh `db reset` + `db:seed`).
 
-**Five 05 bug fixes are still only on `ws/05-business`** — they landed after the branch was
+**Six 05 bug fixes are still only on `ws/05-business`** — they landed after the branch was
 first merged. **https://github.com/joshwu108/Meta/pull/4** is open for them, with the full
 write-up and a test plan; merging it is all that is needed. The three originally listed here
-plus the insights scope fix (`c91d1b9`) and the onboarding dead-end warning (`39c213f`):
+plus the insights scope fix (`c91d1b9`), the onboarding dead-end warning (`39c213f`) and the
+error-screen recovery fix (`51d13e3`):
 
 - `e3f960e` + `cf29fb6` — **every time on the business screens is the venue's wall clock.**
   The editor read and wrote `datetime-local` in the browser's zone, and the display
@@ -24,6 +25,11 @@ plus the insights scope fix (`c91d1b9`) and the onboarding dead-end warning (`39
   `profiles(id)`, so every publish and proposal decision silently failed its audit insert
   (01's helper logs and returns rather than throwing). A publish now records the venue's
   owner.
+- `51d13e3` — **"Try again" on the business error screen could not recover.** `reset()`
+  re-renders the boundary against the client router cache, whose entry for the segment is the
+  failed payload, so the owner saw the same error however often they clicked, even after the
+  server was healthy. Clearing and refetching now happen in one transition. The same defect
+  is in 02's shared `ScreenError`, reported under Needs from others.
 
 Every P0 and P1 item below is ticked.
 
