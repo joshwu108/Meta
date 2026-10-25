@@ -13,7 +13,7 @@ import { OWNERS, appIsReady, revisionsAvailable, signIn, trySeedPendingProposal 
 
 test.describe('Scene 4 — a business approves an AI proposal', () => {
   // The editor's `datetime-local` is read in the venue's zone (VENUE_TIMEZONE); CI runners are UTC.
-  test.use({ timezoneId: 'America/Los_Angeles' });
+  test.use({ timezoneId: 'UTC' });
 
   test.beforeEach(async ({ page }) => {
     test.skip(!(await appIsReady(page)), 'the app is not reachable');

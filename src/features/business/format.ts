@@ -1,4 +1,5 @@
 /** Date, time and money formatting for the business screens. Shared by server and client. */
+import { VENUE_TIMEZONE, wallTimeInZone, zonedWallTimeToUtc } from './venue-time';
 
 export const VENUE_LOCALE = 'en-US';
 
@@ -32,13 +33,35 @@ export const formatPriceRange = (min: number | null, max: number | null): string
   return formatPrice(min ?? max);
 };
 
-/** `18:30` for a datetime-local input, in the viewer's own zone. */
-export const toDateTimeLocalValue = (iso: string): string => {
-  const date = new Date(iso);
+/**
+ * `datetime-local` values are rendered and read in the **venue's** zone, not the browser's.
+ *
+ * A venue's opening hours are a wall-clock fact about the venue, and the server validates
+ * against them in `VENUE_TIMEZONE`. Using the browser's zone meant an owner on a laptop set
+ * to anything else saw times shifted by hours and had plausible entries rejected — which is
+ * exactly what a UTC CI runner hit.
+ */
+export const toDateTimeLocalValue = (iso: string, timezone: string = VENUE_TIMEZONE): string => {
+  const wall = wallTimeInZone(timezone, new Date(iso));
   const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-    date.getHours(),
-  )}:${pad(date.getMinutes())}`;
+  return `${wall.year}-${pad(wall.month)}-${pad(wall.day)}T${pad(wall.hour)}:${pad(wall.minute)}`;
 };
 
-export const fromDateTimeLocalValue = (value: string): string => new Date(value).toISOString();
+export const fromDateTimeLocalValue = (value: string, timezone: string = VENUE_TIMEZONE): string => {
+  const [date, time] = value.split('T');
+  const [year, month, day] = (date ?? '').split('-').map(Number);
+  const [hour, minute] = (time ?? '').split(':').map(Number);
+  if ([year, month, day, hour, minute].some((n) => !Number.isFinite(n))) {
+    // An empty or half-typed field must not throw in the browser; the route's schema
+    // rejects it with a VALIDATION message the form can show on the field.
+    return '';
+  }
+  return zonedWallTimeToUtc(timezone, year!, month!, day!, hour!, minute!).toISOString();
+};
+
+/** How the venue's zone is named next to a time field, e.g. "PST". */
+export const timezoneLabel = (timezone: string = VENUE_TIMEZONE, at: Date = new Date()): string => {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'short' })
+    .formatToParts(at);
+  return parts.find((p) => p.type === 'timeZoneName')?.value ?? timezone;
+};
