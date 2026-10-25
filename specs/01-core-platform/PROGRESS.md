@@ -76,8 +76,9 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Needs from others
 
-- 05: Scene 4 passes on `pnpm dev` only by accident. On `pnpm test:e2e:prod` (production build) 2 of 4 tests fail: (1) clicks on Review land before hydration and are dropped; use `clickUntilURL(page, link, /\/business\/proposals\/[0-9a-f-]{36}/)` from `tests/e2e/helpers.ts`. (2) With navigation actually waited for, `getByText(/this is an estimate, not rsvps/i)` is not on the detail page (it is on the list card; the detail says "These are not RSVPs and nobody has committed to come."), and the reject test's `you rejected this proposal` check likely has the same cause. On dev the slow first render leaves the test on the list page, where the copy exists. Once fixed, tell 01 and CI switches to `E2E_SERVER=prod` (03's ask). All other 59 tests pass on the production build.
-- 03: production-server E2E is available (`pnpm test:e2e:prod`); CI switch is held only on 05's Scene 4 (above).
+- 05: 01 fixed Scene 4's navigation and copy checks on ws/01-core (passes on dev and 3/4 on the production build). The remaining prod failure is yours: the proposal detail page throws React hydration error #418 (text mismatch, most likely a date rendered in the server machine's timezone) on a full load, and the reject click made during React's recovery is lost. Your branch's three-zone rendering fix probably resolves it once on main. Also on main: `reject_proposal` still logs with a business id (01's helper now logs `agent_log.insert_failed` with an FK hint); your branch fixed it.
+
+- 03: production-server E2E is available (`pnpm test:e2e:prod`); CI switch is held only on 05's hydration mismatch (above). Your `messaging.spec.ts` flaked again in a full dev run (90s timeout; passes alone).
 - 03: `tests/e2e/messaging.spec.ts` timed out (90s) once in the full 61-test run on a fresh stack; passes alone twice (5–8s). Likely the polling wait under dev-server load.
 - 06: `vitest run` prints "something prevents the main process from exiting" after the db project; probably a `pg` pool left open in `tests/db/support`.
 - README §4 (integrator): `logAgentAction(...)` now returns `Promise<boolean>` (true = row written); update the contract line. Callers that ignore the result need no change.
@@ -110,6 +111,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-25 00:10 — Wakeup: main unchanged. 03's diagnosis shows the dev-only `frame.join` crash failing CI, so worked on unblocking the prod-build switch: fixed 05's Scene 4 navigation/copy checks; on prod 3/4 pass, the last blocked by 05's hydration mismatch (#418). Dev suite 60/61 (03 messaging flake). CI stays on dev.
 - 2026-10-25 02:40 — Wakeup: main unchanged. 03 asked for CI E2E on `next start`. Added opt-in `E2E_SERVER=prod`, a hydration marker and `waitForHydration`/`clickUntilURL` helpers. On the production build 59/61 pass; 05's Scene 4 has two latent test bugs that dev timing hides (details in Needs from others), so CI stays on dev for now. Dev suite 61/61 green.
 - 2026-10-25 01:55 — Wakeup: main unchanged (9e2c56b). Fixed 05's two seed bugs: event times now resolve in `VENUE_TIMEZONE` (default America/Los_Angeles) regardless of the seeding machine, and each event moves to the next day its venue is open. Seeded events verified at their intended local hours. 1007 vitest + 61/61 Playwright green. Next: integrator merge of ws/01-core.
 - 2026-10-24 23:00 — All six workstreams are on main (9e2c56b). Merged it: one conflict (onboarding page, took 02's real flow over 01's placeholder). 06's `toEventSummary` lacked 01's new `category`; filled. Clean state on 0100–0600: seed fills preferences (14), businesses, events, groups, 37 RSVPs; types match a fresh `db:types`; 1002 vitest + 60/61 Playwright green (03's messaging test flaked once under load, passes alone). Next: keep the full suite green on main.
