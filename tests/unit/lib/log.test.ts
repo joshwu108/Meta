@@ -19,6 +19,14 @@ describe('redact', () => {
     });
   });
 
+  it('never logs screenshot bytes (07)', () => {
+    expect(redact({ images: [{ data: 'AAAA' }], imageData: 'BBBB', count: 2 })).toEqual({
+      images: '[redacted]',
+      imageData: '[redacted]',
+      count: 2,
+    });
+  });
+
   it('serialises errors and truncates very deep objects', () => {
     const out = redact(new Error('oops')) as { name: string; message: string };
     expect(out.name).toBe('Error');

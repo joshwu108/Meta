@@ -95,6 +95,30 @@ describe('generateStructured against the model', () => {
     expect(transport).toHaveBeenCalledTimes(2);
   });
 
+  it('sends images ahead of the JSON text block and keeps them on retry', async () => {
+    const transport = vi.fn().mockResolvedValueOnce(toolMessage({ status: 'bad' })).mockResolvedValueOnce(toolMessage({ status: 'ok', source: 'vision' }));
+    setStructuredTransport(transport);
+    const images = [
+      { mediaType: 'image/jpeg' as const, data: 'AAAA' },
+      { mediaType: 'image/png' as const, data: 'BBBB' },
+    ];
+    await expect(generateStructured({ prompt: 'core.healthcheck', input: { n: 2 }, schema, images })).resolves.toEqual({ status: 'ok', source: 'vision' });
+    const expected = [
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: 'AAAA' } },
+      { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'BBBB' } },
+      { type: 'text', text: '{"n":2}' },
+    ];
+    expect(transport.mock.calls[0]![0].messages[0].content).toEqual(expected);
+    expect(transport.mock.calls[1]![0].messages[0].content).toEqual(expected);
+  });
+
+  it('keeps a plain text message when images is empty', async () => {
+    const transport = vi.fn().mockResolvedValue(toolMessage({ status: 'ok', source: 'model' }));
+    setStructuredTransport(transport);
+    await generateStructured({ prompt: 'core.healthcheck', input: { q: 1 }, schema, images: [] });
+    expect(transport.mock.calls[0]![0].messages[0].content).toBe('{"q":1}');
+  });
+
   it('treats transport errors as retryable and honours maxRetries', async () => {
     const transport = vi.fn().mockRejectedValue(new Error('network'));
     setStructuredTransport(transport);

@@ -1,6 +1,6 @@
 import { ApiError } from '@/lib/api/errors';
 import type { ModelTier } from '../models';
-import type { AiProvider, AiProviderId, AiRequest, AiResponse } from './types';
+import type { AiMessage, AiProvider, AiProviderId, AiRequest, AiResponse } from './types';
 
 /**
  * Shared transport for vendors that implement the OpenAI Chat Completions shape. Both of Meta's
@@ -24,6 +24,22 @@ export type OpenAiCompatOptions = {
   dashboard: string;
   fetchImpl?: typeof fetch;
 };
+
+/**
+ * Images reach this transport only if a caller sends them to a provider that cannot take them.
+ * Vision on the Chat Completions shape needs a vendor-specific image encoding that neither Meta
+ * API is wired for here, so this refuses rather than silently dropping the pictures and answering
+ * from the text alone — a wrong answer is worse than a clear failure.
+ */
+function toText(content: AiMessage['content'], label: string): string {
+  if (typeof content === 'string') return content;
+  if (content.some((part) => part.type === 'image')) {
+    throw new ApiError('AI_UNAVAILABLE', `${label} cannot take images; use AI_PROVIDER=anthropic for this call`, 503, {
+      fatal: true,
+    });
+  }
+  return content.map((part) => (part.type === 'text' ? part.text : '')).join('');
+}
 
 type CompletionEnvelope = {
   choices?: { message?: { content?: string | null }; finish_reason?: string | null }[];
@@ -89,7 +105,7 @@ export function createOpenAiCompatProvider(o: OpenAiCompatOptions): AiProvider {
     async complete(req: AiRequest): Promise<AiResponse> {
       const messages = [
         ...(req.system ? [{ role: 'system' as const, content: req.system }] : []),
-        ...req.messages.map(({ role, content }) => ({ role, content })),
+        ...req.messages.map(({ role, content }) => ({ role, content: toText(content, o.label) })),
       ];
       const response = await doFetch(endpoint, {
         method: 'POST',

@@ -10,4 +10,4 @@ export { chat } from './chat';
 export { MODELS, LLAMA_MODELS, type ModelTier } from './models';
 export { PROMPT_IDS, PROMPTS, isPromptId, type PromptId, type PromptDefinition } from './prompts';
 export { resolveProvider, setProviderOverride, type AiProvider, type AiProviderId } from './providers';
-export type { ChatMessage, ChatOptions, GenerateStructuredOptions } from './types';
+export type { ChatMessage, ChatOptions, GenerateStructuredOptions, StructuredImage } from './types';

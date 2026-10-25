@@ -629,6 +629,72 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"import_plans": {
+                  Row: {
+                    "ai_used": boolean,"cards": NonNullable<Json>,"created_at": string,"done": NonNullable<Json>,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "ai_used"?: boolean,"cards"?: NonNullable<Json>,"created_at"?: string,"done"?: NonNullable<Json>,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "ai_used"?: boolean,"cards"?: NonNullable<Json>,"created_at"?: string,"done"?: NonNullable<Json>,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "import_plans_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "import_plans_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"import_runs": {
+                  Row: {
+                    "ai_used": boolean,"created_at": string,"id": string,"screens": number,"sources": (string)[],"stats": NonNullable<Json>,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "ai_used"?: boolean,"created_at"?: string,"id"?: string,"screens"?: number,"sources"?: (string)[],"stats"?: NonNullable<Json>,"user_id": string
+                  }
+                  Update: {
+                    "ai_used"?: boolean,"created_at"?: string,"id"?: string,"screens"?: number,"sources"?: (string)[],"stats"?: NonNullable<Json>,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "import_runs_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "import_runs_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"interest_embeddings": {
+                  Row: {
+                    "embedding": string,"tag": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "embedding": string,"tag": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "embedding"?: string,"tag"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"invitations": {
                   Row: {
                     "created_at": string,"event_id": string | null,"group_id": string | null,"id": string,"kind": string,"recipient_id": string,"responded_at": string | null,"sender_id": string,"status": string,"updated_at": string
@@ -718,6 +784,32 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"profile_embeddings": {
+                  Row: {
+                    "embedding": string,"source_hash": string,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "embedding": string,"source_hash": string,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "embedding"?: string,"source_hash"?: string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "profile_embeddings_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "profile_embeddings_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"profiles": {
                   Row: {
@@ -847,6 +939,96 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"taste_dislikes": {
+                  Row: {
+                    "created_at": string,"id": string,"label": string,"source": string,"tag": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"label": string,"source": string,"tag"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"label"?: string,"source"?: string,"tag"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "taste_dislikes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "taste_dislikes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"trait_provenance": {
+                  Row: {
+                    "confirmed_at": string,"field": string,"origin": string,"source": string,"strength": string,"suggestion_id": string | null,"user_id": string,"value": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "confirmed_at"?: string,"field": string,"origin": string,"source"?: string,"strength": string,"suggestion_id"?: string | null,"user_id": string,"value": string
+                  }
+                  Update: {
+                    "confirmed_at"?: string,"field"?: string,"origin"?: string,"source"?: string,"strength"?: string,"suggestion_id"?: string | null,"user_id"?: string,"value"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "trait_provenance_suggestion_id_fkey"
+      columns: ["suggestion_id"]
+isOneToOne: false
+      referencedRelation: "trait_suggestions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "trait_provenance_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "trait_provenance_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"trait_suggestions": {
+                  Row: {
+                    "band": string,"category": string | null,"confidence": number,"created_at": string,"decided_at": string | null,"edited_value": string | null,"evidence": NonNullable<Json>,"expires_at": string,"field": string,"id": string,"label": string,"model": string | null,"run_id": string | null,"status": string,"strength": string | null,"updated_at": string,"user_id": string,"value": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "band": string,"category"?: string | null,"confidence": number,"created_at"?: string,"decided_at"?: string | null,"edited_value"?: string | null,"evidence"?: NonNullable<Json>,"expires_at"?: string,"field": string,"id"?: string,"label": string,"model"?: string | null,"run_id"?: string | null,"status"?: string,"strength"?: string | null,"updated_at"?: string,"user_id": string,"value": string
+                  }
+                  Update: {
+                    "band"?: string,"category"?: string | null,"confidence"?: number,"created_at"?: string,"decided_at"?: string | null,"edited_value"?: string | null,"evidence"?: NonNullable<Json>,"expires_at"?: string,"field"?: string,"id"?: string,"label"?: string,"model"?: string | null,"run_id"?: string | null,"status"?: string,"strength"?: string | null,"updated_at"?: string,"user_id"?: string,"value"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "trait_suggestions_run_id_fkey"
+      columns: ["run_id"]
+isOneToOne: false
+      referencedRelation: "import_runs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "trait_suggestions_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "trait_suggestions_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"user_preferences": {
                   Row: {
                     "activity_prefs": (string)[],"availability_slots": (string)[],"budget_max_cents": number | null,"budget_min_cents": number | null,"dealbreakers": (string)[],"field_sources": NonNullable<Json>,"group_size_pref": string | null,"interest_categories": (string)[],"interests": (string)[],"social_goals": (string)[],"travel_radius_km": number,"updated_at": string,"user_id": string
@@ -938,6 +1120,9 @@ isOneToOne: true
                            },
 "haversine_km":
 { Args: { "lat1": number,"lat2": number,"lng1": number,"lng2": number }; Returns: number
+                           },
+"import_decide":
+{ Args: { "p_decisions": Json,"p_dislikes": Json,"p_provenance": Json,"p_user": string }; Returns: Json
                            },
 "invite_to_group":
 { Args: { "p_group": string,"p_recipients": (string)[],"p_sender": string }; Returns: {

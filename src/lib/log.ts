@@ -29,6 +29,9 @@ export const REDACTED_KEYS = [
   'prompt',
   'phone',
   'address',
+  // 07: screenshot bytes never reach logs
+  'images',
+  'imagedata',
 ] as const;
 
 const REDACTED = '[redacted]';

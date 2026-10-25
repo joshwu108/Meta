@@ -32,12 +32,23 @@ function describeIssues(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+/** JSON input as plain text, or image parts followed by the JSON text part when images are given. */
+function userContent<T>(opts: GenerateStructuredOptions<T>): AiMessage['content'] {
+  const text = JSON.stringify(opts.input ?? {});
+  if (!opts.images || opts.images.length === 0) return text;
+  return [
+    ...opts.images.map((image) => ({ type: 'image' as const, mediaType: image.mediaType, data: image.data })),
+    { type: 'text' as const, text },
+  ];
+}
+
 /**
  * Ask the configured model for JSON that matches `schema`. The schema is sent as the provider's
  * native structured-output mechanism (forced tool call on Anthropic, `response_format` on Llama)
  * and the result is validated with Zod. On validation failure the call is retried once with the
  * error appended; after that `AI_UNAVAILABLE` is thrown.
- * With `MOCK_AI=1` the fixture for the prompt id is returned (still validated).
+ * With `MOCK_AI=1` the fixture for the prompt id is returned (still validated). With `images`,
+ * the user message carries them ahead of the JSON and every retry resends them.
  */
 export async function generateStructured<T>(opts: GenerateStructuredOptions<T>): Promise<T> {
   const started = Date.now();
@@ -59,7 +70,7 @@ export async function generateStructured<T>(opts: GenerateStructuredOptions<T>):
   const model = provider.modelFor(tier);
   const schema = zodToJsonSchema(opts.schema, { $refStrategy: 'none' }) as Record<string, unknown>;
   const retries = opts.maxRetries ?? DEFAULT_RETRIES;
-  const baseMessages: AiMessage[] = [{ role: 'user', content: JSON.stringify(opts.input ?? {}) }];
+  const baseMessages: AiMessage[] = [{ role: 'user', content: userContent(opts) }];
 
   let messages = baseMessages;
   let lastError: unknown;

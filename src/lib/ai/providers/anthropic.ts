@@ -4,6 +4,7 @@ import { ApiError } from '@/lib/api/errors';
 import { getAnthropic } from '../client';
 import { MODELS } from '../models';
 import type { ModelTier } from '../models';
+import type { AiMessage } from './types';
 import type { AiProvider, AiRequest, AiResponse } from './types';
 
 const TOOL_NAME = 'emit_result';
@@ -17,6 +18,19 @@ export type AnthropicProviderOptions = {
  * Anthropic implementation. Structured mode is done with a forced single-tool call, which is
  * Claude's reliable way to get schema-shaped JSON; free text reads the text blocks.
  */
+/** Vendor-neutral parts to Anthropic blocks. A plain string is passed through untouched. */
+function toAnthropicContent(content: AiMessage['content']): Anthropic.MessageParam['content'] {
+  if (typeof content === 'string') return content;
+  return content.map((part) =>
+    part.type === 'text'
+      ? { type: 'text' as const, text: part.text }
+      : {
+          type: 'image' as const,
+          source: { type: 'base64' as const, media_type: part.mediaType, data: part.data },
+        },
+  );
+}
+
 export function createAnthropicProvider(options: AnthropicProviderOptions = {}): AiProvider {
   const send = options.send ?? ((params) => getAnthropic().messages.create(params));
 
@@ -28,7 +42,7 @@ export function createAnthropicProvider(options: AnthropicProviderOptions = {}):
         model: req.model,
         max_tokens: req.maxTokens,
         system: req.system,
-        messages: req.messages.map(({ role, content }) => ({ role, content })),
+        messages: req.messages.map(({ role, content }) => ({ role, content: toAnthropicContent(content) })),
         ...(req.json
           ? {
               tools: [

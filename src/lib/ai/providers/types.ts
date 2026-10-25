@@ -9,7 +9,15 @@ export type AiJsonSchema = {
   schema: Record<string, unknown>;
 };
 
-export type AiMessage = { role: 'user' | 'assistant'; content: string };
+/**
+ * A piece of a message. Text-only messages stay a plain string; a message carrying images becomes
+ * a list of parts, images first, so a provider can map them to its own block format.
+ */
+export type AiContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image'; mediaType: 'image/jpeg' | 'image/png' | 'image/webp'; data: string };
+
+export type AiMessage = { role: 'user' | 'assistant'; content: string | readonly AiContentPart[] };
 
 /**
  * One vendor-neutral completion request. `json` switches the call into structured mode: the

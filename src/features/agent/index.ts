@@ -1,10 +1,11 @@
 import "server-only";
 import type { SharablePreferences } from "@/shared/types";
 import { DEFAULT_CONSENT, type Consent, type SharingPurpose } from "./schemas";
-import { adminLoadConsent, adminLoadSources, adminRecentShareLogs, adminWriteShareLogs } from "./server/repo";
+import { adminLoadConsent, adminLoadSources, adminRecentShareLogs, adminWriteShareLogs, getPreferences } from "./server/repo";
 import { shareBatch, toAttendeeSharing, type AttendeeSharing, type SharingDeps } from "./server/sharable";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { addConfirmedTraitsWith, removeImportedTraitsWith, type ConfirmedTraits } from "./server/confirmed-traits";
 
 /** Service-role client, untyped: 01's generated types do not include ws02 tables until `pnpm db:types` runs. */
 const getAdminClient = (): SupabaseClient => createAdminClient() as unknown as SupabaseClient;
@@ -72,4 +73,32 @@ export async function getAttendeeSharing(userIds: readonly string[]): Promise<Ma
 export async function getConsent(userId: string): Promise<Consent> {
   const [row] = await adminLoadConsent(getAdminClient(), [userId]);
   return row?.consent ?? DEFAULT_CONSENT;
+}
+
+/**
+ * For 07: union values the user explicitly confirmed (Love it / Yes / Edit) into their
+ * preferences through 02's own patch rules. Normalized tags, derived categories, max 50
+ * interests (`VALIDATION`). Fields still `ai_inferred` before onboarding review stay so.
+ */
+export async function addConfirmedTraits(
+  userId: string,
+  traits: ConfirmedTraits,
+): Promise<{ interests: string[]; activityPrefs: string[] }> {
+  return addConfirmedTraitsWith(getAdminClient(), userId, traits);
+}
+
+/**
+ * For 07's dedupe and cap checks: the owner's own interests, activity styles and dealbreakers.
+ * Owner-scoped and server-only; it never leaves 07's server code.
+ */
+export async function getOwnPreferencesForImport(
+  userId: string,
+): Promise<{ interests: string[]; activityPrefs: string[]; dealbreakers: string[] }> {
+  const prefs = await getPreferences(getAdminClient(), userId);
+  return { interests: prefs.interests, activityPrefs: prefs.activityPrefs, dealbreakers: prefs.dealbreakers };
+}
+
+/** For 07's "Delete my Instagram data" → Remove: drop those values; touched fields become user_set. */
+export async function removeImportedTraits(userId: string, traits: ConfirmedTraits): Promise<void> {
+  return removeImportedTraitsWith(getAdminClient(), userId, traits);
 }

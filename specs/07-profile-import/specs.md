@@ -4,7 +4,27 @@
 **Depends on:** 01 (auth, envelope, `generateStructured`, `logAgentAction`, rate guard, log redaction, UI primitives), 02 (two new server exports in §20 and an onboarding entry point) — stubbed until available
 **Consumed by:** 02 (pending-suggestion count and, P1, provenance badges). 03, 04 and 06 consume nothing from 07 directly: they see accepted traits only through 02's existing `getSharablePreferences()`
 **Read first:** [`../README.md`](../README.md) sections 2–5, [`../02-onboarding-and-agent/specs.md`](../02-onboarding-and-agent/specs.md) sections 4–5
-**Status:** Proposed. Requires the contract changes in §20 to land on `main` before implementation starts. Spec 02 §3 currently lists "Facebook/Instagram enrichment" as out of scope; this workstream is where that work lives.
+**Status:** Building on `ws/07-import`. **Screenshots first:** the MVP reads screenshots the user chooses to share (Instagram's "Your Algorithm" screen, optionally Explore) with Claude vision; the "Download your information" export described in §5–§9 below is **Phase 3**. §0 is the source of truth where it differs from the rest. UI copy: "Bring in your Instagram taste", never "Connect Instagram".
+
+---
+
+## 0. What is built (screenshots first)
+
+**Flow.** `/agent/import` (linked from `/agent/preferences`, a card on `/discover`, and an optional onboarding step opened from Talk with Skip first): choose what to share (Your Algorithm on, Explore off, a 3-step how-to each) → pick 1–4 PNG/JPEG/WebP screenshots, resized in the browser to ≤ 1568 px and re-encoded as JPEG 0.85 (strips EXIF), ≤ 4 MB total → **Send** → review cards → **Done for now** → "Your plan".
+
+**Server.** `POST /api/import/screens` (multipart, `maxDuration = 60`): magic-byte type check, ≤ 1.5 MB per file, ≤ 4 MB total, `aiRateLimiter`, max 10 runs a day. Images go to `import.read_screens` (smart, vision) in memory and are dropped; they are never logged (`images`, `imageData` in `REDACTED_KEYS`) or stored. Output: screens with kind, summary, topics (`listed | see_more | see_less`) and Explore themes with tile counts; all-`other` → `VALIDATION`. Labels map to a ~150-tag vocabulary plus 8 activity styles by exact/alias match (`normalizeTag`); leftovers (≤ 60) go to `import.map_labels` (fast); a code validator keeps only cited, on-list values; then the sensitive filter runs. Confidence is deterministic (`server/weights.ts`): topic 0.6, summary mention 0.3, Explore 0.15 per tile capped at 0.45, model "close" × 0.8; combined 1 − Π(1 − w), capped 0.95; Strong ≥ 0.7, Some ≥ 0.5, Weak ≥ 0.3. Dedupe against the profile, pending suggestions and "not me"; ≤ 25 per run.
+
+**Review.** Interests, Activity style and Less of this (see-less topics). Each card: label, `AiTag` "AI suggestion", band (Weak under "Maybe"), "Why?" with ≤ 3 evidence lines. Actions: Love it / Yes / Edit / Not me; Less of this: Keep as a dislike / Ignore. `POST /api/import/suggestions/decide` is all-or-nothing (`import_decide` SQL function; `CONFLICT` if any item is no longer pending). Approved values go to `user_preferences` only through 02's `addConfirmedTraits` (union, derived categories, 50-interest cap checked first, `ai_inferred` kept before onboarding review), then 03's `invalidateMatches`. Undecided suggestions expire after 30 days (deleted on read).
+
+**Plan (Phase 2).** `GET /api/import/plan` gathers `getSuggestedPeople`, `getRecommendedEvents`, `getNearbyBusinesses` and `listMyGroups`, drops anything that hits a dislike, ranks loved interests first, and asks `import.plan` (smart) for 2–3 cards that reference candidates only as `person:N`, `event:N`, `place:N`, `group:N` with public, non-identifying fields. Code checks every ref and that the action fits it; without AI it falls back to the top person, event and place. Each step is a link into an existing flow (`/match?focus=`, `/events/:id`, `/places`, `/groups/:id`); a step is done when the connection or RSVP exists, or when the user taps Done for places and groups. Nothing is ever done for the user.
+
+**Tables (`0700_import.sql`).** `import_runs` (counts only), `trait_suggestions` (field `interests | activity_prefs | dislike`, value, label, category, confidence, band, evidence, status, strength `love | yes`, `expires_at`), `trait_provenance`, `taste_dislikes` (`not_me | see_less`), `import_plans`. Owner-only select RLS, all writes from server code, no business policy.
+
+**Gates.** `IMPORT_ENABLED=1` and `profiles.is_adult_confirmed`; otherwise no entry point and routes return `FORBIDDEN`.
+
+**02 exports added.** `addConfirmedTraits(userId, { interests?, activityPrefs? })` and `getOwnPreferencesForImport(userId)` (in place of §20's `applyAcceptedTraits`; `removeImportedTraits` comes with Phase 3's delete flow).
+
+**Phase 3.** `/agent/import/settings` with "Delete my Instagram data" (Keep / Remove, no default), and the export JSON parsed in a Web Worker feeding the same pipeline from mapping onward (§5–§9 below).
 
 ---
 
@@ -48,7 +68,7 @@ New requirement ids **IMP-01..IMP-22** (defined in §6). Extends Screen 1 (Welco
 - TikTok "Download your data" JSON adapter: ad interests, favorite hashtags and sounds, searches. Watch history stays excluded: it carries only a video link and a date, and using it would mean fetching each video's metadata from TikTok, which we won't do
 - Instagram saved collections and hashtags from the user's own posts as weaker signals
 - Provenance badge in 02's preference editor ("Added from your Instagram export")
-- "Download what CommonGround stores from my imports" (JSON)
+- "Download what Weave stores from my imports" (JSON)
 - Score-weight calibration from accept/reject rates (§9.6)
 
 ### Out of scope (see §7 and the future scope list in §21)

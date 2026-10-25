@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/features/core";
 import { OnboardingFlow } from "@/features/agent/components/onboarding-flow";
+import { canUseImport } from "@/features/import";
 
 export const metadata = { title: "Welcome · Weave" };
 
@@ -9,5 +10,5 @@ export default async function OnboardingPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/onboarding");
   if (user.profile.onboarding_completed_at) redirect("/discover");
-  return <OnboardingFlow displayName={user.profile.display_name} />;
+  return <OnboardingFlow displayName={user.profile.display_name} importEnabled={await canUseImport(user.id)} />;
 }
