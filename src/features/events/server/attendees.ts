@@ -1,10 +1,16 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { inChunks } from "./chunks";
 import { confirmedAttendees, myRsvps } from "./repo";
 import { ApiError, createAdminClient, getAttendeeSharing, getBlockEdges, getConnectionIds, type AttendeeSharing } from "./stubs";
 import { buildAttendeeList, type AttendeeList, type AttendeeRow, type ViewerContext } from "./visibility";
 
 export type AttendeeData = { viewer: ViewerContext; rows: AttendeeRow[] };
+
+/** 02's reader puts every id in one `.in()`; an event holds up to 500 people, so ask 100 at a time. */
+async function attendeeSharing(userIds: readonly string[]): Promise<Map<string, AttendeeSharing>> {
+  return new Map(await inChunks(userIds, async (part) => [...(await getAttendeeSharing(part))]));
+}
 
 /**
  * Everything the visibility function needs for one viewer and one event's confirmed attendees.
@@ -16,7 +22,7 @@ export async function loadAttendeeData(
 ): Promise<AttendeeData> {
   const attendees = await confirmedAttendees(admin, eventId);
   const [sharing, connectionIds, blocks] = await Promise.all([
-    withInterests ? getAttendeeSharing([viewerId, ...attendees.map((a) => a.userId)]) : Promise.resolve(new Map<string, AttendeeSharing>()),
+    withInterests ? attendeeSharing([viewerId, ...attendees.map((a) => a.userId)]) : Promise.resolve(new Map<string, AttendeeSharing>()),
     getConnectionIds(viewerId),
     getBlockEdges(viewerId),
   ]);

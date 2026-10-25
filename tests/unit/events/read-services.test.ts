@@ -17,6 +17,7 @@ const state = {
   prefs: null as unknown,
   explanations: 0,
   sharingCalls: 0,
+  largestSharingCall: 0,
 };
 
 vi.mock("@/features/events/server/stubs", async (importOriginal) => ({
@@ -26,6 +27,7 @@ vi.mock("@/features/events/server/stubs", async (importOriginal) => ({
   getBlockEdges: async () => [{ blockerId: BLOCKER, blockedId: VIEWER }],
   getAttendeeSharing: async (ids: string[]) => {
     state.sharingCalls += 1;
+    state.largestSharingCall = Math.max(state.largestSharingCall, ids.length);
     return new Map(ids.map((id) => [id, { interests: ["pottery", "coffee"], shareInterestsWithAttendees: id !== STRANGER }]));
   },
   getSharablePreferences: async () => state.prefs,
@@ -79,6 +81,19 @@ describe("getAttendeeList", () => {
     await expect(getAttendeeList(VIEWER, EVENT)).rejects.toMatchObject({ code: "FORBIDDEN" });
     state.mine = new Map([[EVENT, { ...confirmedMine(), status: "waitlisted" }]]);
     await expect(getAttendeeList(VIEWER, EVENT)).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("asks 02 for attendee sharing at most 100 ids at a time", async () => {
+    state.mine = new Map([[EVENT, confirmedMine()]]);
+    state.attendees = Array.from({ length: 250 }, (_, i) => attendee(uid(1000 + i)));
+    state.sharingCalls = 0;
+    state.largestSharingCall = 0;
+
+    const list = await getAttendeeList(VIEWER, EVENT);
+
+    expect(list.count).toBe(250);
+    expect(state.sharingCalls).toBe(3);
+    expect(state.largestSharingCall).toBeLessThanOrEqual(100);
   });
 
   it("hides non-consenting names and blocked users, and gates shared interests on both consents", async () => {
