@@ -3,16 +3,20 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { ApiError } from '@/lib/api/errors';
 import { serverEnv } from '@/lib/env';
 import { log } from '@/lib/log';
-import { getAnthropic } from './client';
 import { fixtureToText, loadFixture } from './mock';
-import { DEFAULT_MAX_TOKENS, MODELS } from './models';
+import { maxTokensFor } from './models';
 import { PROMPTS } from './prompts';
+import { createAnthropicProvider, resolveProvider, setProviderOverride } from './providers';
 import type { ChatOptions } from './types';
 
 type ChatCall = (params: Anthropic.MessageCreateParamsNonStreaming) => Promise<Anthropic.Message>;
-let transport: ChatCall | null = null;
+
+/**
+ * Anthropic-shaped test seam, kept for the existing suites. Shares the one provider override
+ * with `setStructuredTransport`. New tests should prefer `setProviderOverride`.
+ */
 export function setChatTransport(next: ChatCall | null): void {
-  transport = next;
+  setProviderOverride(next ? createAnthropicProvider({ send: next }) : null);
 }
 
 /** Free-text chat completion. With `MOCK_AI=1` returns the fixture text for the prompt id. */
@@ -24,29 +28,27 @@ export async function chat(opts: ChatOptions): Promise<string> {
     return text;
   }
   const definition = PROMPTS[opts.prompt];
-  const model = MODELS[opts.model ?? definition?.model ?? 'smart'];
-  const call: ChatCall = transport ?? ((params) => getAnthropic().messages.create(params));
+  const provider = resolveProvider();
+  const model = provider.modelFor(opts.model ?? definition?.model ?? 'smart');
   try {
-    const response = await call({
+    const response = await provider.complete({
       model,
-      max_tokens: DEFAULT_MAX_TOKENS,
+      maxTokens: maxTokensFor(provider.id),
       system: opts.system ?? definition?.system,
       messages: opts.messages,
     });
-    const text = response.content
-      .filter((block): block is Anthropic.TextBlock => block.type === 'text')
-      .map((block) => block.text)
-      .join('');
     log.info('ai.chat', {
       prompt: opts.prompt,
+      provider: provider.id,
       model,
       latencyMs: Date.now() - started,
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
+      inputTokens: response.usage.inputTokens,
+      outputTokens: response.usage.outputTokens,
     });
-    return text;
+    return response.text;
   } catch (error) {
-    log.error('ai.chat.failed', { prompt: opts.prompt, model, error });
+    log.error('ai.chat.failed', { prompt: opts.prompt, provider: provider.id, model, error });
+    if (error instanceof ApiError) throw error;
     throw new ApiError('AI_UNAVAILABLE', 'The AI service is unavailable', 503);
   }
 }

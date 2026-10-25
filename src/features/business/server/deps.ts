@@ -15,6 +15,12 @@ export type LogAgentActionFn = typeof logAgentAction;
 
 export type BusinessDeps = {
   store: BusinessStore;
+  /**
+   * The signed-in owner acting, for `agent_action_log.user_id`, which references
+   * `profiles(id)`. Null for a worker run. Never a business id: that is a different table
+   * and the insert is rejected by the foreign key.
+   */
+  actorUserId: string | null;
   notify: NotifyFn;
   logAgentAction: LogAgentActionFn;
   now: () => Date;
@@ -24,6 +30,7 @@ export type BusinessDeps = {
 export type DepsOverrides = Partial<Omit<BusinessDeps, 'store'>> & { store: BusinessStore };
 
 export const makeDeps = (overrides: DepsOverrides): BusinessDeps => ({
+  actorUserId: null,
   notify,
   logAgentAction,
   now: () => new Date(),

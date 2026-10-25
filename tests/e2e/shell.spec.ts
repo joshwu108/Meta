@@ -29,7 +29,8 @@ test('mobile shell shows the bottom tab bar and hides the rails', async ({ page 
   await page.setViewportSize({ width: 375, height: 800 });
   const tabs = page.getByRole('navigation', { name: 'Primary' });
   await expect(tabs).toBeVisible();
-  await expect(tabs.getByRole('link')).toHaveCount(5);
+  // Every nav item marked `inTabBar`, named rather than counted so a change says what moved.
+  await expect(tabs.getByRole('link')).toHaveText(['Discover', 'Match', 'Groups', 'Events', 'Graph', 'Agent']);
   await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeHidden();
   await expect(page.getByRole('complementary', { name: 'Contextual' })).toBeHidden();
 });

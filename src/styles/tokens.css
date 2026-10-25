@@ -92,6 +92,8 @@
   --feed-width: 680px;
   --business-width: 960px;
   --tabbar-height: 56px;
+  /* Home-indicator inset on notched phones; 0 everywhere else. Needs viewportFit: 'cover'. */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 
   --backdrop: rgba(255, 255, 255, 0.8);
   color-scheme: light;
@@ -167,4 +169,16 @@
   --shadow-3: 0 12px 28px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.3);
   --backdrop: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
+}
+
+/*
+ * The business centre column is 960px (design-system.md section 3, "960px for tables").
+ * On a large desktop the events table and the interest grid have more to show than that
+ * fits, so the business column — and only the business column — widens. The consumer feed
+ * stays at --feed-width on every screen, because a 680px column is the point of it.
+ */
+@media (min-width: 1440px) {
+  :root {
+    --business-width: 1200px;
+  }
 }

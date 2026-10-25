@@ -3,6 +3,7 @@ import type { CompatibilityResult, SharablePreferences } from '@/shared/types';
 import { resolveCategories } from './categories';
 import { haversineKm, toLatLng } from './geo';
 import { clamp01, intersect, jaccard, normalizeTags, weightedJaccard } from './similarity';
+import { blendInterestScore } from './semantic';
 import {
   BUDGET_WEIGHTS,
   CATEGORY_WEIGHT,
@@ -17,8 +18,19 @@ import {
  */
 export type MatchingPreferences = SharablePreferences;
 
-/** Context the pure scorer cannot know on its own. Both default to "fine". */
-export type ScoreContext = { blocked?: boolean; discoverable?: boolean };
+/**
+ * Context the pure scorer cannot know on its own. All optional; the defaults mean "fine".
+ *
+ * `semanticInterest` is embedding-derived similarity in [0, 1], supplied by the caller because
+ * it needs a database and a model. Omitting it leaves the interests component purely lexical,
+ * which is how this behaved before embeddings existed -- so a missing vector degrades the score
+ * rather than penalising the pair.
+ */
+export type ScoreContext = {
+  blocked?: boolean;
+  discoverable?: boolean;
+  semanticInterest?: number;
+};
 
 export type HardFilter = CompatibilityResult['hardFilterFailed'];
 
@@ -133,7 +145,9 @@ export function getCompatibilityScore(
   const interests = interestSimilarity(a, b);
   const availability = availabilitySimilarity(a, b);
   const components = {
-    interests: interests.value,
+    // Lexical Jaccard blended with the semantic signal, so `pottery` and `ceramics` no longer
+    // score zero against each other. Weights live in INTEREST_BLEND and sum to 1.
+    interests: blendInterestScore(interests.value, ctx.semanticInterest ?? 0),
     availability: availability.value,
     social: socialSimilarity(a, b),
     location: locationSimilarity(distanceBetween(a, b), pairRadiusKm(a, b)),

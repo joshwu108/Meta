@@ -80,6 +80,56 @@
     font: inherit;
     color: inherit;
   }
+  /*
+   * iOS Safari zooms the viewport whenever a focused control is under 16px and never zooms
+   * back. --text-base is 15px, so every form on the product did this. Keyed off the pointer
+   * rather than the width, because an iPad zooms too and is wider than any phone breakpoint;
+   * body copy keeps the type scale the design system sets either way.
+   *
+   * `max()` so a deliberately larger control is not shrunk, and `!important` because a
+   * component's own Tailwind size utility wins over this layer otherwise (the agent composer
+   * sat at 15px until this rule). A platform workaround, not a style preference — the same
+   * reason the reduced-motion block below needs it.
+   */
+  @media (pointer: coarse) {
+    input,
+    select,
+    textarea {
+      font-size: max(16px, 1em) !important;
+    }
+  }
+
+  /*
+   * Touch targets. The design system fixes button heights at 36/40px (design-system.md
+   * section 4), which reads right with a mouse but sits under the 44px every touch platform
+   * asks for. Raised only for coarse pointers, so the desktop design is untouched and a
+   * phone gets a thumb-sized control. Scoped to button-like elements: a bare `a` is often an
+   * inline link inside a sentence, which must not become a 44px block.
+   */
+  @media (pointer: coarse) {
+    button,
+    summary,
+    [role='button'],
+    [role='tab'],
+    a.inline-flex,
+    input[type='checkbox'],
+    input[type='radio'] {
+      min-height: 44px;
+    }
+    /*
+     * Icon-only controls are square, so they need the width as well as the height. The
+     * `:only-child` form misses the notification bell, whose badge sits beside the icon, so
+     * this keys off the 36px square these four share (`h-9 w-9`): the bell, the theme
+     * toggle, sign out and the sheet close button. Coupled to that utility by name — if the
+     * sizing there changes, this rule needs changing with it.
+     */
+    button:has(> svg:only-child),
+    a.inline-flex:has(> svg:only-child),
+    button.w-9,
+    a.w-9 {
+      min-width: 44px;
+    }
+  }
   h1 {
     font-size: var(--text-xl);
     font-weight: var(--weight-bold);
@@ -150,9 +200,23 @@
       transform: none;
     }
   }
+  /* Connection graph: a forming edge breathes so it reads as in-progress, not broken. */
+  .graph-pulse {
+    animation: graph-pulse 2.4s var(--ease-standard) infinite;
+  }
+  @keyframes graph-pulse {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .rise-in,
     .meter-fill,
+    .graph-pulse,
     .feed-stagger > * {
       animation: none;
     }

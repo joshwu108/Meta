@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
-import { OWNERS, appIsReady, signIn } from './support/business';
+import { expect, test, type Page } from '@playwright/test';
+import { OWNERS, appIsReady, eventRow, signIn } from './support/business';
 
 /**
  * The manual event lifecycle through the UI: create a draft, edit it, publish it, read the
@@ -55,7 +55,7 @@ test.describe('a business runs its own event', () => {
     await page.getByRole('button', { name: /save as draft/i }).click();
     await page.waitForURL(/\/business\/events$/);
 
-    const row = page.getByRole('listitem').filter({ hasText: title });
+    const row = eventRow(page, title);
     await expect(row.getByText('Draft')).toBeVisible();
     await expect(row.getByText('$18')).toBeVisible();
 
@@ -66,33 +66,29 @@ test.describe('a business runs its own event', () => {
     await page.getByRole('button', { name: /save changes/i }).click();
     await page.waitForURL(/\/business\/events$/);
 
-    await page.getByRole('listitem').filter({ hasText: title }).getByRole('link', { name: 'Edit' }).click();
+    await eventRow(page, title).getByRole('link', { name: 'Edit' }).click();
     // Wait for the editor: the table rows carry a Publish button of their own now.
     await expect(page.getByRole('heading', { name: 'Edit event' })).toBeVisible();
     await page.getByRole('button', { name: /^publish$/i }).click();
     await page.waitForURL(/\/business\/events$/);
 
-    const published = page.getByRole('listitem').filter({ hasText: title });
+    const published = eventRow(page, title);
     await expect(published.getByText('Published')).toBeVisible();
     await expect(published.getByRole('meter')).toHaveAttribute('aria-valuemax', '12');
 
     // The dashboard counts it as upcoming.
     await page.goto('/business');
-    await expect(page.getByRole('listitem').filter({ hasText: title })).toBeVisible();
+    await expect(eventRow(page, title)).toBeVisible();
 
     // Attendees: counts first, nobody has RSVP'd yet.
     await page.goto('/business/events');
-    await page
-      .getByRole('listitem')
-      .filter({ hasText: title })
-      .getByRole('link', { name: 'Attendees' })
-      .click();
+    await eventRow(page, title).getByRole('link', { name: 'Attendees' }).click();
     await expect(page.getByRole('heading', { name: title })).toBeVisible();
     await expect(page.getByText('No confirmed attendees yet.')).toBeVisible();
 
     // Cancelling needs a reason.
     await page.goto('/business/events');
-    await page.getByRole('listitem').filter({ hasText: title }).getByRole('link', { name: 'Edit' }).click();
+    await eventRow(page, title).getByRole('link', { name: 'Edit' }).click();
     await expect(page.getByRole('heading', { name: 'Edit event' })).toBeVisible();
     await page.getByRole('button', { name: /cancel event/i }).first().click();
     await page.getByLabel('Reason').fill('The kiln needs repairing');
@@ -100,7 +96,7 @@ test.describe('a business runs its own event', () => {
     await page.waitForURL(/\/business\/events$/);
 
     await expect(
-      page.getByRole('listitem').filter({ hasText: title }).getByText('Cancelled'),
+      eventRow(page, title).getByText('Cancelled'),
     ).toBeVisible();
   });
 
@@ -117,7 +113,7 @@ test.describe('a business runs its own event', () => {
     await page.getByRole('button', { name: /save as draft/i }).click();
     await page.waitForURL(/\/business\/events$/);
 
-    const row = () => page.getByRole('listitem').filter({ hasText: title });
+    const row = () => eventRow(page, title);
     await expect(row().getByText('Draft')).toBeVisible();
 
     await row().getByRole('button', { name: 'Publish' }).click();
@@ -174,6 +170,92 @@ test.describe('a business runs its own event', () => {
 
 });
 
+/**
+ * The desktop table (design-system.md section 3). Playwright's default viewport is 1280px,
+ * which is exactly where the table replaces the card list, so these run as a desktop owner
+ * sees them. The ordering is asserted against a sorted copy of what is actually on screen
+ * rather than against fixture titles, because other specs add events to this venue.
+ */
+test.describe('the events table on a desktop', () => {
+  test.beforeEach(async ({ page }) => {
+    test.skip(!(await appIsReady(page)), 'the app is not reachable');
+    await signIn(page, OWNERS.kiln);
+    await page.goto('/business/events');
+  });
+
+  const titles = (page: Page) => page.locator('tbody tr td:nth-child(2)').allInnerTexts();
+
+  test('shows columns instead of cards, and announces how it is sorted', async ({ page }) => {
+    await expect(page.locator('main table')).toBeVisible();
+    await expect(page.locator('main ul li').first()).toBeHidden();
+
+    // Default: soonest first, which is what the column says before anyone clicks it.
+    await expect(page.locator('th', { hasText: 'When' })).toHaveAttribute('aria-sort', 'ascending');
+  });
+
+  test('sorts by event name and flips on a second click', async ({ page }) => {
+    const header = page.getByRole('button', { name: 'Event' });
+
+    await header.click();
+    const ascending = (await titles(page)).map((t) => t.trim());
+    // One row is trivially sorted, so the assertion below would pass without sorting at all.
+    expect(ascending.length, 'needs at least two rows to prove anything').toBeGreaterThan(1);
+    expect(ascending).toEqual([...ascending].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })));
+    await expect(page.locator('th', { hasText: 'Event' })).toHaveAttribute('aria-sort', 'ascending');
+
+    await header.click();
+    const descending = (await titles(page)).map((t) => t.trim());
+    expect(descending).toEqual([...ascending].reverse());
+    await expect(page.locator('th', { hasText: 'Event' })).toHaveAttribute('aria-sort', 'descending');
+  });
+
+  test('opens fill fullest-first and reverses on a second click', async ({ page }) => {
+    /*
+     * Read from the meter's ARIA values, not its label. The label renders "Full" or "N left",
+     * so parsing digits out of it returned 0 for every row — which is why the first version
+     * of this test passed with the sort function stubbed out to return its input.
+     */
+    const ratios = () =>
+      page.locator('tbody tr').evaluateAll((rows) =>
+        rows.map((row) => {
+          const meter = row.querySelector('[role="meter"]');
+          const confirmed = Number(meter?.getAttribute('aria-valuenow') ?? 0);
+          const capacity = Number(meter?.getAttribute('aria-valuemax') ?? 0);
+          return capacity > 0 ? confirmed / capacity : 0;
+        }),
+      );
+    const header = page.getByRole('button', { name: 'Fill' });
+
+    await header.click();
+    const descending = await ratios();
+    await expect(page.locator('th', { hasText: 'Fill' })).toHaveAttribute('aria-sort', 'descending');
+
+    await header.click();
+    const ascending = await ratios();
+    await expect(page.locator('th', { hasText: 'Fill' })).toHaveAttribute('aria-sort', 'ascending');
+
+    /*
+     * Three guards, each earning its keep. Asserting only "descending is sorted" passed with
+     * the sort stubbed out to return its input, because this venue's rows happen to arrive
+     * fullest-first; and rows all equally full would satisfy any ordering. The two
+     * directions must also differ, which is what catches a sort that never ran.
+     *
+     * Not asserted: that one direction is the exact reverse of the other. The sort is
+     * stable, so rows with the same fill keep the server's order in both directions, and
+     * tied rows are normal here.
+     */
+    // Data-dependent, so it says so rather than failing: other specs add and cancel events
+    // for this venue, and a run where every event is equally full proves nothing either way.
+    test.skip(
+      descending.length < 2 || new Set(descending).size < 2,
+      'this venue has no two events with different fills in this run',
+    );
+    expect(descending).toEqual([...descending].sort((a, b) => b - a));
+    expect(ascending).toEqual([...ascending].sort((a, b) => a - b));
+    expect(ascending, 'the two directions must differ, or nothing sorted').not.toEqual(descending);
+  });
+});
+
 test.describe('a venue cannot reach another venue data', () => {
   test.beforeEach(async ({ page }) => {
     test.skip(!(await appIsReady(page)), 'the app is not reachable');
@@ -183,5 +265,22 @@ test.describe('a venue cannot reach another venue data', () => {
   test('an event id this venue does not own is not found', async ({ page }) => {
     await page.goto('/business/events/00000000-0000-0000-0000-000000000000/edit');
     await expect(page.getByRole('heading', { name: /could not find that/i })).toBeVisible();
+  });
+
+  /**
+   * A mistyped or truncated URL used to render the error screen instead: the value reached
+   * Postgres, which rejects a malformed uuid with 22P02, and the store can only report that
+   * as an internal failure. The pages check the shape before looking anything up.
+   */
+  test('a malformed id is not found rather than an error', async ({ page }) => {
+    for (const path of [
+      '/business/events/not-a-uuid/edit',
+      '/business/events/not-a-uuid/attendees',
+      '/business/proposals/not-a-uuid',
+    ]) {
+      await page.goto(path);
+      await expect(page.getByRole('heading', { name: /could not find that/i }), path).toBeVisible();
+      await expect(page.getByRole('heading', { name: /could not load/i }), path).toBeHidden();
+    }
   });
 });

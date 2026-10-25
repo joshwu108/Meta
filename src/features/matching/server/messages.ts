@@ -1,4 +1,5 @@
 import 'server-only';
+import { recordGraphEvent } from '@/features/graph';
 import { ApiError } from '@/lib/api/errors';
 import type { Actor } from './http';
 
@@ -18,11 +19,17 @@ const toMessage = (row: Row, viewerId: string): DirectMessage => ({
   mine: row.sender_id === viewerId,
 });
 
-async function requireAccepted(actor: Actor, connectionId: string): Promise<void> {
-  const { data, error } = await actor.supabase.from('connections').select('status').eq('id', connectionId).maybeSingle();
+/** The accepted connection, so a caller also knows who is on the other side of it. */
+async function requireAccepted(actor: Actor, connectionId: string): Promise<{ otherId: string }> {
+  const { data, error } = await actor.supabase
+    .from('connections')
+    .select('status, requester_id, recipient_id')
+    .eq('id', connectionId)
+    .maybeSingle();
   if (error) throw new ApiError('INTERNAL', 'Could not load the conversation', 500);
   if (!data) throw new ApiError('NOT_FOUND', 'Conversation not found', 404);
   if (data.status !== 'accepted') throw new ApiError('FORBIDDEN', 'You can message people once you’re connected', 403);
+  return { otherId: data.requester_id === actor.userId ? data.recipient_id : data.requester_id };
 }
 
 /**
@@ -42,12 +49,19 @@ export async function listMessages(actor: Actor, connectionId: string, after?: s
 
 /** POST /api/connections/:id/messages: send a text message (RLS re-checks the connection). */
 export async function sendMessage(actor: Actor, connectionId: string, body: string): Promise<DirectMessage> {
-  await requireAccepted(actor, connectionId);
+  const { otherId } = await requireAccepted(actor, connectionId);
   const { data, error } = await actor.supabase
     .from('direct_messages')
     .insert({ connection_id: connectionId, sender_id: actor.userId, body })
     .select('*')
     .single();
   if (error || !data) throw new ApiError('FORBIDDEN', 'You can message people once you’re connected', 403);
+  // Thinned to one per sender per day by the recorder: the graph cares that you talk, not how much.
+  await recordGraphEvent({
+    actorId: actor.userId,
+    subjectId: otherId,
+    kind: 'message_exchanged',
+    refId: connectionId,
+  });
   return toMessage(data as Row, actor.userId);
 }

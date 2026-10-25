@@ -78,7 +78,35 @@ describe('revise error copy', () => {
     );
   });
 
-  it('falls back to the server message for anything unmapped', () => {
-    expect(reviseErrorMessage('INTERNAL', 'something went wrong')).toBe('something went wrong');
+  /*
+   * This used to assert the server's own text was shown for anything unmapped. That was the
+   * hole: the server's INTERNAL text carries a request id, and 04's revise endpoint began
+   * returning it for real. Unmapped codes now share the wording every other business form
+   * uses; VALIDATION is still passed through, because that text is written for the owner.
+   */
+  it('uses owner-facing wording for anything unmapped', () => {
+    expect(reviseErrorMessage('INTERNAL', 'something went wrong')).not.toBe('something went wrong');
+  });
+
+  /**
+   * Observed in the running app: 04's revise endpoint 500s around a DST change (see the
+   * report in PROGRESS.md), and the server's INTERNAL text is "Something went wrong
+   * (request <uuid>)". That fell through `default: return fallback`, so a venue owner was
+   * shown a bare request id.
+   */
+  it('never shows the owner an internal failure or a request id', () => {
+    const message = reviseErrorMessage('INTERNAL', 'Something went wrong (request 03f2c426-6aa5-427f-a222-55af01177d09)');
+
+    expect(message).not.toMatch(/request [0-9a-f-]{8}/i);
+    expect(message).toMatch(/[.!]$/);
+  });
+
+  it('still answers for a code it has no special wording for', () => {
+    for (const code of ['FORBIDDEN', 'UNAUTHENTICATED', 'CAPACITY_FULL'] as const) {
+      const message = reviseErrorMessage(code, 'raw server text');
+
+      expect(message, code).not.toBe('raw server text');
+      expect(message.length, code).toBeGreaterThan(0);
+    }
   });
 });

@@ -1,4 +1,5 @@
 import 'server-only';
+import { recordGraphEvent } from '@/features/graph';
 import { chunk, ID_FILTER_BATCH, type Actor } from '@/features/matching';
 import { ApiError } from '@/lib/api/errors';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -37,6 +38,15 @@ export async function respondToInvitation(actor: Actor, invitationId: string, st
     .maybeSingle();
   if (updateError) throw mapGroupRpcError(updateError.message, 'Could not answer the invitation');
   if (!updated) throw new ApiError('CONFLICT', 'This invitation was already answered', 409);
+  // Joining a group is a story about whoever brought you in.
+  if (status === 'accepted' && row.kind === 'group' && row.group_id) {
+    await recordGraphEvent({
+      actorId: actor.userId,
+      subjectId: row.sender_id,
+      kind: 'group_joined',
+      refId: row.group_id,
+    });
+  }
   return toResult(updated as InvitationRow);
 }
 

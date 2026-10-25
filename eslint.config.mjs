@@ -14,7 +14,7 @@ const config = [
     },
   },
   {
-    files: ['supabase/seed/**/*.ts', 'scripts/**/*.ts', 'src/lib/log.ts'],
+    files: ['supabase/seed/**/*.ts', 'scripts/**/*.ts', 'tests/evals/**/*.ts', 'src/lib/log.ts'],
     rules: { 'no-console': 'off' },
   },
   {

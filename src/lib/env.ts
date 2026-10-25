@@ -24,6 +24,28 @@ export const serverEnv = {
   get anthropicApiKey(): string | undefined {
     return process.env.ANTHROPIC_API_KEY || undefined;
   },
+  /**
+   * Meta Llama API key. The real value is `LLM|<app-id>|<token>`; the pipes are part of the key,
+   * so keep it quoted in `.env.local` or the shell will split it.
+   */
+  get llamaApiKey(): string | undefined {
+    return process.env.LLAMA_API_KEY || undefined;
+  },
+  /** Override the Llama API origin (gateway or proxy). Defaults to Meta's OpenAI-compatible base. */
+  get llamaBaseUrl(): string | undefined {
+    return process.env.LLAMA_API_BASE_URL || undefined;
+  },
+  /**
+   * Meta Model API key (dev.meta.ai), which serves the Muse models. Same `LLM|<app-id>|<token>`
+   * format as a Llama key, but a separate entitlement: one does not imply the other.
+   */
+  get metaApiKey(): string | undefined {
+    return process.env.META_API_KEY || undefined;
+  },
+  /** Override the Meta Model API origin. Defaults to https://api.meta.ai/v1. */
+  get museBaseUrl(): string | undefined {
+    return process.env.META_API_BASE_URL || undefined;
+  },
   get isMockAi(): boolean {
     return process.env.MOCK_AI === '1' || process.env.MOCK_AI === 'true';
   },

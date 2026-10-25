@@ -30,4 +30,5 @@ export {
   type PendingConnectionRequest,
 } from './server/connections';
 export { chunk, ID_FILTER_BATCH, notifySafely } from './server/async';
+export { createTtlCache, type TtlCache } from './server/cache';
 export type { Actor } from './server/http';

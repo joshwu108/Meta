@@ -125,11 +125,12 @@ export interface BusinessStore {
   confirmedRsvpUserIds(eventId: string): Promise<string[]>;
 
   /**
-   * How many distinct people have confirmed for more than one of this venue's finished
-   * events. Service-role read: only the count is returned, never a user id (spec section 3,
-   * P1 analytics).
+   * How many distinct people have confirmed for more than one of the given events. The
+   * caller passes the scope — analytics counts only events that have finished, so that
+   * "came back again" cannot exceed "events hosted". Service-role read: only the count is
+   * returned, never a user id (spec section 3, P1 analytics).
    */
-  countRepeatAttendees(businessId: string): Promise<number>;
+  countRepeatAttendees(eventIds: readonly string[]): Promise<number>;
 
   /* service-role only reads */
   clusterMemberIds(clusterId: string): Promise<string[]>;

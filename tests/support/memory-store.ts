@@ -310,13 +310,11 @@ export class MemoryBusinessStore implements BusinessStore {
     return this.rsvps.filter((r) => r.event_id === eventId && r.status === 'confirmed').map((r) => r.user_id);
   }
 
-  async countRepeatAttendees(businessId: string) {
-    const eventIds = new Set(
-      this.events.filter((e) => e.business_id === businessId).map((e) => e.id),
-    );
+  async countRepeatAttendees(eventIds: readonly string[]) {
+    const scope = new Set(eventIds);
     const perUser = new Map<string, number>();
     for (const rsvp of this.rsvps) {
-      if (rsvp.status !== 'confirmed' || !eventIds.has(rsvp.event_id)) continue;
+      if (rsvp.status !== 'confirmed' || !scope.has(rsvp.event_id)) continue;
       perUser.set(rsvp.user_id, (perUser.get(rsvp.user_id) ?? 0) + 1);
     }
     return [...perUser.values()].filter((count) => count > 1).length;

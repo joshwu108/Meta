@@ -8,8 +8,8 @@ import { toCapabilities } from './businesses';
 import { createSupabaseStore } from './store-supabase';
 
 /** Wires a request's Supabase client into the 05 dependency bundle. One call per route. */
-export function businessDeps(db: SupabaseClient): BusinessDeps {
-  return makeDeps({ store: createSupabaseStore(db, createAdminClient) });
+export function businessDeps(db: SupabaseClient, actorUserId: string | null = null): BusinessDeps {
+  return makeDeps({ store: createSupabaseStore(db, createAdminClient), actorUserId });
 }
 
 /** The capabilities and hours every event write is validated against. */

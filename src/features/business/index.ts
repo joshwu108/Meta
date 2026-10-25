@@ -5,6 +5,7 @@ import type { BusinessMatch, BusinessPublicCard, VenueCriteria } from '@/shared/
 import { getBusinessPublicCardFor } from './server/businesses';
 import { findCandidateBusinesses as rank } from './server/candidates';
 import { businessDeps } from './server/context';
+import { getVenueForProposal as loadVenueForProposal, type VenueForProposal } from './server/venue-for-proposal';
 
 /**
  * The public surface of workstream 05. Other features import from here and nothing else
@@ -43,6 +44,19 @@ export async function findCandidateBusinesses(
   );
 }
 
+/**
+ * `getVenueForProposal(businessId)` — the venue detail 04 needs to draft a proposal: public
+ * card, capabilities and the owner id for notification. Null when the venue is inactive,
+ * has no capabilities, or has opted out of AI proposals.
+ */
+export async function getVenueForProposal(
+  businessId: string,
+  db: SupabaseClient = createAdminClient(),
+): Promise<VenueForProposal | null> {
+  return loadVenueForProposal(db, businessId);
+}
+
+export type { VenueForProposal } from './server/venue-for-proposal';
 export { CANDIDATE_WEIGHTS, MAX_CANDIDATES } from './server/candidates';
 export { MIN_COHORT_SIZE, toDemandBand } from './server/demand-band';
 export { ALLOWED_EVENT_TRANSITIONS, canTransitionEvent } from './server/status-machine';

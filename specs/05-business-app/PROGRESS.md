@@ -2,15 +2,45 @@
 
 Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../README.md`](../README.md)
 
-## Status: ready to merge
+## Status: PR #4 open with eight fixes for main
 
-Every P0 and P1 item below is ticked. Verified **2026-10-24 21:50** against every other
-workstream's branch at once — all 13 migrations (0100, 0200, 0300–0303, 0400–0404, 0500,
-0501, 0600) applied together on a fresh reset, `pnpm db:seed` loaded the full dataset, and
-**349 unit + 38 integration + 34 e2e tests passed with nothing skipped**, including
-Scene 4 end to end. The other branches were grafted locally for that run and removed again,
-so on this branch alone the suite honestly reports 29 integration and 30 e2e with the cases
-that need 04 or 06 skipped.
+All six workstreams are merged into `main`, and the whole product is green there:
+**800 unit, 213 integration, 62 db and 59 e2e tests pass with nothing skipped**, plus
+typecheck, lint and build (verified 2026-10-25 01:30 on a fresh `db reset` + `db:seed`).
+
+**Eight 05 bug fixes are still only on `ws/05-business`** — they landed after the branch was
+first merged. **https://github.com/joshwu108/Meta/pull/4** is open for them, with the full
+write-up and a test plan; merging it is all that is needed. The three originally listed here
+plus the insights scope fix (`c91d1b9`), the onboarding dead-end warning (`39c213f`) and the
+error-screen recovery fix (`51d13e3`) the malformed-id fix (`9cf70cd`) and the error-wording fix (`5b8eb73`):
+
+- `e3f960e` + `cf29fb6` — **every time on the business screens is the venue's wall clock.**
+  The editor read and wrote `datetime-local` in the browser's zone, and the display
+  formatters rendered in whoever was rendering, while opening hours, a proposal's suggested
+  slot and its assumptions text are all venue time. The proposal header read "8:30 PM"
+  directly above an assumption reading "Staff available Thursday 18:30-20:15". Both halves
+  are fixed and the e2e specs now pin the browser to **UTC**, so they prove the app is
+  independent of the viewer's zone rather than hiding the dependency.
+- `bd003d3` — 05 passed a **business id** where `agent_action_log.user_id` references
+  `profiles(id)`, so every publish and proposal decision silently failed its audit insert
+  (01's helper logs and returns rather than throwing). A publish now records the venue's
+  owner.
+- `51d13e3` — **"Try again" on the business error screen could not recover.** `reset()`
+  re-renders the boundary against the client router cache, whose entry for the segment is the
+  failed payload, so the owner saw the same error however often they clicked, even after the
+  server was healthy. Clearing and refetching now happen in one transition. The same defect
+  is in 02's shared `ScreenError`, reported under Needs from others.
+- `9cf70cd` — **a mistyped business URL rendered the error screen instead of not-found.**
+  Postgres rejects a malformed uuid with 22P02, which the store can only report as an
+  internal failure, so `/business/events/not-a-uuid/edit` read as a crash while every other
+  unknown id read as "We could not find that". The three id pages now check the shape
+  first, which is what the API routes already did (they answer 400 VALIDATION).
+- `5b8eb73` — **the status machine spoke to the owner.** Publishing the same draft from two
+  tabs showed the second one "published -> published is not a legal event transition".
+  Every error code a mutation can return is now translated for the owner; VALIDATION text
+  is passed through unchanged, because it names the field and the venue's own hours.
+
+Every P0 and P1 item below is ticked.
 
 Merge order note: 05's `0500_business.sql` adds **both** cross-workstream foreign keys
 (`proposals_business_fk`, `events_proposal_fk`) behind an `if exists` guard, so it is safe
@@ -271,6 +301,18 @@ either side of 04. Both were confirmed present in the 13-migration run.
 
 ## Needs from others
 
+- **Integrator — merge PR #4** (https://github.com/joshwu108/Meta/pull/4). Five bug fixes
+  landed after the branch was first merged and are **not on `main`**: `e3f960e` and `cf29fb6` (every time on the business
+  screens is the venue's wall clock, not the viewer's) and `bd003d3` (the agent audit log
+  recorded a business id where a profile id belongs, so every row was silently rejected).
+  Repeated here because the worker prompt points integrators at this section; the full
+  explanation is in the status block at the top of this file.
+  Verified 2026-10-25 02:55 with three zones in play at once — server `TZ=UTC`, browser
+  `Asia/Tokyo`, venue `America/Los_Angeles`: the proposal header, its assumptions text and
+  the editor field all read 18:30 venue time. Without these commits that same configuration
+  shows 1:30 AM in the header, 10:30 in the editor and 18:30 in the assumption — three
+  different times for one event, on the machine whoever presents happens to use.
+
 - **01** — scaffold, `envelope.ts` with `withBusinessOwner`, `notify()`, `logAgentAction()`,
   `src/shared/types.ts`. 05 stubs all of them meanwhile; nothing is blocked. Two asks:
   - **`/login` and `/signup?as=business`.** The Scene 4 Playwright test signs in through
@@ -279,6 +321,55 @@ either side of 04. Both were confirmed present in the 13-migration run.
     this branch's copy (`DemandBand`, `WeeklyHours`, `BusinessCapabilities`,
     `BusinessOwnerView`, `BusinessEvent`, `EventEdits`, `ProposalDocument`,
     `ProposalSummary`, `ProposalDetail`, `AttendeeList`, `BusinessInsights`).
+- **03 (+ 06, integrator) — two of 03's tests fail the moment 06 merges. Fix verified, not
+  applied.** 06's `0600` adds `invitations_event_fk foreign key (event_id) references
+  events(id)`, and 03's `contracts.test.ts` and `planner-routes.test.ts` invite people to a
+  hardcoded `EVENT_ID` that no row has, so `createEventInvitations` fails with "Could not
+  create event invitations". Neither side is wrong: the FK is right and the fixture predates
+  it. **I reproduced it (graft 06's migration onto main, reset, seed, `pnpm test:integration`)
+  and confirmed a fix takes the suite to 135/135 with nothing skipped**, but did not commit
+  it, because 03 is actively committing to those files and it would conflict.
+  The verified change, in both files:
+  1. `const EVENT_ID = '…'` becomes `let EVENT_ID = '…'`, and the first `beforeAll` replaces
+     it with a real id when the table exists:
+     `const existing = await admin.from('events').select('id').limit(1); if (existing.data?.[0]) EVENT_ID = existing.data[0].id;`
+     (cast `admin` for the lookup — `database.types.ts` predates 05, see the next item.)
+     The literal stays as the fallback so 03's branch alone is unaffected.
+  2. One dependent change in `contracts.test.ts`: the "06 stand-ins degrade" case asserts
+     `getEventPublic(EVENT_ID)` is null, which stops being true once `EVENT_ID` is a real
+     event. It should use a deliberately absent id
+     (`'00000000-0000-0000-0000-000000000000'`) instead.
+- **01** — the seed occasionally fails the first row right after `supabase db reset` with
+  "profile update for demo.new@… failed: Database client error. Retrying the connection."
+  Re-running `pnpm db:seed` succeeds. A short wait or a retry around the first write would
+  save the next person thinking they have a regression; it briefly looked like one here.
+- **01 — the seed computes event times in the *seeder's* timezone. Fix verified, not
+  applied.** `eventTimes()` in `supabase/seed/loaders/domain.ts` uses `setHours()`, which is
+  the machine's zone, while `start_hour` in `events.json` is clearly meant as the venue's
+  wall clock. Seeded from CDT, an `11:00` event lands at **09:00** venue time; from UTC it
+  lands somewhere else again, so demo data is not reproducible across machines. Verified fix
+  (resolve the instant in the venue's zone, which also makes it DST-correct):
+  ```ts
+  const today = wallTimeInZone(VENUE_TIMEZONE, new Date());
+  const day = new Date(Date.UTC(today.year, today.month - 1, today.day + daysFromNow));
+  const start = zonedWallTimeToUtc(VENUE_TIMEZONE, day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate(), startHour, 0);
+  ```
+  `VENUE_TIMEZONE`, `wallTimeInZone` and `zonedWallTimeToUtc` are exported from
+  `@/features/business/venue-time` (pure, no `server-only`). Confirmed locally: the four
+  seeded events move to their intended venue hours. Not committed — 01 was committing to
+  that file a minute earlier.
+- **01 / 06 — a seeded event lands on a day its venue is closed.** `days_from_now` is
+  relative to the seed date, so the weekday drifts daily; today "Wheel Throwing Basics"
+  seeds on a **Monday** at Kiln & Cup, which has no Monday hours. 05's validation then
+  refuses to edit the system's own data: `PATCH /api/business/events/:id` answers
+  `422 "these details do not fit the venue: the venue is closed on mon"`. The scripted demo
+  path is unaffected (Scene 4 edits a proposal, and its `thu_eve` slot is open), but anyone
+  clicking Edit → Save on a seeded event hits it. Fixture fix rather than a code one: target
+  a weekday each venue is open, or snap `days_from_now` to one.
+- **01** — `agent_action_log.user_id` references `profiles(id)`, so a failed insert is only
+  visible in the server log (the helper logs and returns). 05 was silently dropping every
+  audit row for weeks because of it. A one-line note in the helper's doc comment, or
+  surfacing the count somewhere, would make the next workstream's mistake findable.
 - **01 / integrator** — **regenerate `src/lib/supabase/database.types.ts` after 05 merges.**
   It was generated before 05 existed, so the typed client does not know `businesses`,
   `business_capabilities` or `events`. 05's store takes an untyped `SupabaseClient` and is
@@ -315,6 +406,85 @@ either side of 04. Both were confirmed present in the 13-migration run.
     will wire it in one commit once the route and its shape are agreed on the README.
 - **06** — `rsvps` table. `confirmedCount` is a guarded query returning 0 until it lands.
 
+- **02 — the consumer error screens have a "Try again" button that cannot recover.**
+  `src/features/matching/components/ScreenStates.tsx:48` wires `onClick={reset}`, and three
+  routes use it: `(consumer)/match/error.tsx`, `(consumer)/groups/error.tsx` and
+  `(consumer)/groups/[id]/error.tsx`. Next's `reset()` re-renders the boundary's children
+  against the client router cache, whose entry for the segment is the failed payload, so the
+  same error replays and the button does nothing for as long as the viewer keeps clicking.
+  I hit this in 05's own boundary and measured it: with the failing read restored and the
+  server proven healthy from a second tab, `reset()` alone stayed broken, and so did
+  `router.refresh()` followed by `reset()`. The fix that works is to clear and refetch in one
+  transition, so React commits the cleared boundary together with the new payload:
+  `const router = useRouter(); const [, startTransition] = useTransition();` then
+  `onClick={() => startTransition(() => { reset(); router.refresh(); })}`.
+  05 applies this through `src/features/business/components/recover.ts` (commit `51d13e3`),
+  which 02 is welcome to import rather than repeat. Not applied to `ScreenStates.tsx`:
+  it is 02's file.
+
+- **Integrator (small, repo-wide) — React components cannot be unit-tested.**
+  `@testing-library/react` and `jsdom` are both already in `package.json` and no test uses
+  them, because everything under `src/` compiles as classic JSX under `vitest.config.ts`, so
+  importing any component that pulls in `@/features/core/components/ui` dies with
+  "React is not defined" (`Toast.tsx:14`). A per-file `@jsxRuntime automatic` pragma does not
+  help, since the failure is in the imported module. Adding `esbuild: { jsx: 'automatic' }`
+  to `vitest.config.ts` would make component rendering testable for every workstream. Not
+  applied: `vitest.config.ts` is a shared contract. 05 worked around it by extracting the
+  logic under test into a plain module.
+
+- **01 — two mobile-correctness bugs in files 05 does not own.** Both are invisible on a
+  desktop browser and in Playwright, and both affect every workstream's screens:
+  1. **Nothing handles the iPhone home indicator.** `env(safe-area-inset-bottom)` appears
+     nowhere in `src/`. The bottom tab bar in `AppShell.tsx` is a fixed
+     `h-[var(--tabbar-height)]` = 56px strip, so on a notched iPhone the bottom row of tabs
+     sits partly under the system gesture bar. Fix: add
+     `pb-[env(safe-area-inset-bottom)]` to that nav (and to any sticky bottom action bar).
+  2. **iOS Safari zooms the page on every input.** `--text-base` is `0.9375rem` (15px) in
+     `tokens.css`, and Safari zooms the viewport whenever a focused input is under 16px —
+     the page jumps and does not zoom back. Measured at 15px on the business event editor
+     and the consumer signup form. The narrow fix is 16px on form controls only
+     (`input`, `select`, `textarea`), which kills the zoom without reflowing body copy
+     anywhere in the product; raising `--text-base` itself shifts type everywhere and should
+     be a deliberate design call rather than a side effect.
+
+- **01 / design system — "Contrast AA on all text" (design-system.md §7) does not hold for the
+  brand tokens.** Measured with a WCAG contrast pass over six business screens in both themes
+  (computed colours, blended against the first opaque ancestor, large-text rule applied at
+  ≥24px or ≥18.66px bold):
+  - Primary button, white on `--color-brand`: **4.82:1 light** (passes) but **3.46:1 dark**
+    (`#ffffff` on `#2d88ff`) — fails AA for 15px text.
+  - Active nav item, brand on brand-soft: **4.20:1 light** (`#0866ff` on `#e7f0ff`) and
+    **3.40:1 dark** (`#2d88ff` on `#263951`) — fails AA in both themes.
+  - Notification badge and avatar initials land at 3.4-3.65:1.
+  These are design tokens, not 05 files, and the spec deliberately specifies Facebook's blue,
+  so this is a judgement call for whoever owns the palette: darken `--color-brand` for text
+  use, lift the dark-theme `brand-soft`, or state the exception in §7. 05 changed nothing.
+  The pairs above are the whole finding; the method was a computed-style sweep, not a
+  screenshot eyeball.
+
+- **04 — `nextSlotStart` throws for one weekday around every DST change, and it is throwing
+  now.** `src/features/demand/server/time.ts:45` walks candidate days with
+  `now.getTime() + offset * DAY_MS`, i.e. fixed 24-hour steps on an instant. Across a
+  fall-back transition that lands on the same local date twice, so the 7 samples cover only
+  6 weekdays and the loop throws `no <slot> within a week of N days out`. Verified against
+  the venue zone with today's date (2026-10-25, transition 2026-11-01):
+  `offset 7 -> Sun 11/01 00:00, offset 8 -> Sun 11/01 23:00` — Sunday twice, Thursday never.
+  Consequences, all observed: `tests/integration/demand/pipeline.test.ts` and
+  `demand/revise.test.ts` fail to collect, and **`POST /api/ai/proposals/:id/revise` returns
+  500** (`nextSlotStart` <- `validateProposal` <- `reviseProposal`
+  <- `handleRevise`), so "Ask AI to revise" is broken in the running app today. 05's
+  `scene4-business.spec.ts` revision case fails for the same reason; confirmed it also fails
+  with every 05 change stashed, so it is not 05's.
+  Fix: step calendar days in the target zone instead of adding 24 hours to an instant — the
+  same two-pass approach `src/features/business/server/time.ts` uses. Raising the loop bound
+  to `+8` would paper over it without fixing the duplicate day.
+
+- **01 — `tests/integration/seed.test.ts:37` asserts a global count and breaks on any extra
+  signup.** It expects exactly 14 discoverable profiles; the local database has 15 because a
+  human signed up through the UI while testing. Nothing is wrong with the seeder. Scoping the
+  count to seeded emails, or asserting `>= 14`, would make it survive a database that someone
+  has actually used.
+
 ## Blocked
 
 - ~~Git identity not configured in this clone.~~ **Resolved 2026-10-24 15:58**: the owner
@@ -341,6 +511,163 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 05:35` — **opened PR #4 so the five pending fixes are actually actionable.**
+  `main` has not moved in hours, every workstream is merged, and the only thing left outside
+  it is 05's catch-up work — so if nothing prompts another merge the build ships with times
+  in the viewer's zone, an empty audit log and the insights stat that cannot be true. Two
+  notes in a spec file were not going to carry that; 06 had already opened PR #2, so a pull
+  request is this team's actual merge mechanism. #4 describes each fix, what it looked like
+  from the outside, how it was verified, and the two seed defects that belong to 01 and are
+  deliberately not in it. No AI attribution, per the commit skill.
+- `2026-10-25 05:05` — **audited my own suite for tests that pass without testing.** Three
+  had already turned up that way, so I went looking deliberately: grepped for early returns
+  inside tests, skips that never un-skip, and assertions that cannot fail. Found two of the
+  last kind — `expect(error === null || error.code !== undefined).toBe(true)`, which is
+  always true since a PostgrestError always carries a code. In the notifications test it was
+  the **only** assertion, so that test asserted nothing. Both were hedges I wrote while the
+  other workstreams were unmerged and the behaviour was unknown; it is knowable now, so they
+  assert it: an owner's insert into `notifications` is refused with `42501` while the service
+  role's succeeds — the property 05's publish and cancel fan-out depends on — and a
+  cross-owner capability update is filtered to zero rows rather than erroring. The rest of
+  the audit came back clean, and 213 integration tests now run with **zero skips**, so
+  nothing is quietly sitting out.
+- `2026-10-25 04:35` — **put every business screen in the theme matrix, and the matrix was
+  lying.** The design-system checklist asks for both themes at four widths, but only three
+  of 05's eight screens were in it — not the two-column proposal detail, the dense attendee
+  table, the event editor or insights, which are exactly the ones likely to break at 320px.
+  Adding them exposed a flaw in my own helper: "Review" is a client-side navigation, so
+  reading `page.url()` after `waitForLoadState` captured the *list* again under the detail's
+  filename and silently dropped the screen it claimed to cover — the run was green and the
+  screenshots looked plausible. It now waits for the URL. All seven screens pass at 320,
+  768, 1024 and 1440 in both themes, and I read the 320px dark proposal detail by eye:
+  surfaces, the gradient `AiTag`, the wrapped timeline, the stacked decision panel and the
+  header time still agreeing with the assumptions text. 805 unit, 213 integration, 61 e2e.
+- `2026-10-25 04:00` — **rendered the onboarding wizard for the first time; it works, and
+  looking at it found two problems.** Business Screen 1 was the only screen of 05 that no
+  test and no rehearsal had ever rendered, because every spec signs in as an owner who
+  already has a venue. Walked all four steps against a real signup: the venue it creates is
+  correct — slug, geocoded neighborhood from the address, hours, capabilities, price range,
+  AI toggle.
+  Two issues. **Hosting slots and opening hours are entered independently**, so the wizard
+  accepted a venue that hosts Thursday evenings while Thursday is closed. Nothing rejects
+  that at the boundary, but it is a dead end: 04 matches proposals on the hosting slots and
+  05 then refuses to approve them because the venue is shut, so the owner finds out only at
+  the decision. The Review step now says so. And the page rendered as a bare `div` with **no
+  `main` landmark and no wordmark**, unlike 01's auth pages, on what is a business's first
+  screen.
+  One self-inflicted lesson: the first version of the new e2e spec signed in as the seeded
+  consumer and gave her a venue, which left her a business owner for every spec that ran
+  afterwards and emptied Scene 4's inbox. It passed alone and failed in the full run. It now
+  signs up a throwaway account through `/signup?as=business`, which is the real route in.
+  **805 unit, 213 integration, 61 e2e** green from a clean database.
+- `2026-10-25 03:25` — **opened the insights page with real data and found an incoherent
+  stat.** It had never been viewed with 04's `demand_clusters` present. The banded demand
+  renders correctly (Creative/Thursday evenings 6-9, Food & drink 4-5, Games 4-5, no raw
+  count anywhere), but the analytics row read **"Events hosted 0 · People who came 0 · Came
+  back again 5"** — impossible. `countRepeatAttendees` counted across every event the venue
+  owns while the other two stats count only finished ones, so a venue whose *upcoming*
+  events share attendees reported repeat visitors it had never hosted. The caller now passes
+  the scope, which also drops a query since the finished events are already in hand. Third
+  bug in a row found by looking at a screen with real data rather than by a failing test.
+  800 unit, 213 integration, 59 e2e all green.
+- `2026-10-25 02:55` — **closed a gap in my own verification, and moved the merge request
+  where integrators actually look.** Every timezone check so far had the browser in a
+  foreign zone but the *server* in the venue's — and the dashboard and proposal detail are
+  server components, so `formatDateTime` runs server-side there. Re-ran with three zones at
+  once (server `TZ=UTC`, browser `Asia/Tokyo`, venue `America/Los_Angeles`): header, the
+  assumptions text and the editor field all read 18:30 venue time, and the field hint says
+  "Venue time (PDT)". Also repeated the "merge `ws/05-business` again" request under Needs
+  from others, since that is the section the worker prompt tells the integrator to read and
+  it was only in the status block.
+- `2026-10-25 02:30` — **demo rehearsal of Scene 4 end to end against all six workstreams,
+  with proposals 04 actually generated.** Ran `POST /api/ai/generate-opportunities`, then
+  walked the owner's path and read every screen rather than trusting assertions:
+  - **Dashboard**: nav badge 2, stat row (2 waiting / 2 upcoming / 15 RSVPs), both of 04's
+    generated proposals rendered with the gradient `AiTag`, an amber "Awaiting approval"
+    pill and the banded estimate reading "Estimated local interest: 6-9 people … This is an
+    estimate, not RSVPs." No raw count anywhere.
+  - **Proposal detail**: status timeline, the document, the estimate block with its
+    popover, "Why this was suggested", the assumptions checklist, and all four decisions.
+  - **Edit & approve** with the price $20 → $25, then publish.
+  - **End state**: the events list shows `Published · AI suggestion · Beginner Pottery &
+    Coffee Night · Thu, Oct 29, 6:00 PM · Creative · $25 · 10 left`, with edit, attendees
+    and cancel on the row.
+  The venue-zone fix holds throughout: every time reads as the venue's wall clock with the
+  browser in UTC. The one blemish visible on screen is the seeded "Wheel Throwing Basics"
+  sitting on a Monday that Kiln & Cup is closed — the fixture issue already reported.
+  **Scene 4 is demo-ready**, with the caveat that the three fixes at the top of this file
+  are not on `main` yet; without them the demo shows times in the presenter's zone.
+- `2026-10-25 02:00` — **eyeballed the attendee screen against 06's real data, then found
+  two seed bugs.** The masking path renders correctly for the first time with real RSVPs:
+  counts first (9 confirmed, 4 shared), four real names and five "Attendee (private)",
+  capacity 9/12. While reading it I noticed an event titled "Glaze & Latte Sunday" showing
+  Thursday 09:00 against a fixture that says `start_hour: 11`, and pulled on it rather than
+  assuming my formatter was at fault — it was not. **The seed computes event times in the
+  seeder's timezone**, so demo data is not reproducible across machines; and because
+  `days_from_now` drifts the weekday, a seeded event currently lands on a day its venue is
+  closed, which makes 05's own validation reject an edit to it with a 422. Both are written
+  up under Needs from others with a locally verified patch for the first. Not committed: 01
+  had touched that file a minute before.
+- `2026-10-25 01:30` — **all six workstreams are merged and the whole product is green.**
+  02 and 06 landed while I was working, so `main` now has every migration. On a fresh
+  `db reset` + `db:seed`: **800 unit, 213 integration, 62 db and 59 e2e pass with nothing
+  skipped**, typecheck, lint and build clean. The 03↔06 `invitations_event_fk` collision I
+  reported is resolved, and 05's last skipped test — the attendee path against 06's `rsvps`
+  — now runs for real.
+  One near-miss worth recording: `pnpm typecheck` showed 32 errors across 12 of 02's and
+  06's files and I was about to report `main` as broken. The files were byte-identical to
+  `main`; the cause was my own `node_modules` being stale after merging their dependency
+  additions. `pnpm install` cleared all 32. Worth checking before blaming someone else's
+  merge.
+  Three 05 fixes are still only on the branch — see the status block at the top.
+- `2026-10-25 01:05` — **screenshotted Scene 4 and found a time the assertions could not
+  see.** Generated a proposal and read the detail page rather than trusting the suite: the
+  header said "Thu, Oct 29, 8:30 PM" directly above an assumption reading "Staff available
+  Thursday 18:30-20:15" — two different times for the same event on one screen. Last tick's
+  fix pinned the editor's **inputs** to the venue zone but left the display formatters
+  unpinned, so they rendered in whoever was rendering. An incomplete fix on my part; all
+  three formatters now take the venue zone and a test asserts the header and the editor
+  field agree for the same instant. Verified with the browser in UTC: the header now reads
+  6:30 PM. 543 unit, 134 integration (1 skipped), 42 e2e. (cf29fb6)
+- `2026-10-25 00:35` — **full six-workstream state is reachable and green; handed 03 a
+  verified patch rather than editing their files.** Made the pending-fix status unmissable
+  at the top of this file, since "merged" read as "nothing left to pull" and two bug fixes
+  are still only on the branch. Then re-grafted 06 onto the integrated main (01–05) and
+  reproduced the `invitations_event_fk` collision I reported last tick — it is still there,
+  and 06 is the next merge, so it will turn main red. Worked out the fix and **confirmed it
+  takes the suite to 135/135 with nothing skipped**, including one dependent change to a
+  test of mine that lives in 03's file. Did not commit it: 03 committed two minutes ago and
+  06 seven minutes ago, so editing files they are actively working in would collide. The
+  exact change is written out under Needs from others for them to apply.
+- `2026-10-25 00:05` — **05 is merged into main (with 04), and verifying the integrated
+  state found two real bugs of mine.** Main now carries 01–05; **532 unit, 134 integration
+  (1 skipped, waiting on 06) and 42 e2e pass with nothing else skipped** — Scene 4, the AI
+  revision and 04's Scene 3 all run for real rather than against a graft.
+  The integrator had pinned the browser timezone in two of 05's e2e specs to get them green
+  on CI. That was a symptom, not the cause: the event editor rendered and parsed its
+  `datetime-local` fields in the **browser's** zone while the server checks opening hours in
+  `VENUE_TIMEZONE`, so any owner whose machine was not in the venue's zone saw times shifted
+  by hours and had plausible entries rejected. Fixed at the source — the wall-clock helpers
+  moved to a module both sides import, both conversions name the zone, and the two fields
+  now say which zone they are in. The specs pin the browser to **UTC** instead, so they
+  prove the app is zone-independent rather than hiding the dependency.
+  The e2e server log then showed `agent_log.insert_failed … 23503`: **05 was passing a
+  business id where `agent_action_log.user_id` references `profiles(id)`**, so every publish
+  and proposal decision had been failing its audit insert since the day it was written. 01's
+  helper logs and returns rather than throwing, so nothing ever surfaced. The acting user
+  now travels in the dependency bundle and is null for a worker run; a publish records
+  Rosa Delgado of Kiln & Cup where it previously recorded nothing.
+- `2026-10-24 23:15` — **re-ran the six-way check against the new main; 05 is clean, and it
+  surfaced a 03↔06 collision.** With 01+02+03 now on main, grafted 04's and 06's migrations
+  so all 13 applied together again. **05's own suites pass completely**: `business-rls`
+  13/13 (including the 06 attendee case), `proposal-decision` 8/8 (including Scene 4's
+  path), 424 unit, 40 e2e. Two failures, both in **03's** tests and not caused by 05: 06's
+  `0600` adds a foreign key from `invitations.event_id` to `events`, and 03's fixtures
+  invite people to a hardcoded event id that no row has. Recorded under Needs from others
+  with the one-line fix, since it bites only when 03 and 06 are both merged and is not
+  mine to change speculatively. Also noted a transient seed failure right after
+  `db reset` that briefly looked like a regression on my side. Grafts removed; the branch
+  reports 113 integration (9 skipped) on main's schema.
 - `2026-10-24 22:45` — **03 merged into main; integrated it.** One conflict, an import line
   in the seed loader where main dropped `seedGroupSchema` and 05 had added `SeedBusiness`
   for its hours and capabilities loading; both kept. Re-read 03's changed spec — their edits
@@ -547,3 +874,175 @@ either side of 04. Both were confirmed present in the 13-migration run.
   event lifecycle, `decideProposal`. 125 unit tests pass; `tsc --noEmit` and `eslint`
   clean. Still uncommitted — see Blocked (git identity). Next: `store-supabase.ts`,
   the API routes (R1-R12), then the UI (U1-U7).
+
+- **2026-10-25 01:20 — the two business screens that had never been rendered.** Every
+  earlier pass exercised screens that *work*; `error.tsx` and `loading.tsx` had been written
+  and never once displayed. Rendering them found a real bug in the first and cleared the
+  second.
+  `error.tsx`: forced a genuine server failure by revoking `select on public.events` from
+  `authenticated`, which leaves auth and the business lookup working so the owner gets past
+  the guard and the *screen* fails. The boundary itself is right — chrome intact, "Nothing
+  was changed and nothing was published", a digest reference, and no leak of `permission
+  denied`, `42501`, `PGRST`, `supabase` or a stack trace into the UI. But **"Try again" could
+  not recover**: restore the grant, click, and the same error came back.
+  Two false starts worth recording. First I concluded "the cached failure replays" from probes
+  that clicked milliseconds after the `GRANT` while the control reload happened seconds later
+  — PostgREST reloads its schema cache asynchronously after DCL, so I was partly measuring
+  that delay, not the bug. The clean experiment proves server health from a *second tab*
+  (its own router cache, cannot affect the first) before clicking: the bug is real and
+  pre-existing, confirmed against the unmodified boundary. Second, my first fix —
+  `router.refresh()` then `reset()` — still did not recover, even with a refetch visibly
+  firing: the reset commits before the new payload lands. What works is clearing and
+  refetching inside one transition, so React commits them together:
+  `startTransition(() => { reset(); router.refresh(); })`. Extracted to
+  `src/features/business/components/recover.ts` and covered by three unit tests, because the
+  shared `vitest.config.ts` makes rendering the component itself untestable (see Needs from
+  others). Verified in the running app: recovers to the real page; while the server is still
+  broken, repeated clicks keep showing a working boundary rather than a blank or wedged page;
+  and it still recovers after three failed attempts.
+  `loading.tsx`: a client-side navigation never shows it — Next keeps the previous page on
+  screen — so I made a hard navigation genuinely slow by holding `ACCESS EXCLUSIVE` on
+  `events` from a background session. The skeleton renders correctly: 16 placeholder blocks,
+  one `role="status"` announcing "Loading", nav chrome present, settling to the real page.
+  No change needed.
+  Also found and discarded a false alarm: the dashboard appeared not to render at all, which
+  was my own environment — a previous tick left the database reset but unseeded (`db reset`
+  does not seed; `pnpm db:seed` is a separate step). Nothing was reported on that.
+  Suites after the fix: 808 unit, 151 integration + 62 db (0 skipped), typecheck and lint
+  clean. Same `reset()`-only defect exists in 02's shared `ScreenError`, reported with the
+  verified fix rather than edited.
+
+- **2026-10-25 01:40 — the guard paths, walked in a browser for the first time.** The API
+  tests cover who may read what; nobody had opened a business URL *as the wrong person*.
+  Signed out, all three business paths redirect to `/login`. A seeded consumer is sent to
+  `/business/onboarding`, which is right: anyone may become a venue. An owner reaching for
+  another venue's event, and for an id no row has, both get "We could not find that", so
+  existence is not leaked. One real defect: **a malformed id rendered the error screen.**
+  `/business/events/not-a-uuid/edit` read as a crash because the value reached Postgres,
+  which rejects it with 22P02 before any ownership check runs, and the store can only report
+  that as an internal failure. Fixed in `9cf70cd`; the API routes already validated ids, so
+  this was the page half of a check that existed on one side only.
+  Worth recording is where the guard went and why it moved. I first put it in
+  `requireOwnedEvent`/`requireOwnedProposal`, which is the more defensive place, and it broke
+  36 unit tests: the in-memory store keys rows as `evt-1` and `biz-1`, so a domain-level
+  uuid check would have forced a 38-literal fixture refactor across four files for no product
+  gain. The id enters from the URL, which is the boundary the API routes already validate, so
+  the check belongs on the pages. Reverted and moved there.
+  Also worth recording: **the unit suite cannot catch this bug at all.** The memory store
+  simply finds no row for `not-a-uuid` and reports NOT_FOUND whether or not the guard exists,
+  so parametrised NOT_FOUND cases would have been vacuous — the same blind spot that let the
+  camelCase/snake_case mismatch through. The regression test is therefore end-to-end
+  (`tests/e2e/business-events.spec.ts`), and I confirmed it fails with the guards stashed and
+  passes with them restored. `tests/unit/business/lookup-id.test.ts` covers the shape check
+  itself, including a traversal attempt and a uuid with trailing text.
+  Empty states were checked in the same pass and need no change: a venue created from scratch
+  through signup and onboarding gets a clear explanation and a next action on all four
+  screens (dashboard, proposals, events, insights).
+  Suites: 817 unit, 151 integration, 62 db, typecheck and lint clean.
+
+- **2026-10-25 01:55 — the mutation failure paths, rendered for the first time.** The
+  integration suite proves a second decision is refused; nobody had seen what that *looks
+  like*. Publishing one draft from two tabs put **"published -> published is not a legal event
+  transition"** in front of the owner — the status machine talking to a developer. Fixed in
+  `5b8eb73` with a code-to-sentence mapper (`submit-error.ts`) behind `useSubmit`, following
+  the pattern the revise panel already used. The exhaustive test walks every member of
+  `ERROR_CODES` and rejects any message containing an arrow or SCREAMING_CASE, so a code added
+  later cannot leak a raw string. VALIDATION is deliberately excluded and passed through: that
+  text is written for the owner and names the venue's own hours.
+  Verified in the browser both ways: the losing tab now reads "This has already changed
+  somewhere else, so your change was not applied. Reload the page to see where it stands now.",
+  while an out-of-hours save still reads "the venue is open 09:00-21:00 on thu; this event
+  falls outside that".
+  Suites: 829 unit, 151 integration, 62 db, typecheck and lint clean.
+
+- **2026-10-25 07:25 — the responsive split, asked for directly: consumer mobile-first,
+  business analytical on desktop.** The frame for it already existed (`AppShell` has the
+  bottom tab bar under 768px and the business rail from 768px, per design-system.md section
+  3), so the work was density on one side and mobile correctness on the other. Two commits.
+  `e12ea1b`, mobile correctness, in files 05 does not own — made on the user's explicit
+  instruction after being reported here first:
+  - `viewportFit: 'cover'` in `layout.tsx` plus a `--safe-bottom` token, and the tab bar and
+    the content padding both account for it. Without the viewport flag `env(safe-area-inset-*)`
+    is always 0, so the token alone would have done nothing and the bottom row of tabs stayed
+    under the iPhone home indicator.
+  - Form controls at `max(16px, 1em)` on `(pointer: coarse)`. Keyed off the pointer, not a
+    width, because an iPad zooms too and is wider than any phone breakpoint. `!important` is
+    needed: a component's own size utility wins otherwise, which is why the agent composer sat
+    at 15px after the first attempt.
+  - Touch targets to 44px on coarse pointers only, so the 36/40px the design system specifies
+    is untouched on a desktop. Measured on a real touch viewport: `/business/events` went from
+    10 undersized controls to 1, and that one is the wordmark, an inline text link that should
+    stay text-sized. The CSS-module buttons in `features/events` and `features/agent` needed
+    the same rule, because a module's own `height` is invisible to the Tailwind-scoped one.
+  `598711a`, desktop density, 05's own files: the events list renders as a sortable table and
+  local interest as a category x slot grid, both from 1280px, with the card lists kept below
+  that. Sorting is a pure module with 9 tests (`events-sort.ts`), the matrix another 5
+  (`insights-matrix.ts`), and the grid prints the band in every cell so weight never depends
+  on colour alone — no new white-on-brand pairing, given the contrast report above.
+  Two things worth recording. The table first appeared at 1024px and **overflowed the page**:
+  its columns need ~810px and a 1024px window leaves the business column ~696px. My own theme
+  matrix caught that, which is what it is for; the breakpoint moved to 1280px and 1280 is now
+  in the matrix, since that is where a column-sizing regression shows up first. Second, the
+  table put a second copy of every row in the DOM, so six E2E cases that located rows by
+  `listitem` found nothing at Playwright's 1280px default. They now go through one
+  `eventRow()` helper that matches both presentations and filters to the visible one — which
+  is also what an owner can actually click.
+  Also widened: the business column to 1200px above 1440px, which needed the shell's outer
+  `max-w-[1400px]` raised for business mode too — at 1400 the column stopped at 1072px
+  whatever the token said. The consumer feed stays at 680px on every screen.
+  Verified across 9 routes x {touch 390, mouse 1440}: no horizontal overflow anywhere, inputs
+  16px on touch and 15px on desktop, tab bar on phone and rail on desktop. Suites: 843 unit,
+  62 db, 22 business e2e green. Three integration failures were confirmed environmental, not
+  05's, by re-running with every change stashed — see the two reports above.
+
+- **2026-10-25 07:35 — what the owner reads when 04's revise endpoint fails.** With that
+  endpoint returning 500 for real (the DST report above), the revise panel showed
+  "Something went wrong (request 03f2c426-...)": `reviseErrorMessage` ended in
+  `default: return fallback`, so the server's INTERNAL text — request id and all — went
+  straight to a venue owner. Unmapped codes now go through `submitErrorMessage`, the same
+  wording every other business form uses, while VALIDATION is still passed through because
+  that text names the field and the venue's hours.
+  A test asserted the old behaviour explicitly ("falls back to the server message for
+  anything unmapped"), so it was replaced rather than worked around — that assertion *was*
+  the hole. Verified against the live failure: the panel now reads "Something went wrong and
+  nothing was changed. Please try again." with no request id.
+  Also this tick: `scene4-business.spec.ts` no longer fails when 04's endpoint is down. The
+  old gate probed with an empty body, which 04 rejects as 400 — indistinguishable from
+  working — so the suite blamed 05's screen for 04's outage. It now reads the real response
+  status: a 5xx skips with a message naming 04, while a 4xx from 05's own payload still
+  fails. 865 unit tests pass.
+
+- **2026-10-25 07:50 — covering the desktop table, and two vacuous tests I wrote myself.**
+  The sort logic had 9 unit tests; the wiring from a column header to a reordered table had
+  only ever been checked by hand. Three e2e cases now cover it at Playwright's 1280px
+  default, which is exactly where the table replaces the card list.
+  Both ordering cases were vacuous when first written, and only stubbing `sortEvents` to
+  return its input showed it:
+  1. The fill case read the ratio out of the meter's **label**, which renders "Full" or
+     "N left" — never "confirmed/capacity". Every row therefore parsed as 0, so any ordering
+     satisfied the assertion. It now reads `aria-valuenow` / `aria-valuemax` off the
+     `role="meter"` element, which is the real signal.
+  2. Asserting only "descending is sorted" passed with the sort stubbed out, because this
+     venue's rows already arrive fullest-first. Both directions are now asserted and
+     required to differ.
+  A third trap avoided: comparing one direction against the exact reverse of the other is
+  wrong for a stable sort, since rows with equal fills keep the server's order both ways.
+  Verified non-vacuous by breaking `sortEvents` and watching both cases fail, then restoring
+  it. A run where no two events differ in fill now skips with that reason rather than
+  passing for free.
+  Note on a skip seen along the way: `appIsReady` fired while the dev server was recompiling,
+  which reads as "the app is not reachable" and is indistinguishable from a real skip in the
+  summary line. Worth knowing when a case skips unexpectedly right after an edit.
+
+- **Working tree warning for the integrator.** This checkout had another session's
+  uncommitted work in it (a Meta Llama provider under `src/lib/ai`, agent suggestions, a new
+  `specs/07-connection-graph/`). Two of my commits, `ba0bc2b` and `bd1332c`, swept some of it
+  in via `git add -A` and are already pushed: `src/lib/ai/{chat,generate-structured,models}.ts`,
+  `src/lib/ai/providers/{anthropic,index,llama,types}.ts`, `src/lib/env.ts`, and
+  `tests/unit/ai/{llama-provider,provider-resolution}.test.ts`. None of it is 05's and none
+  of it is mine to finish. I have not touched those files on disk — several are still being
+  edited, so reverting them out of the branch would delete live work — and I am using
+  explicit paths rather than `git add -A` from here on. If 05 is merged before this is
+  resolved, an unfinished Llama integration lands on `main` under my name.
+  This also blocks `sync-main.sh`, which refuses to run with a dirty tree, so 05 has not
+  taken main's newer ws04/ws06 commits yet. That is deliberate.

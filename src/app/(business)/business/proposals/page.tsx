@@ -52,7 +52,8 @@ export default async function ProposalsPage({
               aria-selected={active}
               href={href}
               className={cn(
-                '-mb-px border-b-[3px] px-3 pb-2 text-base font-semibold',
+                // inline-flex so the tab can honour the 44px touch height global.css sets.
+                '-mb-px inline-flex items-center border-b-[3px] px-3 pb-2 text-base font-semibold',
                 active ? 'border-brand text-brand' : 'border-transparent text-text-2 hover:text-text',
               )}
             >

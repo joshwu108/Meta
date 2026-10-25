@@ -1,6 +1,7 @@
 import 'server-only';
 import { getSharablePreferences, getSharablePreferencesBatch } from '@/features/agent';
 import { logAgentAction } from '@/features/core';
+import { recordGraphEvents } from '@/features/graph';
 import type { EventCategory, SocialGoal } from '@/shared/enums';
 import type { MatchesQuery } from '@/shared/schemas/social';
 import type { AvailabilitySlot, CompatibilityResult } from '@/shared/types';
@@ -12,6 +13,7 @@ import { resolveCategories } from './categories';
 import { explainMatch } from './explain';
 import { toLatLng } from './geo';
 import { getCompatibilityScore, type MatchingPreferences } from './score';
+import { loadSemanticScores } from './semantic-load';
 import { normalizeTag, normalizeTags } from './similarity';
 import { getBlockedIds, getEdgeUserIds } from './social-graph';
 import { MATCH_LIMITS } from './weights';
@@ -33,7 +35,17 @@ export type MatchesResult = { status: MatchesStatus; matches: MatchCard[] };
 
 export type RankedCandidate = { prefs: MatchingPreferences; result: CompatibilityResult };
 
-export type RankOptions = { exclude: ReadonlySet<string>; interest?: string; goal?: SocialGoal; limit: number };
+export type RankOptions = {
+  exclude: ReadonlySet<string>;
+  interest?: string;
+  goal?: SocialGoal;
+  limit: number;
+  /**
+   * Embedding-derived similarity per candidate id. Omitted (or empty) means the interests
+   * component stays purely lexical, which is the pre-embeddings behaviour.
+   */
+  semanticByUserId?: ReadonlyMap<string, number>;
+};
 
 function passesFilters(candidate: MatchingPreferences, interest: string | undefined, goal: SocialGoal | undefined): boolean {
   if (goal && !candidate.socialGoals.includes(goal)) return false;
@@ -66,7 +78,12 @@ export function rankCandidates(
   return candidates
     .filter((c) => c.userId !== viewer.userId && !opts.exclude.has(c.userId))
     .filter((c) => passesFilters(c, interest, opts.goal))
-    .map((prefs) => ({ prefs, result: getCompatibilityScore(viewer, prefs) }))
+    .map((prefs) => ({
+      prefs,
+      result: getCompatibilityScore(viewer, prefs, {
+        semanticInterest: opts.semanticByUserId?.get(prefs.userId),
+      }),
+    }))
     .filter(({ result }) => result.hardFilterFailed === null && result.score > 0)
     .sort(compareRanked)
     .slice(0, opts.limit);
@@ -115,7 +132,16 @@ async function computeMatches(viewerId: string, query: MatchesQuery): Promise<Ma
   ]);
   const exclude = new Set([...blocked, ...edges]);
   const shared = await loadSharedCandidates(candidateIds.filter((id) => !exclude.has(id)));
-  const ranked = rankCandidates(viewer, shared, { exclude, interest: query.interest, goal: query.goal, limit: query.limit });
+  // Semantic similarity from pgvector, so `pottery` and `ceramics` are no longer strangers.
+  // Degrades to lexical-only when the vector tables are empty or unreachable.
+  const semantic = await loadSemanticScores(viewer, shared);
+  const ranked = rankCandidates(viewer, shared, {
+    exclude,
+    interest: query.interest,
+    goal: query.goal,
+    limit: query.limit,
+    semanticByUserId: semantic.byUserId,
+  });
   if (ranked.length === 0) return { status: 'no_candidates', matches: [] };
   const matches = await toMatchCards(viewer, ranked);
   await logAgentAction({
@@ -125,6 +151,11 @@ async function computeMatches(viewerId: string, query: MatchesQuery): Promise<Ma
     permissionsUsed: ['matching'],
     result: `Ranked ${matches.length} people who share your preferences`,
   });
+  // One introduction per person per day, so the graph shows who the agent found rather than how
+  // often the list was recomputed.
+  await recordGraphEvents(
+    matches.map((match) => ({ actorId: viewerId, subjectId: match.user.id, kind: 'agent_suggested' as const })),
+  );
   return { status: 'ok', matches };
 }
 

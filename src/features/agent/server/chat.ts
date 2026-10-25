@@ -9,7 +9,7 @@ import {
   type SuggestionCard,
   type UserPreferences,
 } from "../schemas";
-import { explainDetailed, type ExplainTarget } from "./explain";
+import { explainDetailed, groundHighlights, type ExplainTarget } from "./explain";
 import { feedbackForPrompt } from "./feedback";
 import * as repo from "./repo";
 import { toSharable } from "./sharable";
@@ -31,11 +31,26 @@ export function selfView(userId: string, preferences: UserPreferences): Sharable
   return view;
 }
 
+const MAX_EXPLANATION = 160;
+
+/**
+ * Build a card. When the upstream source already produced a grounded explanation (06's ranked
+ * events cache theirs for 24h), reuse it and derive highlights deterministically instead of
+ * paying for a second model call.
+ */
 async function card(
   viewer: SharablePreferences,
   target: ExplainTarget,
   base: Omit<SuggestionCard, "explanation" | "highlights">,
+  explanation?: string,
 ): Promise<SuggestionCard> {
+  if (explanation) {
+    return {
+      ...base,
+      explanation: explanation.slice(0, MAX_EXPLANATION),
+      highlights: groundHighlights(viewer.interests, target),
+    };
+  }
   const why = await explainDetailed({ viewer, target, breakdown: {} });
   return { ...base, explanation: why.explanation, highlights: why.highlights };
 }
@@ -64,10 +79,10 @@ async function runOne(userId: string, viewer: SharablePreferences, cap: Capabili
       );
     case "suggest_events":
       return Promise.all(
-        (await suggestEvents(userId)).map((e) =>
+        (await suggestEvents(userId)).map(({ explanation, ...e }) =>
           card(viewer, { kind: "event", event: e }, {
             kind: "event", targetId: e.id, title: e.title, subtitle: e.venue, href: `/events/${e.id}`,
-          }),
+          }, explanation),
         ),
       );
     case "suggest_groups":

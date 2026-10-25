@@ -10,7 +10,7 @@ export const GET = withBusinessOwner(async (ctx, req) => {
       ? (requested as ProposalStatus)
       : undefined;
 
-    const deps = businessDeps(ctx.supabase);
+    const deps = businessDeps(ctx.supabase, ctx.user.id);
     const proposals = await listBusinessProposals(deps, ctx.business.id, status);
     return ok(proposals, { total: proposals.length });
 });

@@ -1,5 +1,6 @@
 import type { AvailabilitySlot, EventCategory } from '@/shared/enums';
 import type { WeeklyHours } from '@/shared/types';
+import { slotWeekday } from '../../venue-time';
 
 /** The whole onboarding form as one immutable value (spec section 7, Screen 1). */
 export type OnboardingDraft = {
@@ -88,3 +89,15 @@ export const canLeaveStep = (step: number, draft: OnboardingDraft): boolean => {
   if (step === 2) return draft.eventCategories.length > 0 && draft.hostingSlots.length > 0;
   return true;
 };
+
+/**
+ * Hosting slots and opening hours are entered separately, so a venue can say it hosts
+ * Thursday evenings while leaving Thursday closed. Nothing rejects that at the boundary,
+ * but it is a dead end: 04 matches proposals on the hosting slots and 05 then refuses to
+ * approve them because the venue is shut, so the owner only finds out at the decision.
+ * The Review step surfaces it instead.
+ */
+export function slotsOutsideHours(draft: OnboardingDraft): AvailabilitySlot[] {
+  if (Object.keys(draft.hours).length === 0) return [];
+  return draft.hostingSlots.filter((slot) => (draft.hours[slotWeekday(slot)] ?? []).length === 0);
+}

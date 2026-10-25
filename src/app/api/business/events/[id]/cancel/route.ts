@@ -9,5 +9,5 @@ export const POST = withBusinessOwner(async (ctx, req, params) => {
     if (!parsedid.success) throw new ApiError('VALIDATION', 'Invalid id', 400);
     const id = parsedid.data;
     const { reason } = await parseBody(cancelEventSchema, req);
-    return ok(await cancelBusinessEvent(businessDeps(ctx.supabase), ctx.business.id, id, reason));
+    return ok(await cancelBusinessEvent(businessDeps(ctx.supabase, ctx.user.id), ctx.business.id, id, reason));
 });

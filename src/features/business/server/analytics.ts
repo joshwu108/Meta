@@ -72,7 +72,7 @@ export async function getBusinessAnalytics(
       fillRates.length === 0
         ? 0
         : round2(fillRates.reduce((total, rate) => total + rate, 0) / fillRates.length),
-    repeatAttendees: await deps.store.countRepeatAttendees(businessId),
+    repeatAttendees: await deps.store.countRepeatAttendees(finished.map((event) => event.id)),
     byCategory,
     recent: finished
       .slice()
