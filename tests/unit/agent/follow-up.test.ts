@@ -27,4 +27,32 @@ describe("suggestFollowUp (MOCK_AI)", () => {
     const out = await suggestFollowUp({ a: p("a", ["sun_day"]), b: p("b", ["sun_day"]), event });
     expect(out.suggestedSlot).toBe("sun_day");
   });
+
+  it("with no shared slot, picks one at least one of them is free rather than neither", async () => {
+    // The fixture suggests thu_eve, which neither user is free for.
+    const out = await suggestFollowUp({ a: p("a", ["mon_eve"]), b: p("b", ["sat_day"]), event });
+    expect(["mon_eve", "sat_day"]).toContain(out.suggestedSlot);
+  });
+
+  it("keeps the model's slot when one of them is free then and they share none", async () => {
+    const out = await suggestFollowUp({ a: p("a", ["thu_eve"]), b: p("b", ["sat_day"]), event });
+    expect(out.suggestedSlot).toBe("thu_eve");
+  });
+
+  it("keeps the venue category inside what both people are into", async () => {
+    // The fixture proposes food_drink; these two only share outdoors.
+    const outdoorsy = (id: string): SharablePreferences => ({ ...p(id, ["sat_day"]), interestCategories: ["outdoors", id === "a" ? "music" : "fitness"] });
+    const out = await suggestFollowUp({ a: outdoorsy("a"), b: outdoorsy("b"), event });
+    expect(out.suggestedBusinessCategory).toBe("outdoors");
+  });
+
+  it("keeps the model's category when it is shared, or when they share none", async () => {
+    expect((await suggestFollowUp({ a: p("a", ["thu_eve"]), b: p("b", ["thu_eve"]), event })).suggestedBusinessCategory).toBe("food_drink");
+    const none = (id: string, c: "music" | "fitness"): SharablePreferences => ({ ...p(id, ["thu_eve"]), interestCategories: [c] });
+    expect((await suggestFollowUp({ a: none("a", "music"), b: none("b", "fitness"), event })).suggestedBusinessCategory).toBe("food_drink");
+  });
+
+  it("refuses to pair a user with themselves", async () => {
+    await expect(suggestFollowUp({ a: p("a", ["thu_eve"]), b: p("a", ["thu_eve"]), event })).rejects.toMatchObject({ code: "VALIDATION" });
+  });
 });

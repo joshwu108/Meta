@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-const { suggestGroupsFrom } = await import("@/features/agent/server/groups");
+const { suggestGroupsFrom } = await import("@/features/agent/server/suggestions/groups");
 
 const group = (id: string, interests: string[], memberCount: number, description: string | null = "d") => ({ id, name: id, description, interests, memberCount });
 const viewer = { userId: "me", interests: ["pottery", "coffee"] };

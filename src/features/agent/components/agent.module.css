@@ -22,8 +22,7 @@
   padding: 0 var(--space-3); border-radius: var(--radius-pill); border: 0; font: inherit; font-size: var(--text-sm);
   background: var(--color-surface-2); color: var(--color-text); cursor: pointer;
 }
-.chip[aria-pressed="true"], .chip[aria-checked="true"], .chipSelected { background: var(--color-brand-soft); color: var(--color-brand); font-weight: var(--weight-semibold); }
-.chipRemove { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0 2px; font-size: var(--text-md); line-height: 1; }
+.chip[aria-pressed="true"], .chip[aria-checked="true"] { background: var(--color-brand-soft); color: var(--color-brand); font-weight: var(--weight-semibold); }
 
 .avatar {
   width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
@@ -32,13 +31,6 @@
 
 .switchRow { display: flex; justify-content: space-between; gap: var(--space-4); align-items: flex-start; padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border-subtle); }
 .switchRow:last-child { border-bottom: 0; }
-.switch {
-  flex: none; width: 44px; height: 26px; border-radius: var(--radius-pill); border: 0; padding: 3px;
-  background: var(--color-divider); cursor: pointer; transition: background var(--duration-fast);
-}
-.switch[aria-checked="true"] { background: var(--color-brand); }
-.knob { display: block; width: 20px; height: 20px; border-radius: 50%; background: var(--color-surface); box-shadow: var(--shadow-1); transition: transform var(--duration-normal) var(--ease-standard); }
-.switch[aria-checked="true"] .knob { transform: translateX(18px); }
 
 .chatLog { display: grid; gap: var(--space-3); max-height: 60vh; overflow-y: auto; padding: var(--space-2) 0; }
 .bubble { max-width: 85%; padding: var(--space-2) var(--space-3); border-radius: 18px; white-space: pre-wrap; overflow-wrap: anywhere; }

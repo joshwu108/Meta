@@ -1,9 +1,6 @@
-// 01's integration project sets no MOCK_AI; these tests must never call the live model.
-process.env.MOCK_AI = "1";
-
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { admin, deleteUser, makeUser, supabaseAvailable } from "./setup";
-import { suggestPeople } from "@/features/agent/server/people";
+import { suggestPeople } from "@/features/agent/server/suggestions/people";
 import { DEFAULT_CONSENT } from "@/features/agent/schemas";
 
 const available = await supabaseAvailable();

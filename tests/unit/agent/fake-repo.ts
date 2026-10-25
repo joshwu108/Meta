@@ -46,6 +46,8 @@ export function createFakeRepo() {
       state.convs.set(newId, { userId, kind, messages: [] });
       return newId;
     }),
+    findLatestConversation: vi.fn(async (_sb: unknown, userId: string, kind: string) =>
+      [...state.convs.entries()].reverse().find(([, c]) => c.userId === userId && c.kind === kind)?.[0] ?? null),
     listMessages: vi.fn(async (_sb: unknown, id: string, limit = 20) => state.convs.get(id)!.messages.slice(-limit)),
     addMessages: vi.fn(async (_sb: unknown, id: string, msgs: StoredMessage[]) => {
       state.convs.get(id)!.messages.push(...msgs);

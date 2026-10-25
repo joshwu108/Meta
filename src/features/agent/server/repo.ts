@@ -110,6 +110,19 @@ export async function resolveConversation(
   return (check(created, "create conversation") as { id: string }).id;
 }
 
+/** Latest conversation of this kind the caller owns (RLS), or null. Never creates one. */
+export async function findLatestConversation(sb: SupabaseClient, userId: string, kind: ConversationKind): Promise<string | null> {
+  const res = await sb
+    .from("agent_conversations")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("kind", kind)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (check(res, "load conversation") as { id: string } | null)?.id ?? null;
+}
+
 export async function listMessages(sb: SupabaseClient, conversationId: string, limit = 20): Promise<StoredMessage[]> {
   const res = await sb
     .from("agent_messages")

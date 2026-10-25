@@ -10,13 +10,13 @@ vi.mock("@/features/core", () => ({
   },
 }));
 vi.mock("@/lib/ai", async () => (await import("./mock-ai")).mockAi);
-vi.mock("@/features/agent/server/events", () => ({
+vi.mock("@/features/agent/server/suggestions/events", () => ({
   suggestEvents: async () => [{ id: "00000000-0000-4000-8000-000000000601", title: "Beginner Pottery & Coffee Night", startsAt: "2026-10-29T19:00:00-07:00", venue: "Kiln & Cup", category: "creative", description: "Throw your first bowl." }],
 }));
-vi.mock("@/features/agent/server/groups", () => ({
+vi.mock("@/features/agent/server/suggestions/groups", () => ({
   suggestGroups: async () => [{ id: "00000000-0000-4000-8000-000000000301", name: "Mission Makers", description: "Pottery on Thursdays.", memberCount: 4 }],
 }));
-vi.mock("@/features/agent/server/people", () => ({
+vi.mock("@/features/agent/server/suggestions/people", () => ({
   suggestPeople: async () => [{
     id: "00000000-0000-4000-8000-000000000101", displayName: "Maya", neighborhood: "Mission",
     preferences: {
@@ -56,8 +56,8 @@ vi.mock("@/features/agent/server/suggestions", () => ({
   }],
 }));
 
-const { handleChatMessage, runCapabilities, selfView } = await import("@/features/agent/server/chat");
-const { EMPTY_PREFERENCES } = await import("@/features/agent/schemas");
+const { handleChatMessage, loadChatHistory, runCapabilities, selfView } = await import("@/features/agent/server/chat");
+const { DEFAULT_CONSENT, EMPTY_PREFERENCES } = await import("@/features/agent/schemas");
 
 const SB = {} as never;
 const viewer = selfView("u1", { ...EMPTY_PREFERENCES, interests: ["pottery", "coffee"], availabilitySlots: ["thu_eve"] });
@@ -121,6 +121,18 @@ describe("handleChatMessage (MOCK_AI)", () => {
     const res = await handleChatMessage(SB, "u1", "anything fun this week?");
     expect(new Set(res.suggestions?.map((s) => s.kind))).toEqual(new Set(["person", "event"]));
   });
+
+  it("tells a user with matching off how to see people, and says nothing when it is on", async () => {
+    fake.state.agent.set("off", { summary: null, consent: { ...DEFAULT_CONSENT, allow_matching: false } });
+    const off = await handleChatMessage(SB, "off", "who should I meet?");
+    expect(off.reply).toContain('turn on "Match me with people" in Permissions');
+    const stored = fake.state.convs.get(off.conversationId)!.messages[1]!;
+    expect(stored.content).toBe(off.reply);
+
+    fake.state.agent.set("on", { summary: null, consent: { ...DEFAULT_CONSENT, allow_matching: true } });
+    const on = await handleChatMessage(SB, "on", "who should I meet?");
+    expect(on.reply).not.toContain("Match me with people");
+  });
 });
 
 describe("chat prompt context", () => {
@@ -140,5 +152,27 @@ describe("chat prompt context", () => {
     await chat.handleChatMessage(SB, "u9", "hi");
     expect(seen[0]).toMatchObject({ feedback: [{ about: "event:42", signal: "down", note: "too loud" }] });
     vi.doUnmock("@/lib/ai");
+  });
+});
+
+describe("loadChatHistory", () => {
+  it("returns nothing for a user who has never chatted, and creates no conversation", async () => {
+    const before = fake.state.convs.size;
+    expect(await loadChatHistory(SB, "never-chatted")).toEqual({ conversationId: null, messages: [] });
+    expect(fake.state.convs.size).toBe(before);
+  });
+
+  it("returns the latest chat with its suggestion cards, oldest first", async () => {
+    const first = await handleChatMessage(SB, "hist", "find me people");
+    await handleChatMessage(SB, "hist", "and events?", first.conversationId);
+    const history = await loadChatHistory(SB, "hist");
+    expect(history.conversationId).toBe(first.conversationId);
+    expect(history.messages.map((m) => [m.role, m.content.slice(0, 12)])).toEqual([
+      ["user", "find me peop"],
+      ["assistant", first.reply.slice(0, 12)],
+      ["user", "and events?"],
+      ["assistant", expect.any(String)],
+    ]);
+    expect(history.messages[1]!.suggestions?.length).toBeGreaterThan(0);
   });
 });

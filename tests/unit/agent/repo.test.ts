@@ -107,3 +107,16 @@ describe("repo: service-role sharing reads", () => {
     spy.mockRestore();
   });
 });
+
+describe("repo: findLatestConversation", () => {
+  it("returns the newest conversation of a kind for the user, or null without creating one", async () => {
+    const sb = createFakeSupabase({ agent_conversations: [{ data: { id: "c9" }, error: null }, { data: null, error: null }] });
+    expect(await repo.findLatestConversation(sb.client, "u1", "chat")).toBe("c9");
+    const call = sb.calls[0]!;
+    expect(op(call, "eq")).toEqual(["user_id", "u1"]);
+    expect(call.ops.filter(([n]) => n === "eq").map(([, a]) => a)).toContainEqual(["kind", "chat"]);
+    expect(op(call, "order")).toEqual(["created_at", { ascending: false }]);
+    expect(await repo.findLatestConversation(sb.client, "u2", "chat")).toBeNull();
+    expect(sb.calls.some((c) => op(c, "insert"))).toBe(false);
+  });
+});

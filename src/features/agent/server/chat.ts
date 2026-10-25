@@ -5,6 +5,7 @@ import {
   ChatModelOutputSchema,
   DEFAULT_CONSENT,
   type ChatModelOutput,
+  type Consent,
   type ChatResponse,
   type SuggestionCard,
   type UserPreferences,
@@ -15,9 +16,7 @@ import * as repo from "./repo";
 import { toSharable } from "./sharable";
 import { logAgentAction } from "@/features/core";
 import { generateStructured } from "@/lib/ai";
-import { suggestPeople } from "./people";
-import { suggestGroups } from "./groups";
-import { suggestEvents } from "./events";
+import { suggestEvents, suggestGroups, suggestPeople } from "./suggestions";
 
 const ALL_CONSENT = { ...DEFAULT_CONSENT, allow_matching: true, allow_demand_aggregation: true, allow_group_planning: true };
 
@@ -140,9 +139,10 @@ export async function handleChatMessage(
     model: "smart",
   });
   const suggestions = await runCapabilities(userId, selfView(userId, preferences), out.capabilities);
+  const reply = withConsentNote(out.reply, out.capabilities, profile.consent);
   await repo.addMessages(sb, convId, [
     { role: "user", content: message, suggestions: null },
-    { role: "assistant", content: out.reply, suggestions: suggestions.length ? suggestions : null },
+    { role: "assistant", content: reply, suggestions: suggestions.length ? suggestions : null },
   ]);
   if (out.capabilities.length > 0) {
     await logAgentAction({
@@ -152,5 +152,24 @@ export async function handleChatMessage(
       result: `Suggested ${suggestions.length} ${suggestions.length === 1 ? "item" : "items"} in chat`,
     });
   }
-  return { conversationId: convId, reply: out.reply, ...(suggestions.length ? { suggestions } : {}) };
+  return { conversationId: convId, reply, ...(suggestions.length ? { suggestions } : {}) };
+}
+
+export type ChatHistory = { conversationId: string | null; messages: repo.StoredMessage[] };
+
+/** The user's latest /agent chat (last 20 messages, oldest first) so a reload keeps the conversation. */
+export async function loadChatHistory(sb: SupabaseClient, userId: string): Promise<ChatHistory> {
+  const conversationId = await repo.findLatestConversation(sb, userId, "chat");
+  if (!conversationId) return { conversationId: null, messages: [] };
+  return { conversationId, messages: await repo.listMessages(sb, conversationId, 20) };
+}
+
+export const MATCHING_OFF_NOTE = 'People suggestions are off. To see people, turn on "Match me with people" in Permissions.';
+
+/** When the agent asked for people but the user has not allowed matching, say why no people appear (AC3). */
+export function withConsentNote(reply: string, capabilities: readonly Capability[], consent: Pick<Consent, "allow_matching">): string {
+  const wantedPeople = capabilities.some((c) => c.name === "suggest_people");
+  return wantedPeople && !consent.allow_matching ? `${reply}
+
+${MATCHING_OFF_NOTE}` : reply;
 }
