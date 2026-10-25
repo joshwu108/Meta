@@ -3,25 +3,41 @@ import { VENUE_TIMEZONE, wallTimeInZone, zonedWallTimeToUtc } from './venue-time
 
 export const VENUE_LOCALE = 'en-US';
 
-const dateTime = new Intl.DateTimeFormat(VENUE_LOCALE, {
-  weekday: 'short',
-  month: 'short',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-});
+/**
+ * Every time on the business screens is the **venue's** wall clock.
+ *
+ * Without `timeZone` these render in whoever is rendering — the server's zone for a server
+ * component, the browser's for a client one — while the venue's opening hours, a proposal's
+ * suggested slot and its "staff available 18:30-20:15" assumptions are all venue time. That
+ * put two different times for the same event on one screen.
+ */
+const formatterCache = new Map<string, Intl.DateTimeFormat>();
 
-const dayOnly = new Intl.DateTimeFormat(VENUE_LOCALE, {
-  weekday: 'short',
-  month: 'short',
-  day: 'numeric',
-});
+type Style = 'dateTime' | 'day' | 'time';
 
-const timeOnly = new Intl.DateTimeFormat(VENUE_LOCALE, { hour: 'numeric', minute: '2-digit' });
+const OPTIONS: Record<Style, Intl.DateTimeFormatOptions> = {
+  dateTime: { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' },
+  day: { weekday: 'short', month: 'short', day: 'numeric' },
+  time: { hour: 'numeric', minute: '2-digit' },
+};
 
-export const formatDateTime = (iso: string): string => dateTime.format(new Date(iso));
-export const formatDay = (iso: string): string => dayOnly.format(new Date(iso));
-export const formatTime = (iso: string): string => timeOnly.format(new Date(iso));
+function formatter(style: Style, timezone: string): Intl.DateTimeFormat {
+  const key = `${style}|${timezone}`;
+  const cached = formatterCache.get(key);
+  if (cached) return cached;
+  const made = new Intl.DateTimeFormat(VENUE_LOCALE, { ...OPTIONS[style], timeZone: timezone });
+  formatterCache.set(key, made);
+  return made;
+}
+
+export const formatDateTime = (iso: string, timezone: string = VENUE_TIMEZONE): string =>
+  formatter('dateTime', timezone).format(new Date(iso));
+
+export const formatDay = (iso: string, timezone: string = VENUE_TIMEZONE): string =>
+  formatter('day', timezone).format(new Date(iso));
+
+export const formatTime = (iso: string, timezone: string = VENUE_TIMEZONE): string =>
+  formatter('time', timezone).format(new Date(iso));
 
 /** `null` means free or pay at the venue, which is not the same as $0.00. */
 export const formatPrice = (cents: number | null): string =>

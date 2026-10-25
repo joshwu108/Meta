@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  formatDateTime,
+  formatDay,
+  formatTime,
   fromDateTimeLocalValue,
   timezoneLabel,
   toDateTimeLocalValue,
@@ -61,5 +64,29 @@ describe('datetime-local values are the venue wall clock', () => {
   it('names the zone for the owner', () => {
     expect(timezoneLabel('America/Los_Angeles', new Date('2026-10-29T18:30:00Z'))).toMatch(/P[DS]T/);
     expect(timezoneLabel('UTC', new Date('2026-10-29T18:30:00Z'))).toBe('UTC');
+  });
+});
+
+describe('displayed times are the venue wall clock', () => {
+  // 2026-10-30T01:30Z is Thursday 18:30 in Los Angeles.
+  const iso = '2026-10-30T01:30:00.000Z';
+
+  it('renders in the venue zone, not the renderer zone', () => {
+    expect(formatDateTime(iso, 'America/Los_Angeles')).toMatch(/Thu, Oct 29.*6:30 PM|Thu, Oct 29.*6:30 PM/);
+    expect(formatTime(iso, 'America/Los_Angeles')).toMatch(/6:30/);
+    expect(formatDay(iso, 'America/Los_Angeles')).toMatch(/Thu, Oct 29/);
+  });
+
+  it('shows a different wall clock for a different zone, proving the zone is applied', () => {
+    expect(formatDateTime(iso, 'UTC')).toMatch(/Fri, Oct 30/);
+    expect(formatTime(iso, 'UTC')).toMatch(/1:30/);
+  });
+
+  it('agrees with the form value for the same instant', () => {
+    // The header time and the editor field must not disagree, which is what a missing
+    // timeZone caused: "8:30 PM" beside an assumption reading 18:30-20:15.
+    const field = toDateTimeLocalValue(iso, 'America/Los_Angeles');
+    expect(field).toBe('2026-10-29T18:30');
+    expect(formatTime(iso, 'America/Los_Angeles').replace(/ /g, ' ')).toBe('6:30 PM');
   });
 });
