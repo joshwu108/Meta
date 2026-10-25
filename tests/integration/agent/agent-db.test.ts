@@ -1,6 +1,3 @@
-// 01's integration project sets no MOCK_AI; these tests must never call the live model.
-process.env.MOCK_AI = "1";
-
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { admin, deleteUser, makeUser, supabaseAvailable } from "./setup";
 import { confirmOnboarding, handleOnboardingMessage } from "@/features/agent/server/onboarding";
