@@ -1,29 +1,16 @@
 import 'server-only';
 import { SLOT_PHRASES } from '@/shared/labels';
 import type { ExplainInput } from '@/shared/types';
-import type { MatchingPreferences } from './score';
 
 /**
- * Workstream 02's exports. Preferences now delegate to 02's real consent boundary
- * (`@/features/agent`), so 03 no longer reads 02's tables; 02 chunks long id lists itself.
- * `explainRecommendation` stays the templated stand-in until 03 swaps it per its merge plan.
+ * Stand-ins for workstream 02's exports (specs/02-onboarding-and-agent/specs.md §5), with the
+ * signatures 02 ships on ws/02-agent: `getSharablePreferencesBatch(userIds, purpose)` and
+ * `explainRecommendation({ viewer, target, breakdown })`. They are the only code in workstream 03
+ * that reads 02's tables. Delete this file and import from `@/features/agent` once 02 is on main.
  */
 
-export type SharingPurpose = 'matching' | 'demand' | 'group_plan';
-
-/** Consent-gated preferences for many users; users who have not consented are absent. */
-export async function getSharablePreferencesBatch(
-  userIds: readonly string[],
-  purpose: SharingPurpose,
-): Promise<Map<string, MatchingPreferences>> {
-  const { getSharablePreferencesBatch: agentBatch } = await import('@/features/agent');
-  return agentBatch(userIds, purpose);
-}
-
-/** Single-user form of the README contract. */
-export async function getSharablePreferences(userId: string, purpose: SharingPurpose): Promise<MatchingPreferences | null> {
-  return (await getSharablePreferencesBatch([userId], purpose)).get(userId) ?? null;
-}
+/** 02 is on main: preferences come through its consent boundary. */
+export { getSharablePreferences, getSharablePreferencesBatch, type SharingPurpose } from '@/features/agent';
 
 /** Templated stand-in for 02's `agent.explain_recommendation`; cites only shared fields. */
 export async function explainRecommendation(input: ExplainInput): Promise<string> {

@@ -23,12 +23,12 @@ test.describe('Scene 3: Generate Opportunities', () => {
   let admin: SupabaseClient;
   let cleanup: () => Promise<void> = async () => undefined;
 
-  // Runs on the real demo seed: 02 seeds the 14 users' preferences and 05 the three venues (AC1).
-  test.beforeAll(async ({ request }) => {
+  test.beforeAll(async () => {
+    // Runs on the demo seed itself: 02's seeded preferences are the Scene 3 cohort (same 14 people
+    // and consent as tests/fixtures/demand/users-scene3.json), so seeding a second copy would double it.
     const helpers = await import('../integration/helpers');
     admin = helpers.adminClient() as unknown as SupabaseClient;
     await helpers.cleanupTestUsers(admin as never);
-    expect((await request.post('/api/dev/seed')).ok()).toBeTruthy();
     await admin.from('event_proposals').delete().not('id', 'is', null);
     await admin.from('opportunity_runs').delete().not('id', 'is', null);
     cleanup = async () => {

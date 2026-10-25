@@ -2,28 +2,18 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AvailabilitySlot, EventCategory } from '@/shared/enums';
 import type { BusinessMatch, VenueCriteria } from '@/shared/types';
-import type { DemandUser } from './categories';
 import { haversineKm } from './geo';
 import type { Venue } from './venue';
 
 /**
  * Stand-ins for exports owned by other workstreams (README §5 "Stubs", spec §11).
  * Delete each when the real export reaches main:
+ * - getSharableBatch      → 02 `getSharablePreferencesBatch(ids, 'demand')` from '@/features/agent'
  * - findCandidates        → 05 `findCandidateBusinesses(criteria)` from '@/features/business'
  * - loadVenue             → 05 venue/capabilities export (requested in PROGRESS "Needs from others")
- * The 05 stand-ins read 05's tables with the service role only because 05's venue export has not
- * landed. Preferences already go through 02's real `getSharablePreferencesBatch` (below).
+ * These read other workstreams' tables with the service role only because their contracts
+ * have not landed; they apply the same consent rule 02 does.
  */
-
-/**
- * 02 is on this branch: delegate to its consent boundary for purpose 'demand' (allow_demand_aggregation),
- * so 04 never reads 02's private tables. Signature kept so wiring and tests are unchanged.
- */
-export async function stubSharableBatch(_admin: SupabaseClient, ids: readonly string[]): Promise<Map<string, DemandUser>> {
-  if (ids.length === 0) return new Map();
-  const { getSharablePreferencesBatch } = await import('@/features/agent');
-  return getSharablePreferencesBatch(ids, 'demand');
-}
 
 type VenueRow = {
   id: string; owner_id: string; name: string; category: string; neighborhood: string | null; address: string;

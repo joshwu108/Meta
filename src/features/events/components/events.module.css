@@ -1,0 +1,59 @@
+/* Page content inside 01's AppShell, which already sets the 680px feed column and gutters. */
+.column { display: grid; gap: var(--space-6); min-width: 0; }
+.filterRow { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3); }
+/* Content the shell's right rail shows at >=1024px; below that it stays in the feed. */
+@media (min-width: 1024px) { .belowRail { display: none; } }
+.pageTitle { margin: 0; font-size: var(--text-xl); font-weight: var(--weight-bold); }
+.section { display: grid; gap: var(--space-3); }
+.sectionTitle { margin: 0; font-size: var(--text-lg); font-weight: var(--weight-bold); }
+.list { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+
+.card {
+  display: grid; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-md);
+  background: var(--color-surface); box-shadow: var(--shadow-1); color: var(--color-text);
+  animation: rise var(--duration-normal) var(--ease-standard) both;
+}
+a.card { text-decoration: none; transition: box-shadow var(--duration-fast) var(--ease-standard); }
+a.card:hover { box-shadow: var(--shadow-2); text-decoration: none; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.list > li:nth-child(2) .card { animation-delay: 30ms; }
+.list > li:nth-child(3) .card { animation-delay: 60ms; }
+.list > li:nth-child(4) .card { animation-delay: 90ms; }
+.list > li:nth-child(5) .card { animation-delay: 120ms; }
+.list > li:nth-child(6) .card { animation-delay: 150ms; }
+
+.compact { grid-template-columns: 96px minmax(0, 1fr); align-items: start; gap: var(--space-3); }
+.cardTitle { margin: 0; font-size: var(--text-md); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.meta { margin: 0; font-size: var(--text-sm); color: var(--color-text-2); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.spread { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.explain { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text); }
+
+.cover {
+  position: relative; display: grid; place-items: center; overflow: hidden; border-radius: var(--radius-md);
+  background: var(--color-pressed); color: var(--color-text-2); aspect-ratio: 16 / 9;
+}
+.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.coverLead { aspect-ratio: 2 / 1; }
+.leadTitle { margin: 0; font-size: var(--text-2xl); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+
+.banner {
+  display: grid; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-md);
+  background: var(--color-warning-soft); color: var(--color-text);
+}
+/* *-ink tokens (01, AA text colors) fall back to the fill color until they reach main. */
+.error { margin: 0; color: var(--color-danger-ink, var(--color-danger)); font-size: var(--text-sm); }
+.rail3 { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(180px, 1fr); gap: var(--space-3); overflow-x: auto; padding-bottom: var(--space-1); }
+.tabs { display: flex; gap: var(--space-4); border-bottom: 1px solid var(--color-divider); }
+.tab { padding: var(--space-3) 0; color: var(--color-text-2); font-weight: var(--weight-semibold); border-bottom: 3px solid transparent; text-decoration: none; }
+.tab:hover { text-decoration: none; color: var(--color-text); }
+.tabActive { color: var(--color-brand-ink, var(--color-brand)); border-bottom-color: var(--color-brand); }
+
+.field { display: grid; gap: var(--space-1); }
+.input, .select, .textarea {
+  font: inherit; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-divider); border-radius: var(--radius-sm);
+  background: var(--color-surface); color: var(--color-text);
+}
+.stars { display: flex; gap: var(--space-1); }
+.star { border: 0; background: none; padding: var(--space-1); cursor: pointer; color: var(--color-text-3); }
+.starOn { color: var(--color-warning); }

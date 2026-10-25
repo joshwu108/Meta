@@ -15,7 +15,7 @@
     "format": "prettier --write .",
     "test": "vitest run --project unit",
     "test:unit": "vitest run --project unit",
-    "test:integration": "vitest run --project integration",
+    "test:integration": "vitest run --project integration --project db",
     "test:db": "vitest run --project db --passWithNoTests",
     "test:all": "vitest run",
     "test:coverage": "vitest run --project unit --coverage",
@@ -58,6 +58,8 @@
     "tailwindcss": "^4.1.0",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0",
-    "vitest": "^3.1.0"
+    "vitest": "^3.1.0",
+    "pg": "8.23.1",
+    "@types/pg": "8.23.1"
   }
 }

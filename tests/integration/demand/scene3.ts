@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { PipelineDeps } from '@/features/demand/server/deps';
 import { createTestUser, type TestUser } from '../helpers';
 import scene3 from '../../fixtures/demand/users-scene3.json';
 
@@ -15,12 +16,6 @@ export function applyTestSchema(): void {
   const sql = readFileSync(path.join(process.cwd(), 'tests', 'integration', 'demand', 'test-schema.sql'), 'utf8');
   execSync(`docker exec -i ${DB_CONTAINER} psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q`, { input: sql, stdio: ['pipe', 'pipe', 'pipe'] });
 }
-
-/**
- * The synthetic Scene 3 world sits one degree north of the seeded demo data (02 seeds the same 14
- * users and 05 the same venues), so its cohorts and venue matches never mix with the seed.
- */
-const TEST_LAT_OFFSET = 1;
 
 const VENUES = [
   { slug: 'kiln', name: 'Kiln & Cup', category: 'creative', neighborhood: 'Mission District', lat: 37.75, lng: -122.42, caps: { event_categories: ['creative', 'food_drink'], capacity: 12, min_price_cents: 1500, max_price_cents: 3500, hosting_slots: ['thu_eve', 'sat_day'] } },
@@ -39,7 +34,7 @@ async function seedConsumer(admin: SupabaseClient, row: Row): Promise<TestUser> 
   const p = row.preferences;
   const must = (r: { error: { message: string } | null }) => { if (r.error) throw new Error(r.error.message); };
   must(await admin.from('profiles').update({
-    neighborhood: p.neighborhood, coarse_lat: p.coarseLat + TEST_LAT_OFFSET, coarse_lng: p.coarseLng, is_discoverable: true, onboarding_completed_at: new Date().toISOString(),
+    neighborhood: p.neighborhood, coarse_lat: p.coarseLat, coarse_lng: p.coarseLng, is_discoverable: true, onboarding_completed_at: new Date().toISOString(),
   }).eq('id', user.id));
   must(await admin.from('user_preferences').upsert({
     user_id: user.id, interests: p['interests'], interest_categories: p['interestCategories'], availability_slots: p['availabilitySlots'],
@@ -53,7 +48,7 @@ async function seedConsumer(admin: SupabaseClient, row: Row): Promise<TestUser> 
 async function seedVenue(admin: SupabaseClient, v: (typeof VENUES)[number]): Promise<TestUser & { businessId: string }> {
   const owner = await createTestUser(admin as never, `owner-${v.slug}`);
   const { data, error } = await admin.from('businesses').insert({
-    owner_id: owner.id, name: v.name, slug: `${v.slug}-${owner.id.slice(0, 8)}`, category: v.category, address: '1 Test St', neighborhood: v.neighborhood, lat: v.lat + TEST_LAT_OFFSET, lng: v.lng,
+    owner_id: owner.id, name: v.name, slug: `${v.slug}-${owner.id.slice(0, 8)}`, category: v.category, address: '1 Test St', neighborhood: v.neighborhood, lat: v.lat, lng: v.lng,
   }).select('id').single();
   if (error) throw new Error(error.message);
   const businessId = (data as { id: string }).id;
@@ -77,6 +72,16 @@ export async function onlyTheseVenues(admin: SupabaseClient, keep: readonly stri
   return async () => {
     await admin.from('businesses').update({ is_active: true }).in('id', others);
   };
+}
+
+/**
+ * Production deps with the user scan limited to this world's consumers. With 02 merged, db:seed
+ * gives the same Scene 3 demo users real consent, which would double every cohort. Consent is
+ * still decided by 02's getSharablePreferencesBatch, so the opted-out user stays excluded.
+ */
+export function sceneDeps(deps: PipelineDeps, world: Scene3World): PipelineDeps {
+  const ids = [...world.consumers.values()].map((u) => u.id);
+  return { ...deps, listEligibleUserIds: async () => ids };
 }
 
 /** 14 Scene 3 consumers (one demand opt-out) and the three venues, as itest users. */

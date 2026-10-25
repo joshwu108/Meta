@@ -5,7 +5,7 @@ vi.mock('server-only', () => ({}));
 process.env.MOCK_AI = '1';
 
 const { adminClient, cleanupTestUsers } = await import('../helpers');
-const { applyTestSchema, onlyTheseVenues, seedScene3 } = await import('./scene3');
+const { applyTestSchema, onlyTheseVenues, sceneDeps, seedScene3 } = await import('./scene3');
 const { supabaseDeps } = await import('@/features/demand/server/wiring');
 const { runPipeline, PipelineBusyError } = await import('@/features/demand/server/pipeline');
 
@@ -30,7 +30,7 @@ beforeAll(async () => {
   await clearDemandTables();
   world = await seedScene3(admin);
   restoreVenues = await onlyTheseVenues(admin, [...world.owners.values()].map((o) => o.businessId));
-  firstRun = await runPipeline(supabaseDeps(admin), { triggeredBy: 'manual' });
+  firstRun = await runPipeline(sceneDeps(supabaseDeps(admin), world), { triggeredBy: 'manual' });
 }, 120_000);
 
 afterAll(async () => {
@@ -67,9 +67,7 @@ describe('ws04 pipeline against local Supabase (MOCK_AI, Scene 3)', () => {
   it('populates run stats and notifies the owner', async () => {
     const { data: run } = await admin.from('opportunity_runs').select('status, stats, finished_at').eq('id', firstRun.runId).single();
     expect(run?.status).toBe('completed');
-    expect(run?.stats).toMatchObject({ stage: 'done', proposalsCreated: firstRun.stats.proposalsCreated });
-    // 13 consenting test users, plus any consenting users the seed loaded (02's preferences seed).
-    expect((run?.stats as { usersConsidered: number }).usersConsidered).toBeGreaterThanOrEqual(13);
+    expect(run?.stats).toMatchObject({ stage: 'done', usersConsidered: 13, proposalsCreated: firstRun.stats.proposalsCreated });
     expect(run?.finished_at).not.toBeNull();
     const owner = world.owners.get('Kiln & Cup')!;
     const { data: notes } = await db(owner.client).from('notifications').select('type, payload');
@@ -106,7 +104,7 @@ describe('ws04 pipeline against local Supabase (MOCK_AI, Scene 3)', () => {
   });
 
   it('creates 0 new proposals on a second run within 14 days', async () => {
-    const second = await runPipeline(supabaseDeps(admin), { triggeredBy: 'manual' });
+    const second = await runPipeline(sceneDeps(supabaseDeps(admin), world), { triggeredBy: 'manual' });
     expect(second.stats.proposalsCreated).toBe(0);
     expect(second.stats.skippedDuplicate).toBe(firstRun.stats.proposalsCreated);
   });
