@@ -84,3 +84,22 @@ export function matchNeighborhood(input: string): (typeof SF_NEIGHBORHOODS)[numb
   const prefixed = SF_NEIGHBORHOODS.filter((n) => n.name.toLowerCase().startsWith(q));
   return prefixed.length === 1 ? (prefixed[0] ?? null) : null;
 }
+
+/** Activity-log names for what the agent used or shared (agent_action_log.permissions_used). */
+const PERMISSION_LABEL: Readonly<Record<string, string>> = {
+  matching: "people matching",
+  demand: "community demand",
+  allow_demand_aggregation: "community demand",
+  group_plan: "group planning",
+  attendees: "event attendee list",
+  reconnect: "reconnecting after an event",
+};
+
+export function permissionLabel(key: string): string {
+  return PERMISSION_LABEL[key] ?? key.replace(/_/g, " ");
+}
+
+/** Distinct, readable labels for one log row, e.g. "people matching, group planning". */
+export function permissionsLabel(keys: readonly string[]): string {
+  return [...new Set(keys.map(permissionLabel))].join(", ");
+}

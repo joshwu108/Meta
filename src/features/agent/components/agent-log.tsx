@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { api } from "../hooks/use-api";
+import { permissionsLabel } from "./labels";
 import s from "./agent.module.css";
 
 type LogRow = { id: string; actor: string; action: string; permissions_used: string[]; result: string; created_at: string };
@@ -31,7 +32,7 @@ export function AgentLog({ limit = 50 }: { limit?: number }) {
         <li key={r.id} className={s.logItem}>
           <p style={{ margin: 0 }}>{r.result}</p>
           <p className={s.muted}>
-            {r.permissions_used.length ? `${r.permissions_used.join(", ").replace(/_/g, " ")} · ` : ""}
+            {r.permissions_used.length ? `${permissionsLabel(r.permissions_used)} · ` : ""}
             <time dateTime={r.created_at}>{timeAgo(r.created_at)}</time>
           </p>
         </li>
