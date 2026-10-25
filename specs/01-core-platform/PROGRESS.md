@@ -76,6 +76,8 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Needs from others
 
+- README §4 (integrator): `logAgentAction(...)` now returns `Promise<boolean>` (true = row written); update the contract line. Callers that ignore the result need no change.
+- All: `logAgentAction` `userId` must be the acting **user's** id (or null), never a business/event id; assert `toBe(true)` in tests to catch it.
 - 06: `EventSummary` now has `category: EventCategory` (moved up from `EventPublic`, which still has it via the intersection); populate it in `toEventSummary`. README §4 needs the same edit (integrator).
 - 03: `Sheet` now traps focus (keeps it if already inside, e.g. your `autoFocus` fields), wraps Tab, and returns focus to the trigger on close; your `use-focus-fallback` can stay for cases where the trigger unmounts.
 - design-system.md (integrator): add `--color-brand-ink`, `--color-danger-ink`, `--color-success-ink` to §1 and change the dark `--color-brand`/hover/pressed to #1A6FE8/#2D88FF/#0A5BE0 (see Decisions). Rule for everyone: brand-colored *text* uses `text-brand-ink`; `bg-brand` + `text-text-on-brand` for fills; `text-danger-ink`/`text-success-ink` on the soft backgrounds.
@@ -104,6 +106,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 22:05 — Wakeup: main unchanged (4529588). 05's ask: `logAgentAction` now resolves true/false and hints on FK misuse, so dropped audit rows are visible. 05's types ask was already satisfied (main's generated types match a fresh `db:types`). 666 vitest green. Next: 06 and 02 on main.
 - 2026-10-24 21:45 — 04 and 05 landed on main (4529588); merged cleanly. Clean state on 0100–0501: seed inserts 3 businesses, 6 events, 2 groups; regenerated `database.types.ts` matches main's; 666 vitest (1 skipped) + 43 Playwright green incl. 05's Scene 4; typecheck + lint clean. Local Scene 4 needed `ENABLE_DEV_ROUTES=1` in `.env.local` (already in `.env.example` and the Playwright config). Next: 06 and 02 on main.
 - 2026-10-24 21:05 — 03 landed on main (e88e93f); merged it cleanly. My `EventSummary.category` broke 03's code at three sites; filled them in (03 already selected the column). Clean state on 0100–0303: 256 vitest + 25 e2e green, typecheck + lint clean. Next: watch for 05/06/04/02 on main.
 - 2026-10-24 20:45 — Wakeup: main still 808078c. Added `category` to `EventSummary` (03 + 06 ask). Next: watch main.
