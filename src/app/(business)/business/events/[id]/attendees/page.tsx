@@ -6,6 +6,7 @@ import { StatRow } from '@/features/business/components/StatRow';
 import { formatDateTime } from '@/features/business/format';
 import { getBusinessEvent, getEventAttendees } from '@/features/business/server/events';
 import { requireBusinessPage } from '@/features/business/server/page-data';
+import { isLookupId } from '@/features/business/server/lookup-id';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +18,7 @@ export const dynamic = 'force-dynamic';
 export default async function AttendeesPage({ params }: { params: Promise<{ id: string }> }) {
   const { deps, business } = await requireBusinessPage();
   const { id } = await params;
+  if (!isLookupId(id)) notFound();
 
   const event = await getBusinessEvent(deps, business.id, id).catch((err: unknown) => {
     if (err instanceof ApiError && err.code === 'NOT_FOUND') notFound();

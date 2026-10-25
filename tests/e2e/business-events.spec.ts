@@ -184,4 +184,21 @@ test.describe('a venue cannot reach another venue data', () => {
     await page.goto('/business/events/00000000-0000-0000-0000-000000000000/edit');
     await expect(page.getByRole('heading', { name: /could not find that/i })).toBeVisible();
   });
+
+  /**
+   * A mistyped or truncated URL used to render the error screen instead: the value reached
+   * Postgres, which rejects a malformed uuid with 22P02, and the store can only report that
+   * as an internal failure. The pages check the shape before looking anything up.
+   */
+  test('a malformed id is not found rather than an error', async ({ page }) => {
+    for (const path of [
+      '/business/events/not-a-uuid/edit',
+      '/business/events/not-a-uuid/attendees',
+      '/business/proposals/not-a-uuid',
+    ]) {
+      await page.goto(path);
+      await expect(page.getByRole('heading', { name: /could not find that/i }), path).toBeVisible();
+      await expect(page.getByRole('heading', { name: /could not load/i }), path).toBeHidden();
+    }
+  });
 });

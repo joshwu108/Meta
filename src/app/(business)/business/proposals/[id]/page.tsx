@@ -11,6 +11,7 @@ import { getBusinessProposal } from '@/features/business/server/proposals';
 import { getBusinessEvent } from '@/features/business/server/events';
 import { requireBusinessPage } from '@/features/business/server/page-data';
 import { nextSlotOccurrence } from '@/features/business/server/time';
+import { isLookupId } from '@/features/business/server/lookup-id';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,7 @@ export const dynamic = 'force-dynamic';
 export default async function ProposalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { deps, business } = await requireBusinessPage();
   const { id } = await params;
+  if (!isLookupId(id)) notFound();
 
   const proposal = await getBusinessProposal(deps, business.id, id).catch((err: unknown) => {
     if (err instanceof ApiError && err.code === 'NOT_FOUND') notFound();
