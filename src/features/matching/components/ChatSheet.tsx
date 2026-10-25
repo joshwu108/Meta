@@ -91,7 +91,7 @@ export function ChatSheet({ connection, onClose }: Props) {
         <label htmlFor={inputId} className="sr-only">
           Message
         </label>
-        <input id={inputId} value={draft} maxLength={1000} onChange={(e) => setDraft(e.target.value)} placeholder="Write a message" className="h-10 min-w-0 flex-1 rounded-pill border border-divider bg-surface-2 px-4 text-text placeholder:text-text-3 focus:border-brand focus:outline-none" />
+        <input id={inputId} autoFocus value={draft} maxLength={1000} onChange={(e) => setDraft(e.target.value)} placeholder="Write a message" className="h-10 min-w-0 flex-1 rounded-pill border border-divider bg-surface-2 px-4 text-text placeholder:text-text-3 focus:border-brand focus:outline-none" />
         <Button type="submit" aria-label="Send" isLoading={isSending} disabled={!draft.trim()} leadingIcon={<Send size={16} aria-hidden />}>
           Send
         </Button>

@@ -56,6 +56,7 @@ test('Block and Report from a match card', async ({ page }) => {
   await trigger.click();
   await page.getByRole('menuitem', { name: 'Report' }).click();
   const report = page.getByRole('dialog', { name: 'Report Yuki Tanaka' });
+  await expect(report.getByRole('radio', { checked: true })).toBeFocused();
   await report.getByRole('radio', { name: 'Spam' }).check();
   await report.getByRole('button', { name: 'Send report' }).click();
   await expect(page.getByText('Thanks. Your report was sent.')).toBeVisible();

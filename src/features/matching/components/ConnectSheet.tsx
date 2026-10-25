@@ -42,6 +42,7 @@ export function ConnectSheet({ person, isSending, onClose, onSend }: Props) {
       </label>
       <textarea
         id={fieldId}
+        autoFocus
         className={`${textAreaClass} mt-1`}
         maxLength={MAX_MESSAGE}
         value={message}

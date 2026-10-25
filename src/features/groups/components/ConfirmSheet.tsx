@@ -15,7 +15,7 @@ export function ConfirmSheet({ confirmation, isPending, onClose }: { confirmatio
       title={confirmation.title}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" autoFocus onClick={onClose}>
             Cancel
           </Button>
           <Button variant={confirmation.tone === 'danger' ? 'danger' : 'primary'} isLoading={isPending} onClick={confirmation.onConfirm}>

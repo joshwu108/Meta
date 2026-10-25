@@ -77,7 +77,7 @@ export function GroupFormFields({ values, onChange }: { values: GroupFormValues;
   const descriptionId = useId();
   return (
     <div className="flex flex-col gap-4">
-      <Input label="Name" value={values.name} maxLength={80} required onChange={(e) => onChange({ ...values, name: e.target.value })} placeholder="Thursday Makers" />
+      <Input label="Name" autoFocus value={values.name} maxLength={80} required onChange={(e) => onChange({ ...values, name: e.target.value })} placeholder="Thursday Makers" />
       <div className="flex flex-col gap-1">
         <label htmlFor={descriptionId} className="text-[length:var(--text-sm)] font-medium text-text-2">
           Description (optional)

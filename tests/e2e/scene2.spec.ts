@@ -63,6 +63,7 @@ test('Scene 2: matches with explanations, connect, create a private group, invit
 
   await cards.first().getByRole('button', { name: 'Connect' }).click();
   const connect = page.getByRole('dialog', { name: 'Connect with Maya Chen' });
+  await expect(connect.getByLabel('Add a note (optional)')).toBeFocused();
   await connect.getByLabel('Add a note (optional)').fill('Pottery on Thursday?');
   await connect.getByRole('button', { name: 'Send request' }).click();
   await expect(page.getByText('Request sent to Maya Chen')).toBeVisible();

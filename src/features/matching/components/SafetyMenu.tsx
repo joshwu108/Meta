@@ -96,7 +96,7 @@ export function BlockSheet({ person, isPending, onClose, onConfirm }: { person: 
       title={`Block ${person.displayName}?`}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" autoFocus onClick={onClose}>
             Cancel
           </Button>
           <Button variant="danger" isLoading={isPending} onClick={() => onConfirm(person)}>
@@ -116,7 +116,7 @@ function ReasonChoice({ value, onChange }: { value: ReportReason; onChange: (nex
       <legend className="mb-2 text-[length:var(--text-sm)] font-medium text-text-2">What’s going on?</legend>
       {REPORT_REASONS.map((reason) => (
         <label key={reason} className="flex items-center gap-3 rounded-sm px-2 py-2 hover:bg-hover">
-          <input type="radio" name="reason" value={reason} checked={value === reason} onChange={() => onChange(reason)} className="accent-[var(--color-brand)]" />
+          <input type="radio" name="reason" value={reason} checked={value === reason} autoFocus={value === reason} onChange={() => onChange(reason)} className="accent-[var(--color-brand)]" />
           {REPORT_REASON_LABELS[reason]}
         </label>
       ))}
