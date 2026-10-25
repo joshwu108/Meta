@@ -41,9 +41,25 @@ function RailContent({ tab }: { tab: Tab }) {
   return <AgentLog limit={20} />;
 }
 
-/** Screen 7: chat plus a right rail (≥1024px) or tabs (mobile). */
-export function AgentHome() {
+/** Preferences / Permissions / Activity tabs. In the shell's right rail at ≥1024px (`@aside/agent`), inline below. */
+export function AgentRail() {
   const [tab, setTab] = useState<Tab>("preferences");
+  return (
+    <aside className={`${s.card} ${s.stack}`} aria-label="Your agent settings">
+      <div className={s.tabs} role="tablist">
+        {TABS.map((t) => (
+          <button key={t.id} role="tab" aria-selected={tab === t.id} className={s.tab} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel"><RailContent tab={tab} /></div>
+    </aside>
+  );
+}
+
+/** Screen 7: chat; the settings rail sits in the shell's right rail (≥1024px) or below the chat (mobile). */
+export function AgentHome() {
   const { update } = usePreferences();
   const [applied, setApplied] = useState<string | null>(null);
 
@@ -54,24 +70,13 @@ export function AgentHome() {
   };
 
   return (
-    <main className={`${s.page} ${s.wide}`}>
+    <div className={s.page}>
       <h1 className={s.title}>My AI agent</h1>
-      <div className={s.split}>
-        <div className={s.stack}>
-          <ChatPanel kind="chat" opener="Hi! Want me to find people, events or groups for this week?" onApply={onApply} />
-          {applied ? <p className={s.muted} role="status">{applied}</p> : null}
-        </div>
-        <aside className={`${s.card} ${s.stack}`}>
-          <div className={s.tabs} role="tablist">
-            {TABS.map((t) => (
-              <button key={t.id} role="tab" aria-selected={tab === t.id} className={s.tab} onClick={() => setTab(t.id)}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <div role="tabpanel"><RailContent tab={tab} /></div>
-        </aside>
+      <div className={s.stack}>
+        <ChatPanel kind="chat" opener="Hi! Want me to find people, events or groups for this week?" onApply={onApply} />
+        {applied ? <p className={s.muted} role="status">{applied}</p> : null}
       </div>
-    </main>
+      <div className={s.mobileOnly}><AgentRail /></div>
+    </div>
   );
 }

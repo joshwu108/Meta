@@ -1,9 +1,10 @@
 import { Bot } from 'lucide-react';
+import Link from 'next/link';
 import { AiRing } from '../ui/AiRing';
 import { AiTag } from '../ui/AiTag';
 import { Card } from '../ui/Card';
 
-/** Default right-rail content: the user's agent strip. Workstream 02 replaces it with live suggestions. */
+/** Default right-rail content: the user's agent strip, linking to the agent (02). Pages with their own rail override `@aside`. */
 export function AgentAside({ displayName }: { displayName: string }) {
   return (
     <Card className="mx-2">
@@ -18,7 +19,10 @@ export function AgentAside({ displayName }: { displayName: string }) {
           <p className="text-[length:var(--text-sm)] text-text-2">Working for {displayName}</p>
         </div>
       </div>
-      <p className="mt-3 text-[length:var(--text-sm)] text-text-2">Suggestions appear here once your agent knows your interests and free evenings.</p>
+      <p className="mt-3 text-[length:var(--text-sm)] text-text-2">Ask me for people, events or groups that fit your week.</p>
+      <Link href="/agent" className="mt-2 inline-block text-[length:var(--text-sm)] font-semibold text-brand hover:underline">
+        Chat with your agent
+      </Link>
       <AiTag className="mt-3" />
     </Card>
   );
