@@ -8,6 +8,7 @@ import { Button, Card, CardHeader, Input } from '@/features/core/components/ui';
 import { Select, Textarea } from './form';
 import { ApiClientError, apiPatch, apiPost } from '@/lib/api/client';
 import type { BusinessEvent, ProposalDetail } from '@/shared/types';
+import { formatDay } from '../format';
 import { SLOT_LABEL } from '../labels';
 import { REJECTION_REASONS, type RejectionReason } from '../schemas';
 import { EventFieldset, type EventDraft } from './EventFieldset';
@@ -99,7 +100,9 @@ export function DecisionPanel({
         <CardHeader
           title="Decided"
           subtitle={`You ${proposal.status} this proposal${
-            proposal.decidedAt ? ` on ${new Date(proposal.decidedAt).toLocaleDateString()}` : ''
+            // Venue zone and fixed locale, so the server and the browser render the same text
+            // (an unpinned toLocaleDateString() broke hydration and swallowed the next click).
+            proposal.decidedAt ? ` on ${formatDay(proposal.decidedAt)}` : ''
           }.`}
         />
         {proposal.resultingEventId ? (
