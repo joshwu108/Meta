@@ -5,7 +5,7 @@ import { adminLoadConsent, adminLoadSources, adminRecentShareLogs, adminWriteSha
 import { shareBatch, toAttendeeSharing, type AttendeeSharing, type SharingDeps } from "./server/sharable";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { addConfirmedTraitsWith, type ConfirmedTraits } from "./server/confirmed-traits";
+import { addConfirmedTraitsWith, removeImportedTraitsWith, type ConfirmedTraits } from "./server/confirmed-traits";
 
 /** Service-role client, untyped: 01's generated types do not include ws02 tables until `pnpm db:types` runs. */
 const getAdminClient = (): SupabaseClient => createAdminClient() as unknown as SupabaseClient;
@@ -96,4 +96,9 @@ export async function getOwnPreferencesForImport(
 ): Promise<{ interests: string[]; activityPrefs: string[]; dealbreakers: string[] }> {
   const prefs = await getPreferences(getAdminClient(), userId);
   return { interests: prefs.interests, activityPrefs: prefs.activityPrefs, dealbreakers: prefs.dealbreakers };
+}
+
+/** For 07's "Delete my Instagram data" → Remove: drop those values; touched fields become user_set. */
+export async function removeImportedTraits(userId: string, traits: ConfirmedTraits): Promise<void> {
+  return removeImportedTraitsWith(getAdminClient(), userId, traits);
 }

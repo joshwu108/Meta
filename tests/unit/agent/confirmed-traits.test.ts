@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { confirmedSources, unionTraits } from '@/features/agent/server/confirmed-traits';
+import { confirmedSources, unionTraits, withoutTraits } from '@/features/agent/server/confirmed-traits';
 import { EMPTY_PREFERENCES, type UserPreferencesWithSources } from '@/features/agent/schemas';
 
 const base = (over: Partial<UserPreferencesWithSources> = {}): UserPreferencesWithSources => ({
@@ -33,5 +33,19 @@ describe('addConfirmedTraits rules (07 → 02)', () => {
     const full = base({ interests: Array.from({ length: 50 }, (_, i) => `tag-${i}`) });
     expect(() => unionTraits(full, { interests: ['ceramics'] }, true)).toThrow(/up to 50 interests/);
     expect(unionTraits(full, { interests: ['tag-3'] }, true).interests).toHaveLength(50);
+  });
+
+  it('removes imported values, keeps categories other interests still imply, and marks touched fields user_set', () => {
+    const current = base({
+      interests: ['pottery', 'ceramics', 'board-games'],
+      interestCategories: ['creative', 'games', 'music'],
+      activityPrefs: ['quiet'],
+      fieldSources: { interests: 'ai_inferred' },
+    });
+    const next = withoutTraits(current, { interests: ['ceramics', 'board-games'] });
+    expect(next.interests).toEqual(['pottery']);
+    expect(next.interestCategories).toEqual(['creative', 'music']);
+    expect(next.activityPrefs).toEqual(['quiet']);
+    expect(next.fieldSources).toMatchObject({ interests: 'user_set', interestCategories: 'user_set' });
   });
 });

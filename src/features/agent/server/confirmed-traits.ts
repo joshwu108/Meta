@@ -86,3 +86,31 @@ export async function addConfirmedTraitsWith(
   });
   return { interests: saved.interests, activityPrefs: saved.activityPrefs };
 }
+
+/** Remove values the user once added from an import (07's "Delete my Instagram data" → Remove). */
+export function withoutTraits(current: UserPreferencesWithSources, traits: ConfirmedTraits): UserPreferencesWithSources {
+  const dropInterests = new Set(normalized(traits.interests));
+  const dropActivity = new Set(normalized(traits.activityPrefs));
+  const interests = current.interests.filter((t) => !dropInterests.has(t));
+  const removedCategories = new Set(resolveCategories([...dropInterests]));
+  const keptCategories = new Set(resolveCategories(interests));
+  const interestCategories = current.interestCategories.filter((c) => keptCategories.has(c) || !removedCategories.has(c));
+  const patch = {
+    ...(dropInterests.size > 0 ? { interests, interestCategories } : {}),
+    ...(dropActivity.size > 0 ? { activityPrefs: current.activityPrefs.filter((t) => !dropActivity.has(t)) } : {}),
+  };
+  // 02's rule: deleting a value marks the field user_set.
+  return applyPatch(current, patch);
+}
+
+export async function removeImportedTraitsWith(admin: SupabaseClient, userId: string, traits: ConfirmedTraits): Promise<void> {
+  const current = await repo.getPreferences(admin, userId);
+  const next = withoutTraits(current, traits);
+  await repo.savePreferences(admin, userId, next);
+  await logAgentAction({
+    userId,
+    action: "remove_imported_traits",
+    permissionsUsed: [],
+    result: `Removed ${current.interests.length - next.interests.length} interests and ${current.activityPrefs.length - next.activityPrefs.length} activity styles you had added from Instagram`,
+  });
+}
