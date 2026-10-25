@@ -80,7 +80,8 @@ export type DecideResult = {
   added: number;
   dismissed: number;
   dislikes: number;
-  profile: { interests: string[]; activityPrefs: string[] };
+  /** The saved preference lists when anything was added, else null. */
+  profile: { interests: string[]; activityPrefs: string[] } | null;
 };
 
 export type ScreensRunResult = {
