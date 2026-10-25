@@ -5,6 +5,7 @@ import { adminLoadConsent, adminLoadSources, adminRecentShareLogs, adminWriteSha
 import { shareBatch, toAttendeeSharing, type AttendeeSharing, type SharingDeps } from "./server/sharable";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { addConfirmedTraitsWith, type ConfirmedTraits } from "./server/confirmed-traits";
 
 /** Service-role client, untyped: 01's generated types do not include ws02 tables until `pnpm db:types` runs. */
 const getAdminClient = (): SupabaseClient => createAdminClient() as unknown as SupabaseClient;
@@ -72,4 +73,16 @@ export async function getAttendeeSharing(userIds: readonly string[]): Promise<Ma
 export async function getConsent(userId: string): Promise<Consent> {
   const [row] = await adminLoadConsent(getAdminClient(), [userId]);
   return row?.consent ?? DEFAULT_CONSENT;
+}
+
+/**
+ * For 07: union values the user explicitly confirmed (Love it / Yes / Edit) into their
+ * preferences through 02's own patch rules. Normalized tags, derived categories, max 50
+ * interests (`VALIDATION`). Fields still `ai_inferred` before onboarding review stay so.
+ */
+export async function addConfirmedTraits(
+  userId: string,
+  traits: ConfirmedTraits,
+): Promise<{ interests: string[]; activityPrefs: string[] }> {
+  return addConfirmedTraitsWith(getAdminClient(), userId, traits);
 }
