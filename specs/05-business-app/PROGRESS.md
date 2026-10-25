@@ -2,31 +2,32 @@
 
 Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../README.md`](../README.md)
 
-## Status: merged, with two fixes still to pull
+## Status: three fixes still to pull into main
 
-`ws/05-business` was merged into `main` on 2026-10-24 (`f1dc615`), and 04 merged after it.
-**Two bug fixes have landed on the branch since that merge and are not on `main` yet**, so
-the integrator needs to merge `ws/05-business` once more:
+All six workstreams are merged into `main`, and the whole product is green there:
+**800 unit, 213 integration, 62 db and 59 e2e tests pass with nothing skipped**, plus
+typecheck, lint and build (verified 2026-10-25 01:30 on a fresh `db reset` + `db:seed`).
 
-- `e3f960e` + `cf29fb6` — every time on the business screens is the venue's wall clock.
-  The editor read and wrote `datetime-local` in the **browser's** zone
-  while the server checks opening hours in `VENUE_TIMEZONE`. Any owner whose machine is not
-  in the venue's zone sees times shifted by hours and has plausible entries rejected. The
-  integrator had pinned the browser timezone in two e2e specs to get CI green; that was the
-  symptom. The specs now pin the browser to **UTC** and pass, which proves the app no longer
-  depends on the viewer's zone.
+**Three 05 bug fixes are still only on `ws/05-business`.** They landed after the branch was
+merged, so the integrator needs to merge it once more:
+
+- `e3f960e` + `cf29fb6` — **every time on the business screens is the venue's wall clock.**
+  The editor read and wrote `datetime-local` in the browser's zone, and the display
+  formatters rendered in whoever was rendering, while opening hours, a proposal's suggested
+  slot and its assumptions text are all venue time. The proposal header read "8:30 PM"
+  directly above an assumption reading "Staff available Thursday 18:30-20:15". Both halves
+  are fixed and the e2e specs now pin the browser to **UTC**, so they prove the app is
+  independent of the viewer's zone rather than hiding the dependency.
 - `bd003d3` — 05 passed a **business id** where `agent_action_log.user_id` references
   `profiles(id)`, so every publish and proposal decision silently failed its audit insert
-  (01's helper logs and returns rather than throwing). Fixed; a publish now records the
-  venue's owner.
+  (01's helper logs and returns rather than throwing). A publish now records the venue's
+  owner.
 
-Every P0 and P1 item below is ticked. On the integrated `main` (01–05) the suite reports
-**532 unit, 134 integration (1 skipped, waiting on 06) and 42 e2e with nothing else
-skipped** — Scene 4, the AI revision and 04's Scene 3 all run for real.
+Every P0 and P1 item below is ticked.
 
 Merge order note: 05's `0500_business.sql` adds **both** cross-workstream foreign keys
 (`proposals_business_fk`, `events_proposal_fk`) behind an `if exists` guard, so it is safe
-either side of 04. Both were confirmed present once 04 landed.
+either side of 04. Both were confirmed present in the 13-migration run.
 
 ---
 
@@ -379,6 +380,18 @@ either side of 04. Both were confirmed present once 04 landed.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 01:30` — **all six workstreams are merged and the whole product is green.**
+  02 and 06 landed while I was working, so `main` now has every migration. On a fresh
+  `db reset` + `db:seed`: **800 unit, 213 integration, 62 db and 59 e2e pass with nothing
+  skipped**, typecheck, lint and build clean. The 03↔06 `invitations_event_fk` collision I
+  reported is resolved, and 05's last skipped test — the attendee path against 06's `rsvps`
+  — now runs for real.
+  One near-miss worth recording: `pnpm typecheck` showed 32 errors across 12 of 02's and
+  06's files and I was about to report `main` as broken. The files were byte-identical to
+  `main`; the cause was my own `node_modules` being stale after merging their dependency
+  additions. `pnpm install` cleared all 32. Worth checking before blaming someone else's
+  merge.
+  Three 05 fixes are still only on the branch — see the status block at the top.
 - `2026-10-25 01:05` — **screenshotted Scene 4 and found a time the assertions could not
   see.** Generated a proposal and read the detail page rather than trusting the suite: the
   header said "Thu, Oct 29, 8:30 PM" directly above an assumption reading "Staff available
