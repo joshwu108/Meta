@@ -16,6 +16,12 @@ export function applyTestSchema(): void {
   execSync(`docker exec -i ${DB_CONTAINER} psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q`, { input: sql, stdio: ['pipe', 'pipe', 'pipe'] });
 }
 
+/**
+ * The synthetic Scene 3 world sits one degree north of the seeded demo data (02 seeds the same 14
+ * users and 05 the same venues), so its cohorts and venue matches never mix with the seed.
+ */
+const TEST_LAT_OFFSET = 1;
+
 const VENUES = [
   { slug: 'kiln', name: 'Kiln & Cup', category: 'creative', neighborhood: 'Mission District', lat: 37.75, lng: -122.42, caps: { event_categories: ['creative', 'food_drink'], capacity: 12, min_price_cents: 1500, max_price_cents: 3500, hosting_slots: ['thu_eve', 'sat_day'] } },
   { slug: 'ritual', name: 'Ritual Grounds', category: 'food_drink', neighborhood: 'Hayes Valley', lat: 37.78, lng: -122.42, caps: { event_categories: ['food_drink', 'community'], capacity: 20, min_price_cents: 0, max_price_cents: 1500, hosting_slots: ['mon_eve', 'tue_eve', 'wed_eve', 'thu_eve', 'fri_eve', 'sat_eve', 'sun_eve'] } },
@@ -33,7 +39,7 @@ async function seedConsumer(admin: SupabaseClient, row: Row): Promise<TestUser> 
   const p = row.preferences;
   const must = (r: { error: { message: string } | null }) => { if (r.error) throw new Error(r.error.message); };
   must(await admin.from('profiles').update({
-    neighborhood: p.neighborhood, coarse_lat: p.coarseLat, coarse_lng: p.coarseLng, is_discoverable: true, onboarding_completed_at: new Date().toISOString(),
+    neighborhood: p.neighborhood, coarse_lat: p.coarseLat + TEST_LAT_OFFSET, coarse_lng: p.coarseLng, is_discoverable: true, onboarding_completed_at: new Date().toISOString(),
   }).eq('id', user.id));
   must(await admin.from('user_preferences').upsert({
     user_id: user.id, interests: p['interests'], interest_categories: p['interestCategories'], availability_slots: p['availabilitySlots'],
@@ -47,7 +53,7 @@ async function seedConsumer(admin: SupabaseClient, row: Row): Promise<TestUser> 
 async function seedVenue(admin: SupabaseClient, v: (typeof VENUES)[number]): Promise<TestUser & { businessId: string }> {
   const owner = await createTestUser(admin as never, `owner-${v.slug}`);
   const { data, error } = await admin.from('businesses').insert({
-    owner_id: owner.id, name: v.name, slug: `${v.slug}-${owner.id.slice(0, 8)}`, category: v.category, address: '1 Test St', neighborhood: v.neighborhood, lat: v.lat, lng: v.lng,
+    owner_id: owner.id, name: v.name, slug: `${v.slug}-${owner.id.slice(0, 8)}`, category: v.category, address: '1 Test St', neighborhood: v.neighborhood, lat: v.lat + TEST_LAT_OFFSET, lng: v.lng,
   }).select('id').single();
   if (error) throw new Error(error.message);
   const businessId = (data as { id: string }).id;

@@ -67,7 +67,9 @@ describe('ws04 pipeline against local Supabase (MOCK_AI, Scene 3)', () => {
   it('populates run stats and notifies the owner', async () => {
     const { data: run } = await admin.from('opportunity_runs').select('status, stats, finished_at').eq('id', firstRun.runId).single();
     expect(run?.status).toBe('completed');
-    expect(run?.stats).toMatchObject({ stage: 'done', usersConsidered: 13, proposalsCreated: firstRun.stats.proposalsCreated });
+    expect(run?.stats).toMatchObject({ stage: 'done', proposalsCreated: firstRun.stats.proposalsCreated });
+    // 13 consenting test users, plus any consenting users the seed loaded (02's preferences seed).
+    expect((run?.stats as { usersConsidered: number }).usersConsidered).toBeGreaterThanOrEqual(13);
     expect(run?.finished_at).not.toBeNull();
     const owner = world.owners.get('Kiln & Cup')!;
     const { data: notes } = await db(owner.client).from('notifications').select('type, payload');
