@@ -391,6 +391,32 @@ either side of 04. Both were confirmed present in the 13-migration run.
     will wire it in one commit once the route and its shape are agreed on the README.
 - **06** — `rsvps` table. `confirmedCount` is a guarded query returning 0 until it lands.
 
+- **02 — the consumer error screens have a "Try again" button that cannot recover.**
+  `src/features/matching/components/ScreenStates.tsx:48` wires `onClick={reset}`, and three
+  routes use it: `(consumer)/match/error.tsx`, `(consumer)/groups/error.tsx` and
+  `(consumer)/groups/[id]/error.tsx`. Next's `reset()` re-renders the boundary's children
+  against the client router cache, whose entry for the segment is the failed payload, so the
+  same error replays and the button does nothing for as long as the viewer keeps clicking.
+  I hit this in 05's own boundary and measured it: with the failing read restored and the
+  server proven healthy from a second tab, `reset()` alone stayed broken, and so did
+  `router.refresh()` followed by `reset()`. The fix that works is to clear and refetch in one
+  transition, so React commits the cleared boundary together with the new payload:
+  `const router = useRouter(); const [, startTransition] = useTransition();` then
+  `onClick={() => startTransition(() => { reset(); router.refresh(); })}`.
+  05 applies this through `src/features/business/components/recover.ts` (commit `51d13e3`),
+  which 02 is welcome to import rather than repeat. Not applied to `ScreenStates.tsx`:
+  it is 02's file.
+
+- **Integrator (small, repo-wide) — React components cannot be unit-tested.**
+  `@testing-library/react` and `jsdom` are both already in `package.json` and no test uses
+  them, because everything under `src/` compiles as classic JSX under `vitest.config.ts`, so
+  importing any component that pulls in `@/features/core/components/ui` dies with
+  "React is not defined" (`Toast.tsx:14`). A per-file `@jsxRuntime automatic` pragma does not
+  help, since the failure is in the imported module. Adding `esbuild: { jsx: 'automatic' }`
+  to `vitest.config.ts` would make component rendering testable for every workstream. Not
+  applied: `vitest.config.ts` is a shared contract. 05 worked around it by extracting the
+  logic under test into a plain module.
+
 ## Blocked
 
 - ~~Git identity not configured in this clone.~~ **Resolved 2026-10-24 15:58**: the owner
@@ -780,3 +806,40 @@ either side of 04. Both were confirmed present in the 13-migration run.
   event lifecycle, `decideProposal`. 125 unit tests pass; `tsc --noEmit` and `eslint`
   clean. Still uncommitted — see Blocked (git identity). Next: `store-supabase.ts`,
   the API routes (R1-R12), then the UI (U1-U7).
+
+- **2026-10-25 01:20 — the two business screens that had never been rendered.** Every
+  earlier pass exercised screens that *work*; `error.tsx` and `loading.tsx` had been written
+  and never once displayed. Rendering them found a real bug in the first and cleared the
+  second.
+  `error.tsx`: forced a genuine server failure by revoking `select on public.events` from
+  `authenticated`, which leaves auth and the business lookup working so the owner gets past
+  the guard and the *screen* fails. The boundary itself is right — chrome intact, "Nothing
+  was changed and nothing was published", a digest reference, and no leak of `permission
+  denied`, `42501`, `PGRST`, `supabase` or a stack trace into the UI. But **"Try again" could
+  not recover**: restore the grant, click, and the same error came back.
+  Two false starts worth recording. First I concluded "the cached failure replays" from probes
+  that clicked milliseconds after the `GRANT` while the control reload happened seconds later
+  — PostgREST reloads its schema cache asynchronously after DCL, so I was partly measuring
+  that delay, not the bug. The clean experiment proves server health from a *second tab*
+  (its own router cache, cannot affect the first) before clicking: the bug is real and
+  pre-existing, confirmed against the unmodified boundary. Second, my first fix —
+  `router.refresh()` then `reset()` — still did not recover, even with a refetch visibly
+  firing: the reset commits before the new payload lands. What works is clearing and
+  refetching inside one transition, so React commits them together:
+  `startTransition(() => { reset(); router.refresh(); })`. Extracted to
+  `src/features/business/components/recover.ts` and covered by three unit tests, because the
+  shared `vitest.config.ts` makes rendering the component itself untestable (see Needs from
+  others). Verified in the running app: recovers to the real page; while the server is still
+  broken, repeated clicks keep showing a working boundary rather than a blank or wedged page;
+  and it still recovers after three failed attempts.
+  `loading.tsx`: a client-side navigation never shows it — Next keeps the previous page on
+  screen — so I made a hard navigation genuinely slow by holding `ACCESS EXCLUSIVE` on
+  `events` from a background session. The skeleton renders correctly: 16 placeholder blocks,
+  one `role="status"` announcing "Loading", nav chrome present, settling to the real page.
+  No change needed.
+  Also found and discarded a false alarm: the dashboard appeared not to render at all, which
+  was my own environment — a previous tick left the database reset but unseeded (`db reset`
+  does not seed; `pnpm db:seed` is a separate step). Nothing was reported on that.
+  Suites after the fix: 808 unit, 151 integration + 62 db (0 skipped), typecheck and lint
+  clean. Same `reset()`-only defect exists in 02's shared `ScreenError`, reported with the
+  verified fix rather than edited.
