@@ -18,6 +18,19 @@ export const SLOT_LABEL = {
   sun_eve: 'Sunday evenings',
 } as const satisfies Record<AvailabilitySlot, string>;
 
+/** Column headings for the desktop insights grid, where the full label will not fit. */
+export const SLOT_SHORT = {
+  mon_eve: 'Mon eve',
+  tue_eve: 'Tue eve',
+  wed_eve: 'Wed eve',
+  thu_eve: 'Thu eve',
+  fri_eve: 'Fri eve',
+  sat_day: 'Sat day',
+  sat_eve: 'Sat eve',
+  sun_day: 'Sun day',
+  sun_eve: 'Sun eve',
+} as const satisfies Record<AvailabilitySlot, string>;
+
 export const CATEGORY_LABEL = {
   creative: 'Creative',
   food_drink: 'Food & drink',

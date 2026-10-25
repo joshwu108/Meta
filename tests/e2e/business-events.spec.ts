@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { OWNERS, appIsReady, signIn } from './support/business';
+import { OWNERS, appIsReady, eventRow, signIn } from './support/business';
 
 /**
  * The manual event lifecycle through the UI: create a draft, edit it, publish it, read the
@@ -55,7 +55,7 @@ test.describe('a business runs its own event', () => {
     await page.getByRole('button', { name: /save as draft/i }).click();
     await page.waitForURL(/\/business\/events$/);
 
-    const row = page.getByRole('listitem').filter({ hasText: title });
+    const row = eventRow(page, title);
     await expect(row.getByText('Draft')).toBeVisible();
     await expect(row.getByText('$18')).toBeVisible();
 
@@ -66,33 +66,29 @@ test.describe('a business runs its own event', () => {
     await page.getByRole('button', { name: /save changes/i }).click();
     await page.waitForURL(/\/business\/events$/);
 
-    await page.getByRole('listitem').filter({ hasText: title }).getByRole('link', { name: 'Edit' }).click();
+    await eventRow(page, title).getByRole('link', { name: 'Edit' }).click();
     // Wait for the editor: the table rows carry a Publish button of their own now.
     await expect(page.getByRole('heading', { name: 'Edit event' })).toBeVisible();
     await page.getByRole('button', { name: /^publish$/i }).click();
     await page.waitForURL(/\/business\/events$/);
 
-    const published = page.getByRole('listitem').filter({ hasText: title });
+    const published = eventRow(page, title);
     await expect(published.getByText('Published')).toBeVisible();
     await expect(published.getByRole('meter')).toHaveAttribute('aria-valuemax', '12');
 
     // The dashboard counts it as upcoming.
     await page.goto('/business');
-    await expect(page.getByRole('listitem').filter({ hasText: title })).toBeVisible();
+    await expect(eventRow(page, title)).toBeVisible();
 
     // Attendees: counts first, nobody has RSVP'd yet.
     await page.goto('/business/events');
-    await page
-      .getByRole('listitem')
-      .filter({ hasText: title })
-      .getByRole('link', { name: 'Attendees' })
-      .click();
+    await eventRow(page, title).getByRole('link', { name: 'Attendees' }).click();
     await expect(page.getByRole('heading', { name: title })).toBeVisible();
     await expect(page.getByText('No confirmed attendees yet.')).toBeVisible();
 
     // Cancelling needs a reason.
     await page.goto('/business/events');
-    await page.getByRole('listitem').filter({ hasText: title }).getByRole('link', { name: 'Edit' }).click();
+    await eventRow(page, title).getByRole('link', { name: 'Edit' }).click();
     await expect(page.getByRole('heading', { name: 'Edit event' })).toBeVisible();
     await page.getByRole('button', { name: /cancel event/i }).first().click();
     await page.getByLabel('Reason').fill('The kiln needs repairing');
@@ -100,7 +96,7 @@ test.describe('a business runs its own event', () => {
     await page.waitForURL(/\/business\/events$/);
 
     await expect(
-      page.getByRole('listitem').filter({ hasText: title }).getByText('Cancelled'),
+      eventRow(page, title).getByText('Cancelled'),
     ).toBeVisible();
   });
 
@@ -117,7 +113,7 @@ test.describe('a business runs its own event', () => {
     await page.getByRole('button', { name: /save as draft/i }).click();
     await page.waitForURL(/\/business\/events$/);
 
-    const row = () => page.getByRole('listitem').filter({ hasText: title });
+    const row = () => eventRow(page, title);
     await expect(row().getByText('Draft')).toBeVisible();
 
     await row().getByRole('button', { name: 'Publish' }).click();

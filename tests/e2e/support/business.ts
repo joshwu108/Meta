@@ -59,8 +59,22 @@ export async function revisionsAvailable(page: Page, proposalId: string): Promis
   return response.status() !== 404;
 }
 
+/**
+ * One event's row, in whichever presentation the viewport is showing.
+ *
+ * The events screen renders the same rows twice: a card list on a phone and a table from
+ * 1024px up, with the other hidden by CSS. A locator pinned to `listitem` found nothing at
+ * Playwright's 1280px default once the table landed, so the row is matched in both and
+ * filtered to the visible one — which is also what an owner can actually click.
+ */
+export function eventRow(page: Page, title: string) {
+  return page
+    .locator('main li, main tbody tr')
+    .filter({ hasText: title })
+    .locator('visible=true');
+}
+
 /** Asserts a row in the events table reached a status. */
 export async function expectEventStatus(page: Page, title: string, status: string): Promise<void> {
-  const row = page.getByRole('listitem').filter({ hasText: title });
-  await expect(row.getByText(status, { exact: false })).toBeVisible();
+  await expect(eventRow(page, title).getByText(status, { exact: false })).toBeVisible();
 }

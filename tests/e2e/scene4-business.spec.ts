@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { OWNERS, appIsReady, revisionsAvailable, signIn, trySeedPendingProposal } from './support/business';
+import { OWNERS, appIsReady, eventRow, revisionsAvailable, signIn, trySeedPendingProposal } from './support/business';
 
 /**
  * Demo Scene 4 (spec section 9, T-E1):
@@ -59,7 +59,7 @@ test.describe('Scene 4 — a business approves an AI proposal', () => {
     await page.getByRole('button', { name: /approve & publish/i }).click();
 
     await page.waitForURL(/\/business\/events/);
-    const row = page.getByRole('listitem').filter({ hasText: /Beginner Pottery & Coffee Night/i });
+    const row = eventRow(page, 'Beginner Pottery & Coffee Night');
     await expect(row.getByText('Published')).toBeVisible();
     await expect(row.getByText('$25')).toBeVisible();
   });

@@ -2,6 +2,7 @@ import { CalendarPlus } from 'lucide-react';
 import { Card, EmptyState } from '@/features/core/components/ui';
 import { ButtonLink } from '@/features/business/components/form';
 import { EventListRow } from '@/features/business/components/EventListRow';
+import { EventsTable } from '@/features/business/components/EventsTable';
 import { listBusinessEvents } from '@/features/business/server/events';
 import { requireBusinessPage } from '@/features/business/server/page-data';
 
@@ -41,11 +42,18 @@ export default async function BusinessEventsPage() {
         />
       ) : (
         <Card className="p-0">
-          <ul>
+          {/* Same rows, two presentations: a stack to scroll on a phone, columns to compare
+              on a desktop (design-system.md section 3). */}
+          <ul className="xl:hidden">
             {events.map((event) => (
               <EventListRow key={event.id} event={event} />
             ))}
           </ul>
+          {/* From 1280px, not 1024px: the table's columns need ~810px and a 1024px window
+              leaves the business column only ~696px, which overflowed the page. */}
+          <div className="hidden overflow-x-auto xl:block">
+            <EventsTable events={events} />
+          </div>
         </Card>
       )}
     </div>

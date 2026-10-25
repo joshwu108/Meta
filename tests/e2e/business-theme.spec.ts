@@ -10,6 +10,9 @@ const BREAKPOINTS = [
   { label: '320', width: 320, height: 720 },
   { label: '768', width: 768, height: 900 },
   { label: '1024', width: 1024, height: 900 },
+  // 1280 is where the events table and the interest grid replace the card lists, so it is
+  // the width a column-sizing regression shows up at first.
+  { label: '1280', width: 1280, height: 900 },
   { label: '1440', width: 1440, height: 900 },
 ] as const;
 
