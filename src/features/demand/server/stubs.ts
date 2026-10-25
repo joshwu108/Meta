@@ -98,5 +98,3 @@ export async function stubLoadVenue(admin: SupabaseClient, match: BusinessMatch)
   if (error) throw new Error(`venue lookup failed: ${error.message}`);
   return data ? toVenue(data as unknown as VenueRow, match) : null;
 }
-
-/** Stub of 05's prefilter + 04 §5.6 weighting. */
