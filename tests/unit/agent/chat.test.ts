@@ -10,6 +10,9 @@ vi.mock("@/features/core", () => ({
   },
 }));
 vi.mock("@/lib/ai", async () => (await import("./mock-ai")).mockAi);
+vi.mock("@/features/agent/server/groups", () => ({
+  suggestGroups: async () => [{ id: "00000000-0000-4000-8000-000000000301", name: "Mission Makers", description: "Pottery on Thursdays.", memberCount: 4 }],
+}));
 vi.mock("@/features/agent/server/people", () => ({
   suggestPeople: async () => [{
     id: "00000000-0000-4000-8000-000000000101", displayName: "Maya", neighborhood: "Mission",
@@ -48,6 +51,7 @@ describe("runCapabilities", () => {
     const cards = await runCapabilities("u1", viewer, [{ name: "suggest_events" }, { name: "suggest_groups" }]);
     expect(cards.filter((c) => c.kind === "event").every((c) => c.href === `/events/${c.targetId}`)).toBe(true);
     expect(cards.filter((c) => c.kind === "group").every((c) => c.href === `/groups/${c.targetId}`)).toBe(true);
+    expect(cards.some((c) => c.kind === "group")).toBe(true);
     expect(cards.every((c) => c.explanation)).toBe(true);
   });
 

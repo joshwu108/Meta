@@ -2,9 +2,8 @@ import "server-only";
 import type { SharablePreferences } from "@/shared/types";
 
 /**
- * Stand-ins for 06 (`getRecommendedEvents`) and 03 (groups), whose tables are not on main yet.
- * Replace with the real exports once 03/06 land. People suggestions use real consented users
- * (see ./people.ts).
+ * The only remaining stand-in: event suggestions, until 06 (`getRecommendedEvents`) reaches main.
+ * People (./people.ts) and groups (./groups.ts, 03's export) are real. Card types live here.
  */
 
 export type PersonCandidate = { id: string; displayName: string; neighborhood: string; preferences: SharablePreferences };
@@ -30,19 +29,8 @@ const EVENTS: readonly EventCandidate[] = [
   },
 ];
 
-const GROUPS: readonly GroupCandidate[] = [
-  {
-    id: "00000000-0000-4000-8000-000000000301",
-    name: "Mission Makers",
-    description: "Pottery, painting and crafts on Thursday evenings in the Mission.",
-    memberCount: 4,
-  },
-];
 
 export async function suggestEvents(_userId: string, limit = 3): Promise<EventCandidate[]> {
   return EVENTS.slice(0, limit);
 }
 
-export async function suggestGroups(_userId: string, limit = 3): Promise<GroupCandidate[]> {
-  return GROUPS.slice(0, limit);
-}
