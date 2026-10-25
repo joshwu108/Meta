@@ -336,6 +336,18 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 22:15` — **A1 audit against 06's consumer, and a schema hardening.** Checked
+  acceptance criterion 1 properly for the first time: 06's `getNearbyBusinesses` selects
+  exactly the columns `businesses` provides and handles the nullable ones correctly. Two
+  things came out of it. PostgREST returns `numeric` as a JSON number, so the
+  `distance_km.toFixed()` in 05's candidate reasons is safe — verified rather than assumed,
+  since a string there would throw. And **`category` was plain text on both `businesses`
+  and `events`**, with the enum living only in the spec comment and the Zod layer: 06 parses
+  both columns with `z.enum(EVENT_CATEGORY)`, so a bad value would have surfaced as a crash
+  in *their* code instead of failing at the write. Added check constraints there and on the
+  two capability arrays that 04 matches against, and probed each one to confirm it rejects.
+  All 13 migrations still apply together, the seed still loads, 349 unit + 38 integration
+  pass with the full schema.
 - `2026-10-24 21:50` — **six-way verification: everything passes with nothing skipped.**
   Grafted every other workstream's migrations (02, 03, 04, 06) plus 04's source locally and
   ran the lot. **All 13 migrations apply together on a fresh reset**, the seed loads, both
