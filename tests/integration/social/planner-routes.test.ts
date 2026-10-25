@@ -48,7 +48,8 @@ setTestOrigin('planner-routes');
 const admin = adminClient();
 let owner: TestUser, maker: TestUser, quiet: TestUser, outsider: TestUser;
 let groupId: string;
-const EVENT_ID = '7a1f3c2e-5b4d-4e6f-8a9b-0c1d2e3f4a5b';
+/** A seeded 05 event: 06's invitations_event_fk needs a real row. */
+let EVENT_ID: string;
 
 function nextThursdayEvening(): string {
   const d = new Date();
@@ -62,6 +63,9 @@ async function addActive(userId: string) {
 }
 
 beforeAll(async () => {
+  const seeded = await admin.from('events').select('id').eq('title', 'Wheel Throwing Basics').limit(1).single();
+  if (seeded.error) throw new Error(`seeded event missing (run pnpm db:seed): ${seeded.error.message}`);
+  EVENT_ID = seeded.data.id;
   [owner, maker, quiet, outsider] = await Promise.all([
     createTestUser(admin, 'plan-owner'),
     createTestUser(admin, 'plan-maker'),

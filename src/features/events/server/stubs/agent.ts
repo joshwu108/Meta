@@ -1,47 +1,13 @@
 import "server-only";
 import type { AvailabilitySlot, EventCategory } from "@/shared/enums";
 import type { SharablePreferences } from "@/shared/types";
-import { createAdminClient, logAgentAction } from "./core";
+import { logAgentAction } from "./core";
 
 // Stand-ins for 02's exports (specs/02-onboarding-and-agent/specs.md §5). Only these stubs read
 // 02's tables; replace each with the real export from "@/features/agent" when it lands.
 
-type Purpose = "matching" | "demand" | "group_plan";
-const CONSENT_FLAG: Record<Purpose, string> = {
-  matching: "allow_matching",
-  demand: "allow_demand_aggregation",
-  group_plan: "allow_group_planning",
-};
-
-export async function getSharablePreferences(
-  userId: string,
-  purpose: Purpose,
-): Promise<SharablePreferences | null> {
-  const db = createAdminClient();
-  const [{ data: prefs }, { data: agent }, { data: profile }] = await Promise.all([
-    db.from("user_preferences").select("*").eq("user_id", userId).maybeSingle(),
-    db.from("agent_profiles").select("consent").eq("user_id", userId).maybeSingle(),
-    db.from("profiles").select("is_discoverable, coarse_lat, coarse_lng, neighborhood").eq("id", userId).maybeSingle(),
-  ]);
-  const consent = (agent?.consent ?? {}) as Partial<Record<string, boolean>>;
-  if (!prefs || !profile || consent[CONSENT_FLAG[purpose]] !== true) return null;
-  if (purpose === "matching" && !profile.is_discoverable) return null;
-  return {
-    userId,
-    interests: prefs.interests ?? [],
-    interestCategories: prefs.interest_categories ?? [],
-    availabilitySlots: prefs.availability_slots ?? [],
-    socialGoals: prefs.social_goals ?? [],
-    groupSizePref: prefs.group_size_pref ?? null,
-    budgetMin: prefs.budget_min_cents ?? null,
-    budgetMax: prefs.budget_max_cents ?? null,
-    travelRadiusKm: Number(prefs.travel_radius_km ?? 5),
-    activityPrefs: prefs.activity_prefs ?? [],
-    coarseLat: profile.coarse_lat === null ? null : Number(profile.coarse_lat),
-    coarseLng: profile.coarse_lng === null ? null : Number(profile.coarse_lng),
-    neighborhood: profile.neighborhood ?? null,
-  };
-}
+/** 02 is on main: preferences come through its consent boundary. */
+export { getSharablePreferences } from "@/features/agent";
 
 /** 02's ExplainInput (src/features/agent/server/explain.ts on ws/02-agent). */
 export type ExplainInput = {
