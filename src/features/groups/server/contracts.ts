@@ -7,7 +7,9 @@ import { uuidSchema } from '@/shared/schemas/common';
 export async function getGroupMemberIds(groupId: string): Promise<string[]> {
   const admin = createAdminClient();
   const id = uuidSchema.parse(groupId);
-  const { data: group } = await admin.from('groups').select('archived_at').eq('id', id).maybeSingle();
+  const { data: group, error: groupError } = await admin.from('groups').select('archived_at').eq('id', id).maybeSingle();
+  // A failed lookup must not read as "no members": callers act on this list (06 invites from it).
+  if (groupError) throw new ApiError('INTERNAL', 'Could not load group members', 500);
   if (!group || group.archived_at) return [];
   const { data, error } = await admin.from('group_members').select('user_id').eq('group_id', id).eq('status', 'active');
   if (error) throw new ApiError('INTERNAL', 'Could not load group members', 500);
