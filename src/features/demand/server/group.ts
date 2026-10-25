@@ -1,4 +1,4 @@
-import type { AvailabilitySlot, EventCategory, GroupSizePref } from '@/shared/enums';
+import type { GroupVenueRequest } from '@/features/groups';
 import type { StoredProposal } from '../schemas';
 import { toBand } from './aggregate';
 import type { PipelineDeps } from './deps';
@@ -6,28 +6,7 @@ import { draft, pickVenue, proposalNotice, type VenueNeed } from './process-clus
 import type { ValidationIssue, ValidationTarget } from './validate';
 import { capabilitySummary, type Venue } from './venue';
 
-/**
- * Mirror of 03's `GroupVenueRequest` (origin/ws/03-matching `src/features/groups/server/venue-request.ts`).
- * Replace with `import type { GroupVenueRequest } from '@/features/groups'` once 03 reaches main.
- */
-export type GroupVenueRequest = {
-  groupId: string;
-  planId: string;
-  suggestionIndex: number;
-  title: string;
-  description: string;
-  category: EventCategory;
-  slot: AvailabilitySlot;
-  estimatedCostCents: number | null;
-  memberCount: number;
-  votes: number;
-  groupSizeMode: GroupSizePref | null;
-  budgetMaxCents: number | null;
-  activityPrefs: string[];
-  neighborhoodLabel: string | null;
-  centerLat: number | null;
-  centerLng: number | null;
-};
+export type { GroupVenueRequest };
 
 export type GroupKey = { groupId: string; planId: string; suggestionIndex: number };
 

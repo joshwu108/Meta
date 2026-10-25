@@ -43,6 +43,6 @@ export async function isActiveGroupMember(client: SupabaseClient, userId: string
     .eq('user_id', userId)
     .eq('status', 'active')
     .maybeSingle();
-  if (error) return false; // 03's table not on this branch yet: fail closed
+  if (error) return false; // fail closed
   return data != null;
 }
