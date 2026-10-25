@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { OWNERS, appIsReady, signIn, trySeedPendingProposal } from './support/business';
+import { OWNERS, appIsReady, revisionsAvailable, signIn, trySeedPendingProposal } from './support/business';
 
 /**
  * Demo Scene 4 (spec section 9, T-E1):
@@ -79,5 +79,37 @@ test.describe('Scene 4 — a business approves an AI proposal', () => {
     await page.goto('/business');
     const nav = page.getByRole('navigation', { name: 'Main navigation' });
     await expect(nav.getByRole('link', { name: /proposals/i })).toContainText(/\d/);
+  });
+});
+
+test.describe('Scene 4 — asking the AI for a different proposal', () => {
+  test.beforeEach(async ({ page }) => {
+    test.skip(!(await appIsReady(page)), 'the app is not reachable');
+    await signIn(page, OWNERS.kiln);
+  });
+
+  test('a revision supersedes the proposal and opens the new one', async ({ page }) => {
+    const seeded = await trySeedPendingProposal(page);
+    test.skip(!seeded, "workstream 04's event_proposals table is not migrated yet");
+
+    await page.goto('/business/proposals');
+    await page.getByRole('link', { name: /review/i }).first().click();
+    const original = new URL(page.url()).pathname;
+
+    test.skip(
+      !(await revisionsAvailable(page, original.split('/').pop() ?? '')),
+      "workstream 04's revise endpoint is not merged yet",
+    );
+
+    await page.getByRole('button', { name: /ask ai to revise/i }).click();
+    // 04 refuses a request with nothing in it, so the button stays disabled until there is.
+    await expect(page.getByRole('button', { name: /ask for a new version/i })).toBeDisabled();
+
+    await page.getByLabel('What should change?').fill('Make it shorter and aimed at beginners.');
+    await page.getByRole('button', { name: /ask for a new version/i }).click();
+
+    // The answer is a new pending proposal; the old one is superseded.
+    await page.waitForURL((url) => url.pathname.startsWith('/business/proposals/') && url.pathname !== original);
+    await expect(page.getByRole('button', { name: /approve as-is/i })).toBeVisible();
   });
 });

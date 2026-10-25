@@ -48,6 +48,17 @@ export async function trySeedPendingProposal(page: Page, fixture = 'pottery-nigh
   throw new Error(`could not seed a proposal: ${response.status()} ${body}`);
 }
 
+/**
+ * True when workstream 04's revise endpoint exists. 04 may merge its pipeline (0400)
+ * before its P1 revision work (0403), so the proposal table existing does not imply this.
+ * An empty body is invalid for the route, so 404 means absent and 4xx-but-not-404 means
+ * present.
+ */
+export async function revisionsAvailable(page: Page, proposalId: string): Promise<boolean> {
+  const response = await page.request.post(`/api/ai/proposals/${proposalId}/revise`, { data: {} });
+  return response.status() !== 404;
+}
+
 /** Asserts a row in the events table reached a status. */
 export async function expectEventStatus(page: Page, title: string, status: string): Promise<void> {
   const row = page.getByRole('listitem').filter({ hasText: title });
