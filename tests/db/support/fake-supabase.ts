@@ -9,7 +9,7 @@ import type pg from "pg";
 type Result = { data: unknown; error: { message: string } | null; count?: number | null };
 type Filter = { sql: string; values: unknown[] };
 
-const EMBED_FK: Record<string, string> = { businesses: "business_id" };
+const EMBED_FK: Record<string, string> = { businesses: "business_id", profiles: "user_id" };
 const ident = (name: string) => {
   if (!/^[a-z_][a-z0-9_]*$/.test(name)) throw new Error(`Unsupported identifier: ${name}`);
   return `"${name}"`;
@@ -112,6 +112,7 @@ class Query implements PromiseLike<Result> {
   gte(col: string, v: unknown) { return this.where(`t.${ident(col)} >= ?`, v); }
   lte(col: string, v: unknown) { return this.where(`t.${ident(col)} <= ?`, v); }
   in(col: string, v: readonly unknown[]) { return this.where(`t.${ident(col)} = any(?)`, [...v]); }
+  contains(col: string, v: readonly unknown[]) { return this.where(`t.${ident(col)} @> ?`, [...v]); }
   is(col: string, v: null | boolean) {
     this.filters.push({ sql: `t.${ident(col)} is ${v === null ? "null" : v ? "true" : "false"}`, values: [] });
     return this;

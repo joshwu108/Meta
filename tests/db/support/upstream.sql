@@ -57,10 +57,14 @@ create table user_preferences (
   budget_min_cents int,
   budget_max_cents int,
   travel_radius_km numeric(4,1) not null default 5,
-  activity_prefs text[] not null default '{}'
+  activity_prefs text[] not null default '{}',
+  dealbreakers text[] not null default '{}',
+  field_sources jsonb not null default '{}'
 );
 create table agent_profiles (
   user_id uuid primary key references profiles(id) on delete cascade,
+  summary text,
+  feedback_notes jsonb not null default '[]',
   consent jsonb not null default '{"allow_matching": false, "allow_demand_aggregation": false, "allow_group_planning": false, "share_interests_with_attendees": false, "share_name_with_business": false}'
 );
 

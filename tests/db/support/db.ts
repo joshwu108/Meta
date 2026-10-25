@@ -88,6 +88,8 @@ export type RlsRole = {
 export async function createRlsRole(db: TestDb): Promise<RlsRole> {
   const role = `cg06_rls_${randomUUID().replaceAll("-", "").slice(0, 12)}`;
   await db.pool.query(`create role ${role} nologin`);
+  // Not a superuser on Supabase's Postgres: SET ROLE needs membership in the role.
+  await db.pool.query(`grant ${role} to current_user`);
   await db.pool.query(`grant usage on schema public, auth to ${role}`);
   await db.pool.query(`grant select, insert, update, delete on all tables in schema public to ${role}`);
   await db.pool.query(`grant execute on all functions in schema public, auth to ${role}`);
