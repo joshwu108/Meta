@@ -51,6 +51,16 @@ describe('runPipeline (Scene 3 data)', () => {
     expect(saved.length).toBeGreaterThan(0);
   });
 
+  it("never counts 02's demand opt-outs (02 AC3, shared fixture)", async () => {
+    const { DEMAND_OPT_OUT_EMAILS } = await import('../../fixtures/consent-cases');
+    const rows = (await import('../../fixtures/demand/users-scene3.json')).default as Array<{ email: string; allowDemandAggregation: boolean; preferences: { userId: string } }>;
+    expect(rows.filter((r) => !r.allowDemandAggregation).map((r) => r.email).sort()).toEqual([...DEMAND_OPT_OUT_EMAILS].sort());
+    const optedOut = new Set(rows.filter((r) => DEMAND_OPT_OUT_EMAILS.includes(r.email)).map((r) => r.preferences.userId));
+    const { deps, saved } = makeDeps({ generate: scene3Generate });
+    await runPipeline(deps, { triggeredBy: 'manual' });
+    expect(saved.flatMap((s) => s.cluster.members).filter((m) => optedOut.has(m.userId))).toEqual([]);
+  });
+
   it('creates nothing new on a second run within the dedup window', async () => {
     const { deps, saved } = makeDeps({ generate: scene3Generate });
     await runPipeline(deps, { triggeredBy: 'manual' });
