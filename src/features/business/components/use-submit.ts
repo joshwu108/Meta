@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ApiClientError, fieldErrors } from '@/lib/api/client';
+import { submitErrorMessage } from './submit-error';
 
 /**
  * One submit-and-navigate for every business form.
@@ -43,7 +44,8 @@ export function useSubmit(): SubmitState {
       await action();
     } catch (err) {
       if (err instanceof ApiClientError) {
-        setMessage(err.message);
+        // Server wording is owner-facing only for VALIDATION; see `submitErrorMessage`.
+        setMessage(submitErrorMessage(err.code, err.message));
         setErrors(fieldErrors(err.details));
       } else {
         setMessage('Something went wrong. Please try again.');
