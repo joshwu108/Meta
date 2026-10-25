@@ -108,6 +108,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-25 01:55 — Wakeup: main unchanged (9e2c56b). Fixed 05's two seed bugs: event times now resolve in `VENUE_TIMEZONE` (default America/Los_Angeles) regardless of the seeding machine, and each event moves to the next day its venue is open. Seeded events verified at their intended local hours. 1007 vitest + 61/61 Playwright green. Next: integrator merge of ws/01-core.
 - 2026-10-24 23:00 — All six workstreams are on main (9e2c56b). Merged it: one conflict (onboarding page, took 02's real flow over 01's placeholder). 06's `toEventSummary` lacked 01's new `category`; filled. Clean state on 0100–0600: seed fills preferences (14), businesses, events, groups, 37 RSVPs; types match a fresh `db:types`; 1002 vitest + 60/61 Playwright green (03's messaging test flaked once under load, passes alone). Next: keep the full suite green on main.
 - 2026-10-24 22:30 — Wakeup: main unchanged (4529588). Fixed 03's focus-trap gap for `autoFocus` sheets (verified the new e2e fails on the old hook). First attempt broke 03's Scene 2 under StrictMode; restore now waits for unmount. 532 unit + 44 Playwright green. Next: 06 and 02 on main.
 - 2026-10-24 22:05 — Wakeup: main unchanged (4529588). 05's ask: `logAgentAction` now resolves true/false and hints on FK misuse, so dropped audit rows are visible. 05's types ask was already satisfied (main's generated types match a fresh `db:types`). 666 vitest green. Next: 06 and 02 on main.
