@@ -19,7 +19,7 @@ export default async function OnboardingPage() {
     <AuthCard title={`Hi ${user.profile.display_name}`} subtitle="Your agent will ask a few questions to learn what you like and when you're free.">
       <div className="flex flex-col items-center gap-4 py-2 text-center">
         <AiRing>
-          <span className="inline-flex h-14 w-14 items-center justify-center rounded-pill text-brand">
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-pill text-brand-ink">
             <Bot size={28} strokeWidth={1.75} aria-hidden />
           </span>
         </AiRing>

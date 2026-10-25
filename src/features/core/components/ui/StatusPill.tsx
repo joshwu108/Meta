@@ -46,11 +46,11 @@ const TONES: Record<string, Tone> = {
 };
 
 const toneClass: Record<Tone, string> = {
-  success: 'bg-success-soft text-success',
+  success: 'bg-success-soft text-success-ink',
   warning: 'bg-warning-soft text-warning-ink',
-  danger: 'bg-danger-soft text-danger',
+  danger: 'bg-danger-soft text-danger-ink',
   neutral: 'bg-surface-2 text-text-2',
-  brand: 'bg-brand-soft text-brand',
+  brand: 'bg-brand-soft text-brand-ink',
 };
 
 export function statusTone(status: string): Tone {

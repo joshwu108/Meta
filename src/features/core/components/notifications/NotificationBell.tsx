@@ -66,7 +66,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
         aria-haspopup="dialog"
         onClick={() => setIsOpen((open) => !open)}
         data-testid="notification-bell"
-        className={cn('relative inline-flex h-9 w-9 items-center justify-center rounded-pill bg-surface-2 text-text transition-colors duration-[var(--duration-fast)] hover:bg-hover active:bg-pressed', isOpen && 'bg-brand-soft text-brand')}
+        className={cn('relative inline-flex h-9 w-9 items-center justify-center rounded-pill bg-surface-2 text-text transition-colors duration-[var(--duration-fast)] hover:bg-hover active:bg-pressed', isOpen && 'bg-brand-soft text-brand-ink')}
       >
         <Bell size={20} strokeWidth={1.75} aria-hidden />
         {unread > 0 && (

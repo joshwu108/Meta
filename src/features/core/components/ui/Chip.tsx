@@ -42,7 +42,7 @@ export function Chip({ children, label, selected = false, onSelect, onRemove, cl
       className={cn(
         'inline-flex h-8 items-center gap-1 rounded-pill px-3 text-[length:var(--text-sm)] font-medium',
         'transition-colors duration-[var(--duration-fast)]',
-        selected ? 'bg-brand-soft text-brand' : 'bg-surface-2 text-text',
+        selected ? 'bg-brand-soft text-brand-ink' : 'bg-surface-2 text-text',
         interactive && 'cursor-pointer hover:bg-hover',
         selected && interactive && 'hover:bg-brand-soft-2',
         className,

@@ -28,12 +28,12 @@ export function LoginForm({ next }: { next?: string }) {
           <Input label="Password" name="password" type="password" autoComplete="current-password" required error={state.fieldErrors?.password} />
         )}
         {state.error && (
-          <p role="alert" className="rounded-md bg-danger-soft px-3 py-2 text-[length:var(--text-sm)] text-danger">
+          <p role="alert" className="rounded-md bg-danger-soft px-3 py-2 text-[length:var(--text-sm)] text-danger-ink">
             {state.error}
           </p>
         )}
         {state.message && (
-          <p role="status" className="rounded-md bg-success-soft px-3 py-2 text-[length:var(--text-sm)] text-success">
+          <p role="status" className="rounded-md bg-success-soft px-3 py-2 text-[length:var(--text-sm)] text-success-ink">
             {state.message}
           </p>
         )}

@@ -26,7 +26,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ l
         {...rest}
       />
       {error ? (
-        <p id={`${inputId}-error`} className="text-[length:var(--text-sm)] text-danger">
+        <p id={`${inputId}-error`} className="text-[length:var(--text-sm)] text-danger-ink">
           {error}
         </p>
       ) : hint ? (

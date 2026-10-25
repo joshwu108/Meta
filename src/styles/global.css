@@ -19,13 +19,16 @@
   --color-brand-pressed: var(--color-brand-pressed);
   --color-brand-soft: var(--color-brand-soft);
   --color-brand-soft-2: var(--color-brand-soft-2);
+  --color-brand-ink: var(--color-brand-ink);
   --color-success: var(--color-success);
   --color-success-soft: var(--color-success-soft);
+  --color-success-ink: var(--color-success-ink);
   --color-warning: var(--color-warning);
   --color-warning-soft: var(--color-warning-soft);
   --color-warning-ink: var(--color-warning-ink);
   --color-danger: var(--color-danger);
   --color-danger-soft: var(--color-danger-soft);
+  --color-danger-ink: var(--color-danger-ink);
   --color-ai-ink: var(--color-ai-ink);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -59,7 +62,7 @@
     min-height: 100dvh;
   }
   a {
-    color: var(--color-brand);
+    color: var(--color-brand-ink);
     text-decoration: none;
   }
   a:hover {
