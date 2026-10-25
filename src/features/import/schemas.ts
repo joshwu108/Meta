@@ -116,3 +116,20 @@ export const PlanOutputSchema = z.object({
     .max(3),
 });
 export type PlanOutput = z.infer<typeof PlanOutputSchema>;
+
+export type PlanViewStep = {
+  ref: string;
+  action: PlanAction;
+  label: string;
+  targetId: string | null;
+  href: string;
+  done: boolean;
+  doneKey: string;
+};
+
+/** "Your plan" as the client sees it; done state comes from real data or a manual tap. */
+export type PlanView = {
+  cards: Array<{ title: string; why: string; steps: PlanViewStep[] }>;
+  aiUsed: boolean;
+  updatedAt: string;
+};
