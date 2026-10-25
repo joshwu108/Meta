@@ -1,5 +1,5 @@
 import { loadFixture, requireUser, skipIfForeignSchema, type SeedContext } from '../context';
-import { seedBusinessSchema, seedEventSchema } from '../types';
+import { seedBusinessSchema, seedEventSchema, type SeedBusiness } from '../types';
 
 /**
  * Businesses, events and groups live in tables owned by workstreams 05, 06 and 03. The loaders
@@ -24,6 +24,7 @@ export async function loadBusinesses(ctx: SeedContext): Promise<number> {
         description: business.description,
         lat: business.lat,
         lng: business.lng,
+        ...(business.hours ? { hours: business.hours } : {}),
       })
       .select('id')
       .single();
@@ -33,17 +34,30 @@ export async function loadBusinesses(ctx: SeedContext): Promise<number> {
     }
     const businessId = (data as { id: string }).id;
     ctx.businessesBySlug.set(business.slug, businessId);
-    await loadCapabilities(ctx, businessId, business.capacity, business.category);
+    await loadCapabilities(ctx, businessId, business);
     inserted += 1;
   }
   return inserted;
 }
 
-/** Capacity and hostable categories live in business_capabilities (workstream 05). */
-async function loadCapabilities(ctx: SeedContext, businessId: string, capacity: number, category: string): Promise<void> {
-  const { error } = await ctx.admin
-    .from('business_capabilities')
-    .insert({ business_id: businessId, capacity, event_categories: [category] });
+/**
+ * What a venue can host lives in `business_capabilities` (workstream 05). A fixture that
+ * carries no `capabilities` block still seeds a usable row from the base fields.
+ */
+async function loadCapabilities(ctx: SeedContext, businessId: string, business: SeedBusiness): Promise<void> {
+  const c = business.capabilities;
+  const { error } = await ctx.admin.from('business_capabilities').insert({
+    business_id: businessId,
+    capacity: business.capacity,
+    event_categories: c?.event_categories ?? [business.category],
+    min_price_cents: c?.min_price_cents ?? null,
+    max_price_cents: c?.max_price_cents ?? null,
+    hosting_slots: c?.hosting_slots ?? [],
+    equipment_tags: c?.equipment_tags ?? [],
+    formats: c?.formats ?? [],
+    notes: c?.notes ?? null,
+    accepts_ai_proposals: c?.accepts_ai_proposals ?? true,
+  });
   if (error && !skipIfForeignSchema(ctx, 'business_capabilities', error)) {
     throw new Error(`business_capabilities insert failed: ${error.message}`);
   }

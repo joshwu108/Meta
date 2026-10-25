@@ -26,6 +26,8 @@ export default defineConfig({
     url: `${baseURL}/api/health`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    env: { MOCK_AI: '1', DEMO_MODE: '1', NEXT_PUBLIC_SITE_URL: baseURL },
+    // ENABLE_DEV_ROUTES lets 05's suite seed a fixture proposal; the route refuses
+    // without it and on any production deployment.
+    env: { MOCK_AI: '1', DEMO_MODE: '1', NEXT_PUBLIC_SITE_URL: baseURL, ENABLE_DEV_ROUTES: '1' },
   },
 });

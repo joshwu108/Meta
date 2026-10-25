@@ -5,11 +5,67 @@
     "category": "creative",
     "neighborhood": "Mission District",
     "address": "3120 Valencia St, San Francisco, CA",
-    "description": "Pottery studio with a small café. Wheel and hand-building classes for beginners.",
+    "description": "Pottery studio with a small caf\u00e9. Wheel and hand-building classes for beginners.",
     "lat": 37.75,
     "lng": -122.42,
     "capacity": 12,
-    "owner": { "email": "owner.kiln-and-cup@commonground.test", "display_name": "Rosa Delgado" }
+    "owner": {
+      "email": "owner.kiln-and-cup@commonground.test",
+      "display_name": "Rosa Delgado"
+    },
+    "hours": {
+      "tue": [
+        [
+          "10:00",
+          "20:00"
+        ]
+      ],
+      "wed": [
+        [
+          "10:00",
+          "20:00"
+        ]
+      ],
+      "thu": [
+        [
+          "09:00",
+          "21:00"
+        ]
+      ],
+      "fri": [
+        [
+          "09:00",
+          "21:00"
+        ]
+      ],
+      "sat": [
+        [
+          "10:00",
+          "18:00"
+        ]
+      ]
+    },
+    "capabilities": {
+      "event_categories": [
+        "creative",
+        "food_drink"
+      ],
+      "min_price_cents": 1500,
+      "max_price_cents": 3500,
+      "hosting_slots": [
+        "thu_eve",
+        "sat_day"
+      ],
+      "equipment_tags": [
+        "pottery-wheels",
+        "kiln"
+      ],
+      "formats": [
+        "workshop"
+      ],
+      "notes": "Two staff on Thursday evenings. Clay is included in the ticket price.",
+      "accepts_ai_proposals": true
+    }
   },
   {
     "slug": "ritual-grounds",
@@ -17,11 +73,84 @@
     "category": "food_drink",
     "neighborhood": "Hayes Valley",
     "address": "432 Octavia St, San Francisco, CA",
-    "description": "Neighborhood café with a back room for tastings, talks and slow mornings.",
+    "description": "Neighborhood caf\u00e9 with a back room for tastings, talks and slow mornings.",
     "lat": 37.78,
     "lng": -122.42,
     "capacity": 20,
-    "owner": { "email": "owner.ritual-grounds@commonground.test", "display_name": "Ben Okoro" }
+    "owner": {
+      "email": "owner.ritual-grounds@commonground.test",
+      "display_name": "Ben Okoro"
+    },
+    "hours": {
+      "mon": [
+        [
+          "07:00",
+          "20:00"
+        ]
+      ],
+      "tue": [
+        [
+          "07:00",
+          "20:00"
+        ]
+      ],
+      "wed": [
+        [
+          "07:00",
+          "21:00"
+        ]
+      ],
+      "thu": [
+        [
+          "07:00",
+          "21:00"
+        ]
+      ],
+      "fri": [
+        [
+          "07:00",
+          "21:00"
+        ]
+      ],
+      "sat": [
+        [
+          "08:00",
+          "21:00"
+        ]
+      ],
+      "sun": [
+        [
+          "08:00",
+          "19:00"
+        ]
+      ]
+    },
+    "capabilities": {
+      "event_categories": [
+        "food_drink",
+        "community"
+      ],
+      "min_price_cents": 0,
+      "max_price_cents": 1500,
+      "hosting_slots": [
+        "mon_eve",
+        "tue_eve",
+        "wed_eve",
+        "thu_eve",
+        "fri_eve",
+        "sat_eve",
+        "sun_eve"
+      ],
+      "equipment_tags": [
+        "espresso-bar"
+      ],
+      "formats": [
+        "social-mixer",
+        "tasting"
+      ],
+      "notes": "Back room only; the front counter stays open during events.",
+      "accepts_ai_proposals": true
+    }
   },
   {
     "slug": "meeple-house",
@@ -31,8 +160,65 @@
     "address": "875 Folsom St, San Francisco, CA",
     "description": "Board-game venue with 400+ titles, game masters on staff and snacks.",
     "lat": 37.78,
-    "lng": -122.40,
+    "lng": -122.4,
     "capacity": 30,
-    "owner": { "email": "owner.meeple-house@commonground.test", "display_name": "Lina Vogel" }
+    "owner": {
+      "email": "owner.meeple-house@commonground.test",
+      "display_name": "Lina Vogel"
+    },
+    "hours": {
+      "wed": [
+        [
+          "12:00",
+          "22:00"
+        ]
+      ],
+      "thu": [
+        [
+          "12:00",
+          "22:00"
+        ]
+      ],
+      "fri": [
+        [
+          "12:00",
+          "23:00"
+        ]
+      ],
+      "sat": [
+        [
+          "10:00",
+          "23:00"
+        ]
+      ],
+      "sun": [
+        [
+          "10:00",
+          "20:00"
+        ]
+      ]
+    },
+    "capabilities": {
+      "event_categories": [
+        "games",
+        "community"
+      ],
+      "min_price_cents": 500,
+      "max_price_cents": 1500,
+      "hosting_slots": [
+        "fri_eve",
+        "sat_eve",
+        "sun_day"
+      ],
+      "equipment_tags": [
+        "board-game-library"
+      ],
+      "formats": [
+        "tournament",
+        "social-mixer"
+      ],
+      "notes": "Game library is free to use during events; staff can teach rules.",
+      "accepts_ai_proposals": true
+    }
   }
 ]

@@ -139,9 +139,23 @@ describe('getGroupVenueRequest for 04 (P1)', () => {
   });
 });
 
-describe('06 stand-ins on a branch without events tables', () => {
-  it('return nothing instead of failing', async () => {
-    expect(await sixStubs.getUpcomingEventsForUser(alice.id)).toEqual([]);
+describe('06 stand-ins degrade instead of failing', () => {
+  it('answer whether or not the events tables exist', async () => {
+    // Workstream 05 owns `events`, so once it is merged the stand-ins find real rows and
+    // "returns nothing" is no longer the right assertion. What has to hold either way is
+    // that they resolve rather than throw, and that an id that does not exist is null.
+    // `database.types.ts` was generated before workstream 05 merged, so the typed client
+    // does not know `events` yet; probe through an untyped view of it.
+    const untyped = admin as unknown as {
+      from: (table: string) => { select: (cols: string) => { limit: (n: number) => Promise<{ error: unknown }> } };
+    };
+    const { error } = await untyped.from('events').select('id').limit(1);
+    const eventsExist = error === null;
+
+    const upcoming = await sixStubs.getUpcomingEventsForUser(alice.id);
+    expect(Array.isArray(upcoming)).toBe(true);
+    if (!eventsExist) expect(upcoming).toEqual([]);
+
     expect(await sixStubs.getEventPublic(EVENT_ID)).toBeNull();
   });
 });
