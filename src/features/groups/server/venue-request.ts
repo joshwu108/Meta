@@ -49,18 +49,21 @@ async function activeMemberIds(groupId: string): Promise<string[]> {
  */
 export async function getGroupVenueRequest(groupId: string, planId: string, suggestionIndex: number): Promise<GroupVenueRequest | null> {
   const admin = createAdminClient();
-  const { data: plan } = await admin
+  const { data: plan, error } = await admin
     .from('group_plans')
     .select('id, suggestions')
     .eq('id', uuidSchema.parse(planId))
     .eq('group_id', uuidSchema.parse(groupId))
     .maybeSingle();
+  // A failed read must not look like "not eligible" to 04.
+  if (error) throw new ApiError('INTERNAL', 'Could not load the plan', 500);
   const suggestion = plan ? parseSuggestions(plan.suggestions)[suggestionIndex] : undefined;
   if (!suggestion || suggestion.kind !== 'new_activity' || !suggestion.needsVenue) return null;
   const [memberIds, votes] = await Promise.all([
     activeMemberIds(groupId),
     admin.from('group_plan_votes').select('user_id', { count: 'exact', head: true }).eq('plan_id', planId).eq('suggestion_index', suggestionIndex),
   ]);
+  if (votes.error) throw new ApiError('INTERNAL', 'Could not count votes', 500);
   const voteCount = votes.count ?? 0;
   if (memberIds.length === 0 || voteCount / memberIds.length < VENUE_VOTE_SHARE) return null;
   const consenting = [...(await getSharablePreferencesBatch(memberIds, 'group_plan')).values()];
