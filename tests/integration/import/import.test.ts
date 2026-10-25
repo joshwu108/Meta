@@ -18,6 +18,7 @@ const { runOpportunityPipeline } = await import('@/features/demand');
 const { aiRateLimiter } = await import('@/lib/api');
 const { setLogSink } = await import('@/lib/log');
 const { buildPlan, readPlan, markStepDone } = await import('@/features/import/server/plan');
+const { deleteImportData, getImportSettings } = await import('@/features/import/server/settings');
 
 setTestOrigin('import');
 const admin = adminClient();
@@ -205,5 +206,44 @@ describe('07 RLS', () => {
     expect(insert.error).not.toBeNull();
     const rpc = await maya.client.rpc('import_decide', { p_user: maya.id, p_decisions: [], p_provenance: [], p_dislikes: [] });
     expect(rpc.error).not.toBeNull();
+  });
+});
+
+describe('Delete my Instagram data', () => {
+  async function addOne(u: TestUser, value: string) {
+    aiRateLimiter.reset();
+    await run(u);
+    const card = (await listPending(u.id)).find((s) => s.value === value)!;
+    await decideSuggestions(u.id, { decisions: [{ id: card.id, action: 'yes' }] });
+  }
+  const interests = async (u: TestUser) =>
+    (await admin.from('user_preferences').select('interests').eq('user_id', u.id).single()).data!.interests;
+  const rowsLeft = async (u: TestUser) => {
+    const counts = await Promise.all(
+      (['import_runs', 'trait_suggestions', 'trait_provenance', 'taste_dislikes', 'import_plans'] as const).map(
+        async (t) => (await admin.from(t).select('user_id').eq('user_id', u.id)).data?.length ?? 0,
+      ),
+    );
+    return counts.reduce((a, b) => a + b, 0);
+  };
+
+  it('keep: deletes every 07 row and leaves the added values as the user\'s own', async () => {
+    await addOne(peer, 'pottery');
+    expect((await getImportSettings(peer.id)).added.map((a) => a.value)).toEqual(['pottery']);
+    const result = await deleteImportData(peer.id, 'keep');
+    expect(result).toMatchObject({ keptTraits: 1, removedTraits: 0 });
+    expect(await interests(peer)).toContain('pottery');
+    expect(await rowsLeft(peer)).toBe(0);
+  });
+
+  it('remove: also takes the added values out of the profile', async () => {
+    await addOne(peer, 'latte-art');
+    expect(await interests(peer)).toContain('latte-art');
+    const result = await deleteImportData(peer.id, 'remove');
+    expect(result).toMatchObject({ keptTraits: 0, removedTraits: 1 });
+    const after = await interests(peer);
+    expect(after).not.toContain('latte-art');
+    expect(after).toEqual(expect.arrayContaining(['ceramics', 'board-games', 'pottery']));
+    expect(await rowsLeft(peer)).toBe(0);
   });
 });

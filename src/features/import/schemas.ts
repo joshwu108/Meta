@@ -133,3 +133,11 @@ export type PlanView = {
   aiUsed: boolean;
   updatedAt: string;
 };
+
+/** /agent/import/settings: what came from Instagram, for the owner only. */
+export type ImportSettings = {
+  added: Array<{ field: 'interests' | 'activity_prefs'; value: string; strength: 'love' | 'yes'; confirmedAt: string }>;
+  dislikes: Array<{ label: string; source: 'not_me' | 'see_less' }>;
+  pending: number;
+  lastImportAt: string | null;
+};
