@@ -1,0 +1,23 @@
+{
+  "id": "03-weeknights-games",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Board games on weeknights, ideally just a few people, nothing over $15."
+    }
+  ],
+  "expected": {
+    "interests": [
+      "board-games"
+    ],
+    "availabilitySlots": [
+      "mon_eve",
+      "tue_eve",
+      "wed_eve",
+      "thu_eve",
+      "fri_eve"
+    ],
+    "groupSizePref": "small",
+    "budgetMaxCents": 1500
+  }
+}

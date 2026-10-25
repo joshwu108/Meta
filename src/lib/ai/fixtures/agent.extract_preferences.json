@@ -1,0 +1,103 @@
+{
+  "interests": [
+    {
+      "tag": "pottery",
+      "confidence": 0.95
+    },
+    {
+      "tag": "coffee",
+      "confidence": 0.85
+    }
+  ],
+  "interestCategories": [
+    "creative",
+    "food_drink"
+  ],
+  "availabilitySlots": [
+    "thu_eve"
+  ],
+  "socialGoals": [
+    "make_friends",
+    "explore_city"
+  ],
+  "groupSizePref": "small",
+  "budgetMaxCents": null,
+  "activityPrefs": [
+    "beginner-friendly"
+  ],
+  "dealbreakers": [],
+  "summary": "Just moved to the city and wants to meet people. Enjoys pottery and coffee shops, is free Thursday evenings, and prefers small groups.",
+  "followUpQuestion": null,
+  "missingFields": [
+    "budget"
+  ],
+  "cases": [
+    {
+      "match": "board game",
+      "output": {
+        "interests": [
+          {
+            "tag": "board-games",
+            "confidence": 0.9
+          }
+        ],
+        "interestCategories": [
+          "games"
+        ],
+        "availabilitySlots": [
+          "fri_eve"
+        ],
+        "socialGoals": [
+          "make_friends"
+        ],
+        "groupSizePref": "small",
+        "budgetMaxCents": 1500,
+        "activityPrefs": [],
+        "dealbreakers": [],
+        "summary": "Likes board games on Friday evenings with a small group, ideally under $15.",
+        "followUpQuestion": null,
+        "missingFields": []
+      }
+    },
+    {
+      "match": "hi there",
+      "output": {
+        "interests": [],
+        "interestCategories": [],
+        "availabilitySlots": [],
+        "socialGoals": [],
+        "groupSizePref": null,
+        "budgetMaxCents": null,
+        "activityPrefs": [],
+        "dealbreakers": [],
+        "summary": "Still getting to know you.",
+        "followUpQuestion": "What do you enjoy doing, and which evenings or weekend times are usually free for you?",
+        "missingFields": [
+          "interests",
+          "availability",
+          "group_size"
+        ]
+      }
+    },
+    {
+      "match": "hello",
+      "output": {
+        "interests": [],
+        "interestCategories": [],
+        "availabilitySlots": [],
+        "socialGoals": [],
+        "groupSizePref": null,
+        "budgetMaxCents": null,
+        "activityPrefs": [],
+        "dealbreakers": [],
+        "summary": "Still getting to know you.",
+        "followUpQuestion": "What do you enjoy doing, and which evenings or weekend times are usually free for you?",
+        "missingFields": [
+          "interests",
+          "availability",
+          "group_size"
+        ]
+      }
+    }
+  ]
+}

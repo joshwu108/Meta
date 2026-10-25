@@ -138,6 +138,31 @@ export async function getSharablePreferences(userId, purpose: 'matching' | 'dema
 - Never includes `dealbreakers`, `field_sources`, summary text, or any message content
 - Logs an `agent_action_log` row `{ actor: 'coordination', action: 'share_preferences', permissions_used: [purpose] }` per call batch (batched per request, not per user, to avoid log spam)
 
+Additional exports from `@/features/agent` (as built):
+
+```ts
+// Batch form for 03/04 pipelines; users without consent are absent from the map.
+getSharablePreferencesBatch(userIds: string[], purpose): Promise<Map<string, SharablePreferences>>
+// 06 attendee list: every requested user; interests only when share_interests_with_attendees is on.
+getAttendeeSharing(userIds: string[]): Promise<Map<string, { interests: string[]; shareInterestsWithAttendees: boolean }>>
+// Consent flags only (no preference values), for server-side defaults such as 06's RSVP sharing choices.
+getConsent(userId: string): Promise<Consent>
+// P1, for 03's planner: rank slots by member availability; members must come from purpose 'group_plan'.
+resolveGroupSchedule(members: SharablePreferences[]): { options: { slot, available: string[], missing: string[] }[]; unanimous: AvailabilitySlot | null; budgetMaxCents: number | null }
+
+// explainRecommendation input (02 owns this type; replaces the placeholder in shared/types.ts)
+type ExplainInput = {
+  viewer: SharablePreferences;
+  target:
+    | { kind: 'person'; preferences: SharablePreferences; displayName?: string }
+    | { kind: 'event'; event: Record<string, unknown> }   // e.g. EventPublic fields plus slot
+    | { kind: 'group'; group: Record<string, unknown> };
+  breakdown: Record<string, unknown>;                      // caller's deterministic score parts
+};
+```
+
+Share logging is one row per shared user per purpose (deduped within an hour, inserted in one statement per call) so each user's activity log shows the entry (AC5).
+
 ## 6. API
 
 | Route | Body / Response |
@@ -149,6 +174,7 @@ export async function getSharablePreferences(userId, purpose: 'matching' | 'dema
 | `POST /api/agent/preferences/confirm` | `{ discoverable: boolean, consent: Consent }` → marks onboarding complete, sets `profiles.onboarding_completed_at` and `is_discoverable` |
 | `GET /api/agent/permissions` / `PATCH` | `Consent` object |
 | `GET /api/agent/log?limit=50` | agent action log rows for the current user |
+| `POST /api/agent/feedback` (P1) | `{ about: 'event:<id>' \| 'person:<id>' \| 'group:<id>', signal: 'up' \| 'down', note? }` → `{ count }`; stored in `agent_profiles.feedback_notes` (newest per target, max 50), last 10 injected into `agent.chat` |
 
 All routes use `withAuth`. `POST /api/agent/chat` applies a per-user limit of 30 calls / 10 min and returns `RATE_LIMITED` beyond it.
 
