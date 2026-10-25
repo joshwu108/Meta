@@ -8,7 +8,7 @@ import { ChatPanel } from "./chat-panel";
 import { PermissionsEditor } from "./permissions-editor";
 import { PreferencesEditor } from "./preferences-editor";
 import { AiTag, Button, Chip } from "./primitives";
-import { SF_NEIGHBORHOODS, SLOT_LABEL, GROUP_SIZE_LABEL } from "./labels";
+import { SF_NEIGHBORHOODS, SLOT_LABEL, GROUP_SIZE_LABEL, matchNeighborhood } from "./labels";
 import s from "./agent.module.css";
 
 type Step = "basics" | "talk" | "review";
@@ -27,7 +27,7 @@ function Basics({ onDone }: { onDone: () => void }) {
   const [hood, setHood] = useState("");
   const [radius, setRadius] = useState(5);
   const [error, setError] = useState<string | null>(null);
-  const match = SF_NEIGHBORHOODS.find((n) => n.name.toLowerCase() === hood.trim().toLowerCase());
+  const match = matchNeighborhood(hood);
 
   async function save() {
     if (!match) return;
@@ -55,6 +55,7 @@ function Basics({ onDone }: { onDone: () => void }) {
         <span>How far will you travel? <strong>{radius} km</strong></span>
         <input type="range" className={s.range} min={1} max={25} value={radius} onChange={(e) => setRadius(Number(e.target.value))} />
       </label>
+      {hood.trim() && !match ? <p className={s.muted} role="status">Pick a neighborhood from the list</p> : null}
       <p className={s.muted}>Others only ever see your neighborhood, never your exact location.</p>
       {error ? <p className={s.error} role="alert">{error}</p> : null}
       <div className={s.row}><Button size="lg" disabled={!match} onClick={save}>Continue</Button></div>
