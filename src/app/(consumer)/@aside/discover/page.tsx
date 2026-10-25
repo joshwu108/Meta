@@ -1,10 +1,16 @@
+import { AgentAside } from "@/features/core/components/app-shell/AgentAside";
+import { getCurrentUser } from "@/features/core";
 import { AgentStrip, DISCOVER_RECOMMENDATIONS } from "@/features/events/components/DiscoverSections";
 import { getRecommendedEventsCached } from "@/features/events/server/recommended";
-import { getCurrentUserId } from "@/features/events/server/stubs";
 
-/** Discover's right rail (>=1024px): the agent strip, from the same memoized ranking as the page. */
+/** Discover's right rail (>=1024px): 01's agent card, then 06's insight from the same memoized ranking as the page. */
 export default async function DiscoverAside() {
-  const userId = await getCurrentUserId();
-  if (!userId) return null;
-  return <AgentStrip recommendations={await getRecommendedEventsCached(userId, DISCOVER_RECOMMENDATIONS)} />;
+  const user = await getCurrentUser();
+  if (!user) return null;
+  return (
+    <div style={{ display: "grid", gap: "var(--space-3)" }}>
+      <AgentAside displayName={user.profile.display_name} />
+      <AgentStrip recommendations={await getRecommendedEventsCached(user.id, DISCOVER_RECOMMENDATIONS)} />
+    </div>
+  );
 }
