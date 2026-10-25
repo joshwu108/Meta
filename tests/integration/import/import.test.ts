@@ -76,7 +76,7 @@ describe('screenshot import → review (MOCK_AI)', () => {
     invalidateMatches(maya.id, peer.id);
     const [prefs, matches, events, demand] = await Promise.all([
       getSharablePreferences(maya.id, 'matching'),
-      getMatchesForViewer(peer.id),
+      getMatchesForViewer(peer.id, { limit: 20 }),
       getRecommendedEvents(maya.id, 8),
       runOpportunityPipeline({ triggeredBy: 'manual', dryRun: true }),
     ]);
@@ -87,7 +87,7 @@ describe('screenshot import → review (MOCK_AI)', () => {
     expect(demand.dryRun).toBe(true);
     // Same answers again with the suggestions still pending.
     invalidateMatches(maya.id, peer.id);
-    const again = await getMatchesForViewer(peer.id);
+    const again = await getMatchesForViewer(peer.id, { limit: 20 });
     expect(again.matches.find((m) => m.user.id === maya.id)?.score).toBe(mayaCard?.score);
     expect((await getRecommendedEvents(maya.id, 8)).map((e) => e.event.id)).toEqual(events.map((e) => e.event.id));
     expect((await runOpportunityPipeline({ triggeredBy: 'manual', dryRun: true })).clustersDetected).toBe(demand.clustersDetected);
