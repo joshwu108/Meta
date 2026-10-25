@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import { AVAILABILITY_SLOT, EVENT_CATEGORY, GROUP_SIZE_PREF } from '@/shared/enums';
 import type { AvailabilitySlot, EventCategory, GroupSizePref } from '@/shared/enums';
+import type { DemandBand } from '@/shared/types';
 
-export const DEMAND_BANDS = ['4-5', '6-9', '10+', '20+'] as const;
-export type DemandBand = (typeof DEMAND_BANDS)[number];
+/** Every value of the shared `DemandBand` (README §4), in order; the zod enums below use it. */
+export const DEMAND_BANDS = ['4-5', '6-9', '10+', '20+'] as const satisfies readonly DemandBand[];
+export type { DemandBand };
 
 /** What the model sees about a cohort (spec §5.5). No user ids, names, or exact coordinates. */
 export type DemandBrief = {
