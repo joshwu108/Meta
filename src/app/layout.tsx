@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import '@/styles/global.css';
 import { ThemeScript } from '@/features/core/components/theme/ThemeScript';
 import { ToastProvider } from '@/features/core/components/ui/Toast';
+import { HydrationMarker } from '@/features/core/components/HydrationMarker';
 
 export const metadata: Metadata = {
   title: { default: 'CommonGround', template: '%s · CommonGround' },
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ThemeScript />
       </head>
       <body>
+        <HydrationMarker />
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
