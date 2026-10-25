@@ -2,19 +2,30 @@
 
 Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../README.md`](../README.md)
 
-## Status: merged into main (2026-10-24)
+## Status: merged, with two fixes still to pull
 
-Every P0 and P1 item below is ticked. Verified **2026-10-24 21:50** against every other
-workstream's branch at once — all 13 migrations (0100, 0200, 0300–0303, 0400–0404, 0500,
-0501, 0600) applied together on a fresh reset, `pnpm db:seed` loaded the full dataset, and
-**349 unit + 38 integration + 34 e2e tests passed with nothing skipped**, including
-Scene 4 end to end. The other branches were grafted locally for that run and removed again,
-so on this branch alone the suite honestly reports 29 integration and 30 e2e with the cases
-that need 04 or 06 skipped.
+`ws/05-business` was merged into `main` on 2026-10-24 (`f1dc615`), and 04 merged after it.
+**Two bug fixes have landed on the branch since that merge and are not on `main` yet**, so
+the integrator needs to merge `ws/05-business` once more:
+
+- `e3f960e` — the event editor read and wrote `datetime-local` in the **browser's** zone
+  while the server checks opening hours in `VENUE_TIMEZONE`. Any owner whose machine is not
+  in the venue's zone sees times shifted by hours and has plausible entries rejected. The
+  integrator had pinned the browser timezone in two e2e specs to get CI green; that was the
+  symptom. The specs now pin the browser to **UTC** and pass, which proves the app no longer
+  depends on the viewer's zone.
+- `bd003d3` — 05 passed a **business id** where `agent_action_log.user_id` references
+  `profiles(id)`, so every publish and proposal decision silently failed its audit insert
+  (01's helper logs and returns rather than throwing). Fixed; a publish now records the
+  venue's owner.
+
+Every P0 and P1 item below is ticked. On the integrated `main` (01–05) the suite reports
+**532 unit, 134 integration (1 skipped, waiting on 06) and 42 e2e with nothing else
+skipped** — Scene 4, the AI revision and 04's Scene 3 all run for real.
 
 Merge order note: 05's `0500_business.sql` adds **both** cross-workstream foreign keys
 (`proposals_business_fk`, `events_proposal_fk`) behind an `if exists` guard, so it is safe
-either side of 04. Both were confirmed present in the 13-migration run.
+either side of 04. Both were confirmed present once 04 landed.
 
 ---
 
