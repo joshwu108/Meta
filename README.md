@@ -90,3 +90,5 @@ production unless `DEMO_MODE=1`.
 7. **Screens**: build on the primitives in `src/features/core/components/ui` and the tokens in
    `src/styles/tokens.css`; mark AI output with `AiTag` only. Placeholders for your routes already
    exist under `src/app/(consumer)` and `src/app/(business)`; replace the `PlaceholderPage` call.
+   The consumer right rail (≥1024px) is the `@aside` parallel route: add
+   `src/app/(consumer)/@aside/<route>/page.tsx` to give a page its own rail; otherwise the agent strip shows.
