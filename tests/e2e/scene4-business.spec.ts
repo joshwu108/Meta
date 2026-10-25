@@ -38,12 +38,17 @@ test.describe('Scene 4 — a business approves an AI proposal', () => {
     // The owner must always be able to tell a suggestion from a confirmed event.
     await expect(page.getByText('AI suggestion').first()).toBeVisible();
 
+    // The dashboard card says it too: the owner must not mistake the estimate for RSVPs.
+    await expect(page.getByText(/this is an estimate, not rsvps/i).first()).toBeVisible();
+
     await page.getByRole('link', { name: /review/i }).first().click();
-    await expect(page.getByRole('heading', { name: /Beginner Pottery & Coffee Night/i })).toBeVisible();
+    // Wait for the detail page itself: its heading and "Estimate" also appear on the dashboard.
+    await page.waitForURL(/\/business\/proposals\/[0-9a-f-]{36}$/);
+    await expect(page.getByRole('heading', { level: 1, name: /Beginner Pottery & Coffee Night/i })).toBeVisible();
 
     // The estimate is labelled as an estimate, and never as a count of attendees.
     await expect(page.getByText('Estimate').first()).toBeVisible();
-    await expect(page.getByText(/this is an estimate, not rsvps/i)).toBeVisible();
+    await expect(page.getByText(/these are not rsvps and nobody has committed to come/i)).toBeVisible();
 
     await page.getByRole('button', { name: /edit & approve/i }).click();
 
