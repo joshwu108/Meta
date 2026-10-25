@@ -9,6 +9,8 @@ import s from "@/features/events/components/events.module.css";
 import { getNearbyBusinesses } from "@/features/events/server/nearby";
 import { getRecommendedEventsCached } from "@/features/events/server/recommended";
 import { getCurrentUserId, getPublicGroups, getSuggestedPeople } from "@/features/events/server/stubs";
+import { canUseImport, countPendingSuggestions } from "@/features/import";
+import { ImportDiscoverCard } from "@/features/import/components/discover-card";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,8 @@ export default async function DiscoverPage() {
     getPublicGroups(3),
     getSuggestedPeople(userId, 3),
   ]);
+  // Workstream 07: a small entry to "Bring in your Instagram taste" / "Your plan" when it is on.
+  const importPending = (await canUseImport(userId)) ? await countPendingSuggestions(userId) : null;
   const [lead, ...rest] = recommended;
 
   return (
@@ -34,6 +38,7 @@ export default async function DiscoverPage() {
         </div>
       )}
       <PeopleRail people={people} />
+      {importPending !== null ? <ImportDiscoverCard pending={importPending} /> : null}
       {rest.length > 0 ? (
         <section className={s.section} aria-labelledby="more-title">
           <h2 id="more-title" className={s.sectionTitle}>More for you</h2>
