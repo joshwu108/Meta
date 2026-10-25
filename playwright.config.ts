@@ -6,10 +6,13 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // PROBE ONLY (never merged): repeat Scene 4 to measure its failure rate.
+  testMatch: /scene4-business\.spec\.ts/,
+  repeatEach: 10,
+  retries: 0,
   // Every spec shares one local database and reseeds it, so files must not overlap.
   fullyParallel: false,
   workers: 1,
-  retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   // Baselines are per platform: fonts differ between macOS and Linux CI. CI runs with
   // --update-snapshots=missing so a new platform writes its own baselines on first run.
