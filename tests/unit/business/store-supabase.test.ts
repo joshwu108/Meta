@@ -253,7 +253,7 @@ describe('a missing service-role key degrades instead of failing', () => {
 
     expect(await store.clusterMemberIds('cluster-1')).toEqual([]);
     expect(await store.insightClusters({ lat: 0, lng: 0, radiusKm: 3, sinceDays: 30 })).toEqual([]);
-    expect(await store.countRepeatAttendees('biz-1')).toBe(0);
+    expect(await store.countRepeatAttendees(['evt-1', 'evt-2'])).toBe(0);
     warn.mockRestore();
   });
 });
@@ -297,39 +297,23 @@ describe('service-role reads', () => {
 
 describe('repeat attendees', () => {
   it('counts a person who confirmed for two events once, and returns no ids', async () => {
-    const { store, adminCalls } = storeWith((call) =>
-      call.table === 'events'
-        ? { data: [{ id: 'evt-1' }, { id: 'evt-2' }] }
-        : {
-            data: [
-              { user_id: 'user-a' },
-              { user_id: 'user-a' },
-              { user_id: 'user-b' },
-            ],
-          },
-    );
+    const { store, adminCalls } = storeWith(() => ({
+      data: [{ user_id: 'user-a' }, { user_id: 'user-a' }, { user_id: 'user-b' }],
+    }));
 
-    expect(await store.countRepeatAttendees('biz-1')).toBe(1);
+    expect(await store.countRepeatAttendees(['evt-1', 'evt-2'])).toBe(1);
     expect(adminCalls.some((c) => c.table === 'rsvps' && c.op === 'in')).toBe(true);
   });
 
-  it('short-circuits when the venue has no events at all', async () => {
+  it('short-circuits on an empty scope without touching the service role', async () => {
     const { store, adminCalls } = storeWith(() => ({ data: [] }));
-    expect(await store.countRepeatAttendees('biz-1')).toBe(0);
+    expect(await store.countRepeatAttendees([])).toBe(0);
     expect(adminCalls).toHaveLength(0);
   });
 
   it('returns zero while workstream 06 has not merged rsvps', async () => {
-    const { store } = storeWith((call) =>
-      call.table === 'events' ? { data: [{ id: 'evt-1' }] } : { error: UNDEFINED_TABLE_ERROR },
-    );
-    expect(await store.countRepeatAttendees('biz-1')).toBe(0);
+    const { store } = storeWith(() => ({ error: UNDEFINED_TABLE_ERROR }));
+    expect(await store.countRepeatAttendees(['evt-1', 'evt-2'])).toBe(0);
   });
 
-  it('surfaces a failure reading the events', async () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const { store } = storeWith((call) => (call.table === 'events' ? { error: error({}) } : {}));
-    await expect(store.countRepeatAttendees('biz-1')).rejects.toMatchObject({ code: 'INTERNAL' });
-    spy.mockRestore();
-  });
 });
