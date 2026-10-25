@@ -462,6 +462,29 @@ either side of 04. Both were confirmed present in the 13-migration run.
   The pairs above are the whole finding; the method was a computed-style sweep, not a
   screenshot eyeball.
 
+- **04 — `nextSlotStart` throws for one weekday around every DST change, and it is throwing
+  now.** `src/features/demand/server/time.ts:45` walks candidate days with
+  `now.getTime() + offset * DAY_MS`, i.e. fixed 24-hour steps on an instant. Across a
+  fall-back transition that lands on the same local date twice, so the 7 samples cover only
+  6 weekdays and the loop throws `no <slot> within a week of N days out`. Verified against
+  the venue zone with today's date (2026-10-25, transition 2026-11-01):
+  `offset 7 -> Sun 11/01 00:00, offset 8 -> Sun 11/01 23:00` — Sunday twice, Thursday never.
+  Consequences, all observed: `tests/integration/demand/pipeline.test.ts` and
+  `demand/revise.test.ts` fail to collect, and **`POST /api/ai/proposals/:id/revise` returns
+  500** (`nextSlotStart` <- `validateProposal` <- `reviseProposal`
+  <- `handleRevise`), so "Ask AI to revise" is broken in the running app today. 05's
+  `scene4-business.spec.ts` revision case fails for the same reason; confirmed it also fails
+  with every 05 change stashed, so it is not 05's.
+  Fix: step calendar days in the target zone instead of adding 24 hours to an instant — the
+  same two-pass approach `src/features/business/server/time.ts` uses. Raising the loop bound
+  to `+8` would paper over it without fixing the duplicate day.
+
+- **01 — `tests/integration/seed.test.ts:37` asserts a global count and breaks on any extra
+  signup.** It expects exactly 14 discoverable profiles; the local database has 15 because a
+  human signed up through the UI while testing. Nothing is wrong with the seeder. Scoping the
+  count to seeded emails, or asserting `>= 14`, would make it survive a database that someone
+  has actually used.
+
 ## Blocked
 
 - ~~Git identity not configured in this clone.~~ **Resolved 2026-10-24 15:58**: the owner
@@ -931,3 +954,43 @@ either side of 04. Both were confirmed present in the 13-migration run.
   while an out-of-hours save still reads "the venue is open 09:00-21:00 on thu; this event
   falls outside that".
   Suites: 829 unit, 151 integration, 62 db, typecheck and lint clean.
+
+- **2026-10-25 07:25 — the responsive split, asked for directly: consumer mobile-first,
+  business analytical on desktop.** The frame for it already existed (`AppShell` has the
+  bottom tab bar under 768px and the business rail from 768px, per design-system.md section
+  3), so the work was density on one side and mobile correctness on the other. Two commits.
+  `e12ea1b`, mobile correctness, in files 05 does not own — made on the user's explicit
+  instruction after being reported here first:
+  - `viewportFit: 'cover'` in `layout.tsx` plus a `--safe-bottom` token, and the tab bar and
+    the content padding both account for it. Without the viewport flag `env(safe-area-inset-*)`
+    is always 0, so the token alone would have done nothing and the bottom row of tabs stayed
+    under the iPhone home indicator.
+  - Form controls at `max(16px, 1em)` on `(pointer: coarse)`. Keyed off the pointer, not a
+    width, because an iPad zooms too and is wider than any phone breakpoint. `!important` is
+    needed: a component's own size utility wins otherwise, which is why the agent composer sat
+    at 15px after the first attempt.
+  - Touch targets to 44px on coarse pointers only, so the 36/40px the design system specifies
+    is untouched on a desktop. Measured on a real touch viewport: `/business/events` went from
+    10 undersized controls to 1, and that one is the wordmark, an inline text link that should
+    stay text-sized. The CSS-module buttons in `features/events` and `features/agent` needed
+    the same rule, because a module's own `height` is invisible to the Tailwind-scoped one.
+  `598711a`, desktop density, 05's own files: the events list renders as a sortable table and
+  local interest as a category x slot grid, both from 1280px, with the card lists kept below
+  that. Sorting is a pure module with 9 tests (`events-sort.ts`), the matrix another 5
+  (`insights-matrix.ts`), and the grid prints the band in every cell so weight never depends
+  on colour alone — no new white-on-brand pairing, given the contrast report above.
+  Two things worth recording. The table first appeared at 1024px and **overflowed the page**:
+  its columns need ~810px and a 1024px window leaves the business column ~696px. My own theme
+  matrix caught that, which is what it is for; the breakpoint moved to 1280px and 1280 is now
+  in the matrix, since that is where a column-sizing regression shows up first. Second, the
+  table put a second copy of every row in the DOM, so six E2E cases that located rows by
+  `listitem` found nothing at Playwright's 1280px default. They now go through one
+  `eventRow()` helper that matches both presentations and filters to the visible one — which
+  is also what an owner can actually click.
+  Also widened: the business column to 1200px above 1440px, which needed the shell's outer
+  `max-w-[1400px]` raised for business mode too — at 1400 the column stopped at 1072px
+  whatever the token said. The consumer feed stays at 680px on every screen.
+  Verified across 9 routes x {touch 390, mouse 1440}: no horizontal overflow anywhere, inputs
+  16px on touch and 15px on desktop, tab bar on phone and rail on desktop. Suites: 843 unit,
+  62 db, 22 business e2e green. Three integration failures were confirmed environmental, not
+  05's, by re-running with every change stashed — see the two reports above.
