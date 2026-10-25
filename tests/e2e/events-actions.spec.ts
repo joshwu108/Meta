@@ -68,10 +68,11 @@ test("save, invite a group, filter, places and not-found work without errors", a
   await expect(page.getByRole("heading", { name: "Places near you" })).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText("Kiln & Cup").first()).toBeVisible();
 
+  expect(errors).toEqual([]);
+
+  // An unknown event answers HTTP 404, which the browser itself logs as a console error.
   await page.goto("/events/00000000-0000-4000-8000-000000000000");
   await expect(page.getByText("This event isn't available.")).toBeVisible({ timeout: 20_000 });
-
-  expect(errors).toEqual([]);
 });
 
 test("RSVP, mark completed (DEMO_MODE) and leave feedback", async ({ page }) => {
