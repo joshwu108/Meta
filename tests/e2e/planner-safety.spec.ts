@@ -41,14 +41,26 @@ test('Block and Report from a match card', async ({ page }) => {
   await login(page, NEW_USER.email);
   await page.goto('/match');
   const card = page.getByRole('article', { name: /^Yuki Tanaka/ });
-  await card.getByRole('button', { name: 'More options for Yuki Tanaka' }).click();
+  const trigger = card.getByRole('button', { name: 'More options for Yuki Tanaka' });
+  await trigger.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('menuitem', { name: 'Block' })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('menuitem', { name: 'Report' })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('menuitem', { name: 'Block' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menu')).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+
+  await trigger.click();
   await page.getByRole('menuitem', { name: 'Report' }).click();
   const report = page.getByRole('dialog', { name: 'Report Yuki Tanaka' });
   await report.getByRole('radio', { name: 'Spam' }).check();
   await report.getByRole('button', { name: 'Send report' }).click();
   await expect(page.getByText('Thanks. Your report was sent.')).toBeVisible();
 
-  await card.getByRole('button', { name: 'More options for Yuki Tanaka' }).click();
+  await trigger.click();
   await page.getByRole('menuitem', { name: 'Block' }).click();
   await page.getByRole('dialog', { name: 'Block Yuki Tanaka?' }).getByRole('button', { name: 'Block' }).click();
   await expect(page.getByText('Yuki Tanaka is blocked')).toBeVisible();

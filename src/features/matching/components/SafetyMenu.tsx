@@ -1,6 +1,6 @@
 'use client';
 import { Ban, Flag, MoreHorizontal } from 'lucide-react';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Button, Sheet } from '@/features/core/components/ui';
 import type { ReportReason } from '@/shared/schemas/social';
 import { REPORT_REASON_LABELS } from '../labels';
@@ -11,14 +11,35 @@ type Person = { id: string; displayName: string };
 // Keys of the label map, so the client bundle does not pull in Zod for one enum.
 const REPORT_REASONS = Object.keys(REPORT_REASON_LABELS) as ReportReason[];
 
+/** Arrow keys, Home and End move focus between the open menu's items (WAI-ARIA menu button pattern). */
+function moveMenuFocus(event: ReactKeyboardEvent<HTMLDivElement>) {
+  const items = [...event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]')];
+  const at = items.indexOf(document.activeElement as HTMLElement);
+  const targets: Record<string, number> = { ArrowDown: at + 1, ArrowUp: at - 1, Home: 0, End: items.length - 1 };
+  const next = targets[event.key];
+  if (next === undefined) return;
+  event.preventDefault();
+  items[(next + items.length) % items.length]?.focus();
+}
+
 /** Overflow menu on a person card: Block and Report (spec §7, Section 12.3 social safety). */
 export function SafetyMenu({ person, onBlock, onReport }: { person: Person; onBlock: (p: Person) => void; onReport: (p: Person) => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  // Closing from the keyboard puts focus back on the trigger; Tab then continues from there.
+  const closeToTrigger = () => {
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
   useEffect(() => {
     if (!isOpen) return;
     const close = (event: MouseEvent) => !rootRef.current?.contains(event.target as Node) && setIsOpen(false);
-    const escape = (event: KeyboardEvent) => event.key === 'Escape' && setIsOpen(false);
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setIsOpen(false);
+      triggerRef.current?.focus();
+    };
     document.addEventListener('mousedown', close);
     document.addEventListener('keydown', escape);
     return () => {
@@ -30,6 +51,7 @@ export function SafetyMenu({ person, onBlock, onReport }: { person: Person; onBl
   return (
     <div ref={rootRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         aria-label={`More options for ${person.displayName}`}
         aria-haspopup="menu"
@@ -40,7 +62,12 @@ export function SafetyMenu({ person, onBlock, onReport }: { person: Person; onBl
         <MoreHorizontal size={20} strokeWidth={1.75} aria-hidden />
       </button>
       {isOpen && (
-        <div role="menu" className="rise-in absolute right-0 bottom-11 z-40 w-44 rounded-md bg-surface p-1 shadow-[var(--shadow-3)]">
+        <div
+          role="menu"
+          aria-label={`Options for ${person.displayName}`}
+          onKeyDown={(event) => (event.key === 'Tab' ? closeToTrigger() : moveMenuFocus(event))}
+          className="rise-in absolute right-0 bottom-11 z-40 w-44 rounded-md bg-surface p-1 shadow-[var(--shadow-3)]"
+        >
           <button role="menuitem" type="button" autoFocus className={item} onClick={() => {
               setIsOpen(false);
               onBlock(person);
