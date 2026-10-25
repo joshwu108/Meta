@@ -1,7 +1,7 @@
 import "server-only";
 import type { SharablePreferences } from "@/shared/types";
 import { DEFAULT_CONSENT, type Consent, type SharingPurpose } from "./schemas";
-import { adminLoadConsent, adminLoadSources, adminRecentShareLogs, adminWriteShareLogs } from "./server/repo";
+import { adminLoadConsent, adminLoadSources, adminRecentShareLogs, adminWriteShareLogs, getPreferences } from "./server/repo";
 import { shareBatch, toAttendeeSharing, type AttendeeSharing, type SharingDeps } from "./server/sharable";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -85,4 +85,15 @@ export async function addConfirmedTraits(
   traits: ConfirmedTraits,
 ): Promise<{ interests: string[]; activityPrefs: string[] }> {
   return addConfirmedTraitsWith(getAdminClient(), userId, traits);
+}
+
+/**
+ * For 07's dedupe and cap checks: the owner's own interests, activity styles and dealbreakers.
+ * Owner-scoped and server-only; it never leaves 07's server code.
+ */
+export async function getOwnPreferencesForImport(
+  userId: string,
+): Promise<{ interests: string[]; activityPrefs: string[]; dealbreakers: string[] }> {
+  const prefs = await getPreferences(getAdminClient(), userId);
+  return { interests: prefs.interests, activityPrefs: prefs.activityPrefs, dealbreakers: prefs.dealbreakers };
 }
