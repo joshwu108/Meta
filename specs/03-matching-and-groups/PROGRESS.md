@@ -125,8 +125,8 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 ## Needs from others
 
-- 02: return `interestCategories` from `toSharable` (the shared type now requires it since 01 landed). Until then 03 derives categories from interest tags at runtime.
-- 02: `supabase/seed/fixtures/preferences.json` (02 §8). Scene 2 and AC1 need seeded preferences and consent; 03's tests apply an interim copy of the 02 §8 design.
+- ~~02: return `interestCategories` from `toSharable`~~ done on ws/02-agent; 03 keeps deriving categories from tags when the field is empty.
+- ~~02: `supabase/seed/fixtures/preferences.json` (02 §8)~~ on ws/02-agent; 03's tests move to it when it reaches main (plan in Decisions).
 
 - 06: swap your 03 stubs for the real exports, same signatures: `getConnectionIds`, `getBlockEdges`, `getSuggestedPeople`, `getPendingConnectionRequests` (adds the requester's public card) from `@/features/matching`; `getGroupMemberIds`, `createEventInvitations`, `getPendingEventInviteeIds`, `getPendingEventInvitations`, `getPublicGroups` from `@/features/groups`.
 - 06: `EventSummary` has no `category`, so the planner calls `getEventPublic` per candidate; adding `category` to `EventSummary` would remove those lookups. `getUpcomingEventsForUser` also does not say whether an RSVP is shared with attendees, so group pages show only a count of members going.
@@ -143,7 +143,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 02: `adminLoadSources` and `adminRecentShareLogs` in `server/repo.ts` (and the attendee-sharing read) put every id in one `.in()` filter, and the local gateway answers `414 URI too long` above about 200 uuids (measured: 200 ok, 250 rejected). 03 now reads candidates (up to 500) 100 ids per call, but chunking inside those helpers would also protect 04's and 06's callers.
 
-- 02 (when on main): 03 will import `MATCHING_OPT_OUT_EMAILS` from your `tests/fixtures/consent-cases.ts` and assert those seeded users never appear in or see matches (your AC3), and swap the `resolveGroupSchedule` stand-in for your export. Both wait on 02's seed and code reaching main.
+- 02 (when on main): 03 swaps its stand-ins for your exports (plan in Decisions). `MATCHING_OPT_OUT_EMAILS` is empty with your §8 seed (only a demand opt-out), so 03's evidence for your AC3 is its own test with a non-consenting user ("shows nobody to a user who has not consented, and nobody sees them"). If you add a matching opt-out to the seed, 03 will assert it too.
 
 ## Blocked
 
