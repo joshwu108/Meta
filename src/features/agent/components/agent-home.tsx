@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { SuggestionCard } from "../schemas";
+import { useChatHistory } from "../hooks/use-chat-history";
 import { usePermissions, usePreferences } from "../hooks/use-preferences";
 import { AgentLog } from "./agent-log";
 import { ChatPanel } from "./chat-panel";
@@ -61,6 +62,7 @@ export function AgentRail() {
 /** Screen 7: chat; the settings rail sits in the shell's right rail (≥1024px) or below the chat (mobile). */
 export function AgentHome() {
   const { update } = usePreferences();
+  const history = useChatHistory();
   const [applied, setApplied] = useState<string | null>(null);
 
   const onApply = async (card: SuggestionCard) => {
@@ -73,7 +75,17 @@ export function AgentHome() {
     <div className={s.page}>
       <h1 className={s.title}>My AI agent</h1>
       <div className={s.stack}>
-        <ChatPanel kind="chat" opener="Hi! Want me to find people, events or groups for this week?" onApply={onApply} />
+        {history.status === "loading" ? (
+          <p className={s.muted} role="status">Loading your chat…</p>
+        ) : (
+          <ChatPanel
+            kind="chat"
+            opener="Hi! Want me to find people, events or groups for this week?"
+            initial={history.lines}
+            initialConversationId={history.conversationId}
+            onApply={onApply}
+          />
+        )}
         {applied ? <p className={s.muted} role="status">{applied}</p> : null}
       </div>
       <div className={s.mobileOnly}><AgentRail /></div>

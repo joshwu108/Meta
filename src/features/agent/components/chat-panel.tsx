@@ -55,6 +55,8 @@ type Props = {
   kind: "onboarding" | "chat";
   opener: string;
   initial?: ChatLine[];
+  /** Conversation the initial lines belong to, so new messages continue it. */
+  initialConversationId?: string;
   onResponse?: (res: ChatResponse) => void;
   onApply?: (card: SuggestionCard) => void;
   /** Called with the envelope error code, e.g. AI_UNAVAILABLE, so the parent can offer a fallback. */
@@ -63,9 +65,9 @@ type Props = {
 };
 
 /** Chat with the personal agent. The log is an aria-live region. */
-export function ChatPanel({ kind, opener, initial = [], onResponse, onApply, onError, disabled }: Props) {
+export function ChatPanel({ kind, opener, initial = [], initialConversationId, onResponse, onApply, onError, disabled }: Props) {
   const [lines, setLines] = useState<ChatLine[]>(initial);
-  const [conversationId, setConversationId] = useState<string | undefined>();
+  const [conversationId, setConversationId] = useState<string | undefined>(initialConversationId);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
