@@ -54,7 +54,7 @@ Branch: `ws/02-agent` · Owner: Tanish Patro
 - [x] AC1 Scene 1 sentence → pottery, coffee, thu_eve, small; nothing invented (service test + Playwright UI test)
 - [x] AC2 Deleting an inferred value persists — verified 2026-10-24 against local Supabase on a throwaway merge with ws/01-core @ 67e4f12 (`agent-db.test.ts`); rerun after main sync
 - [ ] AC3 Consent off → excluded from matching / demand (shared fixture) — ws02 side done: `tests/fixtures/consent-cases.ts` + boundary test; needs 03/04 to assert against it
-- [x] AC4 Suggestion cards deep-link and show "Why this?"
+- [x] AC4 Suggestion cards deep-link and show "Why this?" — people cards use real consented users (`server/people.ts`), verified by `tests/e2e/agent-chat.spec.ts`; event/group cards still point at stub ids until 06/03 land
 - [x] AC5 Activity log entry per sharing purpose — verified 2026-10-24 against local Supabase on a throwaway merge with ws/01-core @ 67e4f12 (`agent-db.test.ts`); rerun after main sync
 
 ### P1
@@ -108,12 +108,16 @@ ws02 sync procedure once 01 is on main (tested approach):
 - Fix item 3, then the merge plan above (stubs → 01 imports).
 - Rerun on Node 22 from clean: `pnpm db:reset`, `pnpm db:seed`, `pnpm test`, `pnpm test:integration`, `pnpm typecheck`, `pnpm lint`, Scene 1 Playwright with `MOCK_AI=1`. Push to `ws/02-agent` only once all pass. Never push to main.
 
+- 2026-10-24: `suggest_people` no longer uses placeholder people. Until 03's matches export lands it reads 01's `profile_public_cards` and filters through `getSharablePreferencesBatch(ids, "matching")` (so non-consenting or hidden users never appear), ranked by shared interests then slots. Default `agent.chat` fixture now requests people and events.
+
 ## Needs from others
 - ~~01: `src/shared/types.ts` on ws/01-core has a placeholder `ExplainInput = { userId, subject, signals }`. 02 owns this type; please replace it with the shape in specs/02 §5 (`{ viewer, target, breakdown }`), which 06 already codes against.~~ Done on main (966a415).
 - 01 / integrator: `vitest.config.ts` on main stubs `server-only` only in the `db` project. ws02 added the same alias to `unit` and `integration` (one `serverAlias` const) so 9 agent test files load; please keep it when merging ws02 (integration finding 2).
 - 01 / integrator: `tests/e2e/auth.spec.ts` "a user without onboarding…" clicked 01's placeholder "Continue to Discover" button, which spec 02's onboarding replaces. ws02 changed that one test to assert the agent onboarding heading; finishing onboarding is covered by `agent-scene1.spec.ts`.
 - 01: Playwright wrote Windows baselines for `theme.spec.ts` on first run here (`gallery-*-win32.png`); left uncommitted on this machine since 01 owns those baselines.
 - 01: `ui/Chip` labels every remove button "Remove"; please use `Remove ${label}` (pass a `label` prop) so a row of chips has distinct accessible names, as spec 02 §7 and the Scene 1 E2E need. Then ws02 can drop its local Chip. Same for `ui/Switch`: accept `labelledBy`/`describedBy` for rows that render their own text.
+- 03: when the matches export lands on main, swap `server/people.ts#suggestPeople` for it (keep the consent boundary). 06 / 03: swap `server/suggestion-stubs.ts` events and groups for `getRecommendedEvents` and the public groups export; their tables are not on main, so no guarded queries were added.
+- 01: `tests/e2e/auth.spec.ts` "a seeded business owner is routed to the business side" is timing-flaky locally after other specs (blank `/` while dev compiles `/business/onboarding` past the 5s `toHaveURL` window); passes alone and in CI.
 - 01: the `integration` vitest project sets no `MOCK_AI`; ws02's DB tests pin it in-file. Consider `env: { MOCK_AI: '1' }` on that project so no integration test can reach the live model.
 - README: add `getAttendeeSharing(userIds)` and `getConsent(userId)` (requested by 06) to the 02 function contracts.
 - 06: `getAttendeeSharing` and `getConsent` now exist on ws/02-agent with the exact shape of your stub; swap `stubs/agent.ts` for `@/features/agent` after both land on main.
@@ -149,3 +153,4 @@ ws02 sync procedure once 01 is on main (tested approach):
 - 2026-10-24 17:40 · Lenovo resumed as the ws02 worker. Full check on Node 22: typecheck + lint clean, 145 unit/integration green (5 Supabase-stack tests skip until 01's 0100 is on main), 10/10 Playwright green. Nothing unblocked left: AC3 waits on 03/04; DB variant and stub swap wait on 01 landing on main.
 - 2026-10-24 18:40 · 01 landed on main: merged main (15 conflicts resolved per plan), adopted nullable groupSizePref + interestCategories, fixed strict-indexing errors, removed 01 stubs for real exports, registered preferences seed, full-stack agent E2E, fixed 320px overflow inside the shell. Clean state on Node 22: db reset + seed (14 prefs), 217 unit + 30 integration + 26 E2E green, typecheck + lint clean. Next: primitives swap (merge plan 7), AC3 waits on 03/04.
 - 2026-10-24 18:55 · landed: merge plan step 7 (01's Button/AiTag/AiRing). 217 unit + 10 agent E2E green; typecheck + lint clean. Next: AC3 waits on 03/04; Never-idle list.
+- 2026-10-24 19:30 · CI fix: regenerated database.types.ts for 0200 (types job was red on 583ce64; green on 9c680ca). Landed real consented people suggestions for agent chat (unit + integration) and AC4 E2E. Clean state: db reset + seed, types current, 222 unit + 32 integration + 26/27 E2E (1 flaky 01 auth timing test, passes on rerun), typecheck + lint clean. Remaining: AC3 (03/04), events/groups stubs (06/03), ui/Chip ask (01).
