@@ -4,7 +4,6 @@ import { useState, type ReactNode } from 'react';
 import { Avatar, Button, Card, StatusPill, useToast } from '@/features/core/components/ui';
 import { useApiAction } from '@/lib/api/use-api-action';
 import type { GroupDetail, RosterMember } from '../server/types';
-import { ROLE_LABELS } from '../labels';
 import { ConfirmSheet, type Confirmation } from './ConfirmSheet';
 import { InvitePicker, type InviteCandidate } from './InvitePicker';
 
@@ -24,11 +23,7 @@ function MemberRow({ member, actions }: { member: RosterMember; actions: ReactNo
         </p>
         {member.user.neighborhood && <p className="truncate text-[length:var(--text-sm)] text-text-2">{member.user.neighborhood}</p>}
       </div>
-      {member.status === 'invited' ? (
-        <StatusPill status="invited" />
-      ) : (
-        member.role !== 'member' && <span className="rounded-pill bg-brand-soft px-2 py-0.5 text-[length:var(--text-xs)] font-semibold text-brand">{ROLE_LABELS[member.role]}</span>
-      )}
+      {member.status === 'invited' ? <StatusPill status="invited" /> : member.role !== 'member' && <StatusPill status={member.role} />}
       <div className="flex items-center gap-1">{actions}</div>
     </li>
   );

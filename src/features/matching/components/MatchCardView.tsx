@@ -63,7 +63,7 @@ function Place({ neighborhood }: { neighborhood: string | null }) {
 function LeadMatch({ match, actions, label }: { match: MatchCard; actions: ReactNode; label: string }) {
   return (
     <Card as="article" className="flex flex-col gap-3 sm:p-5" aria-label={`${label}: ${match.user.displayName}, compatibility ${match.score}`}>
-      <p className="text-[length:var(--text-sm)] font-semibold text-brand">{label}</p>
+      <p className="text-[length:var(--text-sm)] font-semibold text-text-2">{label}</p>
       <div className="flex items-start gap-3">
         <Avatar name={match.user.displayName} src={match.user.avatarUrl} size={56} />
         <div className="min-w-0 flex-1">

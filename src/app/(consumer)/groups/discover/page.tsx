@@ -41,7 +41,7 @@ export default async function DiscoverGroupsPage() {
                       <AvatarStack people={group.memberPreview.map((p) => ({ name: p.displayName, src: p.avatarUrl }))} max={4} size={32} />
                       {group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}
                       {group.interests.length > 0 && <span className="truncate">· {group.interests.slice(0, 3).map(chipLabel).join(', ')}</span>}
-                      {group.myStatus === 'active' && <span className="font-semibold text-brand">· You’re a member</span>}
+                      {group.myStatus === 'active' && <span className="font-semibold text-text">· You’re a member</span>}
                     </span>
                   </span>
                   <ChevronRight size={20} className="shrink-0 text-text-3" aria-hidden />
