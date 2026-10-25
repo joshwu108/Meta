@@ -1,5 +1,5 @@
 import 'server-only';
-import type { Actor } from '@/features/matching';
+import { chunk, ID_FILTER_BATCH, type Actor } from '@/features/matching';
 import { ApiError } from '@/lib/api/errors';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { uuidSchema } from '@/shared/schemas/common';
@@ -69,15 +69,15 @@ export async function createEventInvitations(input: {
 /** Recipients who already hold a pending invitation to the event. */
 export async function getPendingEventInviteeIds(eventId: string, recipientIds: readonly string[]): Promise<Set<string>> {
   if (recipientIds.length === 0) return new Set();
-  const { data, error } = await createAdminClient()
-    .from('invitations')
-    .select('recipient_id')
-    .eq('kind', 'event')
-    .eq('event_id', uuidSchema.parse(eventId))
-    .eq('status', 'pending')
-    .in('recipient_id', [...recipientIds]);
-  if (error) throw new ApiError('INTERNAL', 'Could not load event invitations', 500);
-  return new Set((data ?? []).map((row) => row.recipient_id));
+  const event = uuidSchema.parse(eventId);
+  const admin = createAdminClient();
+  const reads = await Promise.all(
+    chunk([...new Set(recipientIds)], ID_FILTER_BATCH).map((batch) =>
+      admin.from('invitations').select('recipient_id').eq('kind', 'event').eq('event_id', event).eq('status', 'pending').in('recipient_id', batch),
+    ),
+  );
+  if (reads.some((read) => read.error)) throw new ApiError('INTERNAL', 'Could not load event invitations', 500);
+  return new Set(reads.flatMap((read) => read.data ?? []).map((row) => row.recipient_id));
 }
 
 /** A user's pending event invitations, newest first (06's Activity hub). */

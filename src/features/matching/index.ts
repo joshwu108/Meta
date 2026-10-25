@@ -29,5 +29,5 @@ export {
   type ConnectionItem,
   type PendingConnectionRequest,
 } from './server/connections';
-export { notifySafely } from './server/async';
+export { chunk, ID_FILTER_BATCH, notifySafely } from './server/async';
 export type { Actor } from './server/http';

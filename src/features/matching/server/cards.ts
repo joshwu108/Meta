@@ -1,6 +1,7 @@
 import 'server-only';
 import { ApiError } from '@/lib/api/errors';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { chunk, ID_FILTER_BATCH } from './async';
 
 /** The public part of a profile (same columns as `profile_public_cards`). */
 export type PublicCard = {
@@ -19,13 +20,13 @@ export type PublicCard = {
 export async function getPublicCards(userIds: readonly string[]): Promise<Map<string, PublicCard>> {
   const ids = [...new Set(userIds)];
   if (ids.length === 0) return new Map();
-  const { data, error } = await createAdminClient()
-    .from('profiles')
-    .select('id, display_name, avatar_url, bio, neighborhood')
-    .in('id', ids);
-  if (error) throw new ApiError('INTERNAL', 'Could not load profiles', 500);
+  const admin = createAdminClient();
+  const reads = await Promise.all(
+    chunk(ids, ID_FILTER_BATCH).map((batch) => admin.from('profiles').select('id, display_name, avatar_url, bio, neighborhood').in('id', batch)),
+  );
+  if (reads.some((read) => read.error)) throw new ApiError('INTERNAL', 'Could not load profiles', 500);
   return new Map(
-    (data ?? []).map((row) => [
+    reads.flatMap((read) => read.data ?? []).map((row) => [
       row.id,
       { id: row.id, displayName: row.display_name, avatarUrl: row.avatar_url, bio: row.bio, neighborhood: row.neighborhood },
     ]),

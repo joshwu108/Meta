@@ -3,7 +3,7 @@ import { logAgentAction } from '@/features/core';
 import type { EventCategory, SocialGoal } from '@/shared/enums';
 import type { MatchesQuery } from '@/shared/schemas/social';
 import type { AvailabilitySlot, CompatibilityResult } from '@/shared/types';
-import { chunk, mapLimit } from './async';
+import { chunk, ID_FILTER_BATCH, mapLimit } from './async';
 import { createTtlCache } from './cache';
 import { loadCandidateIds } from './candidates';
 import { getPublicCards, unknownCard, type PublicCard } from './cards';
@@ -75,14 +75,11 @@ export function rankCandidates(
 const EXPLAIN_CONCURRENCY = 5;
 
 /**
- * Ids per consent-gated read. 02's batch read puts every id in one `in.(...)` filter and the
- * gateway answers 414 above about 200 uuids, while the candidate pool goes up to 500.
+ * Consent-gated preferences of every candidate who shares them for matching. 02's batch read puts
+ * every id in one `in.(...)` filter and the candidate pool goes up to 500, so it is read in chunks.
  */
-const SHARE_BATCH = 100;
-
-/** Consent-gated preferences of every candidate who shares them for matching, read in chunks. */
 export async function loadSharedCandidates(ids: readonly string[]): Promise<MatchingPreferences[]> {
-  const maps = await Promise.all(chunk(ids, SHARE_BATCH).map((batch) => getSharablePreferencesBatch(batch, 'matching')));
+  const maps = await Promise.all(chunk(ids, ID_FILTER_BATCH).map((batch) => getSharablePreferencesBatch(batch, 'matching')));
   return maps.flatMap((map) => [...map.values()]);
 }
 

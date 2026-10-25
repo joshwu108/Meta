@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { adminClient, createTestUser, type TestUser } from '../helpers';
 import { cleanupSocialUsers, setProfile, testOrigin, setTestOrigin } from './support';
@@ -108,6 +109,15 @@ describe('matching exports', () => {
   it('getCompatibilityScore works on plain SharablePreferences', () => {
     const base = { userId: 'x', interests: ['pottery'], interestCategories: ['creative' as const], availabilitySlots: ['thu_eve' as const], socialGoals: ['make_friends' as const], groupSizePref: 'small' as const, budgetMin: null, budgetMax: null, travelRadiusKm: 5, activityPrefs: [], coarseLat: 37.76, coarseLng: -122.42, neighborhood: null };
     expect(matching.getCompatibilityScore(base, { ...base, userId: 'y' }).hardFilterFailed).toBeNull();
+  });
+});
+
+describe('long id lists', () => {
+  it('getPublicCards and getPendingEventInviteeIds take more ids than one filter holds (414 above ~200)', async () => {
+    const strangers = Array.from({ length: 300 }, () => randomUUID());
+    const cards = await matching.getPublicCards([...strangers, alice.id, bob.id]);
+    expect([...cards.keys()].sort()).toEqual([alice.id, bob.id].sort());
+    await expect(groups.getPendingEventInviteeIds(EVENT_ID, strangers)).resolves.toEqual(new Set());
   });
 });
 
