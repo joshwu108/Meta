@@ -994,3 +994,20 @@ either side of 04. Both were confirmed present in the 13-migration run.
   16px on touch and 15px on desktop, tab bar on phone and rail on desktop. Suites: 843 unit,
   62 db, 22 business e2e green. Three integration failures were confirmed environmental, not
   05's, by re-running with every change stashed — see the two reports above.
+
+- **2026-10-25 07:35 — what the owner reads when 04's revise endpoint fails.** With that
+  endpoint returning 500 for real (the DST report above), the revise panel showed
+  "Something went wrong (request 03f2c426-...)": `reviseErrorMessage` ended in
+  `default: return fallback`, so the server's INTERNAL text — request id and all — went
+  straight to a venue owner. Unmapped codes now go through `submitErrorMessage`, the same
+  wording every other business form uses, while VALIDATION is still passed through because
+  that text names the field and the venue's hours.
+  A test asserted the old behaviour explicitly ("falls back to the server message for
+  anything unmapped"), so it was replaced rather than worked around — that assertion *was*
+  the hole. Verified against the live failure: the panel now reads "Something went wrong and
+  nothing was changed. Please try again." with no request id.
+  Also this tick: `scene4-business.spec.ts` no longer fails when 04's endpoint is down. The
+  old gate probed with an empty body, which 04 rejects as 400 — indistinguishable from
+  working — so the suite blamed 05's screen for 04's outage. It now reads the real response
+  status: a 5xx skips with a message naming 04, while a 4xx from 05's own payload still
+  fails. 865 unit tests pass.
