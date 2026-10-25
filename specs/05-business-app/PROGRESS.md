@@ -415,6 +415,18 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 05:05` — **audited my own suite for tests that pass without testing.** Three
+  had already turned up that way, so I went looking deliberately: grepped for early returns
+  inside tests, skips that never un-skip, and assertions that cannot fail. Found two of the
+  last kind — `expect(error === null || error.code !== undefined).toBe(true)`, which is
+  always true since a PostgrestError always carries a code. In the notifications test it was
+  the **only** assertion, so that test asserted nothing. Both were hedges I wrote while the
+  other workstreams were unmerged and the behaviour was unknown; it is knowable now, so they
+  assert it: an owner's insert into `notifications` is refused with `42501` while the service
+  role's succeeds — the property 05's publish and cancel fan-out depends on — and a
+  cross-owner capability update is filtered to zero rows rather than erroring. The rest of
+  the audit came back clean, and 213 integration tests now run with **zero skips**, so
+  nothing is quietly sitting out.
 - `2026-10-25 04:35` — **put every business screen in the theme matrix, and the matrix was
   lying.** The design-system checklist asks for both themes at four widths, but only three
   of 05's eight screens were in it — not the two-column proposal detail, the dense attendee
