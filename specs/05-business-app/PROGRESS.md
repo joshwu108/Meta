@@ -2,6 +2,20 @@
 
 Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../README.md`](../README.md)
 
+## Status: ready to merge
+
+Every P0 and P1 item below is ticked. Verified **2026-10-24 21:50** against every other
+workstream's branch at once — all 13 migrations (0100, 0200, 0300–0303, 0400–0404, 0500,
+0501, 0600) applied together on a fresh reset, `pnpm db:seed` loaded the full dataset, and
+**349 unit + 38 integration + 34 e2e tests passed with nothing skipped**, including
+Scene 4 end to end. The other branches were grafted locally for that run and removed again,
+so on this branch alone the suite honestly reports 29 integration and 30 e2e with the cases
+that need 04 or 06 skipped.
+
+Merge order note: 05's `0500_business.sql` adds **both** cross-workstream foreign keys
+(`proposals_business_fk`, `events_proposal_fk`) behind an `if exists` guard, so it is safe
+either side of 04. Both were confirmed present in the 13-migration run.
+
 ---
 
 ## Acceptance Criteria (spec §10)
@@ -322,6 +336,14 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 21:50` — **six-way verification: everything passes with nothing skipped.**
+  Grafted every other workstream's migrations (02, 03, 04, 06) plus 04's source locally and
+  ran the lot. **All 13 migrations apply together on a fresh reset**, the seed loads, both
+  of 05's cross-workstream FKs are present, and **349 unit + 38 integration + 34 e2e pass
+  with zero skips** — every test 05 has written now runs, including Scene 4 and the AI
+  revision. 04's feature also still typechecks against 05 with no errors. Grafts removed;
+  the branch alone reports 29 integration + 30 e2e with the dependent cases skipped.
+  Added a "ready to merge" summary at the top of this file for the integrator.
 - `2026-10-24 21:20` — **verified the last unchecked cross-workstream seam: 06's `rsvps`.**
   Grafted 06's migration locally (never committed). Their table matches what 05 reads and
   their RLS is `auth.uid() = user_id`, which proves the earlier service-role fix was
