@@ -1,4 +1,10 @@
-/** /agent draws its own right rail (preferences, permissions, activity log); the shell's agent strip would repeat it. */
-export default function AgentHomeAside() {
-  return null;
+import { AgentRail } from "@/features/agent/components/agent-home";
+
+/** `/agent` right rail (≥1024px): the agent's Preferences / Permissions / Activity tabs (spec 02 §7). */
+export default function AgentAsideRail() {
+  return (
+    <div className="mx-2">
+      <AgentRail />
+    </div>
+  );
 }

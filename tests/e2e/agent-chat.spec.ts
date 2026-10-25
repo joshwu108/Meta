@@ -24,8 +24,22 @@ test("agent chat suggests real people with explanations and working deep links",
   const names = await people.allInnerTexts();
   expect(names).not.toContain("Maya Chen");
 
+  const events = page.locator('a[href^="/events/"]');
+  await expect(events.first()).toBeVisible();
+  const eventHrefs = await events.evaluateAll((links) => links.map((a) => a.getAttribute("href") ?? ""));
+  for (const href of eventHrefs) {
+    expect(href).toMatch(/^\/events\/[0-9a-f-]{36}$/);
+    expect(href).not.toContain("00000000-0000-4000-8000");
+  }
+
   const whys = page.getByText("Why this?");
-  expect(await whys.count()).toBeGreaterThanOrEqual(hrefs.length);
+  expect(await whys.count()).toBeGreaterThanOrEqual(hrefs.length + eventHrefs.length);
   await whys.first().click();
   await expect(page.locator("details[open]").first()).toBeVisible();
+
+  // The deep link opens 06's real event page, not a not-found screen.
+  const title = (await events.first().innerText()).trim();
+  await events.first().click();
+  await page.waitForURL(/\/events\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("heading", { name: title }).first()).toBeVisible();
 });

@@ -8,12 +8,12 @@ import s from "./agent.module.css";
 
 function Frame({ title, intro, children }: { title: string; intro: string; children: React.ReactNode }) {
   return (
-    <main className={s.page}>
+    <div className={s.page}>
       <Link className={s.link} href="/agent">← My AI agent</Link>
       <h1 className={s.title}>{title}</h1>
       <p className={s.muted}>{intro}</p>
       <section className={s.card}>{children}</section>
-    </main>
+    </div>
   );
 }
 

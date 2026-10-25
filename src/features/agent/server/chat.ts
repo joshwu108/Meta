@@ -16,7 +16,8 @@ import { toSharable } from "./sharable";
 import { logAgentAction } from "@/features/core";
 import { generateStructured } from "@/lib/ai";
 import { suggestPeople } from "./people";
-import { suggestEvents, suggestGroups } from "./suggestion-stubs";
+import { suggestGroups } from "./groups";
+import { suggestEvents } from "./events";
 
 const ALL_CONSENT = { ...DEFAULT_CONSENT, allow_matching: true, allow_demand_aggregation: true, allow_group_planning: true };
 
@@ -71,7 +72,7 @@ async function runOne(userId: string, viewer: SharablePreferences, cap: Capabili
       );
     case "suggest_groups":
       return Promise.all(
-        (await suggestGroups(userId)).map((g) =>
+        (await suggestGroups(viewer)).map((g) =>
           card(viewer, { kind: "group", group: g }, {
             kind: "group", targetId: g.id, title: g.name, subtitle: `${g.memberCount} members`, href: `/groups/${g.id}`,
           }),

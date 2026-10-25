@@ -8,6 +8,7 @@ vi.mock("@/features/core", () => ({
 }));
 vi.mock("@/lib/ai", async () => (await import("./mock-ai")).mockAi);
 vi.mock("@/features/agent/server/people", () => ({ suggestPeople: async () => [] }));
+vi.mock("@/features/agent/server/events", () => ({ suggestEvents: async () => [] }));
 const { appendFeedback, feedbackForPrompt, recordFeedback, MAX_FEEDBACK_NOTES } = await import("@/features/agent/server/feedback");
 const { parseFeedbackNotes } = await import("@/features/agent/server/rows");
 const { FeedbackRequestSchema } = await import("@/features/agent/schemas");
