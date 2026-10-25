@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { EventSummary } from "@/shared/types";
 import { savedUpcomingEvents } from "./bookmarks";
 import { loadCardContext, toEventCard, type EventCard } from "./cards";
+import { inChunks } from "./chunks";
 import { listFollowUps, type FollowUpView } from "./follow-ups";
 import { toEventSummary } from "./mappers";
 import { eventsForUser, getEventsByIds, profilePreviews, type ProfilePreview } from "./repo";
@@ -28,9 +29,11 @@ export type Activity = {
 };
 
 async function feedbackGiven(admin: SupabaseClient, userId: string, eventIds: readonly string[]): Promise<Set<string>> {
-  if (eventIds.length === 0) return new Set();
-  const { data } = await admin.from("event_feedback").select("event_id").eq("user_id", userId).in("event_id", eventIds);
-  return new Set((data ?? []).map((r) => r.event_id as string));
+  const rows = await inChunks(eventIds, async (part) => {
+    const { data } = await admin.from("event_feedback").select("event_id").eq("user_id", userId).in("event_id", part);
+    return data ?? [];
+  });
+  return new Set(rows.map((r) => r.event_id as string));
 }
 
 async function myEvents(admin: SupabaseClient, userId: string): Promise<Pick<Activity, "upcoming" | "past">> {

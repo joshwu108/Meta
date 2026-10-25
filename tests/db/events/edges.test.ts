@@ -166,3 +166,33 @@ describe.skipIf(!available)("P1 bookmarks against Postgres", () => {
     await expect(setEventBookmark(client, user, crypto.randomUUID(), true)).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });
+
+describe.skipIf(!available)("id lists longer than one PostgREST chunk", () => {
+  let db: TestDb;
+
+  beforeAll(async () => {
+    db = await createTestDb();
+    clientState.pool = db.pool;
+  });
+  afterAll(async () => db?.drop());
+
+  it("counts, cards and previews stay complete across chunk boundaries", async () => {
+    const { confirmedCounts, getEventsByIds, profilePreviews } = await import("@/features/events/server/repo");
+    const businessId = await createBusiness(db.pool);
+    const ids: string[] = [];
+    for (let i = 0; i < 130; i++) ids.push(await createEvent(db.pool, { businessId }));
+    const [a, b] = await Promise.all([createUser(db.pool, "A"), createUser(db.pool, "B")]);
+    await rsvpAs(db, a, ids[0]!);
+    await rsvpAs(db, b, ids[129]!);
+    const admin = fakeSupabase(db.pool) as unknown as SupabaseClient;
+
+    const counts = await confirmedCounts(admin, ids);
+    const rows = await getEventsByIds(admin, ids);
+    const people = await profilePreviews(admin, [a, b, ...Array.from({ length: 150 }, () => crypto.randomUUID())]);
+
+    expect(counts.size).toBe(130);
+    expect([counts.get(ids[0]!), counts.get(ids[129]!), counts.get(ids[64]!)]).toEqual([1, 1, 0]);
+    expect(rows).toHaveLength(130);
+    expect([...people.values()].map((p) => p.displayName).sort()).toEqual(["A", "B"]);
+  });
+});

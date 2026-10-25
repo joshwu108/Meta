@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { EventCategory, RsvpStatus } from "@/shared/enums";
 import { EVENT_SELECT, EventRow } from "../schemas";
+import { inChunks } from "./chunks";
 import { compareInstants } from "./time";
 
 /** Statuses anyone may browse and RSVP to. */
@@ -51,15 +52,17 @@ export async function getVisibleEvent(db: SupabaseClient, eventId: string): Prom
 }
 
 export async function getEventsByIds(db: SupabaseClient, ids: readonly string[]): Promise<EventRow[]> {
-  if (ids.length === 0) return [];
-  return rowsOf(must(await db.from("events").select(EVENT_SELECT).in("id", ids).in("status", VISIBLE_STATUSES)));
+  const data = await inChunks(ids, async (part) =>
+    must(await db.from("events").select(EVENT_SELECT).in("id", part).in("status", VISIBLE_STATUSES)) ?? []);
+  return rowsOf(data);
 }
 
 export async function confirmedCounts(db: SupabaseClient, eventIds: readonly string[]): Promise<Map<string, number>> {
   if (eventIds.length === 0) return new Map();
-  const data = must(await db.from("rsvps").select("event_id").eq("status", "confirmed").in("event_id", eventIds));
+  const data = await inChunks(eventIds, async (part) =>
+    must(await db.from("rsvps").select("event_id").eq("status", "confirmed").in("event_id", part)) ?? []);
   const counts = new Map<string, number>(eventIds.map((id) => [id, 0]));
-  for (const r of data ?? []) counts.set(r.event_id as string, (counts.get(r.event_id as string) ?? 0) + 1);
+  for (const r of data) counts.set(r.event_id as string, (counts.get(r.event_id as string) ?? 0) + 1);
   return counts;
 }
 
@@ -80,13 +83,12 @@ const MyRsvpRow = z.object({
 });
 
 export async function myRsvps(db: SupabaseClient, userId: string, eventIds?: readonly string[]): Promise<Map<string, MyRsvp>> {
-  let query = db.from("rsvps")
+  const select = () => db.from("rsvps")
     .select("event_id, status, needs_reconfirm, share_with_attendees, share_with_business").eq("user_id", userId);
-  if (eventIds) {
-    if (eventIds.length === 0) return new Map();
-    query = query.in("event_id", eventIds);
-  }
-  const rows = z.array(MyRsvpRow).parse(must(await query) ?? []);
+  const raw = eventIds
+    ? await inChunks(eventIds, async (part) => must(await select().in("event_id", part)) ?? [])
+    : must(await select()) ?? [];
+  const rows = z.array(MyRsvpRow).parse(raw);
   return new Map(rows.map((r) => [r.event_id, {
     eventId: r.event_id, status: r.status, needsReconfirm: r.needs_reconfirm,
     shareWithAttendees: r.share_with_attendees, shareWithBusiness: r.share_with_business,
@@ -98,12 +100,14 @@ export async function friendsGoing(
   db: SupabaseClient, eventIds: readonly string[], friendIds: ReadonlySet<string>,
 ): Promise<Map<string, string[]>> {
   if (eventIds.length === 0 || friendIds.size === 0) return new Map();
-  const data = must(
-    await db.from("rsvps").select("event_id, user_id").eq("status", "confirmed").eq("share_with_attendees", true)
-      .in("event_id", eventIds).in("user_id", [...friendIds]),
-  );
+  const friends = [...friendIds];
+  const data = await inChunks(eventIds, (events) => inChunks(friends, async (users) =>
+    must(
+      await db.from("rsvps").select("event_id, user_id").eq("status", "confirmed").eq("share_with_attendees", true)
+        .in("event_id", events).in("user_id", users),
+    ) ?? []));
   const going = new Map<string, string[]>();
-  for (const r of data ?? []) going.set(r.event_id as string, [...(going.get(r.event_id as string) ?? []), r.user_id as string]);
+  for (const r of data) going.set(r.event_id as string, [...(going.get(r.event_id as string) ?? []), r.user_id as string]);
   return going;
 }
 
@@ -121,9 +125,8 @@ export async function confirmedAttendees(db: SupabaseClient, eventId: string): P
       .order("created_at"),
   ) ?? [];
   const sharing = rsvps.filter((r) => r.share_with_attendees).map((r) => r.user_id as string);
-  const profiles = sharing.length === 0 ? [] : must(
-    await db.from("profiles").select("id, display_name, avatar_url").in("id", sharing),
-  ) ?? [];
+  const profiles = await inChunks(sharing, async (part) =>
+    must(await db.from("profiles").select("id, display_name, avatar_url").in("id", part)) ?? []);
   const byId = new Map(profiles.map((p) => [p.id as string, p]));
   return rsvps.map((r) => {
     const profile = r.share_with_attendees ? byId.get(r.user_id as string) : undefined;
@@ -138,12 +141,12 @@ export async function confirmedAttendees(db: SupabaseClient, eventId: string): P
 
 /** Active (confirmed or waitlisted) RSVP holders among the given users. */
 export async function activeRsvpUserIds(db: SupabaseClient, eventId: string, userIds: readonly string[]): Promise<Set<string>> {
-  if (userIds.length === 0) return new Set();
-  const data = must(
-    await db.from("rsvps").select("user_id").eq("event_id", eventId).in("status", ["confirmed", "waitlisted"])
-      .in("user_id", userIds),
-  );
-  return new Set((data ?? []).map((r) => r.user_id as string));
+  const data = await inChunks(userIds, async (part) =>
+    must(
+      await db.from("rsvps").select("user_id").eq("event_id", eventId).in("status", ["confirmed", "waitlisted"])
+        .in("user_id", part),
+    ) ?? []);
+  return new Set(data.map((r) => r.user_id as string));
 }
 
 /** A user's confirmed/waitlisted events with the RSVP state, any event status. */
@@ -160,8 +163,8 @@ export type ProfilePreview = { userId: string; displayName: string; avatarUrl: s
 
 /** Name + avatar for users whose identity the caller has already cleared for display. */
 export async function profilePreviews(db: SupabaseClient, userIds: readonly string[]): Promise<Map<string, ProfilePreview>> {
-  if (userIds.length === 0) return new Map();
-  const data = must(await db.from("profiles").select("id, display_name, avatar_url").in("id", userIds)) ?? [];
+  const data = await inChunks(userIds, async (part) =>
+    must(await db.from("profiles").select("id, display_name, avatar_url").in("id", part)) ?? []);
   return new Map(data.map((p) => [p.id as string, {
     userId: p.id as string, displayName: p.display_name as string, avatarUrl: (p.avatar_url ?? null) as string | null,
   }]));
