@@ -82,7 +82,7 @@ beforeAll(async () => {
   await addActive(quiet.id);
   const startsAt = nextThursdayEvening();
   const business = { id: 'b1', name: 'Kiln & Cup', category: 'creative' as const, neighborhood: 'Mission', address: '3120 Valencia St', description: '', imageUrl: null };
-  captured.events = [{ id: EVENT_ID, title: 'Wheel Throwing Basics', startsAt, status: 'published', business, rsvpStatus: null }];
+  captured.events = [{ id: EVENT_ID, title: 'Wheel Throwing Basics', category: 'creative', startsAt, status: 'published', business, rsvpStatus: null }];
   captured.details.set(EVENT_ID, { ...captured.events[0]!, description: 'Beginners welcome', category: 'creative', endsAt: startsAt, capacity: 10, confirmedCount: 3, priceCents: 2000, format: 'workshop', source: 'business_manual' });
 }, 60_000);
 

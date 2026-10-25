@@ -24,6 +24,7 @@ export function toEventSummary(row: EventRow, rsvpStatus: RsvpStatus | null): Ev
   return {
     id: row.id,
     title: row.title,
+    category: row.category,
     startsAt: row.starts_at,
     status: row.status,
     business: toBusinessCard(row.businesses),
@@ -35,7 +36,6 @@ export function toEventPublic(row: EventRow, confirmedCount: number, rsvpStatus:
   return {
     ...toEventSummary(row, rsvpStatus),
     description: row.description,
-    category: row.category,
     endsAt: row.ends_at,
     capacity: row.capacity,
     confirmedCount,

@@ -13,7 +13,7 @@ export function AgentAside({ displayName }: { displayName: string }) {
     <Card className="mx-2">
       <div className="flex items-center gap-3">
         <AiRing>
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-pill text-brand">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-pill text-brand-ink">
             <Bot size={20} strokeWidth={1.75} aria-hidden />
           </span>
         </AiRing>

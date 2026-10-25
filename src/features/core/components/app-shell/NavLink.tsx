@@ -18,7 +18,7 @@ export function NavLink({ href, label, icon, layout, badge }: Props) {
       className={cn(
         'relative flex items-center gap-3 rounded-md font-medium no-underline transition-colors duration-[var(--duration-fast)] hover:no-underline',
         layout === 'rail' ? 'h-11 px-3' : 'h-full flex-1 flex-col justify-center gap-0.5 text-[length:var(--text-xs)]',
-        isActive ? 'bg-brand-soft text-brand' : 'text-text hover:bg-hover active:bg-pressed',
+        isActive ? 'bg-brand-soft text-brand-ink' : 'text-text hover:bg-hover active:bg-pressed',
         layout === 'tab' && isActive && 'bg-transparent',
       )}
     >

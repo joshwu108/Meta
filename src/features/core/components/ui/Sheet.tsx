@@ -1,6 +1,7 @@
 'use client';
 import { X } from 'lucide-react';
-import { useEffect, useId, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useFocusTrap } from '@/features/core/hooks/useFocusTrap';
 import { cn } from './cn';
 
 export type SheetProps = {
@@ -13,9 +14,15 @@ export type SheetProps = {
   variant?: 'sheet' | 'modal';
 };
 
-/** Sheet / Modal: radius-lg, shadow-3, token backdrop. Escape closes; focus returns to the trigger. */
+/**
+ * Sheet / Modal: radius-lg, shadow-3, token backdrop. Escape and backdrop click close. Focus
+ * moves inside on open (first focusable, or a field with `autoFocus`), Tab wraps within the
+ * dialog, and focus returns to the trigger on close.
+ */
 export function Sheet({ isOpen, onClose, title, children, footer, variant = 'sheet' }: SheetProps) {
   const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(panelRef, isOpen);
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
@@ -30,12 +37,14 @@ export function Sheet({ isOpen, onClose, title, children, footer, variant = 'she
       onClick={onClose}
     >
       <div
+        ref={panelRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={(event) => event.stopPropagation()}
         className={cn(
-          'rise-in w-full bg-surface shadow-[var(--shadow-3)] sm:max-w-lg',
+          'rise-in w-full bg-surface shadow-[var(--shadow-3)] outline-none sm:max-w-lg',
           variant === 'sheet' ? 'rounded-t-lg sm:rounded-lg' : 'rounded-lg',
         )}
       >

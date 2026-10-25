@@ -35,7 +35,7 @@ export function Tabs<T extends string>({ items, value, onChange, ariaLabel }: Ta
             }}
             className={cn(
               'relative -mb-px h-11 px-3 font-semibold transition-colors duration-[var(--duration-fast)] hover:bg-hover',
-              isActive ? 'text-brand' : 'text-text-2',
+              isActive ? 'text-brand-ink' : 'text-text-2',
             )}
           >
             {item.label}

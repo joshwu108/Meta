@@ -59,9 +59,11 @@ describe('notify() and notifications RLS', () => {
 describe('logAgentAction()', () => {
   it('records a row the user can read and never throws on bad input', async () => {
     const { logAgentAction } = await import('@/features/core/index');
-    await logAgentAction({ userId: alice.id, action: 'extract_preferences', permissionsUsed: ['interests'], result: 'extracted 3 interests' });
-    await logAgentAction({ userId: null, actor: 'demand_engine', action: 'cluster', result: 'found 1 cluster' });
-    await expect(logAgentAction({ action: '', result: 'x' })).resolves.toBeUndefined();
+    await expect(logAgentAction({ userId: alice.id, action: 'extract_preferences', permissionsUsed: ['interests'], result: 'extracted 3 interests' })).resolves.toBe(true);
+    await expect(logAgentAction({ userId: null, actor: 'demand_engine', action: 'cluster', result: 'found 1 cluster' })).resolves.toBe(true);
+    await expect(logAgentAction({ action: '', result: 'x' })).resolves.toBe(false);
+    // A non-user id (e.g. a business id) violates the FK: reported as false, never thrown.
+    await expect(logAgentAction({ userId: crypto.randomUUID(), action: 'publish_event', result: 'published' })).resolves.toBe(false);
 
     const { data } = await alice.client.from('agent_action_log').select('*');
     expect(data).toHaveLength(1);

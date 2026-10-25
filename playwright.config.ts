@@ -3,6 +3,16 @@ import { defineConfig, devices } from '@playwright/test';
 // 3100 by default: port 3000 is commonly taken by other local tools (Docker, other dev servers).
 const port = Number(process.env.PORT ?? 3100);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`;
+// E2E_SERVER=prod serves a production build (`next start`): no first-request compiles and no
+// dev-only render errors. CI sets it; locally `pnpm test:e2e:prod` does the same.
+const isProdServer = process.env.E2E_SERVER === 'prod';
+/**
+ * Run the built server rather than `next dev`. CI always does: `next dev` compiles routes on
+ * first request and intermittently crashes renders in its dev-only RSC runtime (`frame.join is
+ * not a function`), which made the suite flaky with no product fault behind it. `E2E_SERVER=prod`
+ * opts into the same path locally.
+ */
+const useProdServer = Boolean(process.env.CI) || isProdServer;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -22,13 +32,11 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    // CI runs the production server, as the demo does: `next dev` compiles routes on first
-    // request and intermittently crashes renders in its dev-only RSC runtime (`frame.join is
-    // not a function`), which made the suite flaky without a product fault.
-    command: process.env.CI ? `pnpm build && pnpm start -p ${port}` : `pnpm dev -p ${port}`,
+    command: useProdServer ? `pnpm build && pnpm start -p ${port}` : `pnpm dev -p ${port}`,
     url: `${baseURL}/api/health`,
-    reuseExistingServer: !process.env.CI,
-    timeout: process.env.CI ? 300_000 : 120_000,
+    reuseExistingServer: !process.env.CI && !isProdServer,
+    // A production build plus start needs far longer than a dev boot.
+    timeout: useProdServer ? 420_000 : 120_000,
     // ENABLE_DEV_ROUTES lets 05's suite seed a fixture proposal; the route refuses
     // without it and on any production deployment.
     env: { MOCK_AI: '1', DEMO_MODE: '1', NEXT_PUBLIC_SITE_URL: baseURL, ENABLE_DEV_ROUTES: '1' },
