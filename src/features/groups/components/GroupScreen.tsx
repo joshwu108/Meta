@@ -1,7 +1,7 @@
 'use client';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import { AvatarStack, Button, Card, Chip, Tabs } from '@/features/core/components/ui';
 import { useUrlTab } from '@/lib/use-url-tab';
 import { chipLabel } from '@/shared/labels';
@@ -19,7 +19,7 @@ export type GroupTab = 'plans' | 'events' | 'members';
 
 const GROUP_TABS: readonly GroupTab[] = ['plans', 'events', 'members'];
 
-function GroupHeader({ group, onEdit }: { group: GroupDetail; onEdit: () => void }) {
+function GroupHeader({ group, onEdit, editRef }: { group: GroupDetail; onEdit: () => void; editRef: RefObject<HTMLButtonElement | null> }) {
   const people = group.members.map((m) => ({ name: m.user.displayName, src: m.user.avatarUrl }));
   return (
     <Card as="section" aria-label="Group" className="flex flex-col gap-3">
@@ -35,7 +35,7 @@ function GroupHeader({ group, onEdit }: { group: GroupDetail; onEdit: () => void
           </p>
         </div>
         {group.permissions.canEdit && (
-          <Button variant="secondary" leadingIcon={<Pencil size={16} aria-hidden />} onClick={onEdit}>
+          <Button ref={editRef} variant="secondary" leadingIcon={<Pencil size={16} aria-hidden />} onClick={onEdit}>
             Edit
           </Button>
         )}
@@ -73,6 +73,12 @@ export function GroupScreen({ group, candidates }: { group: GroupDetail; candida
   const isMember = group.myStatus === 'active';
   const [tab, setTab] = useUrlTab(GROUP_TABS, isMember ? 'plans' : 'members');
   const [isEditing, setIsEditing] = useState(false);
+  const editRef = useRef<HTMLButtonElement>(null);
+  // 01's Sheet does not return focus yet, so closing puts it back on "Edit".
+  const closeEdit = () => {
+    setIsEditing(false);
+    editRef.current?.focus();
+  };
   const items = [
     ...(isMember ? [{ value: 'plans' as const, label: 'Plans' }] : []),
     { value: 'events' as const, label: 'Events', count: group.upcomingEvents.length || undefined },
@@ -81,7 +87,7 @@ export function GroupScreen({ group, candidates }: { group: GroupDetail; candida
   const active = items.some((item) => item.value === tab) ? tab : items[0]!.value;
   return (
     <div className="flex flex-col gap-4">
-      <GroupHeader group={group} onEdit={() => setIsEditing(true)} />
+      <GroupHeader group={group} onEdit={() => setIsEditing(true)} editRef={editRef} />
       <InvitedBanner group={group} />
       <div className="overflow-x-auto">
         <Tabs items={items} value={active} onChange={setTab} ariaLabel="Group sections" />
@@ -91,7 +97,7 @@ export function GroupScreen({ group, candidates }: { group: GroupDetail; candida
         {active === 'events' && <EventsPanel events={group.upcomingEvents} />}
         {active === 'members' && <MembersPanel group={group} candidates={candidates} />}
       </div>
-      {group.permissions.canEdit && <EditGroupSheet group={group} isOpen={isEditing} onClose={() => setIsEditing(false)} />}
+      {group.permissions.canEdit && <EditGroupSheet group={group} isOpen={isEditing} onClose={closeEdit} />}
     </div>
   );
 }

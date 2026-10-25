@@ -68,6 +68,7 @@ test('Scene 2: matches with explanations, connect, create a private group, invit
   await connect.getByRole('button', { name: 'Send request' }).click();
   await expect(page.getByText('Request sent to Maya Chen')).toBeVisible();
   await expect(page.getByRole('article', { name: /Maya Chen/ })).toHaveCount(0);
+  await expect(page.getByRole('tabpanel', { name: 'Recommended' })).toBeFocused();
   await openRequestFromBell(browser);
 
   await page.goto('/groups');

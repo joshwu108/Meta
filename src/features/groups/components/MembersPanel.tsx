@@ -1,8 +1,9 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Avatar, Button, Card, StatusPill, useToast } from '@/features/core/components/ui';
 import { useApiAction } from '@/lib/api/use-api-action';
+import { useFocusFallback } from '@/lib/use-focus-fallback';
 import type { GroupDetail, RosterMember } from '../server/types';
 import { ConfirmSheet, type Confirmation } from './ConfirmSheet';
 import { InvitePicker, type InviteCandidate } from './InvitePicker';
@@ -66,6 +67,8 @@ function useMemberActions(group: GroupDetail) {
 /** Members tab (Screen 5): roster with roles, invite picker, pending invites, remove/transfer/leave. */
 export function MembersPanel({ group, candidates }: { group: GroupDetail; candidates: InviteCandidate[] }) {
   const actions = useMemberActions(group);
+  const rosterRef = useRef<HTMLUListElement>(null);
+  useFocusFallback(rosterRef, `${actions.confirmation?.title ?? ''}|${group.members.length}|${group.invited.length}`);
   const ownerMustTransfer = group.myRole === 'owner' && group.memberCount > 1;
   const rowActions = (member: RosterMember) => (
     <>
@@ -88,7 +91,7 @@ export function MembersPanel({ group, candidates }: { group: GroupDetail; candid
         <h2 id="roster-heading" className="text-[length:var(--text-md)]">
           Members · {group.memberCount}
         </h2>
-        <ul className="mt-1 divide-y divide-border-subtle">{group.members.map((m) => <MemberRow key={m.user.id} member={m} actions={rowActions(m)} />)}</ul>
+        <ul ref={rosterRef} tabIndex={-1} className="mt-1 divide-y divide-border-subtle">{group.members.map((m) => <MemberRow key={m.user.id} member={m} actions={rowActions(m)} />)}</ul>
         {group.invited.length > 0 && (
           <>
             <h3 className="mt-4 text-[length:var(--text-sm)] text-text-2">Invited</h3>

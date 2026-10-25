@@ -1,5 +1,7 @@
 'use client';
+import { useRef } from 'react';
 import { Button, Tabs } from '@/features/core/components/ui';
+import { useFocusFallback } from '@/lib/use-focus-fallback';
 import { useUrlTab } from '@/lib/use-url-tab';
 import type { ConnectionItem } from '../server/connections';
 import type { MatchCard, MatchesStatus } from '../server/matches';
@@ -40,6 +42,9 @@ function orderMatches(matches: readonly MatchCard[], hidden: ReadonlySet<string>
 export function MatchScreen({ status, matches, incoming, outgoing, connected, filters, focusId }: MatchScreenProps) {
   const [tab, setTab] = useUrlTab(MATCH_TABS, 'recommended');
   const a = useMatchActions();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const sheetFor = a.connectTo?.id ?? a.blockTarget?.id ?? a.reportTarget?.id ?? '';
+  useFocusFallback(panelRef, `${sheetFor}|${a.hidden.size}|${incoming.length}|${outgoing.length}`);
   const visible = orderMatches(matches, a.hidden, focusId);
   const actionsFor = (match: MatchCard) => {
     const person = { id: match.user.id, displayName: match.user.displayName };
@@ -66,7 +71,7 @@ export function MatchScreen({ status, matches, incoming, outgoing, connected, fi
       <div className="overflow-x-auto">
         <Tabs items={tabs} value={tab} onChange={setTab} ariaLabel="Match views" />
       </div>
-      <div role="tabpanel" aria-label={TAB_LABELS[tab]} className="flex flex-col gap-3">
+      <div ref={panelRef} tabIndex={-1} role="tabpanel" aria-label={TAB_LABELS[tab]} className="flex flex-col gap-3">
         {tab === 'connections' && <ConnectionsPanel connected={connected} />}
         {tab === 'requests' && <RequestsPanel incoming={incoming} outgoing={outgoing} isPending={a.isPending} onAnswer={a.answer} />}
         {tab === 'recommended' && (

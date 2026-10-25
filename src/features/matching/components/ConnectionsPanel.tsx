@@ -1,13 +1,16 @@
 'use client';
 import { MessageCircle, UsersRound } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Avatar, Button, Card, EmptyState } from '@/features/core/components/ui';
+import { useFocusFallback } from '@/lib/use-focus-fallback';
 import type { ConnectionItem } from '../server/connections';
 import { ChatSheet } from './ChatSheet';
 
 /** Connections tab (P1): accepted connections with a polled 1:1 conversation. */
 export function ConnectionsPanel({ connected }: { connected: ConnectionItem[] }) {
   const [chatWith, setChatWith] = useState<{ id: string; displayName: string } | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  useFocusFallback(listRef, chatWith?.id ?? '');
   if (connected.length === 0) {
     return (
       <Card>
@@ -17,7 +20,7 @@ export function ConnectionsPanel({ connected }: { connected: ConnectionItem[] })
   }
   return (
     <Card as="section" aria-label="Your connections">
-      <ul className="divide-y divide-border-subtle">
+      <ul ref={listRef} tabIndex={-1} className="divide-y divide-border-subtle">
         {connected.map((item) => (
           <li key={item.id} className="flex min-h-[64px] items-center gap-3 py-2">
             <Avatar name={item.user.displayName} src={item.user.avatarUrl} size={40} />

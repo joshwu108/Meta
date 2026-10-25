@@ -1,7 +1,7 @@
 'use client';
 import { ChevronRight, Lock, Plus, Globe, UsersRound } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { AiTag, AvatarStack, Button, Card, EmptyState } from '@/features/core/components/ui';
 import { chipLabel } from '@/shared/labels';
 import type { GroupSummary } from '../server/types';
@@ -78,6 +78,12 @@ function GroupRow({ group }: { group: GroupSummary }) {
 /** Screen 4 `/groups`: invitations (lead when present), my groups, create group. */
 export function GroupsScreen({ groups }: { groups: GroupSummary[] }) {
   const [isCreating, setIsCreating] = useState(false);
+  const createRef = useRef<HTMLButtonElement>(null);
+  // 01's Sheet does not return focus yet, so closing puts it back on "Create group".
+  const closeCreate = () => {
+    setIsCreating(false);
+    createRef.current?.focus();
+  };
   const invitations = groups.filter((group) => group.myStatus === 'invited');
   const mine = groups.filter((group) => group.myStatus === 'active');
   return (
@@ -87,7 +93,7 @@ export function GroupsScreen({ groups }: { groups: GroupSummary[] }) {
           <h1>Groups</h1>
           <p className="mt-1 text-[length:var(--text-sm)] text-text-2">Small circles for the things you like doing together.</p>
         </div>
-        <Button leadingIcon={<Plus size={18} aria-hidden />} onClick={() => setIsCreating(true)}>
+        <Button ref={createRef} leadingIcon={<Plus size={18} aria-hidden />} onClick={() => setIsCreating(true)}>
           Create group
         </Button>
       </header>
@@ -107,7 +113,7 @@ export function GroupsScreen({ groups }: { groups: GroupSummary[] }) {
           <ul className="feed-stagger mt-1 flex flex-col">{mine.map((group) => <GroupRow key={group.id} group={group} />)}</ul>
         )}
       </Card>
-      <CreateGroupSheet isOpen={isCreating} onClose={() => setIsCreating(false)} />
+      <CreateGroupSheet isOpen={isCreating} onClose={closeCreate} />
     </div>
   );
 }
