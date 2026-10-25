@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type {
   ComponentProps,
   InputHTMLAttributes,
@@ -132,15 +131,23 @@ const LINK_VARIANTS: Record<ButtonVariant, string> = {
 
 const LINK_SIZES: Record<ButtonSize, string> = { md: 'h-9', lg: 'h-10' };
 
-export type ButtonLinkProps = ComponentProps<typeof Link> & {
+export type ButtonLinkProps = ComponentProps<'a'> & {
+  href: string;
   variant?: ButtonVariant;
   size?: ButtonSize;
 };
 
-/** A link that looks like a Button, for navigation actions (Review, Edit, New event). */
+/**
+ * A link that looks like a Button, for navigation actions (Review, Edit, New event).
+ *
+ * A plain anchor, not next/link: in a production build the App Router intermittently fetched
+ * the target's RSC payload and then discarded it, so Review left the owner on the dashboard
+ * (see `navigate` in use-submit.ts). Every business page is force-dynamic, so a real load
+ * costs one round trip and always shows fresh data.
+ */
 export function ButtonLink({ variant = 'primary', size = 'md', className, ...rest }: ButtonLinkProps) {
   return (
-    <Link
+    <a
       {...rest}
       className={cn(LINK_BASE, LINK_VARIANTS[variant], LINK_SIZES[size], 'text-[length:var(--text-base)]', className)}
     />
