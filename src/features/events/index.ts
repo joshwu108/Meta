@@ -6,3 +6,5 @@ export { getRecommendedEvents } from "./server/recommended";
 export { getNearbyBusinesses, type NearbyBusiness } from "./server/nearby";
 export type { EventCard } from "./server/cards";
 export type { RecommendedEvent } from "./server/recommended";
+/** Wraps 01's notify so event notifications also text the demo phone (used by 05's event fan-out). */
+export { withEventSms } from "./server/sms";

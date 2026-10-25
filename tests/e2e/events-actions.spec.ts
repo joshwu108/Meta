@@ -4,6 +4,10 @@ import { login, reseed } from "./helpers";
 // Clicks every WS06 action a judge can reach on seeded data, failing on uncaught page errors or
 // browser console errors. Runs as leo@ (active member of "Mission Makers"), whom no other 06 spec uses.
 const USER = "leo@weave.test";
+
+// Each test visits several pages; the default 30s covers one or two.
+test.describe.configure({ timeout: 120_000 });
+
 type Card = { id: string; title: string; category: string; isFull: boolean; rsvpStatus: string | null };
 
 function watchErrors(page: Page): string[] {
@@ -41,8 +45,11 @@ test("save, invite a group, filter, places and not-found work without errors", a
   expect(reachable, "bell popover receives clicks").toBe(true);
 
   await page.goto(`/events/${event!.id}`);
-  await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByRole("button", { name: "Saved" })).toBeVisible({ timeout: 20_000 });
+  // A retry finds the event already saved; "Save" must not toggle it back off.
+  const save = page.getByRole("button", { name: /^Saved?$/ });
+  await expect(save).toBeVisible({ timeout: 20_000 });
+  if ((await save.textContent())?.trim() === "Save") await save.click();
+  await expect(page.getByRole("button", { name: "Saved", exact: true })).toBeVisible({ timeout: 20_000 });
 
   await page.getByLabel("Invite a group").selectOption({ label: "Mission Makers" });
   await page.getByRole("button", { name: "Invite", exact: true }).click();
@@ -65,10 +72,11 @@ test("save, invite a group, filter, places and not-found work without errors", a
   await expect(page.getByRole("heading", { name: "Places near you" })).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText("Kiln & Cup").first()).toBeVisible();
 
+  expect(errors).toEqual([]);
+
+  // An unknown event answers HTTP 404, which the browser itself logs as a console error.
   await page.goto("/events/00000000-0000-4000-8000-000000000000");
   await expect(page.getByText("This event isn't available.")).toBeVisible({ timeout: 20_000 });
-
-  expect(errors).toEqual([]);
 });
 
 test("RSVP, mark completed (DEMO_MODE) and leave feedback", async ({ page }) => {

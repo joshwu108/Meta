@@ -1,13 +1,17 @@
 import "server-only";
 import { ApiError } from "@/lib/api";
-import { getCurrentUser } from "@/features/core";
+import { getCurrentUser, notify as coreNotify } from "@/features/core";
+import { withEventSms } from "../sms";
 import { createAdminClient } from "./clients";
 
 // 01's API helpers, clients and core contracts, re-exported so 06's modules keep one import path.
 
 export { ApiError, fail, ok, parseBody, toErrorResponse, withAuth, type AuthCtx, type ErrorCode } from "@/lib/api";
-export { logAgentAction, notify } from "@/features/core";
+export { logAgentAction } from "@/features/core";
 export { createAdminClient, createUserClient } from "./clients";
+
+/** 01's notify; event notifications also reach the demo phone when SMS is configured (../sms.ts). */
+export const notify = withEventSms((userId, type, payload) => coreNotify(userId, type, payload));
 
 export type NotificationItem = { id: string; type: string; payload: Record<string, unknown>; readAt: string | null; createdAt: string };
 

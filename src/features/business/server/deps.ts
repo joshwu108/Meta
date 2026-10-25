@@ -1,5 +1,6 @@
 import 'server-only';
 import { logAgentAction, notify } from '@/features/core';
+import { withEventSms } from '@/features/events';
 import { VENUE_TIMEZONE } from './time';
 import type { BusinessStore } from './store';
 
@@ -31,7 +32,8 @@ export type DepsOverrides = Partial<Omit<BusinessDeps, 'store'>> & { store: Busi
 
 export const makeDeps = (overrides: DepsOverrides): BusinessDeps => ({
   actorUserId: null,
-  notify,
+  // Attendee updates and cancellations also text the demo phone when 06's SMS is configured.
+  notify: withEventSms(notify),
   logAgentAction,
   now: () => new Date(),
   timezone: VENUE_TIMEZONE,
