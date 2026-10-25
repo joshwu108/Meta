@@ -1,7 +1,6 @@
 'use client';
 
 import { Sparkles } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { AVAILABILITY_SLOT } from '@/shared/enums';
 import { Button, Card, CardHeader, Input } from '@/features/core/components/ui';
@@ -38,7 +37,6 @@ export function DecisionPanel({
   capacityCeiling: number;
   suggestedStartsAt: string;
 }) {
-  const router = useRouter();
   const { busy: pending, message, errors, submit: run, navigate } = useSubmit();
   const [mode, setMode] = useState<DecisionMode>('idle');
   const [publishNow, setPublishNow] = useState(true);
@@ -64,8 +62,9 @@ export function DecisionPanel({
         published = result.event?.status === 'published';
       },
       // A published event is live, so show it in the events list; a draft or a rejection
-      // stays here and the page re-reads the decided proposal.
-      () => (published ? navigate('/business/events') : router.refresh()),
+      // reloads this page so it re-reads the decided proposal. A real load, like every other
+      // business form (see use-submit): router.refresh() never applied here in a production build.
+      () => navigate(published ? '/business/events' : window.location.href),
     );
   };
 
