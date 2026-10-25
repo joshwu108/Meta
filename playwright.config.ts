@@ -16,6 +16,8 @@ const useProdServer = Boolean(process.env.CI) || isProdServer;
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // Says out loud when a run is the fast-but-not-authoritative kind.
+  globalSetup: './tests/e2e/global-setup.ts',
   // Every spec shares one local database and reseeds it, so files must not overlap.
   fullyParallel: false,
   workers: 1,

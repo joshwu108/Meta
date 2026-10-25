@@ -106,6 +106,13 @@ The card renders from the status the PATCH already returns, and the refresh is a
 rather than the thing the UI waits on. The e2e test that caught it had been passing in dev, which
 is the real lesson — a suite run in the wrong mode can be green and still be wrong.
 
+Checked afterwards whether the shape was systemic, since three cache bugs had been. It is not.
+`router.refresh()` works on a build: RSVP updates in place (measured — the cancel control appears
+and the RSVP button goes, with no reload), and the reconfirm and complete-event buttons are
+covered by `events-actions.spec.ts`, which passes in production mode. Two other workstreams had
+already worked around the same thing in `DecisionPanel.tsx` ("a real load, not router.refresh()")
+and `use-submit.ts`, so the follow-up card was the third occurrence and the last one left.
+
 ### 11. Losing group membership did not reach the graph either
 
 Third instance of the same class, and the mildest: a group puts its roster in each member's graph
@@ -196,6 +203,9 @@ guardrail doing its job on a merge it was written before.
 - The seed is not concurrency-safe: two seeds at once fail on a foreign key against
   `user_preferences`. It only bites when something reseeds while the e2e suite is running, which is
   what three "failures" in an intermediate run turned out to be.
+- **A dev-mode e2e pass now says so.** `tests/e2e/global-setup.ts` prints one line when the run
+  is against `next dev`, because the knowledge that such a run is not authoritative lived only in
+  a comment in `playwright.config.ts` — which is not where someone typing `pnpm test:e2e` looks.
 - **Run the e2e suite the way CI does.** `pnpm test:e2e` uses `next dev`, which compiles routes on
   demand: tests run 2.2× slower by the end of a full pass (3.8s average over the first twenty,
   8.4s over the last ten), which is enough to trip five-second expect timeouts in whichever spec
