@@ -314,6 +314,29 @@ either side of 04. Both were confirmed present in the 13-migration run.
   "profile update for demo.new@… failed: Database client error. Retrying the connection."
   Re-running `pnpm db:seed` succeeds. A short wait or a retry around the first write would
   save the next person thinking they have a regression; it briefly looked like one here.
+- **01 — the seed computes event times in the *seeder's* timezone. Fix verified, not
+  applied.** `eventTimes()` in `supabase/seed/loaders/domain.ts` uses `setHours()`, which is
+  the machine's zone, while `start_hour` in `events.json` is clearly meant as the venue's
+  wall clock. Seeded from CDT, an `11:00` event lands at **09:00** venue time; from UTC it
+  lands somewhere else again, so demo data is not reproducible across machines. Verified fix
+  (resolve the instant in the venue's zone, which also makes it DST-correct):
+  ```ts
+  const today = wallTimeInZone(VENUE_TIMEZONE, new Date());
+  const day = new Date(Date.UTC(today.year, today.month - 1, today.day + daysFromNow));
+  const start = zonedWallTimeToUtc(VENUE_TIMEZONE, day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate(), startHour, 0);
+  ```
+  `VENUE_TIMEZONE`, `wallTimeInZone` and `zonedWallTimeToUtc` are exported from
+  `@/features/business/venue-time` (pure, no `server-only`). Confirmed locally: the four
+  seeded events move to their intended venue hours. Not committed — 01 was committing to
+  that file a minute earlier.
+- **01 / 06 — a seeded event lands on a day its venue is closed.** `days_from_now` is
+  relative to the seed date, so the weekday drifts daily; today "Wheel Throwing Basics"
+  seeds on a **Monday** at Kiln & Cup, which has no Monday hours. 05's validation then
+  refuses to edit the system's own data: `PATCH /api/business/events/:id` answers
+  `422 "these details do not fit the venue: the venue is closed on mon"`. The scripted demo
+  path is unaffected (Scene 4 edits a proposal, and its `thu_eve` slot is open), but anyone
+  clicking Edit → Save on a seeded event hits it. Fixture fix rather than a code one: target
+  a weekday each venue is open, or snap `days_from_now` to one.
 - **01** — `agent_action_log.user_id` references `profiles(id)`, so a failed insert is only
   visible in the server log (the helper logs and returns). 05 was silently dropping every
   audit row for weeks because of it. A one-line note in the helper's doc comment, or
@@ -380,6 +403,17 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 02:00` — **eyeballed the attendee screen against 06's real data, then found
+  two seed bugs.** The masking path renders correctly for the first time with real RSVPs:
+  counts first (9 confirmed, 4 shared), four real names and five "Attendee (private)",
+  capacity 9/12. While reading it I noticed an event titled "Glaze & Latte Sunday" showing
+  Thursday 09:00 against a fixture that says `start_hour: 11`, and pulled on it rather than
+  assuming my formatter was at fault — it was not. **The seed computes event times in the
+  seeder's timezone**, so demo data is not reproducible across machines; and because
+  `days_from_now` drifts the weekday, a seeded event currently lands on a day its venue is
+  closed, which makes 05's own validation reject an edit to it with a 422. Both are written
+  up under Needs from others with a locally verified patch for the first. Not committed: 01
+  had touched that file a minute before.
 - `2026-10-25 01:30` — **all six workstreams are merged and the whole product is green.**
   02 and 06 landed while I was working, so `main` now has every migration. On a fresh
   `db reset` + `db:seed`: **800 unit, 213 integration, 62 db and 59 e2e pass with nothing
