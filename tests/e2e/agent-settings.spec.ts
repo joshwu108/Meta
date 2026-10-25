@@ -50,7 +50,7 @@ test("a manually added interest is saved as user_set and can be removed", async 
 });
 
 test("the activity log shows when another member's agent shared your preferences for matching (AC5)", async ({ page, context }) => {
-  await login(page, "leo@commonground.test");
+  await login(page, "leo@weave.test");
   await page.goto("/agent");
   await page.getByPlaceholder("Message your agent").fill("Who should I meet?");
   await page.getByRole("button", { name: "Send" }).click();

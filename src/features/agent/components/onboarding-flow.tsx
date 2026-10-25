@@ -149,7 +149,7 @@ export function OnboardingFlow({ displayName }: { displayName?: string }) {
   return (
     <main className={`${s.page} ${step === "talk" ? s.wide : ""}`}>
       <Progress step={step} />
-      <h1 className={s.lead}>{displayName ? `Hi ${displayName}, welcome to CommonGround` : "Welcome to CommonGround"}</h1>
+      <h1 className={s.lead}>{displayName ? `Hi ${displayName}, welcome to Weave` : "Welcome to Weave"}</h1>
       {step === "basics" ? <Basics onDone={() => setStep("talk")} /> : null}
       {step === "talk" ? <Talk onDone={() => setStep("review")} /> : null}
       {step === "review" ? <Review /> : null}

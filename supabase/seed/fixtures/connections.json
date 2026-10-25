@@ -1,8 +1,8 @@
 [
-  { "requester": "maya@commonground.test", "recipient": "leo@commonground.test", "status": "accepted" },
-  { "requester": "yuki@commonground.test", "recipient": "maya@commonground.test", "status": "accepted" },
-  { "requester": "ana@commonground.test", "recipient": "kai@commonground.test", "status": "accepted" },
-  { "requester": "sam@commonground.test", "recipient": "theo@commonground.test", "status": "accepted" },
-  { "requester": "omar@commonground.test", "recipient": "sam@commonground.test", "status": "accepted" },
-  { "requester": "priya@commonground.test", "recipient": "nina@commonground.test", "status": "accepted", "message": "Coffee crawl sometime?" }
+  { "requester": "maya@weave.test", "recipient": "leo@weave.test", "status": "accepted" },
+  { "requester": "yuki@weave.test", "recipient": "maya@weave.test", "status": "accepted" },
+  { "requester": "ana@weave.test", "recipient": "kai@weave.test", "status": "accepted" },
+  { "requester": "sam@weave.test", "recipient": "theo@weave.test", "status": "accepted" },
+  { "requester": "omar@weave.test", "recipient": "sam@weave.test", "status": "accepted" },
+  { "requester": "priya@weave.test", "recipient": "nina@weave.test", "status": "accepted", "message": "Coffee crawl sometime?" }
 ]

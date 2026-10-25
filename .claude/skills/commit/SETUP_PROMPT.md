@@ -1,7 +1,7 @@
 # Team setup prompt for the `/commit` skill
 
 Each teammate: fill in the four values in the first block, then paste the whole
-thing into Claude Code **from inside your clone of the CommonGround repo**.
+thing into Claude Code **from inside your clone of the Weave repo**.
 It takes about a minute and only has to be done once per clone.
 
 Your email must be one verified on your GitHub account (GitHub → Settings →
@@ -21,7 +21,7 @@ My details:
 
 Do the following, in order, and show me the output of each step:
 
-1. Confirm we are at the root of the CommonGround repo (there is a `specs/README.md`
+1. Confirm we are at the root of the Weave repo (there is a `specs/README.md`
    and a `.git` directory). If not, stop and tell me where to cd.
 
 2. Make sure the skill exists at `.claude/skills/commit/SKILL.md` with the three

@@ -4,7 +4,7 @@ import { login, reseed } from './helpers';
 test('accepted connections can message each other (P1, polled)', async ({ page, browser }) => {
   test.setTimeout(90_000);
   await reseed(page);
-  await login(page, 'maya@commonground.test');
+  await login(page, 'maya@weave.test');
   await page.goto('/match?tab=connections');
   const connections = page.getByRole('region', { name: 'Your connections' });
   await connections.getByRole('listitem').filter({ hasText: 'Leo Park' }).getByRole('button', { name: 'Message' }).click();
@@ -15,7 +15,7 @@ test('accepted connections can message each other (P1, polled)', async ({ page, 
 
   const leo = await browser.newContext();
   const leoPage = await leo.newPage();
-  await login(leoPage, 'leo@commonground.test');
+  await login(leoPage, 'leo@weave.test');
   await leoPage.goto('/match?tab=connections');
   await leoPage.getByRole('region', { name: 'Your connections' }).getByRole('listitem').filter({ hasText: 'Maya Chen' }).getByRole('button', { name: 'Message' }).click();
   await expect(leoPage.getByRole('list', { name: 'Messages with Maya Chen' })).toContainText('Wheel night on Thursday?');

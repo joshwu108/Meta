@@ -1,4 +1,4 @@
-/* CommonGround design tokens (specs/design-system.md §1–2). Light is default; dark via
+/* Weave design tokens (specs/design-system.md §1–2). Light is default; dark via
    data-theme="dark" or system preference when no explicit theme is set. */
 :root {
   /* Canvas and surfaces */

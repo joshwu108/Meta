@@ -5,7 +5,7 @@ import { ThemeScript } from '@/features/core/components/theme/ThemeScript';
 import { ToastProvider } from '@/features/core/components/ui/Toast';
 
 export const metadata: Metadata = {
-  title: { default: 'CommonGround', template: '%s · CommonGround' },
+  title: { default: 'Weave', template: '%s · Weave' },
   description: 'Find your people nearby. A personal AI agent that brings neighbors together.',
 };
 

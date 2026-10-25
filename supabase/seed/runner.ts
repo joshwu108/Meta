@@ -39,7 +39,7 @@ async function runExtras(ctx: SeedContext, loaders: ReadonlyArray<ExtraLoader>):
 }
 
 /**
- * Idempotent seed: deletes every `@commonground.test` auth user (cascading to their rows), then
+ * Idempotent seed: deletes every `@weave.test` auth user (cascading to their rows), then
  * loads fixtures in dependency order. Tables owned by other workstreams are skipped until their
  * migrations land.
  */

@@ -271,7 +271,7 @@ TDD per workstream rules: tests first in every phase.
 - **Integration** (local Supabase): a second user cannot `select` another's `graph_edge_events`;
   snapshot honours `is_discoverable` and `allow_matching`; a business-owner session gets `FORBIDDEN`
   from `/api/graph`; a failing `recordGraphEvent` does not fail `POST /api/connections`.
-- **E2E**: `/graph` renders for `maya@commonground.test`; tapping a node opens the sheet;
+- **E2E**: `/graph` renders for `maya@weave.test`; tapping a node opens the sheet;
   `Graph | List` toggle; 390px and 1280px viewports; light and dark screenshots.
 - Coverage ≥80% on `src/features/graph/`.
 

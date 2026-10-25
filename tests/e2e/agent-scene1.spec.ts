@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
 test("Scene 1: canonical sentence → review shows pottery, coffee, Thursday evening, small → confirm → Discover", async ({ page }) => {
   await login(page, NEW_USER.email);
   await page.goto("/onboarding");
-  await expect(page.getByRole("heading", { name: `Hi ${NEW_USER.name}, welcome to CommonGround` })).toBeVisible();
+  await expect(page.getByRole("heading", { name: `Hi ${NEW_USER.name}, welcome to Weave` })).toBeVisible();
 
   await page.getByPlaceholder(/start typing/i).fill("Mission District");
   await page.getByRole("button", { name: "Continue" }).click();

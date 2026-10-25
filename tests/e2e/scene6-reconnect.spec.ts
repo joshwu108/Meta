@@ -6,7 +6,7 @@ import { login } from "./helpers";
 const EVENT = "Latte Art & Conversation";
 
 test("mutual reconnect produces a follow-up suggestion for both people", async ({ page }) => {
-  await login(page, "jordan@commonground.test");
+  await login(page, "jordan@weave.test");
   await page.goto("/activity");
   await page.getByRole("region", { name: "Past events" }).getByText(EVENT).click();
 
@@ -20,7 +20,7 @@ test("mutual reconnect produces a follow-up suggestion for both people", async (
   await expect(followUps.getByText("AI suggestion")).toBeVisible();
 
   await page.context().clearCookies();
-  await login(page, "maya@commonground.test");
+  await login(page, "maya@weave.test");
   await page.goto("/activity");
   await expect(page.getByRole("region", { name: "Follow-up suggestions" }).getByText(/jordan/i)).toBeVisible();
 });

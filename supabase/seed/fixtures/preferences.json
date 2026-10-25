@@ -1,6 +1,6 @@
 [
   {
-    "email": "maya@commonground.test",
+    "email": "maya@weave.test",
     "neighborhood": "Mission District",
     "coarseLat": 37.76,
     "coarseLng": -122.42,
@@ -40,7 +40,7 @@
     "summary": "Loves pottery and a good coffee. Free Thursday evenings and Saturday daytime; prefers small groups."
   },
   {
-    "email": "leo@commonground.test",
+    "email": "leo@weave.test",
     "neighborhood": "Mission District",
     "coarseLat": 37.75,
     "coarseLng": -122.42,
@@ -79,7 +79,7 @@
     "summary": "Ceramics hobbyist who wants to keep learning. Usually free Thursday evenings."
   },
   {
-    "email": "sam@commonground.test",
+    "email": "sam@weave.test",
     "neighborhood": "Mission District",
     "coarseLat": 37.76,
     "coarseLng": -122.41,
@@ -118,7 +118,7 @@
     "summary": "New to pottery and up for a board game. Free Thursday and Friday evenings."
   },
   {
-    "email": "ana@commonground.test",
+    "email": "ana@weave.test",
     "neighborhood": "Noe Valley",
     "coarseLat": 37.75,
     "coarseLng": -122.43,
@@ -157,7 +157,7 @@
     "summary": "Recently moved to Noe Valley; paints and explores caf\u00e9s. Thursday evenings free."
   },
   {
-    "email": "kai@commonground.test",
+    "email": "kai@weave.test",
     "neighborhood": "Castro",
     "coarseLat": 37.76,
     "coarseLng": -122.43,
@@ -196,7 +196,7 @@
     "summary": "Wants to get better at ceramics and hikes on Saturdays."
   },
   {
-    "email": "elena@commonground.test",
+    "email": "elena@weave.test",
     "neighborhood": "Castro",
     "coarseLat": 37.76,
     "coarseLng": -122.44,
@@ -235,7 +235,7 @@
     "summary": "Paints and enjoys live music. Thursday evenings work well."
   },
   {
-    "email": "nina@commonground.test",
+    "email": "nina@weave.test",
     "neighborhood": "SoMa",
     "coarseLat": 37.78,
     "coarseLng": -122.4,
@@ -271,7 +271,7 @@
     "summary": "Board game fan looking for a regular Friday night crew."
   },
   {
-    "email": "omar@commonground.test",
+    "email": "omar@weave.test",
     "neighborhood": "SoMa",
     "coarseLat": 37.78,
     "coarseLng": -122.41,
@@ -306,7 +306,7 @@
     "summary": "Plays strategy board games; free Friday and Saturday evenings."
   },
   {
-    "email": "dev@commonground.test",
+    "email": "dev@weave.test",
     "neighborhood": "SoMa",
     "coarseLat": 37.78,
     "coarseLng": -122.4,
@@ -342,7 +342,7 @@
     "summary": "Into board games and trivia nights. Fridays work best."
   },
   {
-    "email": "yuki@commonground.test",
+    "email": "yuki@weave.test",
     "neighborhood": "Mission District",
     "coarseLat": 37.76,
     "coarseLng": -122.42,
@@ -378,7 +378,7 @@
     "summary": "Casual board gamer who also loves live shows. Friday evenings."
   },
   {
-    "email": "priya@commonground.test",
+    "email": "priya@weave.test",
     "neighborhood": "Hayes Valley",
     "coarseLat": 37.78,
     "coarseLng": -122.42,
@@ -417,7 +417,7 @@
     "summary": "Weekend hiker and coffee lover exploring the city."
   },
   {
-    "email": "theo@commonground.test",
+    "email": "theo@weave.test",
     "neighborhood": "Hayes Valley",
     "coarseLat": 37.78,
     "coarseLng": -122.43,
@@ -454,7 +454,7 @@
     "summary": "Enjoys coffee shops and live music; free Wednesday and Saturday evenings."
   },
   {
-    "email": "harper@commonground.test",
+    "email": "harper@weave.test",
     "neighborhood": "Hayes Valley",
     "coarseLat": 37.78,
     "coarseLng": -122.42,
@@ -491,7 +491,7 @@
     "summary": "Goes to live music and loves bigger social events."
   },
   {
-    "email": "marcus@commonground.test",
+    "email": "marcus@weave.test",
     "neighborhood": "Noe Valley",
     "coarseLat": 37.75,
     "coarseLng": -122.43,

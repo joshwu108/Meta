@@ -1,9 +1,9 @@
 import type { Page } from '@playwright/test';
 
 export const SEED_PASSWORD = 'demo-pass-1234';
-export const CONSUMER = { email: 'maya@commonground.test', name: 'Maya Chen' };
-export const NEW_USER = { email: 'demo.new@commonground.test', name: 'Jordan Lee' };
-export const OWNER = { email: 'owner.kiln-and-cup@commonground.test', name: 'Rosa Delgado' };
+export const CONSUMER = { email: 'maya@weave.test', name: 'Maya Chen' };
+export const NEW_USER = { email: 'demo.new@weave.test', name: 'Jordan Lee' };
+export const OWNER = { email: 'owner.kiln-and-cup@weave.test', name: 'Rosa Delgado' };
 
 export async function login(page: Page, email: string, password = SEED_PASSWORD): Promise<void> {
   await page.goto('/login');

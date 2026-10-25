@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 export function AuthCard({ title, subtitle, children, footer }: { title: string; subtitle?: string; children: ReactNode; footer?: ReactNode }) {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
-      <p className="mb-6 text-[length:var(--text-lg)] font-bold text-brand">CommonGround</p>
+      <p className="mb-6 text-[length:var(--text-lg)] font-bold text-brand">Weave</p>
       <section aria-labelledby="auth-title" className="surface-card w-full max-w-[400px] p-6">
         <h1 id="auth-title" className="text-lead">
           {title}

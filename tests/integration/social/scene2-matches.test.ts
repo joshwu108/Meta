@@ -38,13 +38,13 @@ describe('AC1: seeded demo user after Scene 1', () => {
   it('never shows non-discoverable seeded users', async () => {
     const result = await getMatchesForViewer(demoId, { limit: 20 });
     const shown = new Set(result.matches.map((m) => m.user.id));
-    expect(shown.has(ids.get('dev@commonground.test')!)).toBe(false);
-    expect(shown.has(ids.get('harper@commonground.test')!)).toBe(false);
+    expect(shown.has(ids.get('dev@weave.test')!)).toBe(false);
+    expect(shown.has(ids.get('harper@weave.test')!)).toBe(false);
   });
 
   it('keeps the seeded block pair apart in both directions', async () => {
-    const kai = ids.get('kai@commonground.test')!;
-    const leo = ids.get('leo@commonground.test')!;
+    const kai = ids.get('kai@weave.test')!;
+    const leo = ids.get('leo@weave.test')!;
     const forKai = await getMatchesForViewer(kai, { limit: 20 });
     const forLeo = await getMatchesForViewer(leo, { limit: 20 });
     expect(forKai.matches.map((m) => m.user.id)).not.toContain(leo);

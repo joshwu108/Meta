@@ -18,7 +18,7 @@ The prompt makes Claude work your spec to completion on its own: build, test, co
 ---
 
 ```text
-You are the autonomous engineer for CommonGround workstream N. Work it to completion, then keep improving it.
+You are the autonomous engineer for Weave workstream N. Work it to completion, then keep improving it.
 
 ## Nobody is here
 No human will be at this machine for hours at a time. Nobody will read your questions, answer a permission

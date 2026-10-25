@@ -1,6 +1,6 @@
 [
   {
-    "email": "maya@commonground.test",
+    "email": "maya@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000001",
@@ -33,7 +33,7 @@
     }
   },
   {
-    "email": "leo@commonground.test",
+    "email": "leo@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000002",
@@ -65,7 +65,7 @@
     }
   },
   {
-    "email": "sam@commonground.test",
+    "email": "sam@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000003",
@@ -97,7 +97,7 @@
     }
   },
   {
-    "email": "ana@commonground.test",
+    "email": "ana@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000004",
@@ -129,7 +129,7 @@
     }
   },
   {
-    "email": "kai@commonground.test",
+    "email": "kai@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000005",
@@ -161,7 +161,7 @@
     }
   },
   {
-    "email": "elena@commonground.test",
+    "email": "elena@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000006",
@@ -193,7 +193,7 @@
     }
   },
   {
-    "email": "nina@commonground.test",
+    "email": "nina@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000007",
@@ -222,7 +222,7 @@
     }
   },
   {
-    "email": "omar@commonground.test",
+    "email": "omar@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000008",
@@ -250,7 +250,7 @@
     }
   },
   {
-    "email": "dev@commonground.test",
+    "email": "dev@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000009",
@@ -279,7 +279,7 @@
     }
   },
   {
-    "email": "yuki@commonground.test",
+    "email": "yuki@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000010",
@@ -308,7 +308,7 @@
     }
   },
   {
-    "email": "priya@commonground.test",
+    "email": "priya@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000011",
@@ -340,7 +340,7 @@
     }
   },
   {
-    "email": "theo@commonground.test",
+    "email": "theo@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000012",
@@ -370,7 +370,7 @@
     }
   },
   {
-    "email": "harper@commonground.test",
+    "email": "harper@weave.test",
     "allowDemandAggregation": true,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000013",
@@ -400,7 +400,7 @@
     }
   },
   {
-    "email": "marcus@commonground.test",
+    "email": "marcus@weave.test",
     "allowDemandAggregation": false,
     "preferences": {
       "userId": "00000000-0000-4000-8000-000000000014",

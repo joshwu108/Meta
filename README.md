@@ -1,4 +1,4 @@
-# CommonGround
+# Weave
 
 AI-powered local social discovery. A personal agent learns what you like and when you're free,
 finds compatible people and groups nearby, and turns aggregated community demand into event
@@ -112,9 +112,9 @@ Demo accounts (all `demo-pass-1234`):
 
 | Account | Use |
 |---|---|
-| `demo.new@commonground.test` | Brand-new member, no preferences (Scene 1) |
-| `maya@commonground.test` | Onboarded consumer with notifications |
-| `owner.kiln-and-cup@commonground.test` | Pottery studio owner (business shell) |
+| `demo.new@weave.test` | Brand-new member, no preferences (Scene 1) |
+| `maya@weave.test` | Onboarded consumer with notifications |
+| `owner.kiln-and-cup@weave.test` | Pottery studio owner (business shell) |
 
 ## Scripts
 

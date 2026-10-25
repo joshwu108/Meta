@@ -12,7 +12,7 @@ const NAMES = ["maya", "jordan", "sam", "priya", "theo", "nina", "leo", "ana", "
 
 describe("seed planning", () => {
   it("never seeds RSVPs for demo or owner accounts", () => {
-    const ids = rsvpCandidates({ "demo.new@commonground.test": "d1", "demo@commonground.test": "d2", "owner.kiln@commonground.test": "o", "maya@commonground.test": "m" });
+    const ids = rsvpCandidates({ "demo.new@weave.test": "d1", "demo@weave.test": "d2", "owner.kiln@weave.test": "o", "maya@weave.test": "m" });
     expect(ids).toEqual(["m"]);
   });
 
@@ -32,7 +32,7 @@ describe.skipIf(!available)("seedEventsAndRsvps against Postgres", () => {
 
   beforeAll(async () => {
     db = await createTestDb();
-    for (const n of NAMES) users[`${n}@commonground.test`] = await createUser(db.pool, n, `${n}@commonground.test`);
+    for (const n of NAMES) users[`${n}@weave.test`] = await createUser(db.pool, n, `${n}@weave.test`);
     const kiln = await createBusiness(db.pool);
     await createBusiness(db.pool, "Ritual Grounds", "food_drink");
     for (const capacity of [6, 10, 12]) await createEvent(db.pool, { businessId: kiln, capacity });
@@ -55,9 +55,9 @@ describe.skipIf(!available)("seedEventsAndRsvps against Postgres", () => {
     );
     expect(done[0]).toEqual({ status: "completed", past: true, attendees: 6 });
     const { rows: reconnect } = await db.pool.query("select from_user_id, to_user_id from reconnect_interest");
-    expect(reconnect).toEqual([{ from_user_id: users["maya@commonground.test"], to_user_id: users["jordan@commonground.test"] }]);
+    expect(reconnect).toEqual([{ from_user_id: users["maya@weave.test"], to_user_id: users["jordan@weave.test"] }]);
     const { rows: demo } = await db.pool.query("select count(*)::int as n from rsvps where user_id = any($1)", [
-      [users["demo@commonground.test"], users["demo.new@commonground.test"]],
+      [users["demo@weave.test"], users["demo.new@weave.test"]],
     ]);
     expect(demo[0].n).toBe(0);
   });

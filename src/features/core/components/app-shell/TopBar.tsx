@@ -20,13 +20,13 @@ export function TopBar({ homeHref, user, initialUnread, switchLink, trailing }: 
     <header className="sticky top-0 z-40 h-[var(--topbar-height)] overflow-hidden bg-surface shadow-[var(--shadow-1)]">
       <div className="mx-auto flex h-full max-w-[1400px] min-w-0 items-center gap-2 px-4 sm:gap-3">
         <Link href={homeHref} className="shrink-0 text-[length:var(--text-md)] font-bold text-text no-underline hover:no-underline sm:text-[length:var(--text-lg)]">
-          CommonGround
+          Weave
         </Link>
         <label className="relative ml-2 hidden h-10 flex-1 max-w-xs items-center md:flex">
           <Search size={18} className="pointer-events-none absolute left-3 text-text-3" aria-hidden />
           <input
             type="search"
-            placeholder="Search CommonGround"
+            placeholder="Search Weave"
             aria-label="Search"
             className="h-10 w-full rounded-pill bg-surface-2 pl-10 pr-4 text-text placeholder:text-text-3 focus:outline-none focus-visible:outline-2 focus-visible:outline-brand"
           />

@@ -63,7 +63,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 ## Decisions
 
 - 2026-10-24: `src/shared/types.ts` now follows the owning specs where they differ from the README baseline: `SharablePreferences.interestCategories: EventCategory[]`, `groupSizePref: GroupSizePref | null`, and `ExplainInput = { viewer, target, breakdown }` (spec 02 §5; 03 and 06 already code against it). README §4 needs the same edit (Needs from others).
-- 2026-10-24: `users.json` has 16 users (added `jordan@commonground.test` for Scene 6 per spec 06 §8); spec 01 §6 updated; README §5 still says 15.
+- 2026-10-24: `users.json` has 16 users (added `jordan@weave.test` for Scene 6 per spec 06 §8); spec 01 §6 updated; README §5 still says 15.
 - 2026-10-24: Prompt definitions are split into `src/lib/ai/prompts/{agent,groups,demand,events}.ts` and spread into `PROMPTS`; seed extensions register in `supabase/seed/loaders/registry.ts`. Both exist so other workstreams' merges add lines instead of conflicting.
 
 - 2026-10-24: Added `--color-warning-ink` (#8A5A00 light / #F7B928 dark) to tokens.css because the spec's `--color-warning` (#F7B928) on `--color-warning-soft` fails AA for text. Used by `StatusPill` amber states. Proposed for design-system.md under Needs from others.
