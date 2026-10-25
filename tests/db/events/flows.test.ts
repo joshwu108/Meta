@@ -98,6 +98,7 @@ describe.skipIf(!available)("06 flows against Postgres", () => {
   });
 
   it("lets only the venue owner complete an event unless DEMO_MODE is on", async () => {
+    vi.stubEnv("DEMO_MODE", "0"); // CI runs with DEMO_MODE=1
     const eventId = await createEvent(db.pool, { businessId });
     const stranger = await createUser(db.pool);
     const { rows } = await db.pool.query("select owner_id from businesses where id = $1", [businessId]);
