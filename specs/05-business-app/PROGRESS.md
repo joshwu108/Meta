@@ -2,17 +2,17 @@
 
 Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../README.md`](../README.md)
 
-## Status: PR #4 open with seven fixes for main
+## Status: PR #4 open with eight fixes for main
 
 All six workstreams are merged into `main`, and the whole product is green there:
 **800 unit, 213 integration, 62 db and 59 e2e tests pass with nothing skipped**, plus
 typecheck, lint and build (verified 2026-10-25 01:30 on a fresh `db reset` + `db:seed`).
 
-**Seven 05 bug fixes are still only on `ws/05-business`** — they landed after the branch was
+**Eight 05 bug fixes are still only on `ws/05-business`** — they landed after the branch was
 first merged. **https://github.com/joshwu108/Meta/pull/4** is open for them, with the full
 write-up and a test plan; merging it is all that is needed. The three originally listed here
 plus the insights scope fix (`c91d1b9`), the onboarding dead-end warning (`39c213f`) and the
-error-screen recovery fix (`51d13e3`) and the malformed-id fix (`9cf70cd`):
+error-screen recovery fix (`51d13e3`) the malformed-id fix (`9cf70cd`) and the error-wording fix (`5b8eb73`):
 
 - `e3f960e` + `cf29fb6` — **every time on the business screens is the venue's wall clock.**
   The editor read and wrote `datetime-local` in the browser's zone, and the display
@@ -35,6 +35,10 @@ error-screen recovery fix (`51d13e3`) and the malformed-id fix (`9cf70cd`):
   internal failure, so `/business/events/not-a-uuid/edit` read as a crash while every other
   unknown id read as "We could not find that". The three id pages now check the shape
   first, which is what the API routes already did (they answer 400 VALIDATION).
+- `5b8eb73` — **the status machine spoke to the owner.** Publishing the same draft from two
+  tabs showed the second one "published -> published is not a legal event transition".
+  Every error code a mutation can return is now translated for the owner; VALIDATION text
+  is passed through unchanged, because it names the field and the venue's own hours.
 
 Every P0 and P1 item below is ticked.
 
@@ -882,3 +886,18 @@ either side of 04. Both were confirmed present in the 13-migration run.
   through signup and onboarding gets a clear explanation and a next action on all four
   screens (dashboard, proposals, events, insights).
   Suites: 817 unit, 151 integration, 62 db, typecheck and lint clean.
+
+- **2026-10-25 01:55 — the mutation failure paths, rendered for the first time.** The
+  integration suite proves a second decision is refused; nobody had seen what that *looks
+  like*. Publishing one draft from two tabs put **"published -> published is not a legal event
+  transition"** in front of the owner — the status machine talking to a developer. Fixed in
+  `5b8eb73` with a code-to-sentence mapper (`submit-error.ts`) behind `useSubmit`, following
+  the pattern the revise panel already used. The exhaustive test walks every member of
+  `ERROR_CODES` and rejects any message containing an arrow or SCREAMING_CASE, so a code added
+  later cannot leak a raw string. VALIDATION is deliberately excluded and passed through: that
+  text is written for the owner and names the venue's own hours.
+  Verified in the browser both ways: the losing tab now reads "This has already changed
+  somewhere else, so your change was not applied. Reload the page to see where it stands now.",
+  while an out-of-hours save still reads "the venue is open 09:00-21:00 on thu; this event
+  falls outside that".
+  Suites: 829 unit, 151 integration, 62 db, typecheck and lint clean.
