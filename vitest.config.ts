@@ -24,7 +24,11 @@ export default defineConfig({
           name: 'integration',
           include: ['tests/integration/**/*.test.ts'],
           environment: 'node',
-          env: { MOCK_AI: '1' },
+          // SEED_SCALE=0 for the same reason the Playwright suite sets it: these tests assert on
+          // the hand-written demo fixtures, and several resolve users with a single
+          // `listUsers({ perPage: 200 })`, which silently truncates once the generated cohort
+          // pushes the population past that. A test that wants the cohort asks for it itself.
+          env: { MOCK_AI: '1', SEED_SCALE: '0' },
           setupFiles: ['tests/integration/setup.ts'],
           testTimeout: 30_000,
           hookTimeout: 60_000,
@@ -41,7 +45,11 @@ export default defineConfig({
           environment: 'node',
           setupFiles: ['tests/db/support/setup.ts'],
           globalSetup: ['tests/db/support/global-setup.ts'],
-          env: { TEST_DATABASE_URL: process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres' },
+          // 06 asks 02 for explanations and follow-ups, so this project reaches the model client.
+          env: {
+            MOCK_AI: '1',
+            TEST_DATABASE_URL: process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres',
+          },
           testTimeout: 30_000,
           hookTimeout: 60_000,
           pool: 'forks',

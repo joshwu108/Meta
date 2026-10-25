@@ -180,15 +180,20 @@ suite('business platform against the real database', () => {
     expect((data as { business_id: string }[]).some((row) => row.business_id === kilnId)).toBe(true);
   });
 
-  it('excludes a venue that is too small or too far', async () => {
-    const tooBig = await kiln.client.rpc('business_candidates', {
+  it('treats capacity as a floor and still excludes a venue that is too far', async () => {
+    // 0701 made capacity a ranking input rather than an exclusion: a cohort is the number of
+    // people interested, not the number who will attend, and the pipeline already applies a
+    // turnout factor capped at the venue's capacity. A cohort far larger than the room no
+    // longer hides the room.
+    const hugeCohort = await kiln.client.rpc('business_candidates', {
       p_category: 'creative',
       p_cohort_size: 400,
       p_lat: 37.7599,
       p_lng: -122.4148,
       p_radius_km: 3,
     });
-    expect(tooBig.data).toEqual([]);
+    expect(hugeCohort.error).toBeNull();
+    expect((hugeCohort.data as { business_id: string }[]).some((row) => row.business_id === kilnId)).toBe(true);
 
     const tooFar = await kiln.client.rpc('business_candidates', {
       p_category: 'creative',

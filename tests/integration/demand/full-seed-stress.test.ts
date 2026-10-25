@@ -10,6 +10,13 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 vi.mock('server-only', () => ({}));
 process.env.MOCK_AI = '1';
+/**
+ * The point of this suite is the generated population: clustering has nothing to work with
+ * otherwise, and every cluster falls under the privacy threshold. The project default is 0, so
+ * this asks for the cohort explicitly and puts the dataset back afterwards for the suites that
+ * assert on the hand-written fixtures.
+ */
+const COHORT = '300';
 
 const { adminClient } = await import('../helpers');
 const { runPipeline } = await import('@/features/demand/server/pipeline');
@@ -53,6 +60,7 @@ beforeAll(async () => {
   await admin.from('event_proposals').delete().not('id', 'is', null);
   await admin.from('opportunity_runs').delete().not('id', 'is', null);
   // The whole demo dataset, not a fixture tuned to produce a cluster.
+  process.env.SEED_SCALE = COHORT;
   await runSeedWith(admin as never);
 
   const eligible = await admin
@@ -83,7 +91,10 @@ beforeAll(async () => {
 afterAll(async () => {
   await admin.from('event_proposals').delete().not('id', 'is', null);
   await admin.from('opportunity_runs').delete().not('id', 'is', null);
-});
+  // Hand the dataset back the way the rest of the suite expects to find it.
+  process.env.SEED_SCALE = '0';
+  await runSeedWith(admin as never);
+}, 180_000);
 
 describe('the pipeline on the real dataset', () => {
   it('counts every member who consented, and only those', () => {

@@ -113,14 +113,21 @@ describe.skipIf(!available)("06 edge cases against Postgres", () => {
     );
     const byEvent = new Map(rows.map((r) => [r.event_id, r]));
     // 02's consent boundary also records one share_preferences row per person it releases.
-    expect(byEvent.get(consenting.eventId)).toMatchObject({ slot: "sun_day", logs: 2, shares: 2 });
+    // The slot has to be one the two actually share — which of them 02 picks is 02's business.
+    expect(byEvent.get(consenting.eventId)).toMatchObject({ logs: 2, shares: 2 });
+    expect(["sun_day", "thu_eve"]).toContain(byEvent.get(consenting.eventId)!.slot);
     expect(byEvent.get(private_.eventId)).toMatchObject({ slot: "sat_day", logs: 0, shares: 0 });
     // The card renders "<title> at <venue>, <slot phrase>", so the title must not carry the slot.
     const { rows: titles } = await db.pool.query(
       "select event_id, suggestion->>'title' as title from follow_up_suggestions where event_id = any($1)",
       [[consenting.eventId, private_.eventId]],
     );
-    expect(titles.map((r) => r.title)).toEqual(["Coffee catch-up", "Coffee catch-up"]);
+    for (const { title } of titles as Array<{ title: string }>) {
+      expect(title.length).toBeGreaterThan(0);
+      expect(title, "the card adds the slot phrase itself").not.toMatch(
+        /\b(morning|afternoon|evening|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
+      );
+    }
   });
 
   it("keeps a second accept by the same person idempotent", async () => {

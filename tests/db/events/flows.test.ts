@@ -48,7 +48,10 @@ describe.skipIf(!available)("06 flows against Postgres", () => {
 
     expect(before.map((r) => r.event.id)).not.toContain(pottery);
     expect(after[0]!.event.id).toBe(pottery);
-    expect(after[0]!.explanation).toMatch(/Beginner Pottery & Coffee Night fits your interests/);
+    // 02 writes this, grounded in the viewer's own preferences rather than a template.
+    const explanation = after[0]!.explanation ?? "";
+    expect(explanation.length).toBeGreaterThan(10);
+    expect(explanation.toLowerCase()).toMatch(/pottery|coffee|interest|availab/);
     expect(after[0]!.score).toBeGreaterThan(after[1]!.score!);
   });
 
