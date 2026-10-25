@@ -8,7 +8,8 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 **Two bug fixes have landed on the branch since that merge and are not on `main` yet**, so
 the integrator needs to merge `ws/05-business` once more:
 
-- `e3f960e` — the event editor read and wrote `datetime-local` in the **browser's** zone
+- `e3f960e` + `cf29fb6` — every time on the business screens is the venue's wall clock.
+  The editor read and wrote `datetime-local` in the **browser's** zone
   while the server checks opening hours in `VENUE_TIMEZONE`. Any owner whose machine is not
   in the venue's zone sees times shifted by hours and has plausible entries rejected. The
   integrator had pinned the browser timezone in two e2e specs to get CI green; that was the
@@ -378,6 +379,15 @@ either side of 04. Both were confirmed present once 04 landed.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 01:05` — **screenshotted Scene 4 and found a time the assertions could not
+  see.** Generated a proposal and read the detail page rather than trusting the suite: the
+  header said "Thu, Oct 29, 8:30 PM" directly above an assumption reading "Staff available
+  Thursday 18:30-20:15" — two different times for the same event on one screen. Last tick's
+  fix pinned the editor's **inputs** to the venue zone but left the display formatters
+  unpinned, so they rendered in whoever was rendering. An incomplete fix on my part; all
+  three formatters now take the venue zone and a test asserts the header and the editor
+  field agree for the same instant. Verified with the browser in UTC: the header now reads
+  6:30 PM. 543 unit, 134 integration (1 skipped), 42 e2e. (cf29fb6)
 - `2026-10-25 00:35` — **full six-workstream state is reachable and green; handed 03 a
   verified patch rather than editing their files.** Made the pending-fix status unmissable
   at the top of this file, since "merged" read as "nothing left to pull" and two bug fixes
