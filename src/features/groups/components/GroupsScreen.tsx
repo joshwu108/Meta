@@ -3,6 +3,7 @@ import { ChevronRight, Lock, Plus, Globe, UsersRound } from 'lucide-react';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { AiTag, AvatarStack, Button, Card, EmptyState } from '@/features/core/components/ui';
+import { useFocusFallback } from '@/lib/use-focus-fallback';
 import { chipLabel } from '@/shared/labels';
 import type { GroupSummary } from '../server/types';
 import { VISIBILITY_COPY } from '../labels';
@@ -86,11 +87,15 @@ export function GroupsScreen({ groups }: { groups: GroupSummary[] }) {
   };
   const invitations = groups.filter((group) => group.myStatus === 'invited');
   const mine = groups.filter((group) => group.myStatus === 'active');
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useFocusFallback(headingRef, String(invitations.length));
   return (
     <div className="flex flex-col gap-4">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1>Groups</h1>
+          <h1 ref={headingRef} tabIndex={-1}>
+            Groups
+          </h1>
           <p className="mt-1 text-[length:var(--text-sm)] text-text-2">Small circles for the things you like doing together.</p>
         </div>
         <Button ref={createRef} leadingIcon={<Plus size={18} aria-hidden />} onClick={() => setIsCreating(true)}>

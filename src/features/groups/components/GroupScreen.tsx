@@ -3,6 +3,7 @@ import { ArrowLeft, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { useRef, useState, type RefObject } from 'react';
 import { AvatarStack, Button, Card, Chip, Tabs } from '@/features/core/components/ui';
+import { useFocusFallback } from '@/lib/use-focus-fallback';
 import { useUrlTab } from '@/lib/use-url-tab';
 import { chipLabel } from '@/shared/labels';
 import type { GroupDetail } from '../server/types';
@@ -85,6 +86,8 @@ export function GroupScreen({ group, candidates }: { group: GroupDetail; candida
     { value: 'members' as const, label: 'Members', count: group.memberCount },
   ];
   const active = items.some((item) => item.value === tab) ? tab : items[0]!.value;
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusFallback(panelRef, group.myStatus ?? '');
   return (
     <div className="flex flex-col gap-4">
       <GroupHeader group={group} onEdit={() => setIsEditing(true)} editRef={editRef} />
@@ -92,7 +95,7 @@ export function GroupScreen({ group, candidates }: { group: GroupDetail; candida
       <div className="overflow-x-auto">
         <Tabs items={items} value={active} onChange={setTab} ariaLabel="Group sections" />
       </div>
-      <div role="tabpanel" aria-label={items.find((item) => item.value === active)?.label}>
+      <div ref={panelRef} tabIndex={-1} role="tabpanel" aria-label={items.find((item) => item.value === active)?.label}>
         {active === 'plans' && <PlansPanel group={group} />}
         {active === 'events' && <EventsPanel events={group.upcomingEvents} />}
         {active === 'members' && <MembersPanel group={group} candidates={candidates} />}
