@@ -140,6 +140,15 @@ export async function handleChatMessage(
   return { conversationId: convId, reply, ...(suggestions.length ? { suggestions } : {}) };
 }
 
+export type ChatHistory = { conversationId: string | null; messages: repo.StoredMessage[] };
+
+/** The user's latest /agent chat (last 20 messages, oldest first) so a reload keeps the conversation. */
+export async function loadChatHistory(sb: SupabaseClient, userId: string): Promise<ChatHistory> {
+  const conversationId = await repo.findLatestConversation(sb, userId, "chat");
+  if (!conversationId) return { conversationId: null, messages: [] };
+  return { conversationId, messages: await repo.listMessages(sb, conversationId, 20) };
+}
+
 export const MATCHING_OFF_NOTE = 'People suggestions are off. To see people, turn on "Match me with people" in Permissions.';
 
 /** When the agent asked for people but the user has not allowed matching, say why no people appear (AC3). */

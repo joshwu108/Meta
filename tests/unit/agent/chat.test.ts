@@ -35,7 +35,7 @@ vi.mock("@/features/events", () => ({
   }],
 }));
 
-const { handleChatMessage, runCapabilities, selfView } = await import("@/features/agent/server/chat");
+const { handleChatMessage, loadChatHistory, runCapabilities, selfView } = await import("@/features/agent/server/chat");
 const { DEFAULT_CONSENT, EMPTY_PREFERENCES } = await import("@/features/agent/schemas");
 
 const SB = {} as never;
@@ -131,5 +131,27 @@ describe("chat prompt context", () => {
     await chat.handleChatMessage(SB, "u9", "hi");
     expect(seen[0]).toMatchObject({ feedback: [{ about: "event:42", signal: "down", note: "too loud" }] });
     vi.doUnmock("@/lib/ai");
+  });
+});
+
+describe("loadChatHistory", () => {
+  it("returns nothing for a user who has never chatted, and creates no conversation", async () => {
+    const before = fake.state.convs.size;
+    expect(await loadChatHistory(SB, "never-chatted")).toEqual({ conversationId: null, messages: [] });
+    expect(fake.state.convs.size).toBe(before);
+  });
+
+  it("returns the latest chat with its suggestion cards, oldest first", async () => {
+    const first = await handleChatMessage(SB, "hist", "find me people");
+    await handleChatMessage(SB, "hist", "and events?", first.conversationId);
+    const history = await loadChatHistory(SB, "hist");
+    expect(history.conversationId).toBe(first.conversationId);
+    expect(history.messages.map((m) => [m.role, m.content.slice(0, 12)])).toEqual([
+      ["user", "find me peop"],
+      ["assistant", first.reply.slice(0, 12)],
+      ["user", "and events?"],
+      ["assistant", expect.any(String)],
+    ]);
+    expect(history.messages[1]!.suggestions?.length).toBeGreaterThan(0);
   });
 });
