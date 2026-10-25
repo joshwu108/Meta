@@ -111,6 +111,7 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - Integrator: when merging ws/04-demand, `src/lib/ai/prompts/demand.ts` conflicts with main's empty slot; take ws04's version (both prompts). Main's `PROMPT_IDS` already lists both ids.
 
 ## Blocked
+- **Needs the integrator, urgent:** `POST /api/ai/proposals/:id/revise` returns 500 on main until 4fb20f6 lands (DST bug in `nextSlotStart`, found by 05). It affects every run until the 1 Nov clock change. Merge `ws/04-demand` into main (merge-clean, 04 files only) or take 3a179e0 + 4fb20f6. Both are already on `ws/integrate-all` and `ws/07-full-audit`.
 - No Docker on this machine: `pnpm test:integration` and the Scene 3 Playwright run cannot run here. They passed on the previous ws04 machine at 5f841ee; the new `tests/integration/demand/revise.test.ts` needs a run on a Docker host (or Docker Desktop installed here). Partly covered: 05 grafted 04's branch on its local Supabase and verified revise end to end (05 PROGRESS 9126028: original `expired` at revision 0, new `pending` at revision 1 with the note).
 - Prompt eval (spec §9) needs a live `ANTHROPIC_API_KEY`; never run here (no secrets on this machine).
 
@@ -145,3 +146,4 @@ Branch: `ws/04-demand` · Spec: [specs.md](./specs.md)
 - 2026-10-25 02:50 · wakeup: 05 reported `nextSlotStart` throwing near DST (revise 500 on main today). Fixed (calendar-date stepping, cached Intl formatter) with sweep tests over both 2026 DST changes; 796 vitest green. Flagged 4fb20f6 + 3a179e0 as urgent for the integrator. Next: watch main.
 - 2026-10-25 04:30 · wakeup: main moved to 7710bc1 (release fixes from 01/02/05/06); merged clean, 822 vitest green, typecheck clean. 04's fixes are still not on main, including the DST fix for the live revise 500 (4fb20f6) and the lead-time fix (3a179e0); ws/04-demand still merges into main without conflicts. Next: watch main.
 - 2026-10-25 05:30 · wakeup: main unchanged. `ws/integrate-all` includes 04's DST + lead-time fixes, plus 05's `getVenueForProposal` and a looser venue-capacity rule in 04's files; 04 accepts it and recorded the follow-ups for when it lands (Decisions). 07's spec needs nothing from 04. Next: watch main.
+- 2026-10-25 06:30 · wakeup: main moved to bb61bcd (05 Scene 4 fixes); merged clean. The DST fix is still not on main, so it is now also listed under Blocked for the integrator. Next: watch main.
