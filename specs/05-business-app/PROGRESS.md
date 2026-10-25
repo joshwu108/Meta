@@ -415,6 +415,17 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 04:35` — **put every business screen in the theme matrix, and the matrix was
+  lying.** The design-system checklist asks for both themes at four widths, but only three
+  of 05's eight screens were in it — not the two-column proposal detail, the dense attendee
+  table, the event editor or insights, which are exactly the ones likely to break at 320px.
+  Adding them exposed a flaw in my own helper: "Review" is a client-side navigation, so
+  reading `page.url()` after `waitForLoadState` captured the *list* again under the detail's
+  filename and silently dropped the screen it claimed to cover — the run was green and the
+  screenshots looked plausible. It now waits for the URL. All seven screens pass at 320,
+  768, 1024 and 1440 in both themes, and I read the 320px dark proposal detail by eye:
+  surfaces, the gradient `AiTag`, the wrapped timeline, the stacked decision panel and the
+  header time still agreeing with the assumptions text. 805 unit, 213 integration, 61 e2e.
 - `2026-10-25 04:00` — **rendered the onboarding wizard for the first time; it works, and
   looking at it found two problems.** Business Screen 1 was the only screen of 05 that no
   test and no rehearsal had ever rendered, because every spec signs in as an owner who
