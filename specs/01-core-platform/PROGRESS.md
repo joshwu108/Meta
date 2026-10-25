@@ -76,6 +76,8 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Needs from others
 
+- 03: `tests/e2e/messaging.spec.ts` timed out (90s) once in the full 61-test run on a fresh stack; passes alone twice (5–8s). Likely the polling wait under dev-server load.
+- 06: `vitest run` prints "something prevents the main process from exiting" after the db project; probably a `pg` pool left open in `tests/db/support`.
 - README §4 (integrator): `logAgentAction(...)` now returns `Promise<boolean>` (true = row written); update the contract line. Callers that ignore the result need no change.
 - All: `logAgentAction` `userId` must be the acting **user's** id (or null), never a business/event id; assert `toBe(true)` in tests to catch it.
 - 06: `EventSummary` now has `category: EventCategory` (moved up from `EventPublic`, which still has it via the intersection); populate it in `toEventSummary`. README §4 needs the same edit (integrator).
@@ -106,6 +108,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 23:00 — All six workstreams are on main (9e2c56b). Merged it: one conflict (onboarding page, took 02's real flow over 01's placeholder). 06's `toEventSummary` lacked 01's new `category`; filled. Clean state on 0100–0600: seed fills preferences (14), businesses, events, groups, 37 RSVPs; types match a fresh `db:types`; 1002 vitest + 60/61 Playwright green (03's messaging test flaked once under load, passes alone). Next: keep the full suite green on main.
 - 2026-10-24 22:30 — Wakeup: main unchanged (4529588). Fixed 03's focus-trap gap for `autoFocus` sheets (verified the new e2e fails on the old hook). First attempt broke 03's Scene 2 under StrictMode; restore now waits for unmount. 532 unit + 44 Playwright green. Next: 06 and 02 on main.
 - 2026-10-24 22:05 — Wakeup: main unchanged (4529588). 05's ask: `logAgentAction` now resolves true/false and hints on FK misuse, so dropped audit rows are visible. 05's types ask was already satisfied (main's generated types match a fresh `db:types`). 666 vitest green. Next: 06 and 02 on main.
 - 2026-10-24 21:45 — 04 and 05 landed on main (4529588); merged cleanly. Clean state on 0100–0501: seed inserts 3 businesses, 6 events, 2 groups; regenerated `database.types.ts` matches main's; 666 vitest (1 skipped) + 43 Playwright green incl. 05's Scene 4; typecheck + lint clean. Local Scene 4 needed `ENABLE_DEV_ROUTES=1` in `.env.local` (already in `.env.example` and the Playwright config). Next: 06 and 02 on main.
