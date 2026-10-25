@@ -137,6 +137,12 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 - **The consent boundary holds.** No feature outside `src/features/agent/` reads 02's tables
   directly, and all six cross-user paths — matching, group planning, venue requests, event
   recommendations, follow-ups, demand — go through `getSharablePreferences*` with a purpose.
+- **The loop the product is built on joins up.** `tests/integration/demand/demand-to-feed.test.ts`
+  walks it in one test: demand people expressed becomes a cluster, the cluster becomes a proposal,
+  a venue approves and publishes it through its own routes, and the event comes back to one of the
+  very people whose demand produced it — with an explanation, not just a listing. Every hop had a
+  suite; nothing checked that the chain joins up, which is the claim on the front of the README and
+  the one that breaks quietly when two workstreams each stay correct.
 - **Event generation works on the real dataset.** `tests/integration/demand/full-seed-stress.test.ts`
   runs the pipeline over the whole demo seed and holds it to the cohort threshold, the cluster a
   proposal came from, venue capability, venue lead time, one proposal per cluster and venue,
@@ -158,7 +164,7 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 | Suite | Result |
 |---|---|
 | `pnpm test` (unit) | 1095 passed |
-| `pnpm test:integration` (integration + db) | 285 passed |
+| `pnpm test:integration` (integration + db) | 290 passed |
 | `pnpm test:e2e:prod` (Playwright, production build) | 90 passed in 2.9 min |
 | `tests/audit/core-flows-chrome.ts` (real Chrome) | 8/8 steps |
 
