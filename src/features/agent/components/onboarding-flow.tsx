@@ -8,18 +8,32 @@ import { ChatPanel } from "./chat-panel";
 import { PermissionsEditor } from "./permissions-editor";
 import { PreferencesEditor } from "./preferences-editor";
 import { AiTag, Button, Chip } from "./primitives";
+import { ImportFlow } from "@/features/import/components/import-flow";
 import { SF_NEIGHBORHOODS, SLOT_LABEL, GROUP_SIZE_LABEL, matchNeighborhood } from "./labels";
 import s from "./agent.module.css";
 
-type Step = "basics" | "talk" | "review";
-const STEPS: Step[] = ["basics", "talk", "review"];
+type Step = "basics" | "talk" | "import" | "review";
 
-function Progress({ step }: { step: Step }) {
-  const at = STEPS.indexOf(step);
+function Progress({ step, steps }: { step: Step; steps: Step[] }) {
+  const at = steps.indexOf(step);
   return (
-    <ol className={s.steps} aria-label={`Step ${at + 1} of 3`}>
-      {STEPS.map((x, i) => <li key={x} className={`${s.step} ${i <= at ? s.stepDone : ""}`} />)}
+    <ol className={s.steps} aria-label={`Step ${at + 1} of ${steps.length}`}>
+      {steps.map((x, i) => <li key={x} className={`${s.step} ${i <= at ? s.stepDone : ""}`} />)}
     </ol>
+  );
+}
+
+/** Optional 07 step between Talk and Review. Skip (first in tab order) goes to Review unchanged. */
+function ImportStep({ onDone }: { onDone: () => void }) {
+  return (
+    <div className={s.stack}>
+      <section className={`${s.card} ${s.stack}`}>
+        <h2 className={s.h2}>Want help finding more?</h2>
+        <p className={s.muted}>Bring in your Instagram taste from a screenshot you choose. Nothing is added unless you tap it.</p>
+        <div className={s.row}><Button variant="secondary" onClick={onDone}>Skip</Button></div>
+      </section>
+      <ImportFlow after={() => <div className={s.row}><Button size="lg" onClick={onDone}>Back to review</Button></div>} />
+    </div>
   );
 }
 
@@ -78,7 +92,7 @@ function Heard({ extracted }: { extracted: ChatResponse["extracted"] }) {
   );
 }
 
-function Talk({ onDone }: { onDone: () => void }) {
+function Talk({ onDone, onImport }: { onDone: () => void; onImport?: () => void }) {
   const [extracted, setExtracted] = useState<ChatResponse["extracted"]>();
   const [done, setDone] = useState(false);
   const [aiDown, setAiDown] = useState(false);
@@ -99,6 +113,7 @@ function Talk({ onDone }: { onDone: () => void }) {
         <Button size="lg" variant={done || aiDown ? "primary" : "secondary"} onClick={onDone} disabled={!extracted && !aiDown}>
           {aiDown ? "Fill in a form instead" : done ? "Review my profile" : "Skip to review"}
         </Button>
+        {onImport && !aiDown ? <Button variant="secondary" onClick={onImport}>Bring in your Instagram taste</Button> : null}
       </aside>
     </div>
   );
@@ -144,15 +159,22 @@ function Review() {
   );
 }
 
-/** Screen 1: basics → talk to your agent → review & confirm. `displayName` greets the signed-in user. */
-export function OnboardingFlow({ displayName }: { displayName?: string }) {
+/**
+ * Screen 1: basics → talk to your agent → (optional, 07) bring in Instagram taste → review & confirm.
+ * `displayName` greets the signed-in user; `importEnabled` adds the optional step.
+ */
+export function OnboardingFlow({ displayName, importEnabled = false }: { displayName?: string; importEnabled?: boolean }) {
   const [step, setStep] = useState<Step>("basics");
+  const steps: Step[] = step === "import" ? ["basics", "talk", "import", "review"] : ["basics", "talk", "review"];
   return (
-    <main className={`${s.page} ${step === "talk" ? s.wide : ""}`}>
-      <Progress step={step} />
+    <main className={`${s.page} ${step === "talk" || step === "import" ? s.wide : ""}`}>
+      <Progress step={step} steps={steps} />
       <h1 className={s.lead}>{displayName ? `Hi ${displayName}, welcome to CommonGround` : "Welcome to CommonGround"}</h1>
       {step === "basics" ? <Basics onDone={() => setStep("talk")} /> : null}
-      {step === "talk" ? <Talk onDone={() => setStep("review")} /> : null}
+      {step === "talk" ? (
+        <Talk onDone={() => setStep("review")} onImport={importEnabled ? () => setStep("import") : undefined} />
+      ) : null}
+      {step === "import" ? <ImportStep onDone={() => setStep("review")} /> : null}
       {step === "review" ? <Review /> : null}
     </main>
   );
