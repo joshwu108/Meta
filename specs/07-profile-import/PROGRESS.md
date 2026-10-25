@@ -79,5 +79,6 @@ Other decisions:
 
 ## Log
 
+- 2026-10-25 06:45 — Phase 3 pushed (settings + delete, export Web Worker); mocked unit tests for run/decide/plan/flag bring unit-only coverage on import/server to 82.6% (repo/settings covered by integration). 891 unit green. Next: watch CI and main; polish empty/error states.
 - 2026-10-25 06:30 — Phase 2 (plan) and Phase 3 (settings + delete, export via Web Worker) landed locally; CI on the Phase 2 head: lint/typecheck/unit and migrations/types/integration green, e2e running. 882 unit green; build green. Next: CI result, coverage on import/server.
 - 2026-10-25 05:40 — Phase 1 code complete: migration + types (CI-verified), pipeline core, routes, review UI, onboarding step, 02 addConfirmedTraits; unit 50+ green locally; integration and Scene 1b e2e pushed for CI. Next: CI results, then Phase 2 plan.
