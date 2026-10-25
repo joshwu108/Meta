@@ -67,12 +67,6 @@ export async function getConsent(_userId: string): Promise<Consent> {
   };
 }
 
-const SLOT_PHRASE: Record<string, string> = {
-  sat_day: "Saturday morning", sun_day: "Sunday morning", sat_eve: "Saturday evening", sun_eve: "Sunday evening",
-  mon_eve: "Monday evening", tue_eve: "Tuesday evening", wed_eve: "Wednesday evening", thu_eve: "Thursday evening",
-  fri_eve: "Friday evening",
-};
-
 /**
  * Stand-in for 02's suggestFollowUp (same signature): both people's consented preferences are
  * required, and like 02's version it writes one agent-log row per person.
@@ -86,7 +80,7 @@ export async function suggestFollowUp(input: {
   const shared = input.a.availabilitySlots.filter((s) => theirs.has(s));
   const suggestedSlot: AvailabilitySlot = shared.find((s) => s.endsWith("_day")) ?? shared[0] ?? "sat_day";
   const suggestion = {
-    title: `Coffee, ${SLOT_PHRASE[suggestedSlot]}`,
+    title: "Coffee catch-up", // the card adds the venue and the slot phrase
     description: `You both enjoyed ${input.event.title}. Pick up the conversation over coffee.`,
     suggestedSlot,
     suggestedBusinessCategory: "food_drink" as const,

@@ -29,7 +29,7 @@ const canonicalPair = (x: string, y: string): [string, string] => (x < y ? [x, y
 /** Used when either person has not consented to sharing preferences: no AI, no personal data. */
 function defaultFollowUp(eventTitle: string): FollowUpSuggestion {
   return {
-    title: "Coffee, Saturday morning",
+    title: "Coffee catch-up",
     description: `You both enjoyed ${eventTitle}. Pick up the conversation over coffee.`,
     suggestedSlot: "sat_day",
     suggestedBusinessCategory: "food_drink",
