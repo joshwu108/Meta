@@ -38,7 +38,7 @@ test.describe('business screens, both themes', () => {
           expect(overflow, `${path} overflows horizontally`).toBeLessThanOrEqual(1);
 
           await page.screenshot({
-            path: `tests/e2e/__screenshots__/${theme}-${breakpoint.label}-${path.replaceAll('/', '_')}.png`,
+            path: `test-results/business-theme/${theme}-${breakpoint.label}-${path.replaceAll('/', '_')}.png`,
             fullPage: true,
           });
         }

@@ -44,11 +44,11 @@ test.describe('Scene 4 — a business approves an AI proposal', () => {
 
     await page.getByRole('button', { name: /edit & approve/i }).click();
 
-    const price = page.getByLabel('Price');
+    const price = page.getByRole('spinbutton', { name: 'Price' });
     await expect(price).toHaveValue('20');
     await price.fill('25');
 
-    const starts = page.getByLabel('Starts');
+    const starts = page.getByRole('textbox', { name: 'Starts' });
     const startValue = await starts.inputValue();
     await starts.fill(`${startValue.slice(0, 11)}18:30`);
 
@@ -71,13 +71,13 @@ test.describe('Scene 4 — a business approves an AI proposal', () => {
     await page.getByLabel('Reason').selectOption('staffing');
     await page.getByRole('button', { name: /reject proposal/i }).click();
 
-    await expect(page.getByText(/you rejected this proposal/i)).toBeVisible();
+    await expect(page.getByText(/you rejected this proposal/i).first()).toBeVisible();
   });
 
   test('the proposals nav badge shows the pending count', async ({ page }) => {
     await seedOrSkip(page);
     await page.goto('/business');
-    const nav = page.getByRole('navigation', { name: /business sections/i }).first();
+    const nav = page.getByRole('navigation', { name: 'Main navigation' });
     await expect(nav.getByRole('link', { name: /proposals/i })).toContainText(/\d/);
   });
 });
