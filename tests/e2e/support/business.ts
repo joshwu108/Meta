@@ -43,7 +43,8 @@ export async function trySeedPendingProposal(page: Page, fixture = 'pottery-nigh
   if (response.ok()) return true;
 
   const body = await response.text();
-  if (/event_proposals/i.test(body)) return false;
+  if (/is not migrated yet/i.test(body)) return false;
+  // Anything else is a real failure: never let it read as "04 has not landed".
   throw new Error(`could not seed a proposal: ${response.status()} ${body}`);
 }
 

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { z } from 'zod';
 import { fail, ok, parseBody,  withBusinessOwner } from '@/lib/api';
 import { devRoutesEnabled } from '@/lib/api/dev-routes';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { ApiError } from '@/lib/api';
 import { businessDeps } from '@/features/business/server/context';
 import { toProposalDetail } from '@/features/business/server/proposals';
@@ -29,9 +30,13 @@ export const POST = withBusinessOwner(async (ctx, req) => {
     const file = path.join(process.cwd(), 'tests', 'fixtures', 'proposals', `${fixture}.json`);
     const proposal = JSON.parse(await readFile(file, 'utf8')) as unknown;
 
-    // `event_proposals` is workstream 04's table, so it is not in the generated Database
-    // types and the typed client refuses the name.
-    const untyped = ctx.supabase as unknown as {
+    // Inserted with the service role, because this stands in for workstream 04's pipeline,
+    // which runs as a worker. 04's RLS deliberately gives a business owner SELECT only: a
+    // venue must never be able to fabricate demand for itself.
+    //
+    // `event_proposals` is 04's table, so it is not in the generated Database types and the
+    // typed client refuses the name.
+    const untyped = createAdminClient() as unknown as {
       from: (table: string) => {
         insert: (row: Record<string, unknown>) => {
           select: (cols: string) => {
@@ -54,9 +59,14 @@ export const POST = withBusinessOwner(async (ctx, req) => {
       .single();
 
     if (error) {
+      // Only a missing relation means "04 has not merged yet"; anything else is a real
+      // failure and must not be mistaken for it by the e2e suite's skip check.
+      const missingTable = error.code === '42P01' || error.code === 'PGRST205';
       throw new ApiError(
         'CONFLICT',
-        `could not insert a fixture proposal (${error.code}); workstream 04's event_proposals table may not be migrated yet`,
+        missingTable
+          ? "workstream 04's event_proposals table is not migrated yet"
+          : `could not insert a fixture proposal: ${error.code ?? 'unknown'} ${error.message ?? ''}`.trim(),
       );
     }
 
