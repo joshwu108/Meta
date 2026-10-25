@@ -1,5 +1,5 @@
 import 'server-only';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { getOwnPreferencesForImport } from '@/features/agent';
 import { logAgentAction } from '@/features/core';
 import { generateStructured } from '@/lib/ai';
 import { aiRateLimiter, ApiError } from '@/lib/api';
@@ -16,13 +16,6 @@ export type ShareSource = (typeof SHARE_SOURCES)[number];
 
 /** Recorded on suggestions the mapping model produced (prompt id + version). */
 const MAP_MODEL = 'import.map_labels@1';
-
-async function ownPreferences(sb: SupabaseClient, userId: string): Promise<{ interests: string[]; activityPrefs: string[] }> {
-  const { data, error } = await sb.from('user_preferences').select('interests, activity_prefs').eq('user_id', userId).maybeSingle();
-  if (error) throw new ApiError('INTERNAL', 'Failed to load preferences', 500, { code: error.code });
-  const row = data as { interests: string[]; activity_prefs: string[] } | null;
-  return { interests: row?.interests ?? [], activityPrefs: row?.activity_prefs ?? [] };
-}
 
 /** Leftover labels onto the vocabulary. A failed call keeps the exact matches (`mapped: false`). */
 async function mapLeftovers(leftovers: readonly Signal[]): Promise<{ output: MapLabelsOutput; mapped: boolean }> {
@@ -45,7 +38,6 @@ async function mapLeftovers(leftovers: readonly Signal[]): Promise<{ output: Map
  * memory: they go to the vision prompt and are dropped. Nothing becomes a preference here.
  */
 export async function runScreensImport(
-  sb: SupabaseClient,
   userId: string,
   files: ReadonlyArray<Uint8Array>,
   sources: readonly ShareSource[],
@@ -72,7 +64,7 @@ export async function runScreensImport(
   const modelMappings = validateMappings(output, leftovers);
 
   await repo.deleteExpired(userId);
-  const existing = await repo.loadExisting(userId, await ownPreferences(sb, userId));
+  const existing = await repo.loadExisting(userId, await getOwnPreferencesForImport(userId));
   const { kept, duplicate } = dedupe(aggregate([...mapped, ...modelMappings], summaryMentions(parsed.summaries)), existing);
   const dislikes = dislikeCandidates(parsed.seeLess, existing);
   const unmapped = leftovers.length - modelMappings.length;

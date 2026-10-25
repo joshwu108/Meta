@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { adminClient, createTestUser, type TestUser } from '../helpers';
 import { cleanupSocialUsers, setProfile, setTestOrigin } from '../social/support';
@@ -24,8 +23,7 @@ const admin = adminClient();
 const screenshot = new Uint8Array(readFileSync('tests/fixtures/import/your-algorithm-synthetic.png'));
 let maya: TestUser, peer: TestUser, stranger: TestUser, owner: TestUser;
 
-const asAny = (u: TestUser) => u.client as unknown as SupabaseClient;
-const run = (u: TestUser) => runScreensImport(asAny(u), u.id, [screenshot], ['your_algorithm']);
+const run = (u: TestUser) => runScreensImport(u.id, [screenshot], ['your_algorithm']);
 
 beforeAll(async () => {
   [maya, peer, stranger, owner] = await Promise.all([

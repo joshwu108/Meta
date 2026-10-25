@@ -1,5 +1,5 @@
 import 'server-only';
-import { addConfirmedTraits } from '@/features/agent';
+import { addConfirmedTraits, getOwnPreferencesForImport } from '@/features/agent';
 import { logAgentAction } from '@/features/core';
 import { invalidateMatches, normalizeTag } from '@/features/matching';
 import { ApiError } from '@/lib/api';
@@ -11,6 +11,7 @@ import type { DecisionRow, DislikeRow, ProvenanceRow } from './repo';
 type Row = Awaited<ReturnType<typeof repo.loadByIds>>[number];
 type Plan = { decisions: DecisionRow[]; provenance: ProvenanceRow[]; dislikes: DislikeRow[]; add: { interests: string[]; activityPrefs: string[] } };
 
+const MAX_INTERESTS = 50;
 const TRAIT_ACTIONS: ReadonlySet<DecideAction> = new Set(['love', 'yes', 'edit', 'not_me']);
 const DISLIKE_ACTIONS: ReadonlySet<DecideAction> = new Set(['keep_dislike', 'ignore']);
 
@@ -63,6 +64,13 @@ export function planDecisions(rows: readonly Row[], request: DecideRequest): Pla
 export async function decideSuggestions(userId: string, request: DecideRequest): Promise<DecideResult> {
   const rows = await repo.loadByIds(userId, request.decisions.map((d) => d.id));
   const plan = planDecisions(rows, request);
+  // Check the cap before the atomic write so an over-cap batch changes nothing.
+  if (plan.add.interests.length > 0) {
+    const current = await getOwnPreferencesForImport(userId);
+    if (new Set([...current.interests, ...plan.add.interests]).size > MAX_INTERESTS) {
+      throw new ApiError('VALIDATION', `Your profile holds up to ${MAX_INTERESTS} interests. Remove one to add more.`, 400, { field: 'interests' });
+    }
+  }
   await repo.applyDecisions(userId, plan.decisions, plan.provenance, plan.dislikes);
   const adding = plan.add.interests.length + plan.add.activityPrefs.length > 0;
   const profile = adding ? await addConfirmedTraits(userId, plan.add) : null;

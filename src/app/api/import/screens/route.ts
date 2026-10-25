@@ -10,7 +10,7 @@ export const maxDuration = 60;
  * chose). The files are read into memory, validated by magic bytes, sent to the vision prompt
  * and dropped. Only pending suggestions are stored.
  */
-export const POST = withAuth(async ({ user, supabase }, req) => {
+export const POST = withAuth(async ({ user }, req) => {
   await assertCanUseImport(user.id);
   const form = await req.formData().catch(() => {
     throw new ApiError('VALIDATION', 'Send the screenshots as multipart form data', 400, { field: 'images' });
@@ -21,5 +21,5 @@ export const POST = withAuth(async ({ user, supabase }, req) => {
   );
   if (sources.length === 0) throw new ApiError('VALIDATION', 'Choose what you are sharing', 400, { field: 'sources' });
   const bytes = await Promise.all(files.map(async (file) => new Uint8Array(await file.arrayBuffer())));
-  return ok(await runScreensImport(supabase, user.id, bytes, sources), undefined, { status: 201 });
+  return ok(await runScreensImport(user.id, bytes, sources), undefined, { status: 201 });
 });
