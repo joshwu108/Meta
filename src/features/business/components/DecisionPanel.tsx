@@ -62,9 +62,9 @@ export function DecisionPanel({
         published = result.event?.status === 'published';
       },
       // A published event is live, so show it in the events list; a draft or a rejection
-      // reloads this page so it re-reads the decided proposal. A real load, like every other
-      // business form (see use-submit): router.refresh() never applied here in a production build.
-      () => navigate(published ? '/business/events' : window.location.href),
+      // reloads this page to show the decided proposal. A real load, not router.refresh():
+      // in a production build the refreshed payload was sometimes discarded and the form stayed.
+      () => navigate(published ? '/business/events' : `/business/proposals/${proposal.id}`),
     );
   };
 
