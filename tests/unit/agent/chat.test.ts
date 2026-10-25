@@ -20,6 +20,14 @@ vi.mock("@/features/agent/server/people", () => ({
     },
   }],
 }));
+vi.mock("@/features/events", () => ({
+  getRecommendedEvents: async () => [{
+    event: {
+      id: "00000000-0000-4000-8000-000000000601", title: "Beginner Pottery & Coffee Night", startsAt: "2026-10-29T19:00:00-07:00",
+      business: { name: "Kiln & Cup" }, category: "creative", description: "Throw your first bowl with coffee on the side.",
+    },
+  }],
+}));
 
 const { handleChatMessage, runCapabilities, selfView } = await import("@/features/agent/server/chat");
 const { EMPTY_PREFERENCES } = await import("@/features/agent/schemas");
