@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { PipelineDeps } from '@/features/demand/server/deps';
 
 vi.mock('server-only', () => ({}));
 
 const { runPipeline, PipelineBusyError } = await import('@/features/demand/server/pipeline');
 const { ProposalDocument } = await import('@/features/demand/schemas');
 const fixture = (await import('@/lib/ai/fixtures/demand.generate_proposal.json')).default;
-const { makeDeps, OPTED_OUT_ID } = await import('./harness');
+const { consentingUsers, makeDeps, OPTED_OUT_ID, scene3Users } = await import('./harness');
 const { templateProposal } = await import('@/features/demand/server/generate');
 
 type GenerateFn = Parameters<typeof makeDeps>[0] extends infer O ? NonNullable<O extends { generate?: infer G } ? G : never> : never;
@@ -33,6 +34,7 @@ describe('runPipeline (Scene 3 data)', () => {
   it('never counts the opted-out user', async () => {
     const { deps, saved } = makeDeps({ generate: scene3Generate });
     await runPipeline(deps, { triggeredBy: 'manual' });
+    expect(saved.length).toBeGreaterThan(0);
     expect(saved.every((s) => s.cluster.members.every((m) => m.userId !== OPTED_OUT_ID))).toBe(true);
     const logged = vi.mocked(deps.logActions).mock.calls.flatMap((c) => c[0]).filter((e) => e.action === 'collect_signals');
     expect(logged.map((e) => e.userId)).not.toContain(OPTED_OUT_ID);
@@ -58,7 +60,33 @@ describe('runPipeline (Scene 3 data)', () => {
     const optedOut = new Set(rows.filter((r) => DEMAND_OPT_OUT_EMAILS.includes(r.email)).map((r) => r.preferences.userId));
     const { deps, saved } = makeDeps({ generate: scene3Generate });
     await runPipeline(deps, { triggeredBy: 'manual' });
+    expect(optedOut.size).toBe(DEMAND_OPT_OUT_EMAILS.length);
+    expect(saved.length).toBeGreaterThan(0);
     expect(saved.flatMap((s) => s.cluster.members).filter((m) => optedOut.has(m.userId))).toEqual([]);
+  });
+
+  it('drops a user the consent boundary withholds, though they would fit a cohort', async () => {
+    const member = consentingUsers().find((u) => u.interestCategories.includes('creative') && u.availabilitySlots.includes('thu_eve'))!;
+    const twin = { ...member, userId: 'twin-user' };
+    const creative = (list: Parameters<PipelineDeps['saveProposal']>[0][]) => list.find((x) => x.cluster.category === 'creative' && x.cluster.slot === 'thu_eve');
+    const run = async (withheld: boolean) => {
+      const users = withheld ? consentingUsers() : [...consentingUsers(), twin];
+      const { deps, saved } = makeDeps({
+        generate: scene3Generate,
+        listEligibleUserIds: async () => [...scene3Users().map((u) => u.userId), twin.userId],
+        getSharableBatch: async (ids) => new Map(users.filter((u) => ids.includes(u.userId)).map((u) => [u.userId, u])),
+      });
+      await runPipeline(deps, { triggeredBy: 'manual' });
+      const logged = vi.mocked(deps.logActions).mock.calls.flatMap((c) => c[0]).map((e) => e.userId);
+      return { members: creative(saved)?.cluster.members.map((m) => m.userId) ?? [], logged };
+    };
+    const consented = await run(false);
+    expect(consented.members).toContain('twin-user');
+    expect(consented.logged).toContain('twin-user');
+    const withheld = await run(true);
+    expect(withheld.members.length).toBeGreaterThan(0);
+    expect(withheld.members).not.toContain('twin-user');
+    expect(withheld.logged).not.toContain('twin-user');
   });
 
   it('creates nothing new on a second run within the dedup window', async () => {
