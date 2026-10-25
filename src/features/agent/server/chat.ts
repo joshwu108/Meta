@@ -5,6 +5,7 @@ import {
   ChatModelOutputSchema,
   DEFAULT_CONSENT,
   type ChatModelOutput,
+  type Consent,
   type ChatResponse,
   type SuggestionCard,
   type UserPreferences,
@@ -123,9 +124,10 @@ export async function handleChatMessage(
     model: "smart",
   });
   const suggestions = await runCapabilities(userId, selfView(userId, preferences), out.capabilities);
+  const reply = withConsentNote(out.reply, out.capabilities, profile.consent);
   await repo.addMessages(sb, convId, [
     { role: "user", content: message, suggestions: null },
-    { role: "assistant", content: out.reply, suggestions: suggestions.length ? suggestions : null },
+    { role: "assistant", content: reply, suggestions: suggestions.length ? suggestions : null },
   ]);
   if (out.capabilities.length > 0) {
     await logAgentAction({
@@ -135,5 +137,15 @@ export async function handleChatMessage(
       result: `Suggested ${suggestions.length} ${suggestions.length === 1 ? "item" : "items"} in chat`,
     });
   }
-  return { conversationId: convId, reply: out.reply, ...(suggestions.length ? { suggestions } : {}) };
+  return { conversationId: convId, reply, ...(suggestions.length ? { suggestions } : {}) };
+}
+
+export const MATCHING_OFF_NOTE = 'People suggestions are off. To see people, turn on "Match me with people" in Permissions.';
+
+/** When the agent asked for people but the user has not allowed matching, say why no people appear (AC3). */
+export function withConsentNote(reply: string, capabilities: readonly Capability[], consent: Pick<Consent, "allow_matching">): string {
+  const wantedPeople = capabilities.some((c) => c.name === "suggest_people");
+  return wantedPeople && !consent.allow_matching ? `${reply}
+
+${MATCHING_OFF_NOTE}` : reply;
 }

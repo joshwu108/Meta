@@ -36,7 +36,7 @@ vi.mock("@/features/events", () => ({
 }));
 
 const { handleChatMessage, runCapabilities, selfView } = await import("@/features/agent/server/chat");
-const { EMPTY_PREFERENCES } = await import("@/features/agent/schemas");
+const { DEFAULT_CONSENT, EMPTY_PREFERENCES } = await import("@/features/agent/schemas");
 
 const SB = {} as never;
 const viewer = selfView("u1", { ...EMPTY_PREFERENCES, interests: ["pottery", "coffee"], availabilitySlots: ["thu_eve"] });
@@ -99,6 +99,18 @@ describe("handleChatMessage (MOCK_AI)", () => {
   it("defaults to people and event suggestions", async () => {
     const res = await handleChatMessage(SB, "u1", "anything fun this week?");
     expect(new Set(res.suggestions?.map((s) => s.kind))).toEqual(new Set(["person", "event"]));
+  });
+
+  it("tells a user with matching off how to see people, and says nothing when it is on", async () => {
+    fake.state.agent.set("off", { summary: null, consent: { ...DEFAULT_CONSENT, allow_matching: false } });
+    const off = await handleChatMessage(SB, "off", "who should I meet?");
+    expect(off.reply).toContain('turn on "Match me with people" in Permissions');
+    const stored = fake.state.convs.get(off.conversationId)!.messages[1]!;
+    expect(stored.content).toBe(off.reply);
+
+    fake.state.agent.set("on", { summary: null, consent: { ...DEFAULT_CONSENT, allow_matching: true } });
+    const on = await handleChatMessage(SB, "on", "who should I meet?");
+    expect(on.reply).not.toContain("Match me with people");
   });
 });
 
