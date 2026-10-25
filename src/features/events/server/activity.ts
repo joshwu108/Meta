@@ -45,7 +45,8 @@ async function myEvents(admin: SupabaseClient, userId: string): Promise<Pick<Act
   const pastRows = rows.filter(isPast).reverse();
   const given = await feedbackGiven(admin, userId, pastRows.map((r) => r.id));
   return {
-    upcoming: rows.filter((r) => !isPast(r) && r.status !== "cancelled").map((r) => toEventCard(r, ctx)),
+    // A cancelled upcoming event stays listed (its card shows "Cancelled") so the attendee sees it.
+    upcoming: rows.filter((r) => !isPast(r)).map((r) => toEventCard(r, ctx)),
     past: pastRows.map((r) => ({ ...toEventCard(r, ctx), feedbackGiven: given.has(r.id) })),
   };
 }
@@ -66,13 +67,14 @@ export async function getActivity(userId: string): Promise<Activity> {
     profilePreviews(admin, invites.map((i) => i.senderId)),
   ]);
   const eventsById = new Map(inviteEvents.map((e) => [e.id, e]));
-  const going = new Set(events.upcoming.map((e) => e.id));
+  // Events the viewer still plans to attend; their invitations are already answered by the RSVP.
+  const going = new Set(events.upcoming.filter((e) => e.status !== "cancelled").map((e) => e.id));
   return {
     ...events,
     saved: saved.filter((e) => !going.has(e.id)),
     invitations: invites.flatMap((i) => {
       const row = eventsById.get(i.eventId);
-      if (!row || (row.status !== "published" && row.status !== "full")) return [];
+      if (!row || (row.status !== "published" && row.status !== "full") || going.has(row.id)) return [];
       return [{ id: i.id, groupId: i.groupId, sender: people.get(i.senderId) ?? null, event: toEventSummary(row, null) }];
     }),
     // 03 returns each requester's public card, so no extra profile read.

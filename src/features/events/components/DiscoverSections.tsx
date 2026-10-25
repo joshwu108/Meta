@@ -65,13 +65,13 @@ export function GroupsSection({ groups }: { groups: GroupCard[] }) {
   if (groups.length === 0) return null;
   return (
     <section className={s.section} aria-labelledby="groups-title">
-      <h2 id="groups-title" className={s.sectionTitle}>Groups to join</h2>
+      <h2 id="groups-title" className={s.sectionTitle}>Groups near you</h2>
       <ul className={s.list}>
         {groups.map((g) => (
           <li key={g.id}>
             <Link href={`/groups/${g.id}`} className={`${s.card} ${s.spread}`}>
               <strong>{g.name}</strong>
-              <span className={s.meta}>{g.memberCount} members</span>
+              <span className={s.meta}>{g.memberCount} {g.memberCount === 1 ? "member" : "members"}</span>
             </Link>
           </li>
         ))}

@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import Link from "next/link";
 import type { EventDetail } from "../server/detail";
 import { Avatar } from "@/features/core/components/ui";
 import s from "./events.module.css";
@@ -9,6 +10,7 @@ export function VenueCard({ venue }: { venue: EventDetail["venue"] }) {
       <h2 id="venue-title" className={s.cardTitle}>{venue.name}</h2>
       <p className={s.meta}><MapPin size={14} aria-hidden /> {venue.address}, {venue.neighborhood}</p>
       {venue.description ? <p style={{ margin: 0 }}>{venue.description}</p> : null}
+      <Link href="/places">More places nearby</Link>
     </section>
   );
 }

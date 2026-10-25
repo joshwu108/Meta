@@ -57,3 +57,10 @@ a.card:hover { box-shadow: var(--shadow-2); text-decoration: none; }
 .stars { display: flex; gap: var(--space-1); }
 .star { border: 0; background: none; padding: var(--space-1); cursor: pointer; color: var(--color-text-3); }
 .starOn { color: var(--color-warning); }
+
+/* Loading skeletons for 06's routes. */
+.skeleton { height: 96px; border-radius: var(--radius-md); background: var(--color-pressed); animation: pulse 1.2s var(--ease-standard) infinite alternate; }
+.skeletonTitle { height: 28px; width: 40%; border-radius: var(--radius-sm); background: var(--color-pressed); }
+@keyframes pulse { from { opacity: .55; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+.visuallyHidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

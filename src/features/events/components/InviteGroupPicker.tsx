@@ -7,6 +7,15 @@ import { invitableGroups, type MyGroup } from "./invite-groups";
 import s from "./events.module.css";
 
 type Group = { id: string; name: string };
+type InviteResult = { invited: number; skipped: { rsvped: number; blocked: number; alreadyInvited: number } };
+
+function inviteMessage({ invited, skipped }: InviteResult): string {
+  if (invited > 0) return `Invited ${invited} ${invited === 1 ? "member" : "members"}. They'll each choose whether to RSVP.`;
+  // Blocked members are never named or counted separately, so a block is not revealed.
+  return skipped.rsvped + skipped.alreadyInvited > 0
+    ? "Everyone else in that group is already invited or going."
+    : "There's no one else in that group to invite yet.";
+}
 
 /** Sends invitations to a group; members still RSVP individually. Groups come from 03's GET /api/groups. */
 export function InviteGroupPicker({ eventId }: { eventId: string }) {
@@ -27,8 +36,8 @@ export function InviteGroupPicker({ eventId }: { eventId: string }) {
   const invite = () =>
     startTransition(async () => {
       try {
-        const result = await apiPost<{ invited: number }>(`/api/events/${eventId}/invite-group`, { groupId });
-        setMessage(result.invited === 0 ? "Everyone in that group is already invited or going." : `Invited ${result.invited} ${result.invited === 1 ? "member" : "members"}. They'll each choose whether to RSVP.`);
+        const result = await apiPost<InviteResult>(`/api/events/${eventId}/invite-group`, { groupId });
+        setMessage(inviteMessage(result));
       } catch (err) {
         setMessage((err as Error).message);
       }

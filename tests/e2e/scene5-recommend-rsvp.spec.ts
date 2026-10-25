@@ -34,8 +34,9 @@ test("RSVP with sharing on, then Activity lists the event", async ({ page }) => 
   const shareWithAttendees = sheet.getByRole("switch", { name: "Share my name with other attendees" });
   if ((await shareWithAttendees.getAttribute("aria-checked")) !== "true") await shareWithAttendees.click();
   await sheet.getByRole("button", { name: "Confirm RSVP" }).click();
-  await expect(page.getByRole("button", { name: "Cancel RSVP" })).toBeVisible();
+  // CI drives `pnpm dev`: the first RSVP compiles the route and refreshes the page (same allowance as 01's auth e2e).
+  await expect(page.getByRole("button", { name: "Cancel RSVP" })).toBeVisible({ timeout: 20_000 });
 
   await page.goto("/activity");
-  await expect(page.getByRole("region", { name: "Upcoming" }).getByText(open!.title)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Upcoming" }).getByText(open!.title)).toBeVisible({ timeout: 20_000 });
 });

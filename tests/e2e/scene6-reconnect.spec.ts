@@ -18,9 +18,14 @@ test("mutual reconnect produces a follow-up suggestion for both people", async (
   const followUps = page.getByRole("region", { name: "Follow-up suggestions" });
   await expect(followUps.getByText(/Your agents suggest/)).toBeVisible();
   await expect(followUps.getByText("AI suggestion")).toBeVisible();
+  await followUps.getByRole("button", { name: "Accept" }).click();
+  await expect(followUps.getByText(/Waiting for Maya/)).toBeVisible({ timeout: 20_000 });
 
   await page.context().clearCookies();
   await login(page, "maya@commonground.test");
   await page.goto("/activity");
-  await expect(page.getByRole("region", { name: "Follow-up suggestions" }).getByText(/jordan/i)).toBeVisible();
+  const mayaFollowUps = page.getByRole("region", { name: "Follow-up suggestions" });
+  await expect(mayaFollowUps.getByText(/jordan/i).first()).toBeVisible();
+  await mayaFollowUps.getByRole("button", { name: "Accept" }).click();
+  await expect(mayaFollowUps.getByText(/You're both in/)).toBeVisible({ timeout: 20_000 });
 });

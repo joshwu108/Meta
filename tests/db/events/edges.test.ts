@@ -115,6 +115,12 @@ describe.skipIf(!available)("06 edge cases against Postgres", () => {
     // 02's consent boundary also records one share_preferences row per person it releases.
     expect(byEvent.get(consenting.eventId)).toMatchObject({ slot: "sun_day", logs: 2, shares: 2 });
     expect(byEvent.get(private_.eventId)).toMatchObject({ slot: "sat_day", logs: 0, shares: 0 });
+    // The card renders "<title> at <venue>, <slot phrase>", so the title must not carry the slot.
+    const { rows: titles } = await db.pool.query(
+      "select event_id, suggestion->>'title' as title from follow_up_suggestions where event_id = any($1)",
+      [[consenting.eventId, private_.eventId]],
+    );
+    expect(titles.map((r) => r.title)).toEqual(["Coffee catch-up", "Coffee catch-up"]);
   });
 
   it("keeps a second accept by the same person idempotent", async () => {
