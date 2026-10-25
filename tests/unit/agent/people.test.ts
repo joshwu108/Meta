@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { SharablePreferences } from "@/shared/types";
 
-const { suggestPeopleFrom, adminPublicCards } = await import("@/features/agent/server/people");
+const { suggestPeopleFrom, adminPublicCards } = await import("@/features/agent/server/suggestions/people");
 
 const prefs = (userId: string, interests: string[], slots: SharablePreferences["availabilitySlots"] = []): SharablePreferences => ({
   userId, interests, interestCategories: [], availabilitySlots: slots, socialGoals: [], groupSizePref: null,

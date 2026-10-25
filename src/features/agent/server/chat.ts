@@ -15,9 +15,7 @@ import * as repo from "./repo";
 import { toSharable } from "./sharable";
 import { logAgentAction } from "@/features/core";
 import { generateStructured } from "@/lib/ai";
-import { suggestPeople } from "./people";
-import { suggestGroups } from "./groups";
-import { suggestEvents } from "./events";
+import { suggestEvents, suggestGroups, suggestPeople } from "./suggestions";
 
 const ALL_CONSENT = { ...DEFAULT_CONSENT, allow_matching: true, allow_demand_aggregation: true, allow_group_planning: true };
 

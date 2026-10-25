@@ -10,13 +10,13 @@ vi.mock("@/features/core", () => ({
   },
 }));
 vi.mock("@/lib/ai", async () => (await import("./mock-ai")).mockAi);
-vi.mock("@/features/agent/server/events", () => ({
+vi.mock("@/features/agent/server/suggestions/events", () => ({
   suggestEvents: async () => [{ id: "00000000-0000-4000-8000-000000000601", title: "Beginner Pottery & Coffee Night", startsAt: "2026-10-29T19:00:00-07:00", venue: "Kiln & Cup", category: "creative", description: "Throw your first bowl." }],
 }));
-vi.mock("@/features/agent/server/groups", () => ({
+vi.mock("@/features/agent/server/suggestions/groups", () => ({
   suggestGroups: async () => [{ id: "00000000-0000-4000-8000-000000000301", name: "Mission Makers", description: "Pottery on Thursdays.", memberCount: 4 }],
 }));
-vi.mock("@/features/agent/server/people", () => ({
+vi.mock("@/features/agent/server/suggestions/people", () => ({
   suggestPeople: async () => [{
     id: "00000000-0000-4000-8000-000000000101", displayName: "Maya", neighborhood: "Mission",
     preferences: {

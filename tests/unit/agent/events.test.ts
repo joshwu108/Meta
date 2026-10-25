@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-const { suggestEventsFrom } = await import("@/features/agent/server/events");
+const { suggestEventsFrom } = await import("@/features/agent/server/suggestions/events");
 
 const rec = (id: string, venue: string) => ({
   event: { id, title: `Event ${id}`, startsAt: "2026-10-29T19:00:00-07:00", category: "creative", description: "d", business: { name: venue } },

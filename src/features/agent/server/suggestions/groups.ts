@@ -1,6 +1,6 @@
 import "server-only";
 import type { SharablePreferences } from "@/shared/types";
-import type { GroupCandidate } from "./suggestion-stubs";
+import type { GroupCandidate } from "./types";
 
 /**
  * `suggest_groups` from 03's public groups export. Groups the viewer already belongs to are

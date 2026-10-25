@@ -1,5 +1,5 @@
 import "server-only";
-import type { EventCandidate } from "./suggestion-stubs";
+import type { EventCandidate } from "./types";
 
 /**
  * `suggest_events` from 06's `getRecommendedEvents` (ranked, consent-aware, live events only), so

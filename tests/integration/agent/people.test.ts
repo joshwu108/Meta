@@ -3,7 +3,7 @@ process.env.MOCK_AI = "1";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { admin, deleteUser, makeUser, supabaseAvailable } from "./setup";
-import { suggestPeople } from "@/features/agent/server/people";
+import { suggestPeople } from "@/features/agent/server/suggestions/people";
 import { DEFAULT_CONSENT } from "@/features/agent/schemas";
 
 const available = await supabaseAvailable();

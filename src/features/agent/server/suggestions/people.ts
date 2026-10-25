@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ApiError } from "@/lib/api";
 import type { SharablePreferences } from "@/shared/types";
-import type { PersonCandidate } from "./suggestion-stubs";
+import type { PersonCandidate } from "./types";
 
 /**
  * `suggest_people` until 03's matches export reaches main: real, consented people only.
@@ -57,7 +57,7 @@ export async function adminPublicCards(admin: SupabaseClient, excludeUserId: str
 
 /** Production wiring. Loaded lazily so this module does not import the feature index at load time. */
 export async function suggestPeople(viewer: Pick<SharablePreferences, "userId" | "interests" | "availabilitySlots">, limit = 3): Promise<PersonCandidate[]> {
-  const [{ getConsent, getSharablePreferencesBatch }, { createAdminClient }] = await Promise.all([import("../index"), import("@/lib/supabase/admin")]);
+  const [{ getConsent, getSharablePreferencesBatch }, { createAdminClient }] = await Promise.all([import("../../index"), import("@/lib/supabase/admin")]);
   const admin = createAdminClient() as unknown as SupabaseClient;
   return suggestPeopleFrom(
     {
