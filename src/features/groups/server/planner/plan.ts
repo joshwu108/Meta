@@ -1,4 +1,5 @@
 import 'server-only';
+import { getSharablePreferencesBatch, resolveGroupSchedule } from '@/features/agent';
 import { logAgentAction } from '@/features/core';
 import { getPublicCards, type Actor, type MatchingPreferences } from '@/features/matching';
 import { generateStructured } from '@/lib/ai';
@@ -9,7 +10,6 @@ import { planOutputSchema, type PlanSuggestion } from '@/shared/schemas/social';
 import { canPlan } from '../authz';
 import { loadGroupContext, loadMemberRows } from '../context';
 import { toPlanView } from '../plans';
-import { getSharablePreferencesBatch, resolveGroupSchedule } from '../stubs';
 import type { GroupPlanView } from '../types';
 import { loadCandidateEvents } from './candidates';
 import { completeSuggestions } from './fallback';

@@ -1,4 +1,5 @@
 import 'server-only';
+import { getSharablePreferences, getSharablePreferencesBatch } from '@/features/agent';
 import { logAgentAction } from '@/features/core';
 import type { EventCategory, SocialGoal } from '@/shared/enums';
 import type { MatchesQuery } from '@/shared/schemas/social';
@@ -13,7 +14,6 @@ import { toLatLng } from './geo';
 import { getCompatibilityScore, type MatchingPreferences } from './score';
 import { normalizeTag, normalizeTags } from './similarity';
 import { getBlockedIds, getEdgeUserIds } from './social-graph';
-import { getSharablePreferences, getSharablePreferencesBatch } from './stubs';
 import { MATCH_LIMITS } from './weights';
 
 /** One recommended person (spec §6 `MatchCard`). */

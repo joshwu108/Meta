@@ -1,5 +1,5 @@
 import 'server-only';
-import { getEventPublic, getUpcomingEventsForUser } from '../stubs';
+import { getEventPublic, getUpcomingEventsForUser } from '@/features/events';
 import type { CandidateEvent } from './fallback';
 import type { Prework } from './prework';
 import { slotForStart } from './slots';

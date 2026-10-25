@@ -1,5 +1,6 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
+import { explainRecommendation } from '@/features/agent';
 import { log } from '@/lib/log';
 import { CATEGORY_PHRASES, SLOT_PHRASES, interestLabel, isCategory } from '@/shared/labels';
 import { SOCIAL_GOAL_LABELS } from '../labels';
@@ -7,7 +8,6 @@ import type { CompatibilityResult } from '@/shared/types';
 import { createTtlCache } from './cache';
 import { normalizeTags } from './similarity';
 import type { MatchingPreferences } from './score';
-import { explainRecommendation } from './stubs';
 import { MATCH_LIMITS } from './weights';
 
 const MAX_LENGTH = 160;

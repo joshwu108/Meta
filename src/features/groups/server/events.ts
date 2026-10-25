@@ -1,8 +1,8 @@
 import 'server-only';
+import { getEventPublic, getUpcomingEventsForUser } from '@/features/events';
 import { ApiError } from '@/lib/api/errors';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { EventSummary } from '@/shared/types';
-import { getEventPublic, getUpcomingEventsForUser } from './stubs';
 import type { GroupEvent } from './types';
 
 const MAX_GROUP_EVENTS = 10;

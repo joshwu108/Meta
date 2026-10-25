@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as Ai from '@/lib/ai';
-import type * as GroupStubs from '@/features/groups/server/stubs';
+import type * as Events from '@/features/events';
 import type { EventPublic, EventSummary } from '@/shared/types';
 import { adminClient, createTestUser, type TestUser } from '../helpers';
 import { actAs, call, cleanupSocialUsers, setProfile, setTestOrigin } from './support';
@@ -28,8 +28,8 @@ vi.mock('@/lib/ai', async (importOriginal) => {
     },
   };
 });
-vi.mock('@/features/groups/server/stubs', async (importOriginal) => {
-  const actual = await importOriginal<typeof GroupStubs>();
+vi.mock('@/features/events', async (importOriginal) => {
+  const actual = await importOriginal<typeof Events>();
   return {
     ...actual,
     getUpcomingEventsForUser: async (userId: string) =>

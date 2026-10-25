@@ -6,7 +6,7 @@ vi.mock('server-only', () => ({}));
 const details = new Map<string, EventPublic>();
 const upcoming = vi.fn<(userId: string) => Promise<EventSummary[]>>();
 const eventPublic = vi.fn(async (id: string) => details.get(id) ?? null);
-vi.mock('@/features/groups/server/stubs', () => ({
+vi.mock('@/features/events', () => ({
   getUpcomingEventsForUser: (userId: string) => upcoming(userId),
   getEventPublic: (id: string) => eventPublic(id),
 }));

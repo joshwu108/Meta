@@ -1,5 +1,5 @@
+import type { GroupSchedule } from '@/features/agent';
 import type { AvailabilitySlot } from '@/shared/enums';
-import type { GroupSchedule } from '../stubs';
 
 /** Which slots a plan may use, and how many consenting members are free in each. */
 export type SlotPlan = {

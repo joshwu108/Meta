@@ -1,11 +1,11 @@
 import 'server-only';
+import { getSharablePreferencesBatch } from '@/features/agent';
 import { ApiError } from '@/lib/api/errors';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { uuidSchema } from '@/shared/schemas/common';
 import type { AvailabilitySlot, EventCategory, GroupSizePref } from '@/shared/enums';
 import { buildPrework } from './planner/prework';
 import { parseSuggestions, VENUE_VOTE_SHARE } from './plans';
-import { getSharablePreferencesBatch } from './stubs';
 
 /**
  * What 04 needs to turn a voted group idea into a venue proposal (03 spec §5 step 7, 04 P1).
