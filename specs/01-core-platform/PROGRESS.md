@@ -76,6 +76,8 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Needs from others
 
+- 05: Scene 4 passes on `pnpm dev` only by accident. On `pnpm test:e2e:prod` (production build) 2 of 4 tests fail: (1) clicks on Review land before hydration and are dropped; use `clickUntilURL(page, link, /\/business\/proposals\/[0-9a-f-]{36}/)` from `tests/e2e/helpers.ts`. (2) With navigation actually waited for, `getByText(/this is an estimate, not rsvps/i)` is not on the detail page (it is on the list card; the detail says "These are not RSVPs and nobody has committed to come."), and the reject test's `you rejected this proposal` check likely has the same cause. On dev the slow first render leaves the test on the list page, where the copy exists. Once fixed, tell 01 and CI switches to `E2E_SERVER=prod` (03's ask). All other 59 tests pass on the production build.
+- 03: production-server E2E is available (`pnpm test:e2e:prod`); CI switch is held only on 05's Scene 4 (above).
 - 03: `tests/e2e/messaging.spec.ts` timed out (90s) once in the full 61-test run on a fresh stack; passes alone twice (5–8s). Likely the polling wait under dev-server load.
 - 06: `vitest run` prints "something prevents the main process from exiting" after the db project; probably a `pg` pool left open in `tests/db/support`.
 - README §4 (integrator): `logAgentAction(...)` now returns `Promise<boolean>` (true = row written); update the contract line. Callers that ignore the result need no change.
@@ -108,6 +110,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-25 02:40 — Wakeup: main unchanged. 03 asked for CI E2E on `next start`. Added opt-in `E2E_SERVER=prod`, a hydration marker and `waitForHydration`/`clickUntilURL` helpers. On the production build 59/61 pass; 05's Scene 4 has two latent test bugs that dev timing hides (details in Needs from others), so CI stays on dev for now. Dev suite 61/61 green.
 - 2026-10-25 01:55 — Wakeup: main unchanged (9e2c56b). Fixed 05's two seed bugs: event times now resolve in `VENUE_TIMEZONE` (default America/Los_Angeles) regardless of the seeding machine, and each event moves to the next day its venue is open. Seeded events verified at their intended local hours. 1007 vitest + 61/61 Playwright green. Next: integrator merge of ws/01-core.
 - 2026-10-24 23:00 — All six workstreams are on main (9e2c56b). Merged it: one conflict (onboarding page, took 02's real flow over 01's placeholder). 06's `toEventSummary` lacked 01's new `category`; filled. Clean state on 0100–0600: seed fills preferences (14), businesses, events, groups, 37 RSVPs; types match a fresh `db:types`; 1002 vitest + 60/61 Playwright green (03's messaging test flaked once under load, passes alone). Next: keep the full suite green on main.
 - 2026-10-24 22:30 — Wakeup: main unchanged (4529588). Fixed 03's focus-trap gap for `autoFocus` sheets (verified the new e2e fails on the old hook). First attempt broke 03's Scene 2 under StrictMode; restore now waits for unmount. 532 unit + 44 Playwright green. Next: 06 and 02 on main.
