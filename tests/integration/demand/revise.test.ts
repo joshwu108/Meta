@@ -11,7 +11,10 @@ const { runPipeline } = await import('@/features/demand/server/pipeline');
 const { reviseRouteDeps } = await import('@/features/demand/server/route-deps');
 const { handleRevise } = await import('@/features/demand/server/revise-route');
 
-vi.mock('next/server', () => ({ after: (task: () => unknown) => task() }));
+vi.mock('next/server', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/server')>()),
+  after: (task: () => unknown) => task(),
+}));
 
 const db = (client: unknown) => client as SupabaseClient;
 const admin = adminClient() as unknown as SupabaseClient;
