@@ -93,7 +93,21 @@ drops the pair's snapshots, the same place `/api/me` and `/api/agent/permissions
 invalidation. `tests/integration/social/block-propagation.test.ts` covers it, and also checks the
 block lands in both directions and leaves everyone else alone.
 
-### 10. Two prompt ids promised a fixture that was never written
+### 10. Losing group membership did not reach the graph either
+
+Third instance of the same class, and the mildest: a group puts its roster in each member's graph
+snapshot, and neither leaving a group nor being removed from one dropped that snapshot, so a
+former member kept seeing the group and its members for up to a minute. The data was legitimately
+theirs a moment earlier, so this is staleness rather than a new disclosure — but for a private
+group the roster is exactly what membership gates. Both routes now invalidate.
+`tests/integration/graph/membership-invalidation.test.ts` covers it.
+
+**The pattern worth remembering:** per-viewer caches sit above the privacy gates, and every
+mutation that changes who may see whom has to reach them. Invalidating the *subject's* own entry is
+never enough, because entries are keyed by the viewer. Three surfaces have needed this so far —
+consent, blocks, group membership — and a fourth cached read surface will need it too.
+
+### 11. Two prompt ids promised a fixture that was never written
 
 `matching.explain_match` and `events.reconnect_followup` sat in the registry with no definition, no
 fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Removed.
@@ -124,7 +138,7 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 | Suite | Result |
 |---|---|
 | `pnpm test` (unit) | 1019 passed |
-| `pnpm test:integration` (integration + db) | 265 passed |
+| `pnpm test:integration` (integration + db) | 268 passed |
 | `pnpm test:e2e` (Playwright, bundled Chromium) | 87 passed |
 | `tests/audit/core-flows-chrome.ts` (real Chrome) | 8/8 steps |
 
