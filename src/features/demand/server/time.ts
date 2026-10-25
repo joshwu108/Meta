@@ -36,15 +36,18 @@ export function zonedTimeToUtc(year: number, month: number, day: number, hour: n
 }
 
 /**
- * Spec §5.8: next occurrence of `slot`'s weekday at `hhmm` venue-local time, at least `minDaysOut`
- * calendar days after `now`.
+ * Spec §5.8: first occurrence of `slot`'s weekday at `hhmm` venue-local time that starts at least
+ * `minDaysOut` full days (minDaysOut × 24h) after `now`, so the venue always gets that much lead time.
  */
 export function nextSlotStart(slot: AvailabilitySlot, hhmm: string, now: Date, minDaysOut: number, timeZone = VENUE_TIME_ZONE): Date {
   const [hour, minute] = hhmm.split(':').map(Number) as [number, number];
   const target = SLOT_WEEKDAY[slot];
-  for (let offset = minDaysOut; offset < minDaysOut + 7; offset += 1) {
+  const earliest = now.getTime() + minDaysOut * DAY_MS;
+  for (let offset = minDaysOut; offset <= minDaysOut + 7; offset += 1) {
     const p = zonedParts(new Date(now.getTime() + offset * DAY_MS), timeZone);
-    if (p.weekday === target) return zonedTimeToUtc(p.year, p.month, p.day, hour, minute, timeZone);
+    if (p.weekday !== target) continue;
+    const start = zonedTimeToUtc(p.year, p.month, p.day, hour, minute, timeZone);
+    if (start.getTime() >= earliest) return start;
   }
   throw new Error(`no ${slot} within a week of ${minDaysOut} days out`);
 }
