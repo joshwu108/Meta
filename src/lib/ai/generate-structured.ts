@@ -36,11 +36,25 @@ function extractToolInput(message: Anthropic.Message): unknown {
   return block.input;
 }
 
+/** JSON input as plain text, or image blocks followed by the JSON text block when images are given. */
+function userContent<T>(opts: GenerateStructuredOptions<T>): Anthropic.MessageParam['content'] {
+  const text = JSON.stringify(opts.input ?? {});
+  if (!opts.images || opts.images.length === 0) return text;
+  return [
+    ...opts.images.map((image) => ({
+      type: 'image' as const,
+      source: { type: 'base64' as const, media_type: image.mediaType, data: image.data },
+    })),
+    { type: 'text' as const, text },
+  ];
+}
+
 /**
  * Ask Claude for JSON that matches `schema`. The schema is converted to a tool definition so the
  * model is forced to emit structured output; the result is validated with Zod. On validation
  * failure the call is retried once with the error appended; after that `AI_UNAVAILABLE` is thrown.
- * With `MOCK_AI=1` the fixture for the prompt id is returned (still validated).
+ * With `MOCK_AI=1` the fixture for the prompt id is returned (still validated). With `images`,
+ * the user message carries them ahead of the JSON and every retry resends them.
  */
 export async function generateStructured<T>(opts: GenerateStructuredOptions<T>): Promise<T> {
   const started = Date.now();
@@ -62,9 +76,7 @@ export async function generateStructured<T>(opts: GenerateStructuredOptions<T>):
   const call: ToolCall = transport ?? ((params) => getAnthropic().messages.create(params));
   const jsonSchema = zodToJsonSchema(opts.schema, { $refStrategy: 'none' }) as Anthropic.Tool.InputSchema;
   const retries = opts.maxRetries ?? DEFAULT_RETRIES;
-  const baseMessages: Anthropic.MessageParam[] = [
-    { role: 'user', content: JSON.stringify(opts.input ?? {}) },
-  ];
+  const baseMessages: Anthropic.MessageParam[] = [{ role: 'user', content: userContent(opts) }];
 
   let messages = baseMessages;
   let lastError: unknown;

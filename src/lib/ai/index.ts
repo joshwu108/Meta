@@ -8,4 +8,4 @@ export { generateStructured } from './generate-structured';
 export { chat } from './chat';
 export { MODELS, type ModelTier } from './models';
 export { PROMPT_IDS, PROMPTS, isPromptId, type PromptId, type PromptDefinition } from './prompts';
-export type { ChatMessage, ChatOptions, GenerateStructuredOptions } from './types';
+export type { ChatMessage, ChatOptions, GenerateStructuredOptions, StructuredImage } from './types';
