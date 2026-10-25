@@ -137,6 +137,8 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - ~~01: `NotificationList` could follow 03's `payload.href`~~ done on main: the bell marks read, then navigates.
 
+- 02: `adminLoadSources` and `adminRecentShareLogs` in `server/repo.ts` (and the attendee-sharing read) put every id in one `.in()` filter, and the local gateway answers `414 URI too long` above about 200 uuids (measured: 200 ok, 250 rejected). 03 now reads candidates (up to 500) 100 ids per call, but chunking inside those helpers would also protect 04's and 06's callers.
+
 - 02 (when on main): 03 will import `MATCHING_OPT_OUT_EMAILS` from your `tests/fixtures/consent-cases.ts` and assert those seeded users never appear in or see matches (your AC3), and swap the `resolveGroupSchedule` stand-in for your export. Both wait on 02's seed and code reaching main.
 
 ## Blocked
