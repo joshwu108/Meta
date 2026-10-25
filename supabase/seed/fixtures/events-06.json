@@ -11,20 +11,20 @@
     "capacity": 10,
     "priceCents": 1500,
     "attendees": [
-      "maya@commonground.test",
-      "jordan@commonground.test",
-      "sam@commonground.test",
-      "priya@commonground.test",
-      "theo@commonground.test",
-      "nina@commonground.test"
+      "maya@weave.test",
+      "jordan@weave.test",
+      "sam@weave.test",
+      "priya@weave.test",
+      "theo@weave.test",
+      "nina@weave.test"
     ],
     "reconnect": {
-      "from": "maya@commonground.test",
-      "to": "jordan@commonground.test"
+      "from": "maya@weave.test",
+      "to": "jordan@weave.test"
     }
   },
   "excludeFromRsvps": [
-    "demo.new@commonground.test"
+    "demo.new@weave.test"
   ],
   "excludePrefixes": [
     "demo",

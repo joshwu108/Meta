@@ -7,18 +7,21 @@ import type { EventCandidate } from "./suggestion-stubs";
  */
 export type RecommendedLike = {
   event: { id: string; title: string; startsAt: string; category: string; description: string; business: { name: string } };
+  /** 06 already computes and caches this for 24h; passing it through avoids a duplicate call. */
+  explanation?: string;
 };
 
 export type EventsDeps = { recommended: (viewerId: string, limit: number) => Promise<RecommendedLike[]> };
 
 export async function suggestEventsFrom(deps: EventsDeps, viewerId: string, limit = 3): Promise<EventCandidate[]> {
-  return (await deps.recommended(viewerId, limit)).map(({ event }) => ({
+  return (await deps.recommended(viewerId, limit)).map(({ event, explanation }) => ({
     id: event.id,
     title: event.title,
     startsAt: event.startsAt,
     venue: event.business.name,
     category: event.category,
     description: event.description,
+    ...(explanation ? { explanation } : {}),
   }));
 }
 

@@ -4,7 +4,7 @@ import type { MemberRole, Visibility } from '@/shared/enums';
 
 export const VISIBILITY_COPY: Readonly<Record<Visibility, { label: string; description: string }>> = {
   private: { label: 'Private', description: 'Only people you invite can see the group, its members and its plans.' },
-  public: { label: 'Public', description: 'Anyone on CommonGround can find the group and see who is in it. Members can invite others.' },
+  public: { label: 'Public', description: 'Anyone on Weave can find the group and see who is in it. Members can invite others.' },
 };
 
 export const ROLE_LABELS: Readonly<Record<MemberRole, string>> = { owner: 'Owner', admin: 'Admin', member: 'Member' };

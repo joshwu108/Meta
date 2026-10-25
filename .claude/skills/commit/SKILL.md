@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Commit (and optionally push) work in the CommonGround repo autonomously, authored by the team member who owns this clone. Use whenever a task is done and should be committed, when the user says "commit", "/commit", "save this", "push this", or when an autonomous task finishes a coherent unit of work. Also handles one-command identity setup with "/commit setup".
+description: Commit (and optionally push) work in the Weave repo autonomously, authored by the team member who owns this clone. Use whenever a task is done and should be committed, when the user says "commit", "/commit", "save this", "push this", or when an autonomous task finishes a coherent unit of work. Also handles one-command identity setup with "/commit setup".
 ---
 
 # /commit — team commit skill

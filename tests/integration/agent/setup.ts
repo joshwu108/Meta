@@ -22,7 +22,7 @@ export const admin = (): SupabaseClient => createClient(SUPABASE_URL, SERVICE, {
 
 /** Create a confirmed user (profile row comes from 01's trigger) and a signed-in client for them. */
 export async function makeUser(tag: string): Promise<{ id: string; sb: SupabaseClient }> {
-  const email = `it-ws02-${tag}-${Date.now()}@commonground.test`;
+  const email = `it-ws02-${tag}-${Date.now()}@weave.test`;
   const password = "test-pass-1234";
   const created = await admin().auth.admin.createUser({ email, password, email_confirm: true });
   if (created.error || !created.data.user) throw created.error ?? new Error("createUser failed");

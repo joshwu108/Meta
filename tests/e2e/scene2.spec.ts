@@ -34,7 +34,7 @@ async function acceptInvitationAs(browser: Browser, email: string): Promise<void
 async function openRequestFromBell(browser: Browser): Promise<void> {
   const context = await browser.newContext();
   const page = await context.newPage();
-  await login(page, 'maya@commonground.test');
+  await login(page, 'maya@weave.test');
   const recommended = page.getByRole('tab', { name: /Recommended/ });
   await openSettled(page, '/match', recommended);
   await expect(recommended).toHaveAttribute('aria-selected', 'true');
@@ -92,7 +92,7 @@ test('Scene 2: matches with explanations, connect, create a private group, invit
   await page.getByRole('button', { name: 'Invite 2' }).click();
   await expect(page.getByText('Invited 2 people')).toBeVisible(FIRST_REQUEST);
 
-  await acceptInvitationAs(browser, 'yuki@commonground.test');
+  await acceptInvitationAs(browser, 'yuki@weave.test');
 
   await page.reload();
   await settle(page, page.getByRole('heading', { name: 'Members · 2' }));

@@ -90,4 +90,4 @@ export type SeedNotification = z.infer<typeof seedNotificationSchema>;
 /** Password for every seeded account (specs §6). */
 export const SEED_PASSWORD = 'demo-pass-1234';
 /** Every seeded auth user has an email under this domain; the runner deletes them before inserting. */
-export const SEED_DOMAIN = 'commonground.test';
+export const SEED_DOMAIN = 'weave.test';

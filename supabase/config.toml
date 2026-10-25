@@ -1,4 +1,4 @@
-project_id = "commonground"
+project_id = "weave"
 
 [api]
 enabled = true

@@ -20,7 +20,7 @@ async function signUpAsBusiness(page: Page): Promise<void> {
   const stamp = `${Date.now().toString().slice(-7)}${Math.random().toString(36).slice(2, 6)}`;
   await page.goto('/signup?as=business');
   await page.getByLabel('Your name').fill('Sam Rivera');
-  await page.getByLabel('Email').fill(`biz.${stamp}@commonground.test`);
+  await page.getByLabel('Email').fill(`biz.${stamp}@weave.test`);
   await page.getByLabel('Password').fill('onboarding-test-pass');
   await page.getByRole('checkbox').check();
   await page.getByRole('button', { name: /sign up|create/i }).click();

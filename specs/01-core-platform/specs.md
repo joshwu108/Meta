@@ -185,12 +185,12 @@ Design direction (binding for every screen, see [`../design-system.md`](../desig
 
 `pnpm db:seed` runs `seed.ts` with the admin client and loads fixtures in dependency order. Base fixtures delivered here:
 
-- `users.json` — 16 users with display names, neighborhoods (Mission, Hayes Valley, Castro, SoMa, Noe Valley), coarse coordinates, `is_discoverable: true` for 14. (The 16th, `jordan@commonground.test`, is the Scene 6 reconnect partner named in spec 06 §8; `demo.new@` stays the Scene 1 user.) Password for every seeded user is `demo-pass-1234`. User `demo.new@commonground.test` has **no** preferences so Scene 1 can be run live.
-- `businesses.json` — Kiln & Cup (pottery studio, Mission), Ritual Grounds (café, Hayes Valley), Meeple House (board-game venue, SoMa), each with an owner account `owner.<slug>@commonground.test`.
+- `users.json` — 16 users with display names, neighborhoods (Mission, Hayes Valley, Castro, SoMa, Noe Valley), coarse coordinates, `is_discoverable: true` for 14. (The 16th, `jordan@weave.test`, is the Scene 6 reconnect partner named in spec 06 §8; `demo.new@` stays the Scene 1 user.) Password for every seeded user is `demo-pass-1234`. User `demo.new@weave.test` has **no** preferences so Scene 1 can be run live.
+- `businesses.json` — Kiln & Cup (pottery studio, Mission), Ritual Grounds (café, Hayes Valley), Meeple House (board-game venue, SoMa), each with an owner account `owner.<slug>@weave.test`.
 - `events.json` — 6 published events across the three venues over the next 14 days.
 - `groups.json` — 2 groups ("Mission Makers", public, 4 members; "Thursday Night Crew", private, 3 members).
 
-Workstream 02 adds `preferences.json` (interests/availability for the 14 seeded users, engineered so that 6 share `creative` + `thu_eve` + Mission radius for Scene 3). The seed runner must be idempotent: it deletes by `email like '%@commonground.test'` before inserting.
+Workstream 02 adds `preferences.json` (interests/availability for the 14 seeded users, engineered so that 6 share `creative` + `thu_eve` + Mission radius for Scene 3). The seed runner must be idempotent: it deletes by `email like '%@weave.test'` before inserting.
 
 `POST /api/dev/seed` wraps the same runner and is only mounted when `NODE_ENV !== 'production'` or `DEMO_MODE=1`.
 

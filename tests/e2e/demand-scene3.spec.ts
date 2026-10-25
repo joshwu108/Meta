@@ -41,7 +41,7 @@ test.describe('Scene 3: Generate Opportunities', () => {
   test.afterAll(async () => cleanup());
 
   test('operator clicks Generate, the tracker completes and the pottery proposal is listed', async ({ page, context, baseURL }) => {
-    const email = `presenter-${Date.now()}@itest.commonground.test`;
+    const email = `presenter-${Date.now()}@itest.weave.test`;
     const password = 'itest-pass-1234';
     const created = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { display_name: 'Presenter', is_adult_confirmed: true } });
     expect(created.error).toBeNull();

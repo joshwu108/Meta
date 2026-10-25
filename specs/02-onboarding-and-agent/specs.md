@@ -9,7 +9,7 @@
 
 ## 1. Purpose
 
-Every CommonGround user gets a personal AI agent. This workstream builds that agent: the conversational onboarding that turns "I just moved here, I like pottery and coffee shops, I'm free Thursday evenings and want to meet people in a small group" into a structured, editable preference profile; the ongoing chat interface; the preference and permission management screens; and the **coordination boundary** through which other parts of the system may read a user's preferences, limited strictly to what the user has consented to.
+Every Weave user gets a personal AI agent. This workstream builds that agent: the conversational onboarding that turns "I just moved here, I like pottery and coffee shops, I'm free Thursday evenings and want to meet people in a small group" into a structured, editable preference profile; the ongoing chat interface; the preference and permission management screens; and the **coordination boundary** through which other parts of the system may read a user's preferences, limited strictly to what the user has consented to.
 
 The agent is advisory. It never accepts invitations, RSVPs, or commits the user to anything. Everything it infers is shown to the user for confirmation before it is used.
 

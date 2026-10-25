@@ -11,7 +11,7 @@ import { OWNER, SEED_PASSWORD, login, reseed } from '../helpers';
 
 export const OWNERS = {
   kiln: { email: OWNER.email, password: SEED_PASSWORD },
-  ritual: { email: 'owner.ritual-grounds@commonground.test', password: SEED_PASSWORD },
+  ritual: { email: 'owner.ritual-grounds@weave.test', password: SEED_PASSWORD },
 } as const;
 
 export type Owner = (typeof OWNERS)[keyof typeof OWNERS];

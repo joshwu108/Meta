@@ -1,4 +1,4 @@
 {
   "_comment": "Scene 1 state for the demo user (what 02’s onboarding leaves), applied by applyDemoUserScene1 in 03’s tests. Seeded users’ preferences come from 02’s supabase/seed/fixtures/preferences.json.",
-  "demoUser": { "email": "demo.new@commonground.test", "interests": ["pottery", "coffee"], "categories": ["creative", "food_drink"], "slots": ["thu_eve"], "goals": ["make_friends"], "groupSize": "small", "budgetMax": null, "radiusKm": 5, "activity": [] }
+  "demoUser": { "email": "demo.new@weave.test", "interests": ["pottery", "coffee"], "categories": ["creative", "food_drink"], "slots": ["thu_eve"], "goals": ["make_friends"], "groupSize": "small", "budgetMax": null, "radiusKm": 5, "activity": [] }
 }

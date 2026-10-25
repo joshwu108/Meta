@@ -9,7 +9,7 @@ import scene3 from '../../fixtures/demand/users-scene3.json';
 type Row = { email: string; allowDemandAggregation: boolean; preferences: Record<string, unknown> & { coarseLat: number; coarseLng: number; neighborhood: string } };
 
 /** Local stack's database container (`project_id` in supabase/config.toml). */
-const DB_CONTAINER = process.env.SUPABASE_DB_CONTAINER ?? 'supabase_db_commonground';
+const DB_CONTAINER = process.env.SUPABASE_DB_CONTAINER ?? 'supabase_db_weave';
 
 /** Applies the guarded 02/05 stand-in tables with psql in the local db container (no DDL over PostgREST). */
 export function applyTestSchema(): void {

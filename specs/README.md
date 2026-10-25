@@ -1,6 +1,6 @@
-# CommonGround — Engineering Specs
+# Weave — Engineering Specs
 
-CommonGround is a two-sided, AI-powered local social discovery platform. People get a personal AI agent that learns their interests and availability, finds compatible people and groups nearby, and recommends events. Aggregated, opt-in community demand is turned by AI into event proposals that local businesses approve, edit, or reject before anything is published. Users RSVP, meet, and keep the relationship going.
+Weave is a two-sided, AI-powered local social discovery platform. People get a personal AI agent that learns their interests and availability, finds compatible people and groups nearby, and recommends events. Aggregated, opt-in community demand is turned by AI into event proposals that local businesses approve, edit, or reject before anything is published. Users RSVP, meet, and keep the relationship going.
 
 This directory splits the hackathon MVP into **six workstreams that can be built in parallel**. Each `specs.md` is self-contained: it restates the slice of the product it owns, the tables and API routes it owns, the contracts it consumes from the others, how to build it in isolation with mocks, and its acceptance tests.
 
@@ -15,7 +15,7 @@ This directory splits the hackathon MVP into **six workstreams that can be built
 
 The shared visual theme (Meta-aligned: Facebook light/dark surfaces, Meta blue for actions, the Meta AI gradient reserved for AI-generated content) is specified in [`design-system.md`](./design-system.md) and is binding for every screen.
 
-The end-to-end flow and the system architecture are drawn in [`commonground-flow.drawio`](./commonground-flow.drawio) (open at https://app.diagrams.net or with the VS Code Draw.io extension).
+The end-to-end flow and the system architecture are drawn in [`weave-flow.drawio`](./weave-flow.drawio) (open at https://app.diagrams.net or with the VS Code Draw.io extension).
 
 ---
 
@@ -37,7 +37,7 @@ The end-to-end flow and the system architecture are drawn in [`commonground-flow
 ### Repo layout
 
 ```
-commonground/
+weave/
 ├── src/
 │   ├── app/
 │   │   ├── (consumer)/           # consumer screens: /, /discover, /match, /groups, /events, /agent, /activity

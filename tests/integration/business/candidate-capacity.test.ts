@@ -25,7 +25,7 @@ const SUFFIX = `cap-${Date.now()}`;
 type Venue = { id: string; ownerId: string };
 
 async function makeVenue(label: string, capacity: number): Promise<Venue> {
-  const email = `owner.${label}.${SUFFIX}@itest.commonground.test`;
+  const email = `owner.${label}.${SUFFIX}@itest.weave.test`;
   const { data: user, error: userError } = await admin.auth.admin.createUser({
     email,
     password: 'demo-pass-1234',

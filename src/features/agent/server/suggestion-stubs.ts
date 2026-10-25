@@ -7,5 +7,9 @@ import type { SharablePreferences } from "@/shared/types";
  */
 
 export type PersonCandidate = { id: string; displayName: string; neighborhood: string; preferences: SharablePreferences };
-export type EventCandidate = { id: string; title: string; startsAt: string; venue: string; category: string; description: string };
+export type EventCandidate = {
+  id: string; title: string; startsAt: string; venue: string; category: string; description: string;
+  /** 06's grounded explanation, reused so a card does not pay for a second model call. */
+  explanation?: string;
+};
 export type GroupCandidate = { id: string; name: string; description: string; memberCount: number };

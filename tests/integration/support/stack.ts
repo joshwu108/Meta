@@ -41,7 +41,7 @@ export async function signedInOwner(
   stack: Stack,
   email: string,
 ): Promise<{ userId: string; client: SupabaseClient }> {
-  const password = 'commonground-test-password';
+  const password = 'weave-test-password';
   const existing = await stack.admin.auth.admin.listUsers({ perPage: 200 });
   const found = existing.data?.users.find((user) => user.email === email);
 
@@ -70,4 +70,4 @@ export async function cleanup(stack: Stack, businessIds: readonly string[]): Pro
   }
 }
 
-export const uniqueEmail = (label: string): string => `ws05.${label}@commonground.test`;
+export const uniqueEmail = (label: string): string => `ws05.${label}@weave.test`;

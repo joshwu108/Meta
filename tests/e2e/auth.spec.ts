@@ -9,7 +9,7 @@ test.beforeAll(async ({ request }) => {
 });
 
 test('signup with adult confirmation redirects to onboarding', async ({ page }) => {
-  const email = `e2e-${Date.now()}@commonground.test`;
+  const email = `e2e-${Date.now()}@weave.test`;
   await page.goto('/signup');
   await expect(page.getByRole('heading', { name: 'Find your people' })).toBeVisible();
   await page.getByLabel('Display name').fill('E2E Tester');
@@ -36,7 +36,7 @@ test('a user without onboarding is sent to /onboarding and sees the agent onboar
   await login(page, NEW_USER.email);
   await expect(page).toHaveURL(/\/onboarding$/);
   // ws02's onboarding replaced 01's placeholder skip button; finishing it is covered by agent-scene1.spec.ts.
-  await expect(page.getByRole('heading', { name: `Hi ${NEW_USER.name}, welcome to CommonGround` })).toBeVisible();
+  await expect(page.getByRole('heading', { name: `Hi ${NEW_USER.name}, welcome to Weave` })).toBeVisible();
 });
 
 test('a seeded business owner is routed to the business side', async ({ page }) => {

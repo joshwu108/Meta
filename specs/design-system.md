@@ -1,9 +1,9 @@
-# CommonGround Design System — Meta-aligned theme
+# Weave Design System — Meta-aligned theme
 
 **Applies to:** every screen in workstreams 01–06. Workstream 01 ships the tokens and primitives; everyone else consumes them.
 **Why this direction:** the hackathon track is sponsored by Meta ("Bringing People Closer Together with AI"). The product should feel at home next to Facebook, Messenger, and Meta AI: familiar surfaces, Meta blue for primary actions, and the Meta AI gradient reserved for anything the AI produced. Familiarity lowers the barrier for judges and for users who already live in Meta apps.
 
-**Boundary:** CommonGround is *inspired by* Meta's visual language, not branded as Meta. Do not use the Meta or Facebook logos, wordmarks, the infinity mark, or copy that implies the product is made by Meta. Meta's proprietary typeface (Optimistic) is not available, so the system font stack Facebook itself ships is used instead.
+**Boundary:** Weave is *inspired by* Meta's visual language, not branded as Meta. Do not use the Meta or Facebook logos, wordmarks, the infinity mark, or copy that implies the product is made by Meta. Meta's proprietary typeface (Optimistic) is not available, so the system font stack Facebook itself ships is used instead.
 
 ---
 
@@ -129,7 +129,7 @@ One family, hierarchy by size and weight only. Page titles 24/700, card titles 1
 ## 3. Layout
 
 - **Canvas + cards:** page background `--color-canvas`; content lives on `--color-surface` cards with `--radius-md` and `--shadow-1`. Cards get `--shadow-2` on hover only when the whole card is clickable.
-- **App frame (consumer):** 56px top bar on all widths (logo-free wordmark "CommonGround" in `--color-text`, search, notification bell, avatar). ≥1024px adds a 280px left rail with nav items (icon + label, active item in `--color-brand-soft` with blue icon), and a 320px right rail for contextual content (agent suggestions on Discover, filters on Events). Center column max 680px like the Facebook feed. <768px: bottom tab bar with 5 items (Discover, Match, Groups, Events, Agent); Activity lives behind the bell.
+- **App frame (consumer):** 56px top bar on all widths (logo-free wordmark "Weave" in `--color-text`, search, notification bell, avatar). ≥1024px adds a 280px left rail with nav items (icon + label, active item in `--color-brand-soft` with blue icon), and a 320px right rail for contextual content (agent suggestions on Discover, filters on Events). Center column max 680px like the Facebook feed. <768px: bottom tab bar with 5 items (Discover, Match, Groups, Events, Agent); Activity lives behind the bell.
 - **App frame (business):** same top bar; left rail always present ≥768px with Dashboard, Proposals (badge count), Events, Insights; center column max 960px for tables.
 - **Hierarchy, not uniformity:** every page has one lead element (lead event card, pending proposal, planner) at `--text-2xl`/full-width; supporting items are compact. Avoid equal-weight grids.
 - **Density:** list rows 56–72px, 16px card padding, 12px between cards, 24px between sections.

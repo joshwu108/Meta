@@ -61,7 +61,7 @@ post-event review has real input.
   created by a signup trigger, so each persona needs an `auth.admin.createUser` call. 300
   sequential Admin API calls (each bcrypt-hashing a password) is too slow, so creation runs in
   bounded concurrent batches. `deleteSeedUsers` already cleans up anything under
-  `@commonground.test`, so personas use that domain and reseeding stays idempotent.
+  `@weave.test`, so personas use that domain and reseeding stays idempotent.
 - **Scale is opt-out.** `SEED_SCALE` (default 300) controls volume; e2e and CI set `0` so test
   runtime does not regress.
 

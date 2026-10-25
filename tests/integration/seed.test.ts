@@ -17,20 +17,20 @@ describe('seed runner', () => {
     expect(second.consumers).toBe(16);
 
     const anon = createClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
-    const consumer = await anon.auth.signInWithPassword({ email: 'maya@commonground.test', password: SEED_PASSWORD });
+    const consumer = await anon.auth.signInWithPassword({ email: 'maya@weave.test', password: SEED_PASSWORD });
     expect(consumer.error).toBeNull();
     const { data: profile } = await anon.from('profiles').select('display_name, onboarding_completed_at, is_discoverable').single();
     expect(profile?.display_name).toBe('Maya Chen');
     expect(profile?.onboarding_completed_at).not.toBeNull();
     await anon.auth.signOut();
 
-    const fresh = await anon.auth.signInWithPassword({ email: 'demo.new@commonground.test', password: SEED_PASSWORD });
+    const fresh = await anon.auth.signInWithPassword({ email: 'demo.new@weave.test', password: SEED_PASSWORD });
     expect(fresh.error).toBeNull();
     const { data: newProfile } = await anon.from('profiles').select('onboarding_completed_at').single();
     expect(newProfile?.onboarding_completed_at).toBeNull();
     await anon.auth.signOut();
 
-    const owner = await anon.auth.signInWithPassword({ email: 'owner.kiln-and-cup@commonground.test', password: SEED_PASSWORD });
+    const owner = await anon.auth.signInWithPassword({ email: 'owner.kiln-and-cup@weave.test', password: SEED_PASSWORD });
     expect(owner.error).toBeNull();
 
     const { count } = await admin.from('profiles').select('id', { count: 'exact', head: true }).eq('is_discoverable', true);

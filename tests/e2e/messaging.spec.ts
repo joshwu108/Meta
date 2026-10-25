@@ -8,7 +8,7 @@ const FIRST_REQUEST = { timeout: 20_000 };
 test('accepted connections can message each other (P1, polled)', async ({ page, browser }) => {
   test.setTimeout(90_000);
   await reseed(page);
-  await login(page, 'maya@commonground.test');
+  await login(page, 'maya@weave.test');
   const messageLeo = page.getByRole('region', { name: 'Your connections' }).getByRole('listitem').filter({ hasText: 'Leo Park' }).getByRole('button', { name: 'Message' });
   await openSettled(page, '/match?tab=connections', messageLeo);
   await messageLeo.click();
@@ -19,7 +19,7 @@ test('accepted connections can message each other (P1, polled)', async ({ page, 
 
   const leo = await browser.newContext();
   const leoPage = await leo.newPage();
-  await login(leoPage, 'leo@commonground.test');
+  await login(leoPage, 'leo@weave.test');
   const messageMaya = leoPage.getByRole('region', { name: 'Your connections' }).getByRole('listitem').filter({ hasText: 'Maya Chen' }).getByRole('button', { name: 'Message' });
   await openSettled(leoPage, '/match?tab=connections', messageMaya);
   await messageMaya.click();

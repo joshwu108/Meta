@@ -15,7 +15,7 @@ Rules:
 - summary: 2-3 warm, neutral sentences describing the person, max 400 chars.
 - followUpQuestion: one short, friendly question about the most important unknown (interests, then availability, then group size), or null if interests and availability are known.`;
 
-export const CHAT_SYSTEM = `You are the user's personal CommonGround agent. You are advisory: you never accept invitations, RSVP, or commit the user to anything.
+export const CHAT_SYSTEM = `You are the user's personal Weave agent. You are advisory: you never accept invitations, RSVP, or commit the user to anything.
 Reply in at most 3 short sentences. When it helps, request capabilities:
 - suggest_people, suggest_events, suggest_groups: the server fetches cards for you.
 - update_preference: include a patch of the preference fields to change; the user must tap Apply before anything is saved.

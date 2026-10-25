@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ApiError } from "@/lib/api";
 import type { SharablePreferences } from "@/shared/types";
-import type { PersonCandidate } from "./suggestions";
+import type { PersonCandidate } from "./suggestion-stubs";
 
 /**
  * `suggest_people` until 03's matches export reaches main: real, consented people only.

@@ -10,7 +10,7 @@
     "lng": -122.42,
     "capacity": 12,
     "owner": {
-      "email": "owner.kiln-and-cup@commonground.test",
+      "email": "owner.kiln-and-cup@weave.test",
       "display_name": "Rosa Delgado"
     },
     "hours": {
@@ -78,7 +78,7 @@
     "lng": -122.42,
     "capacity": 20,
     "owner": {
-      "email": "owner.ritual-grounds@commonground.test",
+      "email": "owner.ritual-grounds@weave.test",
       "display_name": "Ben Okoro"
     },
     "hours": {
@@ -163,7 +163,7 @@
     "lng": -122.4,
     "capacity": 30,
     "owner": {
-      "email": "owner.meeple-house@commonground.test",
+      "email": "owner.meeple-house@weave.test",
       "display_name": "Lina Vogel"
     },
     "hours": {

@@ -40,5 +40,5 @@ export async function getPublicCard(userId: string): Promise<PublicCard | null> 
 
 /** Placeholder used when a profile disappeared between two reads. */
 export function unknownCard(userId: string): PublicCard {
-  return { id: userId, displayName: 'CommonGround member', avatarUrl: null, bio: null, neighborhood: null };
+  return { id: userId, displayName: 'Weave member', avatarUrl: null, bio: null, neighborhood: null };
 }

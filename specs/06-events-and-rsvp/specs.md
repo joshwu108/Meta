@@ -185,7 +185,7 @@ Sections: Upcoming (with reconfirm badges), Invitations, Connection requests, Pa
 
 ## 8. Seed Contribution
 
-Extend `events.json` with RSVPs: each seeded event has 3–8 confirmed RSVPs with mixed `share_with_attendees`; one event is full. Add one `completed` event in the past at Ritual Grounds with 6 attendees including two seeded users who will be used in Scene 6 (`maya@` and `jordan@commonground.test`), and a reconnect row from one of them so the presenter only has to add the other.
+Extend `events.json` with RSVPs: each seeded event has 3–8 confirmed RSVPs with mixed `share_with_attendees`; one event is full. Add one `completed` event in the past at Ritual Grounds with 6 attendees including two seeded users who will be used in Scene 6 (`maya@` and `jordan@weave.test`), and a reconnect row from one of them so the presenter only has to add the other.
 
 ## 9. Tests
 

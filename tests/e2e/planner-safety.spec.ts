@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => {
 
 test('AC4: the group planner suggests 2–4 activities in the shared slot and members can vote', async ({ page }) => {
   test.setTimeout(90_000);
-  await login(page, 'maya@commonground.test');
+  await login(page, 'maya@weave.test');
   const missionMakers = page.getByRole('link', { name: /Mission Makers/ }).first();
   await openSettled(page, '/groups', missionMakers);
   await missionMakers.click();
@@ -81,7 +81,7 @@ test('Block and Report from a match card', async ({ page }) => {
 test('an agent deep link (/match?focus=) shows that person as the lead card', async ({ page }) => {
   test.setTimeout(60_000);
   const { data } = await admin().auth.admin.listUsers({ perPage: 200 });
-  const ana = data.users.find((u) => u.email === 'ana@commonground.test')!;
+  const ana = data.users.find((u) => u.email === 'ana@weave.test')!;
   await login(page, NEW_USER.email);
   const lead = page.getByRole('list', { name: 'Recommended people' }).getByRole('article').first();
   await openSettled(page, `/match?focus=${ana.id}`, lead);
