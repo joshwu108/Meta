@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { config as loadEnv } from 'dotenv';
 import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { NEW_USER, login, reseed } from './helpers';
+import { openSettled } from './support/social';
 
 // The first request to a route compiles it in dev mode, which can take longer than 5s in CI.
 const FIRST_REQUEST = { timeout: 20_000 };
@@ -20,8 +21,9 @@ test.beforeEach(async ({ page }) => {
 test('AC4: the group planner suggests 2–4 activities in the shared slot and members can vote', async ({ page }) => {
   test.setTimeout(90_000);
   await login(page, 'maya@commonground.test');
-  await page.goto('/groups');
-  await page.getByRole('link', { name: /Mission Makers/ }).first().click();
+  const missionMakers = page.getByRole('link', { name: /Mission Makers/ }).first();
+  await openSettled(page, '/groups', missionMakers);
+  await missionMakers.click();
   await page.getByRole('textbox', { name: 'What should we do?' }).fill('Something creative on a weeknight with Leo');
   await page.getByRole('button', { name: 'Plan something for us' }).click();
   await expect(page.getByText('Based on 4 of 4 members who allow group planning')).toBeVisible(FIRST_REQUEST);
@@ -41,9 +43,9 @@ test('AC4: the group planner suggests 2–4 activities in the shared slot and me
 test('Block and Report from a match card', async ({ page }) => {
   test.setTimeout(90_000);
   await login(page, NEW_USER.email);
-  await page.goto('/match');
   const card = page.getByRole('article', { name: /^Yuki Tanaka/ });
   const trigger = card.getByRole('button', { name: 'More options for Yuki Tanaka' });
+  await openSettled(page, '/match', trigger);
   await trigger.focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('menuitem', { name: 'Block' })).toBeFocused();
@@ -78,7 +80,7 @@ test('an agent deep link (/match?focus=) shows that person as the lead card', as
   const { data } = await admin().auth.admin.listUsers({ perPage: 200 });
   const ana = data.users.find((u) => u.email === 'ana@commonground.test')!;
   await login(page, NEW_USER.email);
-  await page.goto(`/match?focus=${ana.id}`);
   const lead = page.getByRole('list', { name: 'Recommended people' }).getByRole('article').first();
+  await openSettled(page, `/match?focus=${ana.id}`, lead);
   await expect(lead).toHaveAccessibleName(/^Suggested by your agent: Ana Souza/);
 });
