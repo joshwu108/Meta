@@ -403,6 +403,24 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 02:30` — **demo rehearsal of Scene 4 end to end against all six workstreams,
+  with proposals 04 actually generated.** Ran `POST /api/ai/generate-opportunities`, then
+  walked the owner's path and read every screen rather than trusting assertions:
+  - **Dashboard**: nav badge 2, stat row (2 waiting / 2 upcoming / 15 RSVPs), both of 04's
+    generated proposals rendered with the gradient `AiTag`, an amber "Awaiting approval"
+    pill and the banded estimate reading "Estimated local interest: 6-9 people … This is an
+    estimate, not RSVPs." No raw count anywhere.
+  - **Proposal detail**: status timeline, the document, the estimate block with its
+    popover, "Why this was suggested", the assumptions checklist, and all four decisions.
+  - **Edit & approve** with the price $20 → $25, then publish.
+  - **End state**: the events list shows `Published · AI suggestion · Beginner Pottery &
+    Coffee Night · Thu, Oct 29, 6:00 PM · Creative · $25 · 10 left`, with edit, attendees
+    and cancel on the row.
+  The venue-zone fix holds throughout: every time reads as the venue's wall clock with the
+  browser in UTC. The one blemish visible on screen is the seeded "Wheel Throwing Basics"
+  sitting on a Monday that Kiln & Cup is closed — the fixture issue already reported.
+  **Scene 4 is demo-ready**, with the caveat that the three fixes at the top of this file
+  are not on `main` yet; without them the demo shows times in the presenter's zone.
 - `2026-10-25 02:00` — **eyeballed the attendee screen against 06's real data, then found
   two seed bugs.** The masking path renders correctly for the first time with real RSVPs:
   counts first (9 confirmed, 4 shared), four real names and five "Attendee (private)",
