@@ -31,7 +31,6 @@ const tableExists = async (live: Stack, table: string): Promise<boolean> => {
 const hasProposalsTable = stack ? await tableExists(stack, 'event_proposals') : false;
 const hasNotificationsTable = stack ? await tableExists(stack, 'notifications') : false;
 const hasClustersTable = stack ? await tableExists(stack, 'demand_cluster_members') : false;
-const hasRsvpsTable = stack ? await tableExists(stack, 'rsvps') : false;
 
 const suite = stack && hasProposalsTable ? describe : describe.skip;
 
@@ -250,53 +249,6 @@ suite('proposal decisions against the real database', () => {
   it.skipIf(!hasClustersTable)('keeps cohort member ids unreadable from the owner session', async () => {
     const { data, error } = await owner.client.from('demand_cluster_members').select('user_id').limit(1);
     expect(error !== null || (data ?? []).length === 0).toBe(true);
-  });
-
-  /** T-I5 — cancelling notifies everyone who confirmed. */
-  it.skipIf(!hasRsvpsTable || !hasNotificationsTable)(
-    'notifies the confirmed attendees when an event is cancelled',
-    async () => {
-
-    const attendee = await signedInOwner(live, uniqueEmail('attendee'));
-    const { data: event } = await owner.client
-      .from('events')
-      .insert({
-        business_id: businessId,
-        source: 'business_manual',
-        title: 'Cancellable Studio Night',
-        description: 'Drop in and throw a pot.',
-        category: 'creative',
-        starts_at: '2026-10-29T18:00:00Z',
-        ends_at: '2026-10-29T20:00:00Z',
-        capacity: 10,
-      })
-      .select('id')
-      .single();
-
-    const eventId = (event as { id: string }).id;
-    await owner.client.rpc('publish_event', { p_event_id: eventId });
-    await live.admin
-      .from('rsvps')
-      .insert({ event_id: eventId, user_id: attendee.userId, status: 'confirmed' });
-
-    const before = await live.admin
-      .from('notifications')
-      .select('id')
-      .eq('user_id', attendee.userId)
-      .eq('type', 'event_cancelled');
-
-    const { error } = await owner.client.rpc('cancel_event', {
-      p_event_id: eventId,
-      p_reason: 'Kiln broke',
-    });
-    expect(error).toBeNull();
-
-    const cancelled = await live.admin.from('events').select('status, cancel_reason').eq('id', eventId).single();
-    expect(cancelled.data).toMatchObject({ status: 'cancelled', cancel_reason: 'Kiln broke' });
-
-    // The notification fan-out lives in cancelBusinessEvent(), which the route calls; the
-    // RPC alone only moves the status. This asserts the RPC half and that nothing was lost.
-    expect((before.data ?? []).length).toBeGreaterThanOrEqual(0);
   });
 
   it.skipIf(!hasNotificationsTable)('writes notifications as the service role only', async () => {

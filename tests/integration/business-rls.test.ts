@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { SKIP_REASON, cleanup, localStack, signedInOwner, uniqueEmail, type Stack } from './support/stack';
 
+
 /**
  * Spec section 9 (integration) — the guarantees only the real database can give:
  * RLS, the status-guard trigger, and the atomicity of `decide_proposal`.
@@ -11,6 +12,19 @@ import { SKIP_REASON, cleanup, localStack, signedInOwner, uniqueEmail, type Stac
 
 const stack = await localStack();
 const suite = stack ? describe : describe.skip;
+
+/** PostgREST answers from a schema cache, so a missing table is PGRST205, not 42P01. */
+const MISSING_TABLE_CODES = new Set(['42P01', 'PGRST205']);
+
+/**
+ * Probed before the suite is defined so a table another workstream has not merged produces
+ * a visible `skipped`, not a test that returns early and reads as a pass.
+ */
+const hasRsvps = await (async () => {
+  if (!stack) return false;
+  const { error } = await stack.admin.from('rsvps').select('event_id').limit(1);
+  return error === null || !MISSING_TABLE_CODES.has(error.code);
+})();
 
 if (!stack) console.warn(`[ws05] skipping integration tests: ${SKIP_REASON}`);
 
@@ -201,6 +215,41 @@ suite('business platform against the real database', () => {
       // Either the table is not merged yet, or RLS returns nothing. Never rows.
       expect(error !== null || (data ?? []).length === 0).toBe(true);
     }
+  });
+
+  /**
+   * T-I5 and the attendee list. Workstream 06 owns `rsvps` and its policy is
+   * `auth.uid() = user_id`, so a venue reading its own attendees as itself sees nothing —
+   * which is why 05 reads them with the service role and masks before returning. Skips
+   * until 06 merges.
+   */
+  it.skipIf(!hasRsvps)('reads attendees only through the service role', async () => {
+    const attendee = await signedInOwner(live, uniqueEmail('attendee'));
+    await live.admin.from('rsvps').insert({
+      event_id: eventId,
+      user_id: attendee.userId,
+      status: 'confirmed',
+      share_with_business: true,
+    });
+
+    // The venue's own session is refused by 06's policy.
+    const asOwner = await kiln.client.from('rsvps').select('user_id').eq('event_id', eventId);
+    expect(asOwner.data ?? []).toEqual([]);
+
+    // The service role sees it, which is the path 05's store uses.
+    const asService = await live.admin
+      .from('rsvps')
+      .select('user_id, status, share_with_business')
+      .eq('event_id', eventId);
+    expect(asService.data).toHaveLength(1);
+    expect(asService.data?.[0]).toMatchObject({ status: 'confirmed', share_with_business: true });
+
+    // And the columns 05 selects all exist on 06's table.
+    const shape = await live.admin
+      .from('rsvps')
+      .select('user_id, status, share_with_business, profiles(display_name)')
+      .eq('event_id', eventId);
+    expect(shape.error).toBeNull();
   });
 
   it('keeps meeple out of this suite assertions', () => {
