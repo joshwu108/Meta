@@ -27,12 +27,14 @@ describe.skipIf(!available)("suggest_people against local Supabase", () => {
   let match: Seeded;
   let noConsent: Seeded;
   let hidden: Seeded;
+  let viewerOk: Seeded;
 
   beforeAll(async () => {
     match = await person("match", { discoverable: true, allowMatching: true, interests: ["quilting-it"] });
     noConsent = await person("noconsent", { discoverable: true, allowMatching: false, interests: ["quilting-it"] });
     hidden = await person("hidden", { discoverable: false, allowMatching: true, interests: ["quilting-it"] });
-    made.push(match.id, noConsent.id, hidden.id);
+    viewerOk = await person("viewer", { discoverable: true, allowMatching: true, interests: ["quilting-it"] });
+    made.push(match.id, noConsent.id, hidden.id, viewerOk.id);
   });
 
   afterAll(async () => {
@@ -41,14 +43,18 @@ describe.skipIf(!available)("suggest_people against local Supabase", () => {
 
   it("suggests only discoverable people who allowed matching, never the viewer", async () => {
     const viewer = { userId: match.id, interests: ["quilting-it"], availabilitySlots: [] };
-    const outsider = await suggestPeople({ ...viewer, userId: "00000000-0000-4000-8000-0000000000ff" }, 50);
-    const ids = outsider.map((p) => p.id);
+    const other = await suggestPeople({ ...viewer, userId: viewerOk.id }, 50);
+    const ids = other.map((p) => p.id);
     expect(ids).toContain(match.id);
     expect(ids).not.toContain(noConsent.id);
     expect(ids).not.toContain(hidden.id);
 
     const self = await suggestPeople(viewer, 50);
     expect(self.map((p) => p.id)).not.toContain(match.id);
+  });
+
+  it("shows nobody to a viewer who has not allowed matching (AC3)", async () => {
+    expect(await suggestPeople({ userId: noConsent.id, interests: ["quilting-it"], availabilitySlots: [] }, 50)).toEqual([]);
   });
 
   it("logs the matching share for each suggested person (AC5)", async () => {
