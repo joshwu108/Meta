@@ -279,6 +279,11 @@ either side of 04. Both were confirmed present in the 13-migration run.
     this branch's copy (`DemandBand`, `WeeklyHours`, `BusinessCapabilities`,
     `BusinessOwnerView`, `BusinessEvent`, `EventEdits`, `ProposalDocument`,
     `ProposalSummary`, `ProposalDetail`, `AttendeeList`, `BusinessInsights`).
+- **01 / integrator** — **regenerate `src/lib/supabase/database.types.ts` after 05 merges.**
+  It was generated before 05 existed, so the typed client does not know `businesses`,
+  `business_capabilities` or `events`. 05's store takes an untyped `SupabaseClient` and is
+  unaffected, but anything using the generated types has to cast — 03's contract test now
+  does, and 06 will hit the same thing reading `events`. `pnpm db:types` regenerates it.
 - **06** — **move event status only through `transition_event_status(p_event_id, p_to)`**
   (migration `0501_business_rpc.sql`). A direct `UPDATE ... SET status` is rejected by the
   `events_status_guard` trigger. Legal transitions from 05's side: `published -> full`,
@@ -336,6 +341,17 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 22:45` — **03 merged into main; integrated it.** One conflict, an import line
+  in the seed loader where main dropped `seedGroupSchema` and 05 had added `SeedBusiness`
+  for its hours and capabilities loading; both kept. Re-read 03's changed spec — their edits
+  are internal (cascade rules, `archived_at`, RLS helper functions) and touch nothing 05
+  consumes or exports. One of **03's** tests failed because of 05: it asserted their 06
+  stand-ins "return nothing on a branch without events tables", which stops being true the
+  moment 05 merges, since 05 owns `events`. Rewrote it to hold either way rather than
+  deleting the check. Also recorded an ask for the integrator: `database.types.ts` predates
+  05, so the typed client does not know 05's tables and consumers have to cast until it is
+  regenerated. **424 unit, 113 integration (9 skipped), 37 e2e**; 8 migrations apply
+  together and the seed still loads 05's capabilities.
 - `2026-10-24 22:15` — **A1 audit against 06's consumer, and a schema hardening.** Checked
   acceptance criterion 1 properly for the first time: 06's `getNearbyBusinesses` selects
   exactly the columns `businesses` provides and handles the nullable ones correctly. Two
