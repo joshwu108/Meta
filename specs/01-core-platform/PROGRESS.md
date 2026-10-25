@@ -104,6 +104,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 21:45 — 04 and 05 landed on main (4529588); merged cleanly. Clean state on 0100–0501: seed inserts 3 businesses, 6 events, 2 groups; regenerated `database.types.ts` matches main's; 666 vitest (1 skipped) + 43 Playwright green incl. 05's Scene 4; typecheck + lint clean. Local Scene 4 needed `ENABLE_DEV_ROUTES=1` in `.env.local` (already in `.env.example` and the Playwright config). Next: 06 and 02 on main.
 - 2026-10-24 21:05 — 03 landed on main (e88e93f); merged it cleanly. My `EventSummary.category` broke 03's code at three sites; filled them in (03 already selected the column). Clean state on 0100–0303: 256 vitest + 25 e2e green, typecheck + lint clean. Next: watch for 05/06/04/02 on main.
 - 2026-10-24 20:45 — Wakeup: main still 808078c. Added `category` to `EventSummary` (03 + 06 ask). Next: watch main.
 - 2026-10-24 20:25 — Wakeup: main at 808078c (contrast + Sheet work still only on ws/01-core). Landed 03's Sheet focus ask (`useFocusTrap`, e2e on /dev/theme). 80 unit + 17 integration + 18 e2e green. Next: watch main.
