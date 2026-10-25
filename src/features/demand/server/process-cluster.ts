@@ -22,7 +22,18 @@ export function proposalNotice(proposalId: string, title: string, demandBand: st
 /** What venue matching needs: a demand cluster or a group's voted idea. */
 export type VenueNeed = Pick<AggregatedCluster, 'category' | 'memberCount' | 'slot' | 'center' | 'budgetP50Cents'>;
 
-/** Spec §5.6: best candidate that has room this run. 05 already ranks and enforces capacity. */
+/**
+ * Spec §5.6: best candidate that has room this run.
+ *
+ * Capacity is a floor, not an exclusion. A cluster's `memberCount` counts people who said they
+ * are *interested*; `attendanceEstimate()` turns that into likely attendance with a 0.6-0.9
+ * turnout factor and caps it at the venue's capacity. Requiring `capacity >= memberCount` here
+ * therefore skipped exactly the venues popular demand should help most -- a 12-seat cafe beside a
+ * 20-person cohort was passed over for a 30-seat venue further away. Capacity fit is already a
+ * ranking input in `findCandidateBusinesses` (0.4 x min(1, cohortSize / capacity)), so this only
+ * needs to drop venues too small to host a social event at all, which is `minCohortSize`.
+ * The same rule lives in `business_candidates` (migration 0701); keep the two in step.
+ */
 export async function pickVenue(
   cluster: VenueNeed,
   deps: Pick<PipelineDeps, 'config' | 'findCandidates' | 'loadVenue'>,
@@ -40,7 +51,7 @@ export async function pickVenue(
   for (const match of matches) {
     if ((usedByBusiness.get(match.businessId) ?? 0) >= deps.config.maxProposalsPerBusinessPerRun) continue;
     const venue = await deps.loadVenue(match);
-    if (venue && venue.capabilities.capacity >= cluster.memberCount) return venue;
+    if (venue && venue.capabilities.capacity >= Math.min(cluster.memberCount, deps.config.minCohortSize)) return venue;
   }
   return null;
 }

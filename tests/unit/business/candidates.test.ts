@@ -48,8 +48,16 @@ describe('candidate prefilter', () => {
     expect(acceptsCriteria(candidate({ event_categories: ['games'] }), criteria)).toBe(false);
   });
 
-  it('rejects a venue too small for the cohort', () => {
-    expect(acceptsCriteria(candidate({ capacity: 5 }), criteria)).toBe(false);
+  it('accepts a venue smaller than the cohort', () => {
+    // Deliberate change of contract (migration 0701): capacity is a floor, not an exclusion.
+    // A cohort counts interested people, not attendees; turnout is modelled separately and
+    // capped at capacity. The old rule rejected capacity 5 against a cohort of 6, which hid
+    // every venue smaller than its local demand. `capacityFit` ranks fit instead.
+    expect(acceptsCriteria(candidate({ capacity: 5 }), criteria)).toBe(true);
+  });
+
+  it('rejects a venue below the minimum cohort size', () => {
+    expect(acceptsCriteria(candidate({ capacity: 3 }), criteria)).toBe(false);
   });
 
   it('accepts a venue exactly the size of the cohort', () => {

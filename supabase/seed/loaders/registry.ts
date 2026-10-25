@@ -1,6 +1,8 @@
 import type { SeedContext } from '../context';
 import { loadAgentPreferences } from '../agent';
+import { loadGeneratedPeople } from './generated';
 import { loadRsvps } from './rsvps';
+import { backfillGraphProvenance } from './graph';
 import { loadBlocks, loadConnections } from './social';
 
 /**
@@ -13,6 +15,7 @@ export type ExtraLoader = { name: string; run: (ctx: SeedContext) => Promise<num
 /** Runs after consumers and owners exist (02: `loadAgentPreferences`). */
 export const AFTER_USERS: ReadonlyArray<ExtraLoader> = [
   { name: 'agent preferences (02)', run: loadAgentPreferences },
+  { name: 'generated people (scale)', run: loadGeneratedPeople },
 ];
 
 /** Runs after businesses and events exist (06: `loadRsvps`; 04: demand clusters). */
@@ -24,4 +27,5 @@ export const AFTER_EVENTS: ReadonlyArray<ExtraLoader> = [
 export const AFTER_ALL: ReadonlyArray<ExtraLoader> = [
   { name: 'connections', run: loadConnections },
   { name: 'blocks', run: loadBlocks },
+  { name: 'graph provenance (07)', run: backfillGraphProvenance },
 ];

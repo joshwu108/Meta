@@ -35,6 +35,17 @@ export const serverEnv = {
   get llamaBaseUrl(): string | undefined {
     return process.env.LLAMA_API_BASE_URL || undefined;
   },
+  /**
+   * Meta Model API key (dev.meta.ai), which serves the Muse models. Same `LLM|<app-id>|<token>`
+   * format as a Llama key, but a separate entitlement: one does not imply the other.
+   */
+  get metaApiKey(): string | undefined {
+    return process.env.META_API_KEY || undefined;
+  },
+  /** Override the Meta Model API origin. Defaults to https://api.meta.ai/v1. */
+  get museBaseUrl(): string | undefined {
+    return process.env.META_API_BASE_URL || undefined;
+  },
   get isMockAi(): boolean {
     return process.env.MOCK_AI === '1' || process.env.MOCK_AI === 'true';
   },

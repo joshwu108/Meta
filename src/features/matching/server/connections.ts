@@ -1,4 +1,5 @@
 import 'server-only';
+import { recordGraphEvent } from '@/features/graph';
 import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -81,6 +82,12 @@ export async function sendConnectionRequest(actor: Actor, input: { recipientId: 
     requesterId: actor.userId,
     href: '/match?tab=requests',
   });
+  await recordGraphEvent({
+    actorId: actor.userId,
+    subjectId: input.recipientId,
+    kind: 'request_sent',
+    refId: data.id,
+  });
   invalidateMatches(actor.userId, input.recipientId);
   return toItem(data as ConnectionRow, actor.userId, recipient);
 }
@@ -113,6 +120,7 @@ export async function respondToConnection(actor: Actor, connectionId: string, st
       href: '/match?tab=connections',
     });
   }
+  await recordGraphEvent({ actorId: actor.userId, subjectId: row.requester_id, kind: status, refId: connectionId });
   invalidateMatches(actor.userId, row.requester_id);
   log.info('connections.answered', { userId: actor.userId, status });
   return toItem(updated as ConnectionRow, actor.userId, requester);

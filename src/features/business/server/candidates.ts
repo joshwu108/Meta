@@ -1,6 +1,7 @@
 import 'server-only';
 import type { BusinessMatch, VenueCriteria, WeeklyHours } from '@/shared/types';
 import { CATEGORY_LABEL, SLOT_LABEL } from '../labels';
+import { MIN_COHORT_SIZE } from './demand-band';
 
 /**
  * `findCandidateBusinesses(criteria)` — the contract workstream 04 calls when it has a
@@ -44,11 +45,18 @@ const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
 /**
  * Re-checks in TypeScript what the SQL already filtered, so a caller passing rows from a
- * stub or a fixture gets the same guarantees as one reading the database.
+ * fixture gets the same guarantees as one reading the database.
+ *
+ * Capacity is a floor, not an exclusion. `cohortSize` counts people who said they are
+ * *interested*; turnout is modelled separately and capped at the venue's capacity. Requiring
+ * `capacity >= cohortSize` hid every venue smaller than the demand around it, which is the
+ * opposite of useful -- a snug venue the cohort fills is the best case, and `capacityFit`
+ * already rewards it in the ranking below. Only venues too small to host a social event at
+ * all are rejected. Mirrors `business_candidates` (migration 0701).
  */
 export function acceptsCriteria(row: CandidateRow, criteria: VenueCriteria): boolean {
   if (!row.event_categories.includes(criteria.category)) return false;
-  if (row.capacity < criteria.cohortSize) return false;
+  if (row.capacity < Math.min(criteria.cohortSize, MIN_COHORT_SIZE)) return false;
   if (row.distance_km > criteria.radiusKm) return false;
   return true;
 }

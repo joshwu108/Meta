@@ -1,7 +1,7 @@
 import type { ModelTier } from '../models';
 
 /** Vendors `src/lib/ai` can talk to. Selected by `AI_PROVIDER` (see ./index.ts). */
-export type AiProviderId = 'anthropic' | 'llama';
+export type AiProviderId = 'anthropic' | 'llama' | 'muse';
 
 /** A JSON Schema the model must conform to, plus the name the vendor labels it with. */
 export type AiJsonSchema = {
@@ -37,4 +37,16 @@ export type AiProvider = {
   /** This vendor's model id for a tier. */
   modelFor: (tier: ModelTier) => string;
   complete: (req: AiRequest) => Promise<AiResponse>;
+};
+
+/**
+ * `details` a provider attaches to an `AI_UNAVAILABLE` error. `fatal` marks a failure that
+ * retrying cannot fix -- a bad credential or a model the app is not entitled to -- so callers
+ * stop immediately and keep the actionable message instead of a generic one.
+ */
+export type AiErrorDetails = {
+  status?: number;
+  reason?: string;
+  model?: string;
+  fatal?: boolean;
 };

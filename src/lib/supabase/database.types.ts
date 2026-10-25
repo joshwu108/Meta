@@ -463,6 +463,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"graph_edge_events": {
+                  Row: {
+                    "actor_id": string,"created_at": string,"id": string,"kind": string,"metadata": NonNullable<Json>,"pair_hi": string | null,"pair_lo": string | null,"ref_id": string | null,"ref_table": string | null,"source": string,"subject_id": string,"weight": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actor_id": string,"created_at"?: string,"id"?: string,"kind": string,"metadata"?: NonNullable<Json>,"pair_hi"?: never,"pair_lo"?: never,"ref_id"?: string | null,"ref_table"?: string | null,"source": string,"subject_id": string,"weight"?: number
+                  }
+                  Update: {
+                    "actor_id"?: string,"created_at"?: string,"id"?: string,"kind"?: string,"metadata"?: NonNullable<Json>,"pair_hi"?: never,"pair_lo"?: never,"ref_id"?: string | null,"ref_table"?: string | null,"source"?: string,"subject_id"?: string,"weight"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "graph_edge_events_actor_id_fkey"
+      columns: ["actor_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "graph_edge_events_actor_id_fkey"
+      columns: ["actor_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "graph_edge_events_subject_id_fkey"
+      columns: ["subject_id"]
+isOneToOne: false
+      referencedRelation: "profile_public_cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "graph_edge_events_subject_id_fkey"
+      columns: ["subject_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"group_members": {
                   Row: {
                     "created_at": string,"group_id": string,"joined_at": string | null,"role": string,"status": string,"updated_at": string,"user_id": string
@@ -894,6 +932,9 @@ isOneToOne: true
                            },
 "event_transition_allowed":
 { Args: { "p_from": string,"p_to": string }; Returns: boolean
+                           },
+"graph_backfill":
+{ Args: Record<PropertyKey, never>; Returns: number
                            },
 "haversine_km":
 { Args: { "lat1": number,"lat2": number,"lng1": number,"lng2": number }; Returns: number

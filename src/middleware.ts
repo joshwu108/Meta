@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
-const PUBLIC_PATHS = ['/login', '/signup', '/auth', '/dev/theme', '/api/dev', '/api/health'];
+/**
+ * `/api/cron` is public here because it authenticates itself with the OPPORTUNITY_CRON_SECRET
+ * bearer token: a scheduler sends that header and no session cookie, so gating it on a session
+ * would make the route unreachable and its own secret check dead code.
+ */
+const PUBLIC_PATHS = ['/login', '/signup', '/auth', '/dev/theme', '/api/dev', '/api/health', '/api/cron'];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));

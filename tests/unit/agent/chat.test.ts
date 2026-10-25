@@ -21,6 +21,27 @@ vi.mock("@/features/agent/server/people", () => ({
   }],
 }));
 
+// Live suggestion sources (06 events, 03 groups) need a database; stand in for them here with
+// rows in the exact shape those features return, including 06's own grounded explanation.
+vi.mock("@/features/agent/server/suggestions", () => ({
+  suggestEvents: async () => [{
+    id: "00000000-0000-4000-8000-000000000601",
+    title: "Beginner Pottery & Coffee Night",
+    startsAt: "2026-10-29T19:00:00-07:00",
+    venue: "Kiln & Cup",
+    category: "creative",
+    description: "Throw your first bowl with coffee on the side.",
+    explanation: "Pottery on a Thursday evening, close to you.",
+  }],
+  suggestGroups: async () => [{
+    id: "00000000-0000-4000-8000-000000000301",
+    name: "Mission Makers",
+    description: "Pottery, painting and crafts on Thursday evenings.",
+    interests: ["pottery"],
+    memberCount: 4,
+  }],
+}));
+
 const { handleChatMessage, runCapabilities, selfView } = await import("@/features/agent/server/chat");
 const { EMPTY_PREFERENCES } = await import("@/features/agent/schemas");
 

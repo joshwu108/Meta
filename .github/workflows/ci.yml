@@ -11,6 +11,8 @@ concurrency:
 
 env:
   MOCK_AI: '1'
+  # Generated population is for local demos; CI seeds only the fixtures so runtime stays flat.
+  SEED_SCALE: '0'
   DEMO_MODE: '1'
 
 jobs:

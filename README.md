@@ -15,12 +15,98 @@ pnpm install
 pnpm db:start                 # starts Postgres + Auth + PostgREST in Docker, applies supabase/migrations
 cp .env.example .env          # then paste the anon + service_role keys printed by db:start
 cp .env .env.local            # Next.js reads .env.local; the seed and tests read .env
-pnpm db:seed                  # 15 users, 3 business owners, demo notifications (password: demo-pass-1234)
+pnpm db:seed                  # demo accounts + 300 generated people (password: demo-pass-1234)
 pnpm dev -p 3100              # http://localhost:3100
 ```
 
+### AI provider
+
 `MOCK_AI=1` (default in `.env.example`) serves fixtures from `src/lib/ai/fixtures/` instead of
-calling Claude, so everything works offline. Set `ANTHROPIC_API_KEY` and `MOCK_AI=0` for live AI.
+calling a model, so everything works offline.
+
+For live AI, set `MOCK_AI=0` plus one credential. `AI_PROVIDER` picks the vendor; left unset, the
+first key present wins, Llama first:
+
+| Provider | Env | Tiers (`smart` / `fast`) |
+|---|---|---|
+| Meta Model API (Muse) | `META_API_KEY` | `muse-spark-1.3` / `muse-spark-1.1` |
+| Meta Llama API | `LLAMA_API_KEY` | `Llama-4-Maverick-17B-128E-Instruct-FP8` / `Llama-4-Scout-17B-16E-Instruct-FP8` |
+| Anthropic | `ANTHROPIC_API_KEY` | `claude-sonnet-5-5` / `claude-haiku-5-5` |
+
+Both Meta keys look like `LLM|<app-id>|<token>` — the pipes are part of the key, so quote the
+value in `.env.local`. **They are different services with separate entitlements:** Muse is served
+by the Meta Model API at `api.meta.ai`, Llama by `api.llama.com`, and a key entitled to one
+returns `403 permission_denied` on the other. Check which you have with `pnpm ai:check`.
+
+Muse Spark is a reasoning model: it spends hidden reasoning tokens before emitting content (even
+a one-word answer costs 200–500), so it gets a larger default budget and an exhausted budget
+returns empty content rather than an error. Override with `AI_MAX_TOKENS`, or the model ids with
+`MUSE_MODEL_SMART` / `MUSE_MODEL_FAST`.
+
+Structured output goes through `response_format: json_schema` on both Meta APIs — Muse rejects a
+named `tool_choice`, so the forced-tool-call path is Anthropic-only.
+
+`pnpm ai:check` drives one real structured call through `src/lib/ai` and prints what is wrong
+(missing key, bad quoting, or a model the app is not entitled to) without printing the key.
+
+### Seed volume
+
+`pnpm db:seed` loads the hand-written demo fixtures **and** a generated population of 300 people.
+The demo accounts are untouched by this; generated emails are namespaced under `gen.` so nothing
+the e2e suites assert on can collide.
+
+The volume exists because the demand pipeline needs density: a cluster must reach
+`MIN_COHORT_SIZE` (4) inside one geocell for a single `(category, slot)` pair, and a proposal
+additionally needs that cluster within 3km of a venue of the same category. Spread thinly, nobody
+clusters -- the original 15-row seed produced **zero** clusters, which is why the business side had
+nothing to suggest. So cohorts are *planted*: `supabase/seed/generate/cohorts.ts` pins a category,
+a slot, a tight centre and a shared core of interest tags per cohort. Measured, planting covers
+15/15 venue-critical combinations where volume alone covers 4/15.
+
+| Env | Effect |
+|---|---|
+| `SEED_SCALE` | Generated headcount, default 300. `0` disables it (CI and Playwright use this so test runtime does not regress) |
+
+Generation is deterministic from a fixed seed, so a reseed produces the same people and tests can
+assert on them. Verify the result with:
+
+```bash
+pnpm tsx tests/evals/demand/cluster-check.ts   # clusters the real seeded rows, no AI
+curl -H "Authorization: Bearer $OPPORTUNITY_CRON_SECRET" localhost:3100/api/cron/opportunities
+```
+
+### Semantic matching (pgvector)
+
+Exact-tag matching scored `pottery` against `ceramics` as **zero**, so conceptually close people
+never met. The interests component is now a blend: `0.6 x` exact-tag Jaccard `+ 0.4 x` semantic
+similarity from embeddings.
+
+Meta's Model API has no `/v1/embeddings` endpoint, so vectors are produced locally by
+`@huggingface/transformers` (all-MiniLM-L6-v2, 384 dims) and stored in pgvector
+(migration 0702). Set `EMBEDDING_MODEL` to swap models; the dimension must stay 384.
+
+```bash
+pnpm embed:backfill           # only rows whose text changed
+pnpm embed:backfill --force   # re-embed everything
+```
+
+Backfill is idempotent: `profile_embeddings.source_hash` fingerprints the embedded text, so a
+reseed skips unchanged rows (317 profiles re-check in under 300ms).
+
+Two tables, because they answer different questions. `profile_embeddings` drives the score;
+`interest_embeddings` (one row per tag) exists to keep matches **explainable**. This app drops
+any highlight absent from the input and rejects explanations citing an interest only one side
+holds, so a cosine score is not a usable reason. When semantic similarity drives a match with no
+shared tag, the highlight becomes the nearest *named* concept pair — `ceramics` ↔ `pottery` —
+real values from both profiles. No user is ever shown a number.
+
+The two levels use different floors (`SEMANTIC_FLOOR` in `matching/server/weights.ts`) because
+their distributions differ: tag pairs median 0.24, profile pairs median 0.59. A single floor of
+0.45 admitted 93.6% of profile pairs — a near-uniform bonus that stopped discriminating. The
+floors are 0.45 for tags (5.3% qualify) and 0.70 for profiles (16.7% qualify).
+
+If the vector tables are empty or unreachable, matching degrades to exact-tag scoring and logs a
+warning. A semantic bonus is an enhancement, never a dependency.
 
 Demo accounts (all `demo-pass-1234`):
 
@@ -49,7 +135,7 @@ Demo accounts (all `demo-pass-1234`):
 src/app            routes: (consumer), (business), (auth), api/
 src/features/core  auth, notifications, API envelope consumers, app shell, ui primitives
 src/lib/api        ok(), fail(), withAuth(), withBusinessOwner(), parseBody()
-src/lib/ai         generateStructured(), chat(), MOCK_AI fixtures, prompt registry
+src/lib/ai         generateStructured(), chat(), provider adapters, MOCK_AI fixtures, prompts
 src/lib/supabase   server/client/admin clients, generated Database types
 src/shared         enums, cross-workstream types, Zod schemas
 src/styles         tokens.css (light + dark), global.css
@@ -63,8 +149,9 @@ and is wrapped in `withAuth` unless a comment marks it public. See `specs/README
 ## Deployment
 
 Vercel (web) + hosted Supabase. Required env vars: `NEXT_PUBLIC_SUPABASE_URL`,
-`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `MOCK_AI`,
-`DEMO_MODE`, `MIN_COHORT_SIZE`, `OPPORTUNITY_CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`. Apply migrations
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `AI_PROVIDER` with either
+`LLAMA_API_KEY` or `ANTHROPIC_API_KEY`, `MOCK_AI`, `DEMO_MODE`, `MIN_COHORT_SIZE`,
+`OPPORTUNITY_CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`. Apply migrations
 with `supabase db push` against the hosted project. The dev seed route is unreachable in
 production unless `DEMO_MODE=1`.
 

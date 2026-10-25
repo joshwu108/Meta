@@ -4,7 +4,7 @@ import { ApiError } from '@/lib/api/errors';
 import { serverEnv } from '@/lib/env';
 import { log } from '@/lib/log';
 import { fixtureToText, loadFixture } from './mock';
-import { DEFAULT_MAX_TOKENS } from './models';
+import { maxTokensFor } from './models';
 import { PROMPTS } from './prompts';
 import { createAnthropicProvider, resolveProvider, setProviderOverride } from './providers';
 import type { ChatOptions } from './types';
@@ -33,7 +33,7 @@ export async function chat(opts: ChatOptions): Promise<string> {
   try {
     const response = await provider.complete({
       model,
-      maxTokens: DEFAULT_MAX_TOKENS,
+      maxTokens: maxTokensFor(provider.id),
       system: opts.system ?? definition?.system,
       messages: opts.messages,
     });

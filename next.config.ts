@@ -17,7 +17,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' ${supabaseOrigin} ${supabaseWsOrigin} https://api.anthropic.com`,
+  `connect-src 'self' ${supabaseOrigin} ${supabaseWsOrigin} https://api.anthropic.com https://api.llama.com https://api.meta.ai`,
   "frame-src 'none'",
   "object-src 'none'",
   "base-uri 'self'",

@@ -5,9 +5,9 @@ import { ApiError } from '@/lib/api/errors';
 import { serverEnv } from '@/lib/env';
 import { log } from '@/lib/log';
 import { loadFixture } from './mock';
-import { DEFAULT_MAX_TOKENS } from './models';
+import { maxTokensFor } from './models';
 import { PROMPTS } from './prompts';
-import { createAnthropicProvider, resolveProvider, setProviderOverride } from './providers';
+import { createAnthropicProvider, isFatalAiError, resolveProvider, setProviderOverride } from './providers';
 import type { AiMessage } from './providers';
 import type { GenerateStructuredOptions } from './types';
 
@@ -67,7 +67,7 @@ export async function generateStructured<T>(opts: GenerateStructuredOptions<T>):
     try {
       const response = await provider.complete({
         model,
-        maxTokens: DEFAULT_MAX_TOKENS,
+        maxTokens: maxTokensFor(provider.id),
         system: definition?.system,
         messages,
         json: { name: SCHEMA_NAME, schema },
@@ -87,6 +87,11 @@ export async function generateStructured<T>(opts: GenerateStructuredOptions<T>):
       }
       lastError = parsed.error;
     } catch (error) {
+      // A bad key or an un-granted model will fail identically on every retry; surface it as-is.
+      if (isFatalAiError(error)) {
+        log.error('ai.generate_structured.fatal', { prompt: opts.prompt, provider: provider.id, model });
+        throw error;
+      }
       lastError = error;
     }
     messages = [

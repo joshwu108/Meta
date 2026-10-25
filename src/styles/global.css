@@ -197,9 +197,23 @@
       transform: none;
     }
   }
+  /* Connection graph: a forming edge breathes so it reads as in-progress, not broken. */
+  .graph-pulse {
+    animation: graph-pulse 2.4s var(--ease-standard) infinite;
+  }
+  @keyframes graph-pulse {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .rise-in,
     .meter-fill,
+    .graph-pulse,
     .feed-stagger > * {
       animation: none;
     }
