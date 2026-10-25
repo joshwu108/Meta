@@ -4,7 +4,7 @@ import { fakeClient } from './fake-supabase';
 vi.mock('server-only', () => ({}));
 
 const { loadRevisable, revisionSaver } = await import('@/features/demand/server/store-revise');
-const { groupProposalSaver, hasPendingGroupProposal, isActiveGroupMember, stubGetGroupVenueRequest } = await import('@/features/demand/server/store-group');
+const { groupProposalSaver, hasPendingGroupProposal, isActiveGroupMember } = await import('@/features/demand/server/store-group');
 const { ApiError } = await import('@/lib/api');
 
 const PROPOSAL = { title: 'Beginner Pottery & Coffee Night', demand: { band: '6-9' } };
@@ -73,11 +73,5 @@ describe('store-group', () => {
     expect(await isActiveGroupMember(fakeClient({ data: { user_id: 'u1' }, error: null }).client, 'u1', 'g1')).toBe(true);
     expect(await isActiveGroupMember(fakeClient({ data: null, error: null }).client, 'u1', 'g1')).toBe(false);
     expect(await isActiveGroupMember(fakeClient({ data: null, error: { message: 'relation does not exist' } }).client, 'u1', 'g1')).toBe(false);
-  });
-
-  it('the 03 stub refuses rather than reading preferences itself', async () => {
-    const error = await stubGetGroupVenueRequest('g1', 'pl1', 0).catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(ApiError);
-    expect((error as InstanceType<typeof ApiError>).code).toBe('AI_UNAVAILABLE');
   });
 });

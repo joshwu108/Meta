@@ -1,7 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ApiError } from '@/lib/api';
-import type { GroupDeps, GroupKey, GroupVenueRequest } from './group';
+import type { GroupDeps, GroupKey } from './group';
 
 /** Group-originated rows in `event_proposals` (0404), written with the service role. */
 
@@ -44,15 +43,6 @@ export async function isActiveGroupMember(client: SupabaseClient, userId: string
     .eq('user_id', userId)
     .eq('status', 'active')
     .maybeSingle();
-  if (error) return false; // 03's table not on this branch yet: fail closed
+  if (error) return false; // fail closed
   return data != null;
-}
-
-/**
- * Stub for 03's `getGroupVenueRequest` from '@/features/groups' (on origin/ws/03-matching, not main).
- * Rebuilding it here would mean reading members' preferences without 02's consent boundary, so the
- * stub refuses instead. Delete it and import the real export once 03 reaches main.
- */
-export async function stubGetGroupVenueRequest(_groupId: string, _planId: string, _suggestionIndex: number): Promise<GroupVenueRequest | null> {
-  throw new ApiError('AI_UNAVAILABLE', 'Group venue requests are not available yet', 503);
 }

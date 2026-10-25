@@ -10,7 +10,8 @@ import type { ReviseRouteDeps } from './revise-route';
 import { defaultRouteDeps, type RouteDeps } from './routes';
 import { getRunView } from './store-supabase';
 import { loadRevisable, revisionSaver } from './store-revise';
-import { groupProposalSaver, hasPendingGroupProposal, isActiveGroupMember, stubGetGroupVenueRequest } from './store-group';
+import { getGroupVenueRequest } from '@/features/groups';
+import { groupProposalSaver, hasPendingGroupProposal, isActiveGroupMember } from './store-group';
 import { logActions, notifyOwner } from './core-adapters';
 import { stubFindCandidates, stubLoadVenue } from './stubs';
 import { supabaseDeps } from './wiring';
@@ -30,7 +31,7 @@ export function routeDeps(): RouteDeps {
 function groupRouteDeps(): GroupRouteDeps {
   return {
     isActiveMember: isActiveGroupMember,
-    getRequest: stubGetGroupVenueRequest,
+    getRequest: getGroupVenueRequest,
     limit: (userId) => aiRateLimiter.assert(userId),
     propose: () => {
       const client = admin();
