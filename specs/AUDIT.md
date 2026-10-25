@@ -93,7 +93,20 @@ drops the pair's snapshots, the same place `/api/me` and `/api/agent/permissions
 invalidation. `tests/integration/social/block-propagation.test.ts` covers it, and also checks the
 block lands in both directions and leaves everyone else alone.
 
-### 10. Losing group membership did not reach the graph either
+### 10. Accepting a follow-up did nothing visible, on a production build only
+
+Chasing that "flake" into production mode turned up a real bug the dev server had been hiding.
+Accepting an agent's follow-up suggestion sent the PATCH, the server recorded it, and the card then
+sat with both buttons disabled until the member reloaded the page by hand. `router.refresh()`
+re-fetches the page, but on a production build the refreshed payload never reached this card;
+`next dev` re-renders on every request, so it looked fine there. Deterministic once run the right
+way: three of three in production, three of three green after the fix.
+
+The card renders from the status the PATCH already returns, and the refresh is a background sync
+rather than the thing the UI waits on. The e2e test that caught it had been passing in dev, which
+is the real lesson — a suite run in the wrong mode can be green and still be wrong.
+
+### 11. Losing group membership did not reach the graph either
 
 Third instance of the same class, and the mildest: a group puts its roster in each member's graph
 snapshot, and neither leaving a group nor being removed from one dropped that snapshot, so a
@@ -107,7 +120,7 @@ mutation that changes who may see whom has to reach them. Invalidating the *subj
 never enough, because entries are keyed by the viewer. Three surfaces have needed this so far —
 consent, blocks, group membership — and a fourth cached read surface will need it too.
 
-### 11. Two prompt ids promised a fixture that was never written
+### 12. Two prompt ids promised a fixture that was never written
 
 `matching.explain_match` and `events.reconnect_followup` sat in the registry with no definition, no
 fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Removed.
@@ -139,7 +152,7 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 |---|---|
 | `pnpm test` (unit) | 1095 passed |
 | `pnpm test:integration` (integration + db) | 285 passed |
-| `pnpm test:e2e` (Playwright, bundled Chromium) | 90 passed |
+| `pnpm test:e2e:prod` (Playwright, production build) | 90 passed in 2.9 min |
 | `tests/audit/core-flows-chrome.ts` (real Chrome) | 8/8 steps |
 
 ## Still open
@@ -183,12 +196,12 @@ guardrail doing its job on a merge it was written before.
 - The seed is not concurrency-safe: two seeds at once fail on a foreign key against
   `user_preferences`. It only bites when something reseeds while the e2e suite is running, which is
   what three "failures" in an intermediate run turned out to be.
-- The e2e suite has a residual flake that moves. Across full runs a different spec fails each time
-  — `graph`, `messaging`, `scene2`, `business-events` have each done it once — and every one of
-  them passes when run alone, immediately afterwards. Three causes of this shape were fixed here
-  (specs that never reseeded), so what remains is something else: most likely timing against a
-  shared dev server over a nine-minute run. Worth a dedicated pass; it is not a product defect, but
-  it does mean a red CI run needs a second look before it is believed.
+- **Run the e2e suite the way CI does.** `pnpm test:e2e` uses `next dev`, which compiles routes on
+  demand: tests run 2.2× slower by the end of a full pass (3.8s average over the first twenty,
+  8.4s over the last ten), which is enough to trip five-second expect timeouts in whichever spec
+  happens to be late. That is what the "moving flake" was — a different spec failing each run,
+  every one passing alone. `pnpm test:e2e:prod` serves a production build: 90 passed in 2.9
+  minutes against 8.7, and no failures.
 - Chrome writes a `style` attribute onto form fields before React hydrates, which React reports as
   a hydration mismatch on an input our markup never styles. Bundled Chromium is clean across every
   spec, so this is the browser editing the page rather than our HTML disagreeing with itself. The
