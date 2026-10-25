@@ -63,7 +63,7 @@ export async function getActivity(userId: string): Promise<Activity> {
   ]);
   const [inviteEvents, people] = await Promise.all([
     getEventsByIds(admin, invites.map((i) => i.eventId)),
-    profilePreviews(admin, [...invites.map((i) => i.senderId), ...requests.map((r) => r.requesterId)]),
+    profilePreviews(admin, invites.map((i) => i.senderId)),
   ]);
   const eventsById = new Map(inviteEvents.map((e) => [e.id, e]));
   const going = new Set(events.upcoming.map((e) => e.id));
@@ -75,8 +75,12 @@ export async function getActivity(userId: string): Promise<Activity> {
       if (!row || (row.status !== "published" && row.status !== "full")) return [];
       return [{ id: i.id, groupId: i.groupId, sender: people.get(i.senderId) ?? null, event: toEventSummary(row, null) }];
     }),
+    // 03 returns each requester's public card, so no extra profile read.
     connectionRequests: requests.map((r) => ({
-      id: r.id, requester: people.get(r.requesterId) ?? null, message: r.message, createdAt: r.createdAt,
+      id: r.id,
+      requester: { userId: r.requester.id, displayName: r.requester.displayName, avatarUrl: r.requester.avatarUrl },
+      message: r.message,
+      createdAt: r.createdAt,
     })),
     followUps,
     notifications,
