@@ -9,7 +9,7 @@ export const GET = withBusinessOwner(async (ctx, _req, params) => {
     const parsedid = uuidSchema.safeParse(params.id);
     if (!parsedid.success) throw new ApiError('VALIDATION', 'Invalid id', 400);
     const id = parsedid.data;
-    const deps = businessDeps(ctx.supabase);
+    const deps = businessDeps(ctx.supabase, ctx.user.id);
     return ok(await getBusinessProposal(deps, ctx.business.id, id));
 });
 
@@ -19,7 +19,7 @@ export const PATCH = withBusinessOwner(async (ctx, req, params) => {
     if (!parsedid.success) throw new ApiError('VALIDATION', 'Invalid id', 400);
     const id = parsedid.data;
     const body = await parseBody(proposalDecisionSchema, req);
-    const deps = businessDeps(ctx.supabase);
+    const deps = businessDeps(ctx.supabase, ctx.user.id);
     const venue = await requireVenueContext(deps, ctx.business.id);
     return ok(await decideProposal(deps, ctx.business.id, venue, id, body));
 });

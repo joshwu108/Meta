@@ -19,7 +19,7 @@ export async function requireBusinessPage(): Promise<BusinessPageContext> {
   const user = await getCurrentUser();
   if (!user) redirect('/login?next=/business');
 
-  const deps = businessDeps(await createServerClient());
+  const deps = businessDeps(await createServerClient(), user.id);
   const business = await getOwnerBusiness(deps, user.id);
   if (!business) redirect('/business/onboarding');
 

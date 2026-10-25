@@ -70,7 +70,7 @@ export const POST = withBusinessOwner(async (ctx, req) => {
       );
     }
 
-    const deps = businessDeps(ctx.supabase);
+    const deps = businessDeps(ctx.supabase, ctx.user.id);
     const row = await deps.store.findProposal((data as { id: string }).id);
     if (!row) throw new ApiError('INTERNAL', 'the fixture proposal disappeared');
     return ok(toProposalDetail(row, deps), undefined, { status: 201 });
