@@ -3,8 +3,9 @@
  * way a person would. The Playwright suite proves behaviour; this proves the product actually
  * works in the browser people use, and leaves screenshots to look at.
  *
- *   pnpm dev -p 3100   # in another shell
+ *   MOCK_AI=1 DEMO_MODE=1 ENABLE_DEV_ROUTES=1 SEED_SCALE=0 pnpm dev -p 3100 &
  *   pnpm tsx tests/audit/core-flows-chrome.ts
+ *   kill %1
  */
 import { chromium, type Locator, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
@@ -56,7 +57,12 @@ async function login(page: Page, email: string): Promise<void> {
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill(PASSWORD);
   await page.getByRole('button', { name: 'Log in' }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 30_000 });
+  // `/` is a redirect hop, not a destination: it routes by session and onboarding state. Waiting
+  // only for "not /login" catches that hop and reads the wrong landing page.
+  await page.waitForURL(
+    (url) => !url.pathname.startsWith('/login') && url.pathname !== '/',
+    { timeout: 30_000 },
+  );
 }
 
 /**
