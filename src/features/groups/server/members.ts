@@ -2,7 +2,7 @@ import 'server-only';
 import { canReach, getBlockEdges, getConnectionIds, getPublicCard, isBlockedEitherWay, notifySafely, type Actor } from '@/features/matching';
 import { ApiError } from '@/lib/api/errors';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { canInvite, canRemove } from './authz';
+import { canInvite, canJoin, canRemove } from './authz';
 import { loadGroupContext, loadMemberRows, mapGroupRpcError, toMembership } from './context';
 
 export type InviteResult = {
@@ -67,6 +67,21 @@ export async function removeMember(actor: Actor, groupId: string, targetId: stri
   const { error: rpcError } = await createAdminClient().rpc('remove_group_member', { p_group: groupId, p_user: targetId });
   if (rpcError) throw mapGroupRpcError(rpcError.message, 'Could not remove the member');
   return { removed: true };
+}
+
+/**
+ * POST /api/groups/:id/join: anyone signed in joins a public interest group as a member (03 addition
+ * so public groups found on Discover can be joined; see PROGRESS Decisions).
+ */
+export async function joinGroup(actor: Actor, groupId: string): Promise<{ status: 'active' }> {
+  const { membership, facts } = await loadGroupContext(actor, groupId);
+  const decision = canJoin(facts, membership);
+  if (!decision.ok) throw new ApiError(decision.code, decision.message);
+  const { error } = await createAdminClient()
+    .from('group_members')
+    .upsert({ group_id: groupId, user_id: actor.userId, role: 'member', status: 'active', joined_at: new Date().toISOString() });
+  if (error) throw new ApiError('INTERNAL', 'Could not join the group', 500);
+  return { status: 'active' };
 }
 
 /**

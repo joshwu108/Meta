@@ -194,14 +194,14 @@ describe('planner input', () => {
 describe('scheduling conflicts (02 resolveGroupSchedule + chooseSlots)', () => {
   it('uses every shared slot when there are any', async () => {
     const { chooseSlots } = await import('@/features/groups/server/planner/schedule');
-    const { resolveGroupSchedule } = await import('@/features/groups/server/stubs');
+    const { resolveGroupSchedule } = await import('@/features/agent');
     const plan = chooseSlots(['thu_eve'], resolveGroupSchedule(members), 3);
     expect(plan).toEqual({ slots: ['thu_eve'], freeCounts: { thu_eve: 3 }, everyoneFree: true });
   });
 
   it('falls back to the slots at least half the members can make', async () => {
     const { chooseSlots } = await import('@/features/groups/server/planner/schedule');
-    const { resolveGroupSchedule } = await import('@/features/groups/server/stubs');
+    const { resolveGroupSchedule } = await import('@/features/agent');
     const split = [member('a', { availabilitySlots: ['thu_eve', 'sat_day'] }), member('b', { availabilitySlots: ['sat_day'] }), member('c', { availabilitySlots: ['thu_eve'] })];
     const schedule = resolveGroupSchedule(split);
     expect(schedule.unanimous).toBeNull();

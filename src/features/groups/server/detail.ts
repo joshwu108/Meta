@@ -2,7 +2,7 @@ import 'server-only';
 import { getPublicCards, unknownCard, type Actor, type PublicCard } from '@/features/matching';
 import type { MemberRole, MembershipStatus } from '@/shared/enums';
 import type { GroupMemberRow } from '@/shared/schemas/social';
-import { canEdit, canInvite, canPlan, canTransfer, canVote } from './authz';
+import { canEdit, canInvite, canJoin, canPlan, canTransfer, canVote } from './authz';
 import { loadGroupContext, loadMemberRows } from './context';
 import { getGroupUpcomingEvents } from './events';
 import { loadLatestPlan } from './plans';
@@ -52,6 +52,7 @@ export async function getGroupDetail(actor: Actor, groupId: string): Promise<Gro
       canVote: canVote(membership),
       canTransfer: canTransfer(membership),
       canLeave: membership?.status === 'active',
+      canJoin: canJoin(facts, membership).ok,
     },
     upcomingEvents,
     latestPlan,

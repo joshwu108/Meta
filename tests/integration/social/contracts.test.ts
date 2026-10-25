@@ -7,7 +7,7 @@ vi.mock('server-only', () => ({}));
 
 const groups = await import('@/features/groups');
 const matching = await import('@/features/matching');
-const sixStubs = await import('@/features/groups/server/stubs');
+const { getGroupUpcomingEvents } = await import('@/features/groups/server/events');
 
 setTestOrigin('contracts');
 const admin = adminClient();
@@ -144,23 +144,15 @@ describe('getGroupVenueRequest for 04 (P1)', () => {
   });
 });
 
-describe('06 stand-ins degrade instead of failing', () => {
-  it('answer whether or not the events tables exist', async () => {
-    // Workstream 05 owns `events`, so once it is merged the stand-ins find real rows and
-    // "returns nothing" is no longer the right assertion. What has to hold either way is
-    // that they resolve rather than throw, and that an id that does not exist is null.
-    // `database.types.ts` was generated before workstream 05 merged, so the typed client
-    // does not know `events` yet; probe through an untyped view of it.
-    const untyped = admin as unknown as {
-      from: (table: string) => { select: (cols: string) => { limit: (n: number) => Promise<{ error: unknown }> } };
-    };
-    const { error } = await untyped.from('events').select('id').limit(1);
-    const eventsExist = error === null;
+describe('group events through 06 (AC5)', () => {
+  it('lists the next event an active member is going to, as a count without names', async () => {
+    const next = await admin.from('events').select('id').eq('status', 'published').gt('starts_at', new Date().toISOString()).order('starts_at').limit(1).single();
+    expect(next.error).toBeNull();
+    const eventId = next.data!.id;
+    expect((await admin.from('rsvps').insert({ event_id: eventId, user_id: bob.id, status: 'confirmed' })).error).toBeNull();
 
-    const upcoming = await sixStubs.getUpcomingEventsForUser(alice.id);
-    expect(Array.isArray(upcoming)).toBe(true);
-    if (!eventsExist) expect(upcoming).toEqual([]);
-
-    expect(await sixStubs.getEventPublic(EVENT_ID)).toBeNull();
+    const events = await getGroupUpcomingEvents(publicId, [alice.id, bob.id, carol.id], alice.id);
+    expect(events).toContainEqual(expect.objectContaining({ membersGoing: 1, event: expect.objectContaining({ id: eventId, rsvpStatus: null }) }));
+    expect(JSON.stringify(events)).not.toContain(bob.id);
   });
 });

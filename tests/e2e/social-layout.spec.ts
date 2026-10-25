@@ -1,8 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { config as loadEnv } from 'dotenv';
-import { applyDemoUserScene1, applyInterimPreferences } from '../fixtures/social/preferences';
+import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { CONSUMER, login, reseed } from './helpers';
+import { openSettled } from './support/social';
 
 loadEnv({ path: '.env.local' });
 loadEnv({ path: '.env' });
@@ -24,7 +25,6 @@ async function screenPaths(page: Page): Promise<string[]> {
 
 test.beforeEach(async ({ page }) => {
   await reseed(page);
-  await applyInterimPreferences(admin());
   await applyDemoUserScene1(admin());
 });
 
@@ -35,8 +35,7 @@ for (const theme of THEMES) {
     await login(page, CONSUMER.email);
     for (const path of await screenPaths(page)) {
       await page.setViewportSize({ width: 1440, height: 900 });
-      await page.goto(path);
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      await openSettled(page, path, page.getByRole('heading', { level: 1 }));
       for (const width of WIDTHS) {
         await page.setViewportSize({ width, height: 900 });
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

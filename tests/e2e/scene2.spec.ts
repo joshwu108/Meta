@@ -1,8 +1,12 @@
 import { expect, test, type Browser } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { config as loadEnv } from 'dotenv';
-import { applyDemoUserScene1, applyInterimPreferences } from '../fixtures/social/preferences';
+import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { NEW_USER, login, reseed } from './helpers';
+import { openSettled, settle } from './support/social';
+
+// The first request to a route compiles it in dev mode, which can take longer than 5s in CI.
+const FIRST_REQUEST = { timeout: 20_000 };
 
 loadEnv({ path: '.env.local' });
 loadEnv({ path: '.env' });
@@ -31,14 +35,15 @@ async function openRequestFromBell(browser: Browser): Promise<void> {
   const context = await browser.newContext();
   const page = await context.newPage();
   await login(page, 'maya@commonground.test');
-  await page.goto('/match');
-  await expect(page.getByRole('tab', { name: /Recommended/ })).toHaveAttribute('aria-selected', 'true');
+  const recommended = page.getByRole('tab', { name: /Recommended/ });
+  await openSettled(page, '/match', recommended);
+  await expect(recommended).toHaveAttribute('aria-selected', 'true');
   await page.getByRole('button', { name: /^Notifications/ }).click();
   await page.getByRole('dialog', { name: 'Notifications' }).getByRole('link', { name: new RegExp(`${NEW_USER.name} wants to connect`) }).click();
   await page.waitForURL(/\/match\?tab=requests$/);
-  await expect(page.getByRole('tab', { name: /Requests/ })).toHaveAttribute('aria-selected', 'true');
   const request = page.getByRole('region', { name: 'Incoming' }).getByRole('listitem').filter({ hasText: NEW_USER.name });
-  await expect(request.getByRole('button', { name: 'Accept' })).toBeVisible();
+  await settle(page, request.getByRole('button', { name: 'Accept' }));
+  await expect(page.getByRole('tab', { name: /Requests/ })).toHaveAttribute('aria-selected', 'true');
   await context.close();
 }
 
@@ -46,13 +51,11 @@ test('Scene 2: matches with explanations, connect, create a private group, invit
   test.setTimeout(120_000);
   await reseed(page);
   const admin = adminClient();
-  await applyInterimPreferences(admin);
   await applyDemoUserScene1(admin);
 
   await login(page, NEW_USER.email);
-  await page.goto('/match');
   const cards = page.getByRole('list', { name: 'Recommended people' }).getByRole('article');
-  await expect(cards.first()).toBeVisible();
+  await openSettled(page, '/match', cards.first());
   expect(await cards.count()).toBeGreaterThanOrEqual(3);
   for (const index of [0, 1, 2]) {
     const card = cards.nth(index);
@@ -66,13 +69,14 @@ test('Scene 2: matches with explanations, connect, create a private group, invit
   await expect(connect.getByLabel('Add a note (optional)')).toBeFocused();
   await connect.getByLabel('Add a note (optional)').fill('Pottery on Thursday?');
   await connect.getByRole('button', { name: 'Send request' }).click();
-  await expect(page.getByText('Request sent to Maya Chen')).toBeVisible();
+  await expect(page.getByText('Request sent to Maya Chen')).toBeVisible(FIRST_REQUEST);
   await expect(page.getByRole('article', { name: /Maya Chen/ })).toHaveCount(0);
   await expect(page.getByRole('tabpanel', { name: 'Recommended' })).toBeFocused();
   await openRequestFromBell(browser);
 
-  await page.goto('/groups');
-  await page.getByRole('button', { name: 'Create group' }).click();
+  const createGroup = page.getByRole('button', { name: 'Create group' });
+  await openSettled(page, '/groups', createGroup);
+  await createGroup.click();
   const create = page.getByRole('dialog', { name: 'Create a group' });
   await create.getByLabel('Name').fill(GROUP_NAME);
   await create.getByLabel('Interests').fill('pottery');
@@ -80,17 +84,18 @@ test('Scene 2: matches with explanations, connect, create a private group, invit
   await expect(create.getByRole('radio', { name: /Private/ })).toBeChecked();
   await create.getByRole('button', { name: 'Create group' }).click();
   await page.waitForURL(/\/groups\/[0-9a-f-]{36}\?tab=members/);
+  await settle(page, page.getByLabel('Invite Maya Chen'));
   await expect(page.getByRole('heading', { name: GROUP_NAME })).toBeVisible();
 
   await page.getByLabel('Invite Maya Chen').check();
   await page.getByLabel('Invite Yuki Tanaka').check();
   await page.getByRole('button', { name: 'Invite 2' }).click();
-  await expect(page.getByText('Invited 2 people')).toBeVisible();
+  await expect(page.getByText('Invited 2 people')).toBeVisible(FIRST_REQUEST);
 
   await acceptInvitationAs(browser, 'yuki@commonground.test');
 
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Members · 2' })).toBeVisible();
+  await settle(page, page.getByRole('heading', { name: 'Members · 2' }));
   const roster = page.getByRole('region', { name: 'Members · 2' });
   await expect(roster.getByText('Yuki Tanaka')).toBeVisible();
   await expect(roster.getByText(/Jordan Lee/)).toBeVisible();

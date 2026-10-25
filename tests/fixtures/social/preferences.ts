@@ -3,8 +3,8 @@ import path from 'node:path';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
- * Applies the interim preferences fixture (02 §8 design) to seeded users so matching and the
- * planner have data before 02's seed lands. Test and demo-prep only; never part of `pnpm db:seed`.
+ * The demo user as Scene 1 (02's live onboarding) leaves them, for 03's tests and demo prep.
+ * Seeded users' preferences and consent come from 02's seed (`pnpm db:seed`); never part of it.
  */
 
 type FixtureUser = {
@@ -19,7 +19,7 @@ type FixtureUser = {
   activity: string[];
   demand?: boolean;
 };
-type Fixture = { users: FixtureUser[]; demoUser: FixtureUser };
+type Fixture = { demoUser: FixtureUser };
 
 const fixture = JSON.parse(readFileSync(path.join(process.cwd(), 'tests/fixtures/social/preferences.json'), 'utf8')) as Fixture;
 
@@ -53,13 +53,6 @@ async function applyOne(admin: SupabaseClient, userId: string, u: FixtureUser): 
   if (agent.error) throw new Error(`agent_profiles upsert (${u.email}) failed: ${agent.error.message}`);
 }
 
-/** Preferences + consent for the 14 seeded consumers. Returns how many were applied. */
-export async function applyInterimPreferences(admin: SupabaseClient): Promise<number> {
-  const ids = await seededUserIds(admin);
-  const present = fixture.users.filter((u) => ids.has(u.email));
-  await Promise.all(present.map((u) => applyOne(admin, ids.get(u.email)!, u)));
-  return present.length;
-}
 
 /** The demo user as Scene 1 leaves them: pottery, coffee, Thursday evenings, small groups, onboarded. */
 export async function applyDemoUserScene1(admin: SupabaseClient): Promise<string> {

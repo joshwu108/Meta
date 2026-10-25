@@ -44,6 +44,7 @@ export async function respondToInvitation(actor: Actor, invitationId: string, st
 // Event invitations, for workstream 06's invite-group flow (invitations kind = 'event')
 // ---------------------------------------------------------------------------
 
+/** A pending invitation to an event addressed to one user; `groupId` is set when it was sent to a group. */
 export type PendingEventInvitation = { id: string; eventId: string; groupId: string | null; senderId: string; createdAt: string };
 
 /** Create `invitations(kind='event')` rows; never touches RSVPs. Returns the new ids. */

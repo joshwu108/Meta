@@ -5,7 +5,7 @@ vi.mock('server-only', () => ({}));
 vi.mock('@/features/core', () => ({ logAgentAction: vi.fn(), notify: vi.fn() }));
 const explainRecommendation = vi.fn<(input: unknown) => Promise<string>>();
 const getSharablePreferencesBatch = vi.fn<(ids: readonly string[], purpose: string) => Promise<Map<string, MatchingPreferences>>>();
-vi.mock('@/features/matching/server/stubs', () => ({
+vi.mock('@/features/agent', () => ({
   explainRecommendation: (input: unknown) => explainRecommendation(input),
   getSharablePreferences: vi.fn(),
   getSharablePreferencesBatch: (ids: readonly string[], purpose: string) => getSharablePreferencesBatch(ids, purpose),

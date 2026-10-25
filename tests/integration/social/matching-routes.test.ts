@@ -171,10 +171,14 @@ describe('block and report', () => {
     expect(ids((await call(getMatches, { path: '/api/matches' })).body.data)).not.toContain(users.second!.id);
   });
 
-  it('rejects blocking yourself or a malformed id', async () => {
+  it('rejects blocking or reporting yourself, a malformed id, or someone who does not exist', async () => {
     actAs(users.viewer!);
+    const stranger = crypto.randomUUID();
     expect((await call(block, { method: 'POST', params: { id: users.viewer!.id } })).status).toBe(400);
     expect((await call(block, { method: 'POST', params: { id: 'nope' } })).status).toBe(404);
+    expect((await call(block, { method: 'POST', params: { id: stranger } })).status).toBe(404);
+    expect((await call(report, { method: 'POST', params: { id: users.viewer!.id }, body: { reason: 'spam' } })).status).toBe(400);
+    expect((await call(report, { method: 'POST', params: { id: stranger }, body: { reason: 'spam' } })).status).toBe(404);
   });
 
   it('stores a report the reporter cannot read back', async () => {
@@ -183,6 +187,10 @@ describe('block and report', () => {
     expect(res.status).toBe(201);
     const { data } = await admin.from('reports').select('reporter_id, reason').eq('id', res.body.data.id).single();
     expect(data).toEqual({ reporter_id: users.good!.id, reason: 'spam' });
+    const bare = await call(report, { method: 'POST', params: { id: users.far!.id }, body: { reason: 'fake' } });
+    expect(bare.status).toBe(201);
+    const { data: bareRow } = await admin.from('reports').select('reason, details').eq('id', bare.body.data.id).single();
+    expect(bareRow).toEqual({ reason: 'fake', details: null });
     const bad = await call(report, { method: 'POST', params: { id: users.far!.id }, body: { reason: 'boredom' } });
     expect(bad.status).toBe(400);
   });

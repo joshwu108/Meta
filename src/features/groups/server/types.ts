@@ -7,6 +7,7 @@ import type { EventSummary } from '@/shared/types';
 
 export type GroupKind = 'interest' | 'private' | 'event';
 
+/** A group as the viewer sees it in lists: member count and a few public cards, plus the viewer's own role and status. */
 export type GroupSummary = {
   id: string;
   name: string;
@@ -24,6 +25,7 @@ export type GroupSummary = {
   latestPlanTitle: string | null;
 };
 
+/** One person on a group roster (public card only) with their role and membership status. */
 export type RosterMember = { user: PublicCard; role: MemberRole; status: MembershipStatus; joinedAt: string | null; isMe: boolean };
 
 export type GroupPermissions = {
@@ -33,10 +35,12 @@ export type GroupPermissions = {
   canVote: boolean;
   canTransfer: boolean;
   canLeave: boolean;
+  canJoin: boolean;
 };
 
 export type PlanVotes = { counts: number[]; mine: number[] };
 
+/** A group's latest planner run, with vote tallies and which suggestions can be sent to 04 for a venue. */
 export type GroupPlanView = {
   id: string;
   groupId: string;
@@ -54,8 +58,10 @@ export type GroupPlanView = {
   venueMinMembers: number;
 };
 
+/** An event on a group's Events tab: how many active members are going (never who), and whether it was shared with the group. */
 export type GroupEvent = { event: EventSummary; membersGoing: number; sharedWithGroup: boolean };
 
+/** `GET /api/groups/:id`: the summary plus roster, the viewer's permissions, upcoming events and the latest plan. */
 export type GroupDetail = GroupSummary & {
   creatorId: string;
   createdAt: string;

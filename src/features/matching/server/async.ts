@@ -18,10 +18,10 @@ export async function mapLimit<T, R>(items: readonly T[], limit: number, fn: (it
   return results;
 }
 
-/** Split into chunks of `size` (keeps PostgREST `in.(...)` filters well under URL limits). */
 /** Ids per PostgREST `in.(...)` filter: the gateway answers 414 above about 200 uuids in one request line. */
 export const ID_FILTER_BATCH = 100;
 
+/** Split into chunks of `size` (keeps PostgREST `in.(...)` filters well under URL limits). */
 export function chunk<T>(items: readonly T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));

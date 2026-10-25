@@ -1,4 +1,5 @@
 import 'server-only';
+import { getSharablePreferences, getSharablePreferencesBatch } from '@/features/agent';
 import { logAgentAction } from '@/features/core';
 import type { EventCategory, SocialGoal } from '@/shared/enums';
 import type { MatchesQuery } from '@/shared/schemas/social';
@@ -13,7 +14,6 @@ import { toLatLng } from './geo';
 import { getCompatibilityScore, type MatchingPreferences } from './score';
 import { normalizeTag, normalizeTags } from './similarity';
 import { getBlockedIds, getEdgeUserIds } from './social-graph';
-import { getSharablePreferences, getSharablePreferencesBatch } from './stubs';
 import { MATCH_LIMITS } from './weights';
 
 /** One recommended person (spec §6 `MatchCard`). */
@@ -28,6 +28,7 @@ export type MatchCard = {
 
 /** Why a list is empty, so the page can show the right empty state. */
 export type MatchesStatus = 'ok' | 'not_discoverable' | 'no_location' | 'no_candidates';
+/** A viewer's recommended people, best first, with the reason when the list is empty. */
 export type MatchesResult = { status: MatchesStatus; matches: MatchCard[] };
 
 export type RankedCandidate = { prefs: MatchingPreferences; result: CompatibilityResult };

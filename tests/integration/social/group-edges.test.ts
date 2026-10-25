@@ -9,7 +9,8 @@ vi.mock('@/lib/supabase/server', async () => {
 });
 
 const { POST: createGroup } = await import('@/app/api/groups/route');
-const { PATCH: patchGroup } = await import('@/app/api/groups/[id]/route');
+const { GET: getGroup, PATCH: patchGroup } = await import('@/app/api/groups/[id]/route');
+const { POST: join } = await import('@/app/api/groups/[id]/join/route');
 const { POST: invite } = await import('@/app/api/groups/[id]/invite/route');
 const { DELETE: removeMember } = await import('@/app/api/groups/[id]/members/[userId]/route');
 const { POST: leave } = await import('@/app/api/groups/[id]/leave/route');
@@ -96,5 +97,43 @@ describe('group edge cases', () => {
     expect(res.status).toBe(429);
     expect(res.body.error?.code).toBe('RATE_LIMITED');
     aiRateLimiter.reset();
+  });
+});
+
+describe('joining public groups (POST /api/groups/:id/join)', () => {
+  it('lets anyone join a public interest group and rejoin after leaving, as a plain member', async () => {
+    const groupId = await newGroup('public', 'Open table');
+    const privateId = await newGroup('private', 'Closed table');
+    actAs(outsider);
+    expect((await call(getGroup, { params: { id: groupId } })).body.data.permissions.canJoin).toBe(true);
+    const joined = await call(join, { method: 'POST', params: { id: groupId } });
+    expect(joined.status).toBe(200);
+    expect(joined.body.data).toEqual({ status: 'active' });
+    expect((await call(getGroup, { params: { id: groupId } })).body.data).toMatchObject({ myStatus: 'active', permissions: { canJoin: false } });
+    expect((await call(join, { method: 'POST', params: { id: groupId } })).status).toBe(409);
+    expect((await call(join, { method: 'POST', params: { id: privateId } })).status).toBe(404);
+
+    actAs(owner);
+    await call(patchGroup, { method: 'PATCH', params: { id: groupId }, body: { transferOwnerTo: outsider.id } });
+    actAs(outsider);
+    await call(patchGroup, { method: 'PATCH', params: { id: groupId }, body: { transferOwnerTo: owner.id } });
+    const before = await admin.from('group_members').select('role').eq('group_id', groupId).eq('user_id', outsider.id).single();
+    expect(before.data?.role).toBe('admin');
+    expect((await call(leave, { method: 'POST', params: { id: groupId } })).body.data).toEqual({ status: 'left' });
+    expect((await call(join, { method: 'POST', params: { id: groupId } })).status).toBe(200);
+    const { data: row } = await admin.from('group_members').select('role, status').eq('group_id', groupId).eq('user_id', outsider.id).single();
+    expect(row).toEqual({ role: 'member', status: 'active' });
+  });
+
+  it('keeps someone an admin removed out until they are invited back', async () => {
+    const groupId = await newGroup('public', 'Removal sticks');
+    actAs(friend);
+    expect((await call(join, { method: 'POST', params: { id: groupId } })).status).toBe(200);
+    actAs(owner);
+    expect((await call(removeMember, { method: 'DELETE', params: { id: groupId, userId: friend.id } })).status).toBe(200);
+    actAs(friend);
+    const res = await call(join, { method: 'POST', params: { id: groupId } });
+    expect(res.status).toBe(403);
+    expect((await call(getGroup, { params: { id: groupId } })).body.data.permissions.canJoin).toBe(false);
   });
 });

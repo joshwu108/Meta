@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canEdit,
   canInvite,
+  canJoin,
   canPlan,
   canRemove,
   canTransfer,
@@ -11,8 +12,8 @@ import {
   type Membership,
 } from '@/features/groups/server/authz';
 
-const privateGroup: GroupFacts = { visibility: 'private', creatorId: 'creator', archived: false };
-const publicGroup: GroupFacts = { visibility: 'public', creatorId: 'creator', archived: false };
+const privateGroup: GroupFacts = { visibility: 'private', kind: 'private', creatorId: 'creator', archived: false };
+const publicGroup: GroupFacts = { visibility: 'public', kind: 'interest', creatorId: 'creator', archived: false };
 const owner: Membership = { role: 'owner', status: 'active' };
 const admin: Membership = { role: 'admin', status: 'active' };
 const member: Membership = { role: 'member', status: 'active' };
@@ -41,6 +42,17 @@ describe('group authorization', () => {
     expect(canInvite(publicGroup, member)).toBe(true);
     expect(canInvite(publicGroup, invited)).toBe(false);
     expect(canInvite(publicGroup, null)).toBe(false);
+  });
+
+  it('lets anyone join a public interest group, rejoin after leaving, but not after being removed', () => {
+    expect(canJoin(publicGroup, null)).toEqual({ ok: true });
+    expect(canJoin(publicGroup, left)).toEqual({ ok: true });
+    expect(canJoin(publicGroup, { role: 'member', status: 'removed' })).toMatchObject({ ok: false, code: 'FORBIDDEN' });
+    expect(canJoin(publicGroup, member)).toMatchObject({ ok: false, code: 'CONFLICT' });
+    expect(canJoin(publicGroup, invited)).toMatchObject({ ok: false, code: 'VALIDATION' });
+    expect(canJoin(privateGroup, null)).toMatchObject({ ok: false, code: 'FORBIDDEN' });
+    expect(canJoin({ ...publicGroup, kind: 'event' }, null)).toMatchObject({ ok: false, code: 'FORBIDDEN' });
+    expect(canJoin({ ...publicGroup, archived: true }, null)).toMatchObject({ ok: false, code: 'FORBIDDEN' });
   });
 
   it('lets admins always plan, members plan in public groups or groups they created', () => {

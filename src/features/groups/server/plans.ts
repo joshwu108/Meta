@@ -83,7 +83,8 @@ export async function loadLatestPlan(actor: Actor, groupId: string, activeCount:
 export async function toggleVote(actor: Actor, groupId: string, planId: string, suggestionIndex: number): Promise<GroupPlanView> {
   const { membership } = await loadGroupContext(actor, groupId);
   if (!canVote(membership)) throw new ApiError('FORBIDDEN', 'Only active members can vote', 403);
-  const { data: plan } = await actor.supabase.from('group_plans').select('*').eq('id', planId).eq('group_id', groupId).maybeSingle();
+  const { data: plan, error } = await actor.supabase.from('group_plans').select('*').eq('id', planId).eq('group_id', groupId).maybeSingle();
+  if (error) throw new ApiError('INTERNAL', 'Could not load the plan', 500);
   if (!plan) throw new ApiError('NOT_FOUND', 'Plan not found', 404);
   if (suggestionIndex >= parseSuggestions(plan.suggestions).length) throw new ApiError('VALIDATION', 'No suggestion at that position', 400);
 

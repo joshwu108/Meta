@@ -32,7 +32,7 @@ M-01..M-04, M-07 (P0), M-05, M-06, M-08 (P1); G-01..G-08, G-12, G-13 (P0), G-09,
 - Send a chosen new-activity suggestion to 04 as a group-originated proposal request
 - Filters on `/match` by interest and social goal
 - Basic 1:1 messaging between accepted connections (text only, polled)
-- Public group discovery (`/groups/discover`)
+- Public group discovery (`/groups/discover`), and joining a public interest group from its page
 
 ### Out of scope
 - Real-time messaging, read receipts, media; recommendation model training
@@ -216,6 +216,7 @@ Score is 0–100, rounded. Weights live in `src/features/matching/server/weights
 | `PATCH /api/invitations/:id` | `{ status }`; accept → `group_members.status='active', joined_at=now()` |
 | `DELETE /api/groups/:id/members/:userId` | admins remove; owner cannot be removed |
 | `POST /api/groups/:id/leave` | owner must transfer first (`PATCH` with `{ transferOwnerTo }`) or be last member (group archived) |
+| `POST /api/groups/:id/join` | P1: anyone signed in joins a public interest group as `member`; rejoining after leaving is allowed; removed members need a new invite (`FORBIDDEN`); active members get `CONFLICT`, invitees answer their invitation (`VALIDATION`) |
 | `POST /api/groups/:id/plan` | `{ request: string }` → `GroupPlan` |
 | `POST /api/groups/:id/plans/:planId/vote` | P1 `{ suggestionIndex }` toggle |
 | `GET/POST /api/connections/:id/messages` | P1 text messages between accepted connections; `?after=` for polling |
