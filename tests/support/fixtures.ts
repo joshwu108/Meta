@@ -48,6 +48,7 @@ export function testDeps(store: MemoryBusinessStore, now = new Date('2026-10-26T
     },
     logAgentAction: async ({ userId, action, result }) => {
       actions.push({ userId: userId ?? null, action, result });
+      return true;
     },
   });
 
