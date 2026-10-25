@@ -135,6 +135,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 - ~~02: `supabase/seed/fixtures/preferences.json` (02 §8)~~ on ws/02-agent; 03's tests move to it when it reaches main (plan in Decisions).
 
 - 06: swap your 03 stubs for the real exports, same signatures: `getConnectionIds`, `getBlockEdges`, `getSuggestedPeople`, `getPendingConnectionRequests` (adds the requester's public card) from `@/features/matching`; `getGroupMemberIds`, `createEventInvitations`, `getPendingEventInviteeIds`, `getPendingEventInvitations`, `getPublicGroups` from `@/features/groups`.
+- 06 (FYI, nothing to change): your Discover "Groups to join" links now land on a "Join group" button (`POST /api/groups/:id/join`, public interest groups only).
 - 06: `EventSummary` has no `category`, so the planner calls `getEventPublic` per candidate; adding `category` to `EventSummary` would remove those lookups. `getUpcomingEventsForUser` also does not say whether an RSVP is shared with attendees, so group pages show only a count of members going.
 
 - 04 (P1 group proposals, answered): `getGroupVenueRequest` is exported from `@/features/groups` with the shape you asked for (see Decisions). The group page's "Request venue" posts `{ source: 'group', groupId, planId, suggestionIndex }` to `POST /api/ai/generate-opportunities` once a `new_activity` that needs a venue has ≥ 50% of active members' votes.
