@@ -17,6 +17,7 @@ const { getMatchesForViewer, invalidateMatches } = await import('@/features/matc
 const { getRecommendedEvents } = await import('@/features/events');
 const { runOpportunityPipeline } = await import('@/features/demand');
 const { aiRateLimiter } = await import('@/lib/api');
+const { setLogSink } = await import('@/lib/log');
 
 setTestOrigin('import');
 const admin = adminClient();
@@ -139,6 +140,24 @@ describe('screenshot import → review (MOCK_AI)', () => {
     expect(after).not.toContain('ceramics');
     expect(after).not.toContain('horror-movies');
     expect(after.length).toBe(before.length);
+  });
+
+  it('never writes image bytes to the logs or the database', async () => {
+    aiRateLimiter.reset();
+    const lines: string[] = [];
+    const restore = setLogSink((line) => lines.push(line));
+    try {
+      await run(stranger);
+    } finally {
+      restore();
+    }
+    const base64 = Buffer.from(screenshot).toString('base64');
+    const joined = lines.join('\n');
+    expect(lines.length).toBeGreaterThan(0);
+    expect(joined).not.toContain(base64.slice(0, 64));
+    expect(joined).not.toContain(base64.slice(2000, 2064));
+    const stored = await admin.from('trait_suggestions').select('*').eq('user_id', stranger.id);
+    expect(JSON.stringify(stored.data)).not.toContain(base64.slice(0, 64));
   });
 
   it('expired suggestions are deleted on read', async () => {
