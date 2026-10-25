@@ -23,15 +23,14 @@ test.describe('Scene 3: Generate Opportunities', () => {
   let admin: SupabaseClient;
   let cleanup: () => Promise<void> = async () => undefined;
 
-  test.beforeAll(async () => {
+  // Runs on the real demo seed: 02 seeds the 14 users' preferences and 05 the three venues (AC1).
+  test.beforeAll(async ({ request }) => {
     const helpers = await import('../integration/helpers');
-    const scene3 = await import('../integration/demand/scene3');
     admin = helpers.adminClient() as unknown as SupabaseClient;
-    scene3.applyTestSchema();
     await helpers.cleanupTestUsers(admin as never);
+    expect((await request.post('/api/dev/seed')).ok()).toBeTruthy();
     await admin.from('event_proposals').delete().not('id', 'is', null);
     await admin.from('opportunity_runs').delete().not('id', 'is', null);
-    await scene3.seedScene3(admin);
     cleanup = async () => {
       await admin.from('event_proposals').delete().not('id', 'is', null);
       await admin.from('opportunity_runs').delete().not('id', 'is', null);
