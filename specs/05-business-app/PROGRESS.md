@@ -2,17 +2,17 @@
 
 Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../README.md`](../README.md)
 
-## Status: PR #4 open with six fixes for main
+## Status: PR #4 open with seven fixes for main
 
 All six workstreams are merged into `main`, and the whole product is green there:
 **800 unit, 213 integration, 62 db and 59 e2e tests pass with nothing skipped**, plus
 typecheck, lint and build (verified 2026-10-25 01:30 on a fresh `db reset` + `db:seed`).
 
-**Six 05 bug fixes are still only on `ws/05-business`** — they landed after the branch was
+**Seven 05 bug fixes are still only on `ws/05-business`** — they landed after the branch was
 first merged. **https://github.com/joshwu108/Meta/pull/4** is open for them, with the full
 write-up and a test plan; merging it is all that is needed. The three originally listed here
 plus the insights scope fix (`c91d1b9`), the onboarding dead-end warning (`39c213f`) and the
-error-screen recovery fix (`51d13e3`):
+error-screen recovery fix (`51d13e3`) and the malformed-id fix (`9cf70cd`):
 
 - `e3f960e` + `cf29fb6` — **every time on the business screens is the venue's wall clock.**
   The editor read and wrote `datetime-local` in the browser's zone, and the display
@@ -30,6 +30,11 @@ error-screen recovery fix (`51d13e3`):
   failed payload, so the owner saw the same error however often they clicked, even after the
   server was healthy. Clearing and refetching now happen in one transition. The same defect
   is in 02's shared `ScreenError`, reported under Needs from others.
+- `9cf70cd` — **a mistyped business URL rendered the error screen instead of not-found.**
+  Postgres rejects a malformed uuid with 22P02, which the store can only report as an
+  internal failure, so `/business/events/not-a-uuid/edit` read as a crash while every other
+  unknown id read as "We could not find that". The three id pages now check the shape
+  first, which is what the API routes already did (they answer 400 VALIDATION).
 
 Every P0 and P1 item below is ticked.
 
@@ -849,3 +854,31 @@ either side of 04. Both were confirmed present in the 13-migration run.
   Suites after the fix: 808 unit, 151 integration + 62 db (0 skipped), typecheck and lint
   clean. Same `reset()`-only defect exists in 02's shared `ScreenError`, reported with the
   verified fix rather than edited.
+
+- **2026-10-25 01:40 — the guard paths, walked in a browser for the first time.** The API
+  tests cover who may read what; nobody had opened a business URL *as the wrong person*.
+  Signed out, all three business paths redirect to `/login`. A seeded consumer is sent to
+  `/business/onboarding`, which is right: anyone may become a venue. An owner reaching for
+  another venue's event, and for an id no row has, both get "We could not find that", so
+  existence is not leaked. One real defect: **a malformed id rendered the error screen.**
+  `/business/events/not-a-uuid/edit` read as a crash because the value reached Postgres,
+  which rejects it with 22P02 before any ownership check runs, and the store can only report
+  that as an internal failure. Fixed in `9cf70cd`; the API routes already validated ids, so
+  this was the page half of a check that existed on one side only.
+  Worth recording is where the guard went and why it moved. I first put it in
+  `requireOwnedEvent`/`requireOwnedProposal`, which is the more defensive place, and it broke
+  36 unit tests: the in-memory store keys rows as `evt-1` and `biz-1`, so a domain-level
+  uuid check would have forced a 38-literal fixture refactor across four files for no product
+  gain. The id enters from the URL, which is the boundary the API routes already validate, so
+  the check belongs on the pages. Reverted and moved there.
+  Also worth recording: **the unit suite cannot catch this bug at all.** The memory store
+  simply finds no row for `not-a-uuid` and reports NOT_FOUND whether or not the guard exists,
+  so parametrised NOT_FOUND cases would have been vacuous — the same blind spot that let the
+  camelCase/snake_case mismatch through. The regression test is therefore end-to-end
+  (`tests/e2e/business-events.spec.ts`), and I confirmed it fails with the guards stashed and
+  passes with them restored. `tests/unit/business/lookup-id.test.ts` covers the shape check
+  itself, including a traversal attempt and a uuid with trailing text.
+  Empty states were checked in the same pass and need no change: a venue created from scratch
+  through signup and onboarding gets a clear explanation and a next action on all four
+  screens (dashboard, proposals, events, insights).
+  Suites: 817 unit, 151 integration, 62 db, typecheck and lint clean.
