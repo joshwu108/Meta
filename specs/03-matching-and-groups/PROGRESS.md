@@ -8,16 +8,16 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 - [x] Contracts: `getCompatibilityScore()` from `src/features/matching/index.ts`, `getGroupMemberIds()` from `src/features/groups/index.ts`
 - [x] Helpers 06 asked for: `getConnectionIds`, `getBlockEdges`, event-invitation create/read, top matches for Discover (`getSuggestedPeople`), public groups (`getPublicGroups`)
 - [x] Zod schemas for request bodies, rows and DTOs
-- [x] Stubs for 02 (`getSharablePreferences`, `explainRecommendation`) and 06 (`getUpcomingEventsForUser`) in `server/stubs.ts`
+- [x] Stubs for 02 (`getSharablePreferences`, `explainRecommendation`) and 06 (`getUpcomingEventsForUser`) in `server/stubs.ts` (deleted once 02 and 06 reached main; 03 imports `@/features/agent` and `@/features/events`)
 - [x] MOCK_AI fixture `groups.plan_activities.json`
 
 ## Acceptance criteria (P0, spec §10)
 
-- [x] AC1. Seeded demo user receives ranked matches whose top 3 share `creative` interests and `thu_eve` (verified with the interim 02 §8 preferences fixture until 02's seed lands)
+- [x] AC1. Seeded demo user receives ranked matches whose top 3 share `creative` interests and `thu_eve` (verified on 02's seeded preferences)
 - [x] AC2. Every match card shows an explanation grounded in shared fields
 - [x] AC3. Connection, block, report, group create/invite/accept/remove/leave all work and respect authorization
 - [x] AC4. Group planner produces 2–4 suggestions referencing only shared slots and consenting members' data
-- [x] AC5. A group can view upcoming events (through 06's contract) and open them (contract-level test against 06's stand-in; real events need 05/06 on main)
+- [x] AC5. A group can view upcoming events (through 06's contract) and open them (verified end to end on main with 06's contracts, seeded RSVPs and event page: `tests/e2e/group-events.spec.ts`)
 
 ## Build items (P0, spec §3, §6, §7)
 
@@ -125,6 +125,8 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 2026-10-24: Added `POST /api/groups/:id/join` (not in the original spec; §3 and §6 updated). 06's Discover lists 03's public groups as "Groups to join" and links to the group page, where a non-member could read everything but not join, only wait for an invite. Public interest groups (not 06's event groups, not archived) now show "Join group" to anyone signed in. Someone who left can rejoin, always as `member`; someone an admin removed needs a new invitation, so self-join cannot undo a removal. Invitees answer their invitation instead. The membership is written with the service role after the `canJoin` check, like every other membership write.
 
+- 2026-10-24: 02 and 06 reached main (merged here as 37b9418) and both swap plans ran. Preferences, explanations and group scheduling come from `@/features/agent`, events from `@/features/events`; `matching/server/stubs.ts` and `groups/server/stubs.ts` are deleted. The integrator's interim re-export of 02's readers and its seeded-event-id fixes in 03's tests (06's `invitations_event_fk` needs real events) were kept until then. Tests run on 02's seed; 03 still applies only the demo user's Scene 1 state, which 02's onboarding produces live. Groups and 06 now import each other through their `index.ts` files, but neither uses the other at load time; the production build is clean.
+
 - 2026-10-24: Plan for when 01's pending batch reaches main (read on ws/01-core@76e0e85, not merged). `ea42daa` makes `EventSummary.category` required; 01's `cd31fb8` already fills it at the three 03 call sites it saw (stand-in `toSummary`, `groups/server/events.ts`, `planner-routes.test.ts`), and 03's newer `candidates.test.ts` fixtures typecheck against both versions. Left for 03: in `planner/candidates.ts`, filter by `event.category` before the `getEventPublic` lookups. `5b7f578` makes `logAgentAction` resolve a boolean; 03 ignores it, so nothing changes. `abe56d0` adds ink tokens with the rule "brand-colored text uses `text-brand-ink`, danger/success text on soft backgrounds uses `text-danger-ink` / `text-success-ink`": switch `text-danger` to `text-danger-ink` in SafetyMenu's Report item, MembersPanel's Remove button and ChatSheet's error, and `text-brand` to `text-brand-ink` on the icon tiles (GroupsScreen, EventsPanel, discover page) and the PlansPanel and SuggestionCard icons. Links, fills and 01's primitives follow the tokens on their own. Re-run the axe audit after. `9afe30f` adds Sheet focus trapping; keep 03's `autoFocus` (the intended first field) and the focus fallback until 01's restore handles `autoFocus` (asked above).
 
 - 2026-10-24: Plan for when 06 reaches main (checked against ws/06-events@c661eed): `getUpcomingEventsForUser` and `getEventPublic` come from `@/features/events` with the same signatures and shared types. Point `groups/server/events.ts` and `groups/server/planner/candidates.ts` at it, delete the 06 half of `groups/server/stubs.ts`, move the `planner-routes.test.ts` mock to `@/features/events`, and drop the "06 stand-ins on a branch without events tables" contract test.
@@ -136,7 +138,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 - ~~02: return `interestCategories` from `toSharable`~~ done on ws/02-agent; 03 keeps deriving categories from tags when the field is empty.
 - ~~02: `supabase/seed/fixtures/preferences.json` (02 §8)~~ on ws/02-agent; 03's tests move to it when it reaches main (plan in Decisions).
 
-- 06: swap your 03 stubs for the real exports, same signatures: `getConnectionIds`, `getBlockEdges`, `getSuggestedPeople`, `getPendingConnectionRequests` (adds the requester's public card) from `@/features/matching`; `getGroupMemberIds`, `createEventInvitations`, `getPendingEventInviteeIds`, `getPendingEventInvitations`, `getPublicGroups` from `@/features/groups`.
+- ~~06: swap your 03 stubs for the real exports~~ done on main. Original ask, same signatures: `getConnectionIds`, `getBlockEdges`, `getSuggestedPeople`, `getPendingConnectionRequests` (adds the requester's public card) from `@/features/matching`; `getGroupMemberIds`, `createEventInvitations`, `getPendingEventInviteeIds`, `getPendingEventInvitations`, `getPublicGroups` from `@/features/groups`.
 - 06 (FYI, nothing to change): your Discover "Groups to join" links now land on a "Join group" button (`POST /api/groups/:id/join`, public interest groups only).
 - 06: ~~`EventSummary` has no `category`~~ 01 moved `category` onto `EventSummary` (ws/01-core@ea42daa), so once that is on main the planner filters by category before its per-candidate `getEventPublic` lookups (still needed for price). `getUpcomingEventsForUser` also does not say whether an RSVP is shared with attendees, so group pages show only a count of members going.
 
@@ -152,14 +154,15 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - ~~01: `NotificationList` could follow 03's `payload.href`~~ done on main: the bell marks read, then navigates.
 
-- 02: `adminLoadSources` and `adminRecentShareLogs` in `server/repo.ts` (and the attendee-sharing read) put every id in one `.in()` filter, and the local gateway answers `414 URI too long` above about 200 uuids (measured: 200 ok, 250 rejected). 03 now reads candidates (up to 500) 100 ids per call, but chunking inside those helpers would also protect 04's and 06's callers.
+- ~~02: chunk id filters in the batch reads~~ done (100 ids per request, with a regression test). 03 keeps its own 100-id batching for candidates. Original ask: `adminLoadSources` and `adminRecentShareLogs` in `server/repo.ts` (and the attendee-sharing read) put every id in one `.in()` filter, and the local gateway answers `414 URI too long` above about 200 uuids (measured: 200 ok, 250 rejected). 03 now reads candidates (up to 500) 100 ids per call, but chunking inside those helpers would also protect 04's and 06's callers.
 
-- 02 (when on main): 03 swaps its stand-ins for your exports (plan in Decisions). `MATCHING_OPT_OUT_EMAILS` is empty with your §8 seed (only a demand opt-out), so 03's evidence for your AC3 is its own test with a non-consenting user ("shows nobody to a user who has not consented, and nobody sees them"). If you add a matching opt-out to the seed, 03 will assert it too.
+- 02: 03 now uses your exports and seed (stand-ins and the interim preferences fixture are gone). `MATCHING_OPT_OUT_EMAILS` is empty with your §8 seed (only a demand opt-out), so 03's evidence for your AC3 is its own test with a non-consenting user ("shows nobody to a user who has not consented, and nobody sees them"). If you add a matching opt-out to the seed, 03 will assert it too.
 
 ## Blocked
 
 ## Log
 
+- 2026-10-24 22:26 CDT · wakeup: 02 and 06 reached main; merged cleanly (37b9418). Ran both swap plans: 03 uses `@/features/agent` and `@/features/events`, both stub files are deleted, and tests run on 02's seed. AC5 now verified end to end (a group's Events tab shows members going and opens 06's event page). Fresh reset with all 13 migrations, types current, 1010 Vitest tests (unit, integration, db) and 61 E2E green, production build clean. 02 and 06 answered 03's asks (chunked reads, real 03 exports). Next: watch main for 01's pending batch.
 - 2026-10-24 21:52 CDT · wakeup: main unchanged; CI green on dbc5a24. 01's pending batch now also edits 03 code (`cd31fb8` fills `EventSummary.category`) and makes `logAgentAction` resolve a boolean. 03's newer candidate tests now typecheck under both type versions (checked by swapping in 01's `types.ts`), so either merge order stays green. 01's focus trap still misses `autoFocus` sheets (asked). Next: watch main.
 - 2026-10-24 21:36 CDT · wakeup: main unchanged. Never-idle pass on error paths: `getGroupMemberIds` returned [] when its group lookup failed (06 would have invited nobody), and `getGroupVenueRequest` answered "not eligible" on a failed read. Both now throw INTERNAL; vote reads too; `getPublicGroups` logs failed counts. Added tests for the planner's event-candidate filter (now fed by 05's events), safety edge cases, and every exported reader against a failing client. Next: watch main for 01/02/06.
 - 2026-10-24 21:26 CDT · CI green on 1b1b2b3 (main with 04 and 05 merged in) on all three jobs, including the full Playwright suite with the new group-venue E2E. Next: watch main for 01/02/06.
