@@ -31,7 +31,7 @@ function nextThursday(hour: number, minute = 0): string {
 test.describe('a business runs its own event', () => {
   // Opening hours are checked in the venue's zone (VENUE_TIMEZONE), so the browser filling
   // `datetime-local` has to be in it too. CI runners default to UTC.
-  test.use({ timezoneId: 'America/Los_Angeles' });
+  test.use({ timezoneId: 'UTC' });
 
   test.beforeEach(async ({ page }) => {
     test.skip(!(await appIsReady(page)), 'the app is not reachable');
