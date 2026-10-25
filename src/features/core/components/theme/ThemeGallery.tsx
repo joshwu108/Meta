@@ -34,6 +34,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export function ThemeGallery({ forcedTheme }: { forcedTheme: 'light' | 'dark' | null }) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isFormSheetOpen, setIsFormSheetOpen] = useState(false);
   const [isOn, setIsOn] = useState(true);
   const [tab, setTab] = useState<(typeof TAB_ITEMS)[number]['value']>('upcoming');
   const [selected, setSelected] = useState(true);
@@ -136,6 +137,12 @@ export function ThemeGallery({ forcedTheme }: { forcedTheme: 'light' | 'dark' | 
         <Button variant="secondary" onClick={() => setIsSheetOpen(true)}>
           Open sheet
         </Button>
+        <Button variant="secondary" onClick={() => setIsFormSheetOpen(true)}>
+          Open form sheet
+        </Button>
+        <Sheet isOpen={isFormSheetOpen} onClose={() => setIsFormSheetOpen(false)} title="Rename group">
+          <Input label="Group name" defaultValue="Mission Makers" autoFocus />
+        </Sheet>
         <Sheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} title="Edit price" footer={<Button onClick={() => setIsSheetOpen(false)}>Save</Button>}>
           <p className="text-text-2">Sheets use radius-lg, shadow-3 and the token backdrop.</p>
           <div className="mt-3 flex items-center gap-2">
