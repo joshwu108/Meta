@@ -23,6 +23,25 @@ function check<T>(res: { data: T; error: { message: string; code?: string } | nu
   return res.data;
 }
 
+/**
+ * PostgREST puts `.in()` values in the URL and the gateway answers 414 above ~200 uuids, so
+ * batch reads go 100 ids per request (03 measured 200 ok, 250 rejected).
+ */
+export const ID_CHUNK = 100;
+
+export function chunkIds(ids: readonly string[], size = ID_CHUNK): string[][] {
+  const unique = [...new Set(ids)];
+  return Array.from({ length: Math.ceil(unique.length / size) }, (_, i) => unique.slice(i * size, (i + 1) * size));
+}
+
+type ListResult = { data: unknown[] | null; error: { message: string; code?: string } | null };
+
+/** Runs `query` once per id chunk in parallel and concatenates the rows; any failed chunk throws. */
+async function selectInChunks<T>(ids: readonly string[], what: string, query: (chunk: string[]) => PromiseLike<ListResult>): Promise<T[]> {
+  const results = await Promise.all(chunkIds(ids).map((chunk) => query(chunk)));
+  return results.flatMap((res) => (check(res, what) ?? []) as T[]);
+}
+
 export async function getPreferences(sb: SupabaseClient, userId: string): Promise<UserPreferencesWithSources> {
   const res = await sb.from("user_preferences").select(PREFERENCES_COLUMNS).eq("user_id", userId).maybeSingle();
   return rowToPreferences(check(res, "load preferences") as PreferencesRow | null);
@@ -155,16 +174,18 @@ type SourceRow = PreferencesRow & {
 
 export async function adminLoadSources(admin: SupabaseClient, userIds: readonly string[]): Promise<SharableSource[]> {
   const [prefs, agents] = await Promise.all([
-    admin
-      .from("user_preferences")
-      .select(`${PREFERENCES_COLUMNS}, profiles!inner(is_discoverable, neighborhood, coarse_lat, coarse_lng)`)
-      .in("user_id", [...userIds]),
-    admin.from("agent_profiles").select("user_id, consent").in("user_id", [...userIds]),
+    selectInChunks<SourceRow>(userIds, "load sharable preferences", (ids) =>
+      admin
+        .from("user_preferences")
+        .select(`${PREFERENCES_COLUMNS}, profiles!inner(is_discoverable, neighborhood, coarse_lat, coarse_lng)`)
+        .in("user_id", ids),
+    ),
+    selectInChunks<{ user_id: string; consent: unknown }>(userIds, "load consent", (ids) =>
+      admin.from("agent_profiles").select("user_id, consent").in("user_id", ids),
+    ),
   ]);
-  const consentById = new Map(
-    (check(agents, "load consent") as { user_id: string; consent: unknown }[]).map((a) => [a.user_id, a.consent]),
-  );
-  return (check(prefs, "load sharable preferences") as unknown as SourceRow[]).map((row) => {
+  const consentById = new Map(agents.map((a) => [a.user_id, a.consent]));
+  return prefs.map((row) => {
     const { fieldSources: _ignored, ...preferences } = rowToPreferences(row);
     void _ignored;
     return {
@@ -190,15 +211,17 @@ export async function adminRecentShareLogs(
   purpose: ShareLogKey,
 ): Promise<Set<string>> {
   const since = new Date(Date.now() - SHARE_LOG_WINDOW_MS).toISOString();
-  const res = await admin
-    .from("agent_action_log")
-    .select("user_id")
-    .eq("actor", "coordination")
-    .eq("action", "share_preferences")
-    .contains("permissions_used", [purpose])
-    .gte("created_at", since)
-    .in("user_id", [...userIds]);
-  return new Set((check(res, "load share logs") as { user_id: string }[]).map((r) => r.user_id));
+  const rows = await selectInChunks<{ user_id: string }>(userIds, "load share logs", (ids) =>
+    admin
+      .from("agent_action_log")
+      .select("user_id")
+      .eq("actor", "coordination")
+      .eq("action", "share_preferences")
+      .contains("permissions_used", [purpose])
+      .gte("created_at", since)
+      .in("user_id", ids),
+  );
+  return new Set(rows.map((r) => r.user_id));
 }
 
 const PURPOSE_LABEL: Record<ShareLogKey, string> = {
@@ -232,15 +255,15 @@ export type ConsentRow = { userId: string; interests: string[]; consent: Consent
 /** Interests + consent for a set of users (attendee chips, server-side RSVP defaults). */
 export async function adminLoadConsent(admin: SupabaseClient, userIds: readonly string[]): Promise<ConsentRow[]> {
   const [agents, prefs] = await Promise.all([
-    admin.from("agent_profiles").select("user_id, consent").in("user_id", [...userIds]),
-    admin.from("user_preferences").select("user_id, interests").in("user_id", [...userIds]),
+    selectInChunks<{ user_id: string; consent: unknown }>(userIds, "load consent", (ids) =>
+      admin.from("agent_profiles").select("user_id, consent").in("user_id", ids),
+    ),
+    selectInChunks<{ user_id: string; interests: string[] }>(userIds, "load interests", (ids) =>
+      admin.from("user_preferences").select("user_id, interests").in("user_id", ids),
+    ),
   ]);
-  const consentById = new Map(
-    (check(agents, "load consent") as { user_id: string; consent: unknown }[]).map((a) => [a.user_id, a.consent]),
-  );
-  const interestsById = new Map(
-    (check(prefs, "load interests") as { user_id: string; interests: string[] }[]).map((p) => [p.user_id, p.interests]),
-  );
+  const consentById = new Map(agents.map((a) => [a.user_id, a.consent]));
+  const interestsById = new Map(prefs.map((p) => [p.user_id, p.interests]));
   return [...userIds].map((userId) => ({
     userId,
     interests: interestsById.get(userId) ?? [],
