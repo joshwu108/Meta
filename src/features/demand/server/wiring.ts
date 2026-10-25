@@ -15,7 +15,7 @@ export function supabaseDeps(admin: SupabaseClient = createAdminClient() as unkn
     now: () => new Date(),
     startRun: (by) => store.startRun(admin, by),
     updateRun: store.runUpdater(admin),
-    listEligibleUserIds: () => store.listEligibleUserIds(admin),
+    listEligibleUserIds: () => store.listEligibleUserIds(admin, DEMAND_CONFIG.pageSize),
     getSharableBatch: (ids) => stubSharableBatch(admin, ids),
     logActions,
     findCandidates: (criteria) => stubFindCandidates(admin, criteria),

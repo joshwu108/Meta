@@ -9,6 +9,10 @@ export const DEMAND_CONFIG = {
   venueRadiusKm: 3,
   budgetHeadroom: 1.5,
   minDaysOut: 5,
+  /** Ids per `.in()` read: the local gateway rejects URLs above about 200 uuids (414). */
+  idBatchSize: 100,
+  /** Rows per page when listing eligible users; PostgREST caps responses at `max_rows` (1000). */
+  pageSize: 1000,
 } as const;
 
 export type DemandConfig = {

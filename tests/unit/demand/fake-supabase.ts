@@ -16,7 +16,7 @@ export function fakeClient(...results: FakeResult[]) {
     calls.push([name, args]);
     return chain;
   };
-  for (const name of ['from', 'select', 'eq', 'gte', 'not', 'limit', 'insert', 'update', 'in', 'order']) chain[name] = record(name);
+  for (const name of ['from', 'select', 'eq', 'gte', 'not', 'limit', 'insert', 'update', 'in', 'order', 'range']) chain[name] = record(name);
   chain['maybeSingle'] = async () => next();
   chain['single'] = async () => next();
   chain['then'] = (resolve: (r: FakeResult) => unknown) => resolve(next());

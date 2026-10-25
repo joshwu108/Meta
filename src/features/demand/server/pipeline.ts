@@ -21,10 +21,13 @@ const STAT_FOR: Partial<Record<ClusterOutcome['kind'], keyof RunStats>> = {
 
 const bump = (stats: RunStats, key: keyof RunStats | undefined): RunStats => (key ? { ...stats, [key]: stats[key] + 1 } : stats);
 
-/** Spec §5.1: consent-filtered preferences for every eligible user; one batched log insert. */
+/** Spec §5.1: consent-filtered preferences for every eligible user, read in id batches. */
 async function collect(deps: PipelineDeps): Promise<DemandUser[]> {
   const ids = await deps.listEligibleUserIds();
-  const shared = [...(await deps.getSharableBatch(ids)).values()];
+  const shared: DemandUser[] = [];
+  for (let i = 0; i < ids.length; i += deps.config.idBatchSize) {
+    shared.push(...(await deps.getSharableBatch(ids.slice(i, i + deps.config.idBatchSize))).values());
+  }
   await deps.logActions(shared.map((u) => ({
     userId: u.userId, actor: 'demand_engine', action: 'collect_signals', permissionsUsed: ['demand'], result: 'Counted your interests and availability in anonymous community demand',
   })));

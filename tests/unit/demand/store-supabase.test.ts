@@ -42,6 +42,12 @@ describe('store-supabase', () => {
     await expect(store.listEligibleUserIds(fakeClient({ data: null, error: { message: 'x' } }).client)).rejects.toThrow('eligible users');
   });
 
+  it('pages eligible users past the max_rows cap', async () => {
+    const { client, calls } = fakeClient({ data: [{ id: 'a' }, { id: 'b' }], error: null }, { data: [{ id: 'c' }], error: null });
+    expect(await store.listEligibleUserIds(client, 2)).toEqual(['a', 'b', 'c']);
+    expect(calls.filter(([n]) => n === 'range').map(([, a]) => a)).toEqual([[0, 1], [2, 3]]);
+  });
+
   it('saves cluster, member ids and proposal through one RPC', async () => {
     const { client, rpc } = fakeClient({ data: 'p-1', error: null });
     const id = await store.saveProposal(client, { runId: 'r1', cluster: CLUSTER, venue: { match: { businessId: 'b1' } } as never, proposal: { title: 't' } as never });

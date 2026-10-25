@@ -28,14 +28,22 @@ export function runUpdater(admin: SupabaseClient): PipelineDeps['updateRun'] {
   };
 }
 
-export async function listEligibleUserIds(admin: SupabaseClient): Promise<string[]> {
-  const { data, error } = await admin
-    .from('profiles')
-    .select('id')
-    .not('onboarding_completed_at', 'is', null)
-    .eq('is_adult_confirmed', true);
-  if (error) throw new Error(`eligible users failed: ${error.message}`);
-  return (data as Array<{ id: string }>).map((r) => r.id);
+/** Pages through eligible profiles so a city larger than PostgREST's `max_rows` is not truncated. */
+export async function listEligibleUserIds(admin: SupabaseClient, pageSize = 1000): Promise<string[]> {
+  const ids: string[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await admin
+      .from('profiles')
+      .select('id')
+      .not('onboarding_completed_at', 'is', null)
+      .eq('is_adult_confirmed', true)
+      .order('id')
+      .range(from, from + pageSize - 1);
+    if (error) throw new Error(`eligible users failed: ${error.message}`);
+    const page = (data as Array<{ id: string }>).map((r) => r.id);
+    ids.push(...page);
+    if (page.length < pageSize) return ids;
+  }
 }
 
 export async function hasRecentPendingProposal(admin: SupabaseClient, signature: string, since: Date): Promise<boolean> {

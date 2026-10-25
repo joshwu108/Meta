@@ -39,6 +39,18 @@ describe('runPipeline (Scene 3 data)', () => {
     expect(logged).toHaveLength(13);
   });
 
+  it('reads preferences in id batches so large cities stay under the URL limit', async () => {
+    const { deps: base } = makeDeps();
+    const real = await base.listEligibleUserIds();
+    const extra = Array.from({ length: 236 }, (_, i) => `00000000-0000-0000-0000-${String(i).padStart(12, '0')}`);
+    const getSharableBatch = vi.fn(base.getSharableBatch);
+    const { deps, saved } = makeDeps({ listEligibleUserIds: async () => [...extra, ...real], getSharableBatch });
+    await runPipeline(deps, { triggeredBy: 'manual' });
+    const sizes = getSharableBatch.mock.calls.map(([ids]) => ids.length);
+    expect(sizes).toEqual([100, 100, 50]);
+    expect(saved.length).toBeGreaterThan(0);
+  });
+
   it('creates nothing new on a second run within the dedup window', async () => {
     const { deps, saved } = makeDeps({ generate: scene3Generate });
     await runPipeline(deps, { triggeredBy: 'manual' });
