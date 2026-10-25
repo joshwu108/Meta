@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type * as NextServer from 'next/server';
 
 vi.mock('server-only', () => ({}));
 process.env.MOCK_AI = '1';
@@ -12,7 +13,7 @@ const { reviseRouteDeps } = await import('@/features/demand/server/route-deps');
 const { handleRevise } = await import('@/features/demand/server/revise-route');
 
 vi.mock('next/server', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('next/server')>()),
+  ...(await importOriginal<typeof NextServer>()),
   after: (task: () => unknown) => task(),
 }));
 
