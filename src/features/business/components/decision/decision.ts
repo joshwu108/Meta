@@ -18,7 +18,7 @@ export const REASON_LABEL: Record<RejectionReason, string> = {
   other: 'Another reason',
 };
 
-export type DecisionMode = 'idle' | 'editing' | 'rejecting';
+export type DecisionMode = 'idle' | 'editing' | 'rejecting' | 'revising';
 
 const MINUTE_MS = 60_000;
 
