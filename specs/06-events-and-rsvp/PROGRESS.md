@@ -122,13 +122,15 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Blocked
 
-- CI's "migrations, types, integration" job on PR #2 cannot pass until ws/05-business is on main: 0600 references 05's `events`/`businesses`. After 05 lands, regenerate `src/lib/supabase/database.types.ts` (`pnpm db:types`, needs `supabase start`, i.e. Docker; Docker Desktop is installed here but not running) and push.
+- CI's "migrations, types, integration" job on PR #2 cannot pass until ws/05-business is on main: 0600 references 05's `events`/`businesses`. As of 2026-10-24 22:30 PT, 05 is staged on the integrator's `ws/integrate-05` (`7784635`, main + 04 + 05) but not on `origin/main`; per the owner, 06 waits for main rather than merging the integration branch.
+- `src/lib/supabase/database.types.ts` must be regenerated with 06's tables (`pnpm db:types`) after the 05 merge, and the Supabase integration tests and Playwright scenes need a local stack. Docker Desktop is installed but stopped and the disk has 3.7 GiB free; the owner chose not to start Docker on this machine, so these run in CI or on another machine.
 - E2E scenes 5 and 6 are written (`tests/e2e/`) but need 01's `/login` page and seed runner plus a running Supabase stack. Scene 5 runs as `demo.new@commonground.test`, the Scene 1 user (override with `E2E_DEMO_EMAIL`) and that Scene 4 published "Beginner Pottery & Coffee Night".
 - P1 list/map toggle: needs a static map tile provider decision (OpenStreetMap static tiles, Mapbox with a key, etc.) and 01's CSP to allow its `img-src`. Everything else on the page works without it.
 - Supabase CLI and Docker are not available here, so `pnpm db:reset`, `pnpm db:seed`, requests through real PostgREST/GoTrue, and Playwright scenes cannot run on this machine. SQL, RLS (as a non-superuser role), services and routes are covered on plain Postgres. Needs a machine with `supabase start` to finish the stack checks.
 
 ## Log
 
+- 2026-10-24 22:30 PT: asked to integrate 05, but `origin/main` (`e88e93f`) has no 0500/0501; 05 is on `ws/integrate-05` (`7784635`). Rehearsed merging that branch into 06: no conflicts, frozen lockfile, typecheck/lint clean, 635 unit + 62 db tests, `next build` green; all 13 migrations (0100–0600) apply and the attendee smoke passes. Waiting for main per the owner; Docker stays off (3.7 GiB free disk).
 - 2026-10-24 22:15 PT: 03 landed on main; merged (registry imports), swapped every 03 stub for the real export, test schema now uses 03's real tables. 257 unit + 62 db tests, typecheck, lint, build green. Main still lacks 05 (and 02, 04).
 - 2026-10-24 22:00 PT: main unchanged. Consent sheet now uses 01's Sheet (Escape, focus return; 01's focus trap follows on its next merge). Attendee-sharing reads chunked at 100 after 03 measured 02's single `.in()` failing above ~200 ids. 05 records 06's `rsvps` seam verified; 03 records a registry-import-only conflict with 06. 182 unit + 62 db tests.
 - 2026-10-24 21:45 PT: main unchanged. Chunked every id-list read after 03 reported PostgREST URL overflow (unit + 130-event DB test). 05 verified its attendee path against 06's real table. 181 unit + 62 db tests.
