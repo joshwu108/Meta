@@ -9,7 +9,7 @@ import { ExportStep } from './export-step';
 import type { ExtractedLabels } from './export-labels';
 import { ShareStep, type ShareSource } from './share-step';
 
-type Stage = 'loading' | 'share' | 'reading' | 'review' | 'done';
+type Stage = 'loading' | 'share' | 'reading' | 'saving' | 'review' | 'done';
 
 /** Multipart upload with the same envelope unwrapping as 01's API client. */
 async function sendScreens(images: PreparedImage[], sources: ShareSource[]): Promise<ScreensRunResult> {
@@ -83,7 +83,7 @@ export function ImportFlow({ after, onDecided }: Props) {
       setStage('done');
       return;
     }
-    setStage('reading');
+    setStage('saving');
     try {
       setResult(await apiPost<DecideResult>('/api/import/suggestions/decide', { decisions }));
       setStage('done');
@@ -104,10 +104,10 @@ export function ImportFlow({ after, onDecided }: Props) {
       </div>
     );
   }
-  if (stage === 'reading') {
+  if (stage === 'reading' || stage === 'saving') {
     return (
       <Card aria-busy="true">
-        <p className="m-0" role="status">Your agent is looking for interests that fit you…</p>
+        <p className="m-0" role="status">{stage === 'saving' ? 'Saving what you chose…' : 'Your agent is looking for interests that fit you…'}</p>
         <div className="mt-3 grid gap-3 md:grid-cols-2" aria-hidden>
           {[0, 1, 2, 3].map((i) => <div key={i} className="h-24 animate-pulse rounded-md bg-surface" />)}
         </div>
