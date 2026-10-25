@@ -94,12 +94,23 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 ## P1 (spec §3)
 - [x] **P1-1** `/business/insights` — banded demand by category × slot within 3 km, last 30 days
 - [x] **P1-2** Analytics: past events, attendance, repeat attendees (count only)
-- [!] **P1-3** "Ask AI to revise" on a proposal — **blocked**: 04 exposes no revise
-  endpoint. See Needs from others for the exact ask.
+- [x] **P1-3** "Ask AI to revise" on a proposal — 04 built the endpoint I asked for;
+  verified end to end against their branch (see Decisions)
 
 ---
 
 ## Decisions
+
+- **2026-10-24 — P1-3 built and verified against 04's branch.** 04 had already shipped the
+  revise endpoint I asked for, so rather than stub it I grafted their branch locally
+  (migrations plus `src/features/demand` and `src/app/api/ai`, never committed). Two things
+  came out of it: **their feature typechecks against 05 with zero errors**, and the flow
+  works end to end — asking for a revision leaves the original `expired` at revision 0 and
+  opens a new `pending` proposal at revision 1 carrying the owner's note, exactly the
+  supersede behaviour `0403` documents. Notable contract details 05 had to honour: the
+  request schema is `.strict()` and needs at least one field, so an untouched control is
+  omitted rather than sent empty; and because the answer is a *new* proposal, the panel
+  navigates to it instead of refreshing an expired page.
 
 - **2026-10-24 — Verified against workstream 04's real branch, and it found two bugs.**
   04's branch carries its migrations, so rather than keep guessing from their spec I applied
@@ -296,6 +307,16 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 20:50` — **P1-3 shipped; the checklist is now complete.** 04's branch already
+  had the revise endpoint, so I grafted their feature locally (never committed) and built
+  "Ask AI to revise" against the real contract rather than a guess: a note plus optional
+  price, capacity or slot, with distinct copy for the revision limit, a rate limit, the AI
+  being unavailable, and a route that has not merged. Verified end to end — the original
+  proposal ends `expired` at revision 0 and a new `pending` one opens at revision 1 with the
+  owner's note. With 04 grafted: **348 unit, 37 integration (1 skipped), 33 e2e**. Graft
+  removed afterwards, so on `main` the branch reports 348 unit, 29 integration and the
+  04-dependent cases skipped. Typecheck, lint and build clean. Every P0 and P1 item in this
+  checklist is now ticked; what remains is watching main for 04 and 06.
 - `2026-10-24 20:15` — **Scene 4 passes end to end for the first time, and getting there
   found two real bugs.** 04 has not merged, but its branch carries its migrations, so I
   applied them locally (not committed), reset, seeded and ran the suites that had been
