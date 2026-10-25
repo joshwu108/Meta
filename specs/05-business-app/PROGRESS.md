@@ -1011,3 +1011,38 @@ either side of 04. Both were confirmed present in the 13-migration run.
   working — so the suite blamed 05's screen for 04's outage. It now reads the real response
   status: a 5xx skips with a message naming 04, while a 4xx from 05's own payload still
   fails. 865 unit tests pass.
+
+- **2026-10-25 07:50 — covering the desktop table, and two vacuous tests I wrote myself.**
+  The sort logic had 9 unit tests; the wiring from a column header to a reordered table had
+  only ever been checked by hand. Three e2e cases now cover it at Playwright's 1280px
+  default, which is exactly where the table replaces the card list.
+  Both ordering cases were vacuous when first written, and only stubbing `sortEvents` to
+  return its input showed it:
+  1. The fill case read the ratio out of the meter's **label**, which renders "Full" or
+     "N left" — never "confirmed/capacity". Every row therefore parsed as 0, so any ordering
+     satisfied the assertion. It now reads `aria-valuenow` / `aria-valuemax` off the
+     `role="meter"` element, which is the real signal.
+  2. Asserting only "descending is sorted" passed with the sort stubbed out, because this
+     venue's rows already arrive fullest-first. Both directions are now asserted and
+     required to differ.
+  A third trap avoided: comparing one direction against the exact reverse of the other is
+  wrong for a stable sort, since rows with equal fills keep the server's order both ways.
+  Verified non-vacuous by breaking `sortEvents` and watching both cases fail, then restoring
+  it. A run where no two events differ in fill now skips with that reason rather than
+  passing for free.
+  Note on a skip seen along the way: `appIsReady` fired while the dev server was recompiling,
+  which reads as "the app is not reachable" and is indistinguishable from a real skip in the
+  summary line. Worth knowing when a case skips unexpectedly right after an edit.
+
+- **Working tree warning for the integrator.** This checkout had another session's
+  uncommitted work in it (a Meta Llama provider under `src/lib/ai`, agent suggestions, a new
+  `specs/07-connection-graph/`). Two of my commits, `ba0bc2b` and `bd1332c`, swept some of it
+  in via `git add -A` and are already pushed: `src/lib/ai/{chat,generate-structured,models}.ts`,
+  `src/lib/ai/providers/{anthropic,index,llama,types}.ts`, `src/lib/env.ts`, and
+  `tests/unit/ai/{llama-provider,provider-resolution}.test.ts`. None of it is 05's and none
+  of it is mine to finish. I have not touched those files on disk — several are still being
+  edited, so reverting them out of the branch would delete live work — and I am using
+  explicit paths rather than `git add -A` from here on. If 05 is merged before this is
+  resolved, an unfinished Llama integration lands on `main` under my name.
+  This also blocks `sync-main.sh`, which refuses to run with a dirty tree, so 05 has not
+  taken main's newer ws04/ws06 commits yet. That is deliberate.
