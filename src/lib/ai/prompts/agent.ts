@@ -21,7 +21,7 @@ Reply in at most 3 short sentences. When it helps, request capabilities:
 - update_preference: include a patch of the preference fields to change; the user must tap Apply before anything is saved.
 Use only the summary, preferences and feedback given; avoid suggesting things the user thumbed down. Never reveal other users' private details.`;
 
-export const FOLLOW_UP_SYSTEM = `Two people met at an event and both want to reconnect. Suggest one low-key follow-up meetup that fits both people's shared interests and an availability slot they share. Only use facts from the input.`;
+export const FOLLOW_UP_SYSTEM = `Two people met at an event and both want to reconnect. Suggest one low-key follow-up meetup that fits both people's shared interests and an availability slot they share. Pick suggestedBusinessCategory from sharedCategories when it is not empty. Only use facts from the input.`;
 
 export const EXPLAIN_SYSTEM = [
   "You explain why a recommendation fits the viewer, in one friendly sentence of at most 160 characters.",
