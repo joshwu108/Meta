@@ -17,7 +17,7 @@ import { logAgentAction } from "@/features/core";
 import { generateStructured } from "@/lib/ai";
 import { suggestPeople } from "./people";
 import { suggestGroups } from "./groups";
-import { suggestEvents } from "./suggestion-stubs";
+import { suggestEvents } from "./events";
 
 const ALL_CONSENT = { ...DEFAULT_CONSENT, allow_matching: true, allow_demand_aggregation: true, allow_group_planning: true };
 
