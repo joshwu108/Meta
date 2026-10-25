@@ -64,7 +64,8 @@ and is wrapped in `withAuth` unless a comment marks it public. See `specs/README
 
 Vercel (web) + hosted Supabase. Required env vars: `NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `MOCK_AI`,
-`DEMO_MODE`, `MIN_COHORT_SIZE`, `OPPORTUNITY_CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`. Apply migrations
+`DEMO_MODE`, `MIN_COHORT_SIZE`, `OPPORTUNITY_CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `IMPORT_ENABLED`
+(workstream 07; `0` in production until signed off, `1` locally). Apply migrations
 with `supabase db push` against the hosted project. The dev seed route is unreachable in
 production unless `DEMO_MODE=1`.
 

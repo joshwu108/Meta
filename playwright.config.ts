@@ -30,7 +30,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: process.env.CI ? 300_000 : 120_000,
     // ENABLE_DEV_ROUTES lets 05's suite seed a fixture proposal; the route refuses
-    // without it and on any production deployment.
-    env: { MOCK_AI: '1', DEMO_MODE: '1', NEXT_PUBLIC_SITE_URL: baseURL, ENABLE_DEV_ROUTES: '1' },
+    // without it and on any production deployment. IMPORT_ENABLED turns on 07's Scene 1b.
+    env: { MOCK_AI: '1', DEMO_MODE: '1', NEXT_PUBLIC_SITE_URL: baseURL, ENABLE_DEV_ROUTES: '1', IMPORT_ENABLED: '1' },
   },
 });
