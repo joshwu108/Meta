@@ -17,6 +17,6 @@
   font-size: var(--text-xs); font-weight: var(--weight-semibold); white-space: nowrap;
 }
 .warning { background: var(--color-warning-soft); color: var(--color-warning-ink); }
-.brand { background: var(--color-brand-soft); color: var(--color-brand); }
+.brand { background: var(--color-brand-soft); color: var(--color-brand-ink, var(--color-brand)); } /* ink: AA on brand-soft */
 
 .meter { display: grid; gap: var(--space-1); font-size: var(--text-sm); color: var(--color-text-2); }
