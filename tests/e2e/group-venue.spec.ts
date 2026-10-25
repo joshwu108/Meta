@@ -45,7 +45,7 @@ test('P1: a voted venue idea goes to 04 as a group-originated proposal', async (
 
   const { data: detail } = (await (await page.request.get(`/api/groups/${groupId}`)).json()) as { data: { latestPlan: Plan } };
   const index = detail.latestPlan.suggestions.findIndex((s) => s.title === IDEA);
-  await voteAs(browser, 'leo@commonground.test', groupId, detail.latestPlan.id, index);
+  await voteAs(browser, 'leo@weave.test', groupId, detail.latestPlan.id, index);
 
   const requestVenue = idea.getByRole('button', { name: 'Request venue' });
   await page.reload();

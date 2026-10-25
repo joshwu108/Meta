@@ -9,7 +9,7 @@ export default async function EventsAside({ searchParams }: { searchParams: Prom
   return (
     <div style={{ display: "grid", gap: "var(--space-3)" }}>
       <AgentAside displayName={user?.profile.display_name ?? "you"} />
-      <EventFilters values={EventsPageFilters.parse(await searchParams)} />
+      <EventFilters instance="rail" values={EventsPageFilters.parse(await searchParams)} />
     </div>
   );
 }

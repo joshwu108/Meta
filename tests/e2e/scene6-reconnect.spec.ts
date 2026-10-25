@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./helpers";
+import { login, reseed } from "./helpers";
 
 // Scene 6: the seeded completed "Latte Art & Conversation" already holds maya → jordan interest;
 // jordan picks maya, and both see the AI follow-up suggestion in Activity.
 const EVENT = "Latte Art & Conversation";
 
 test("mutual reconnect produces a follow-up suggestion for both people", async ({ page }) => {
+  // The scenario ends with the pair accepted on both sides, so it only runs once per dataset.
+  await reseed(page);
   await login(page, "jordan@weave.test");
   await page.goto("/activity");
   await page.getByRole("region", { name: "Past events" }).getByText(EVENT).click();

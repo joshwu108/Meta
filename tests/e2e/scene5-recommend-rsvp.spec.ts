@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { CONSUMER, login } from "./helpers";
+import { CONSUMER, login, reseed } from "./helpers";
 
 // Scene 5. On a fresh seed (CI) the pottery night does not exist yet: 05 publishes it in Scene 4 and
 // personalisation needs 02's Scene 1 preferences. The RSVP flow therefore runs on any open seeded
@@ -9,6 +9,7 @@ const POTTERY = "Beginner Pottery & Coffee Night";
 type Card = { id: string; title: string; isFull: boolean; rsvpStatus: string | null };
 
 test("Discover leads with a recommendation and its AI explanation", async ({ page }) => {
+  await reseed(page);
   await login(page, CONSUMER.email);
   await page.goto("/discover");
 

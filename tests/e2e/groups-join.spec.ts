@@ -9,7 +9,7 @@ test('a public group found on /groups/discover can be joined from its page', asy
   test.setTimeout(60_000);
   await reseed(page);
   // Elena is onboarded and not in the seeded public group "Mission Makers".
-  await login(page, 'elena@commonground.test');
+  await login(page, 'elena@weave.test');
   const missionMakers = page.getByRole('link', { name: /Mission Makers/ });
   await openSettled(page, '/groups/discover', missionMakers);
   await missionMakers.click();

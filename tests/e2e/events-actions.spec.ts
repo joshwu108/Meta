@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { login } from "./helpers";
+import { login, reseed } from "./helpers";
 
 // Clicks every WS06 action a judge can reach on seeded data, failing on uncaught page errors or
 // browser console errors. Runs as leo@ (active member of "Mission Makers"), whom no other 06 spec uses.
-const USER = "leo@commonground.test";
+const USER = "leo@weave.test";
 type Card = { id: string; title: string; category: string; isFull: boolean; rsvpStatus: string | null };
 
 function watchErrors(page: Page): string[] {
@@ -21,7 +21,10 @@ async function openEvents(page: Page): Promise<Card[]> {
 }
 
 test("save, invite a group, filter, places and not-found work without errors", async ({ page }) => {
+  // Reseeds and then walks most of 06's routes; in dev each one compiles on first request.
+  test.setTimeout(90_000);
   const errors = watchErrors(page);
+  await reseed(page);
   await login(page, USER);
   const event = (await openEvents(page)).find((e) => !e.isFull && e.rsvpStatus === null);
   test.skip(!event, "no open event");
@@ -49,8 +52,10 @@ test("save, invite a group, filter, places and not-found work without errors", a
   await expect(page.getByRole("region", { name: "Saved" }).getByText(event!.title)).toBeVisible({ timeout: 20_000 });
 
   await page.goto("/events?tab=all");
-  await page.getByLabel("Category").first().selectOption({ label: "Food & drink" });
-  await page.getByRole("button", { name: "Apply filters" }).first().click();
+  // Two copies of the filter form exist at once (rail and feed); only one is shown per width.
+  const filters = page.locator('form[aria-label="Filter events"]:visible');
+  await filters.getByLabel("Category").selectOption({ label: "Food & drink" });
+  await filters.getByRole("button", { name: "Apply filters" }).click();
   await expect(page).toHaveURL(/category=food_drink/);
   const titles = await page.getByRole("list").getByRole("heading", { level: 3 }).allTextContents();
   const foodTitles = (await openEvents(page)).filter((e) => e.category === "food_drink").map((e) => e.title);
