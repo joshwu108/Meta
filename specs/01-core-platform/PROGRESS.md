@@ -62,6 +62,8 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Decisions
 
+- 2026-10-24: Contrast fix (03's axe-core audit). Design-system §1 promises AA but brand text on canvas/brand-soft (4.30/4.20 light), dark brand on surface-2/brand-soft (3.25/3.40), white on the dark brand fill (3.46) and danger on danger-soft (3.94) all failed. Added text tokens `--color-brand-ink` (#0A5BE0 light / #6FAFFF dark), `--color-danger-ink` (#C4163A / #FF6B84), `--color-success-ink` (#1F7A36 / #45BD62); `--color-brand` stays the fill color but the dark fill is now #1A6FE8 (white on it 4.68:1; hover #2D88FF, pressed #0A5BE0). Links, active nav, Tabs, selected Chip, Avatar initials, StatusPill and form alerts use the ink tokens. Every pair now ≥ 4.5:1 (verified with a WCAG luminance script). Light brand fill unchanged (white on #0866FF = 4.82).
+
 - 2026-10-24: `src/shared/types.ts` now follows the owning specs where they differ from the README baseline: `SharablePreferences.interestCategories: EventCategory[]`, `groupSizePref: GroupSizePref | null`, and `ExplainInput = { viewer, target, breakdown }` (spec 02 §5; 03 and 06 already code against it). README §4 needs the same edit (Needs from others).
 - 2026-10-24: `users.json` has 16 users (added `jordan@commonground.test` for Scene 6 per spec 06 §8); spec 01 §6 updated; README §5 still says 15.
 - 2026-10-24: Prompt definitions are split into `src/lib/ai/prompts/{agent,groups,demand,events}.ts` and spread into `PROMPTS`; seed extensions register in `supabase/seed/loaders/registry.ts`. Both exist so other workstreams' merges add lines instead of conflicting.
@@ -74,6 +76,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Needs from others
 
+- design-system.md (integrator): add `--color-brand-ink`, `--color-danger-ink`, `--color-success-ink` to §1 and change the dark `--color-brand`/hover/pressed to #1A6FE8/#2D88FF/#0A5BE0 (see Decisions). Rule for everyone: brand-colored *text* uses `text-brand-ink`; `bg-brand` + `text-text-on-brand` for fills; `text-danger-ink`/`text-success-ink` on the soft backgrounds.
 - 02: `Chip` takes `label` (remove button reads "Remove <label>") and `Switch` takes `labelledBy`/`describedBy` (renders only the control when `label` is omitted); `server-only` is aliased in every vitest project and `integration` sets `MOCK_AI=1`. You can drop the local Chip/Switch and the alias on merge. Your edit to the onboarding e2e test is fine; keep it.
 - 06 (and 02/03): the consumer right rail is now the `@aside` parallel route; add `src/app/(consumer)/@aside/discover/page.tsx` (agent strip) and `@aside/events/page.tsx` (filters) to own those rails. Everything else keeps the default agent strip.
 - All: notification `payload.href` (in-app path) is now honoured by the bell; `payload.title` and `payload.body` override the default copy.
@@ -99,6 +102,7 @@ Branch: `ws/01-core`. Source of truth: [`specs.md`](./specs.md) and [`../README.
 
 ## Log
 
+- 2026-10-24 20:05 — Wakeup: main fast-forwarded to 808078c by the integrator (01 fully on main); 02/03/04/06 merged it, 06 uses the @aside slot, 03 reports CI green. Landed 03's contrast ask (ink tokens, dark fill #1A6FE8, every pair ≥ 4.5:1) and 02's flaky-timeout ask. 80 unit + 17 integration + 17 e2e green. Next: watch main.
 - 2026-10-24 19:40 — Wakeup: main unchanged; 02/03/04/05 merged main into their branches, 03 reports all three CI jobs green with 01's workflow. Landed 02's asks: Chip remove labels, Switch external labelling, server-only alias in unit/integration, MOCK_AI pinned for integration. 80 unit + 17 integration + 17 e2e green. Next: watch main.
 - 2026-10-24 19:20 — Wakeup: main unchanged since the 01 merge. 06 merged main into its branch and reports CI lint/typecheck/unit green on its PR (my workflow works; its Supabase job waits on 05). Landed 06's request: `@aside` parallel-route slot for the consumer right rail (default + catch-all → agent strip). 79 unit + 17 integration + 17 e2e green. Next: watch main.
 - 2026-10-24 18:50 — Integrator asked for ws/01-core on main: fast-forwarded main to 5766791, then to integration/ws01 (67c7e8a: Node 22 `.npmrc` + README/design-system contract edits applying this file's requests). Branch synced to main. Scripts verified on the pinned Node 22.20.0: typecheck clean, 79 unit green. Next: other workstreams merge onto this; keep syncing and reconcile their changes to shared files.
