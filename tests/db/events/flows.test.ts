@@ -148,6 +148,25 @@ describe.skipIf(!available)("06 flows against Postgres", () => {
     expect(activity.notifications.map((n) => n.type)).toContain("group_invite");
   });
 
+  it("keeps a cancelled upcoming event in Activity and drops invitations already answered by an RSVP", async () => {
+    const [me, friend] = await Promise.all([createUser(db.pool, "Me"), createUser(db.pool, "Friend")]);
+    const cancelled = await createEvent(db.pool, { businessId, title: "Cancelled Kiln Night" });
+    const invited = await createEvent(db.pool, { businessId, title: "Invited And Going" });
+    await rsvpAs(db, me, cancelled);
+    const groupId = await createGroup(db.pool, friend, [[friend, "active"], [me, "active"]]);
+    await inviteGroupToEvent(friend, invited, groupId);
+    await rsvpAs(db, me, invited);
+    await db.pool.query("update events set cancel_reason = 'Kiln repair' where id = $1", [cancelled]);
+    await setEventStatus(db.pool, cancelled, "cancelled");
+
+    const activity = await getActivity(me);
+
+    expect(activity.upcoming.map((e) => [e.title, e.status])).toEqual(
+      expect.arrayContaining([["Cancelled Kiln Night", "cancelled"], ["Invited And Going", "published"]]),
+    );
+    expect(activity.invitations.map((i) => i.event.id)).not.toContain(invited);
+  });
+
   it("lists nearby venues with distance and next event, and filters the feed by radius", async () => {
     const viewer = await createUser(db.pool);
     await setLocation(db.pool, viewer, 37.77, -122.42); // ~1.1 km north of the venue
