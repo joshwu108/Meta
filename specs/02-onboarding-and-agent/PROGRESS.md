@@ -131,6 +131,7 @@ ws02 sync procedure once 01 is on main (tested approach):
 - ~~01: `profiles`, `agent_action_log`, `set_updated_at()`, `src/lib/api`, `src/lib/ai`, `logAgentAction`, `getCurrentUser`.~~ Landed on main; ws02 stubs removed (aba1bb7).
 
 ## Blocked
+- 2026-10-24 19:40 — main moved (808078c: 01 adopted the server-only alias for every project, MOCK_AI on integration, per-chip remove names and Switch external labels). Merging it conflicts in `vitest.config.ts` only, on one comment line where main supersedes ws02. Held per integration instructions: merge aborted, branch left at 0cb50b8. Resolution when cleared: take main's `vitest.config.ts`, then drop the in-file `MOCK_AI` pins in `tests/integration/agent/*.test.ts` and switch `primitives.tsx` Chip/Switch to `@/features/core/components/ui`.
 - (partly unblocked) Migration + RLS are now verified without Docker via PGlite in `tests/integration/agent/migration.test.ts`; it also passed against ws/01-core's real `0100_core.sql`. The supabase-js integration tests still need the local stack.
 - Running the live prompt eval (`pnpm tsx tests/evals/agent/run.ts`) needs `ANTHROPIC_API_KEY`; the set itself is committed and checked in CI.
 - ~~Even with Docker, `0200_agent.sql` needs 01's `0100_core.sql`, which is not on main yet.~~ Unblocked: 01 is on main; 0100 + 0200 apply on a fresh reset.
