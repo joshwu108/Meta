@@ -23,6 +23,7 @@ test('accepted connections can message each other (P1, polled)', async ({ page, 
   const messageMaya = leoPage.getByRole('region', { name: 'Your connections' }).getByRole('listitem').filter({ hasText: 'Maya Chen' }).getByRole('button', { name: 'Message' });
   await openSettled(leoPage, '/match?tab=connections', messageMaya);
   await messageMaya.click();
-  await expect(leoPage.getByRole('list', { name: 'Messages with Maya Chen' })).toContainText('Wheel night on Thursday?');
+  // The chat's first poll can take longer than 5s under dev-server load (seen by 01 in a full run).
+  await expect(leoPage.getByRole('list', { name: 'Messages with Maya Chen' })).toContainText('Wheel night on Thursday?', FIRST_REQUEST);
   await leo.close();
 });
