@@ -17,6 +17,7 @@ const { getRecommendedEvents } = await import('@/features/events');
 const { runOpportunityPipeline } = await import('@/features/demand');
 const { aiRateLimiter } = await import('@/lib/api');
 const { setLogSink } = await import('@/lib/log');
+const { buildPlan, readPlan, markStepDone } = await import('@/features/import/server/plan');
 
 setTestOrigin('import');
 const admin = adminClient();
@@ -156,6 +157,23 @@ describe('screenshot import → review (MOCK_AI)', () => {
     expect(joined).not.toContain(base64.slice(2000, 2064));
     const stored = await admin.from('trait_suggestions').select('*').eq('user_id', stranger.id);
     expect(JSON.stringify(stored.data)).not.toContain(base64.slice(0, 64));
+  });
+
+  it('builds a plan of links the user follows, and only manual steps can be marked done', async () => {
+    await buildPlan({ userId: maya.id, supabase: maya.client });
+    const plan = await readPlan(maya.id);
+    expect(plan).not.toBeNull();
+    const steps = plan!.cards.flatMap((c) => c.steps);
+    expect(steps.every((s) => s.href.startsWith('/') && !s.done)).toBe(true);
+    const manual = steps.find((s) => s.action === 'open_place');
+    if (manual) {
+      await markStepDone(maya.id, manual.doneKey);
+      expect((await readPlan(maya.id))!.cards.flatMap((c) => c.steps).find((s) => s.doneKey === manual.doneKey)?.done).toBe(true);
+    }
+    const auto = steps.find((s) => s.action === 'connect' || s.action === 'rsvp');
+    if (auto) await expect(markStepDone(maya.id, auto.doneKey)).rejects.toMatchObject({ code: 'VALIDATION' });
+    const log = await admin.from('agent_action_log').select('result').eq('user_id', maya.id).eq('action', 'import_build_plan');
+    expect(log.data?.[0]?.result).toMatch(/nothing was booked or sent/);
   });
 
   it('expired suggestions are deleted on read', async () => {

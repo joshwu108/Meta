@@ -24,12 +24,14 @@ async function sendScreens(images: PreparedImage[], sources: ShareSource[]): Pro
 const message = (err: unknown, fallback: string) => (err instanceof ApiClientError ? err.message : fallback);
 
 type Props = {
-  /** Shown after Done for now (the plan on /agent/import, "Back to review" in onboarding). */
+  /** Shown after Done for now ("Back to review" in onboarding). */
   after?: (result: DecideResult | null) => ReactNode;
+  /** Called after decisions are saved, e.g. to rebuild the plan. */
+  onDecided?: () => void;
 };
 
 /** "Bring in your Instagram taste": share → read → review. Every save is a tap the user makes. */
-export function ImportFlow({ after }: Props) {
+export function ImportFlow({ after, onDecided }: Props) {
   const [stage, setStage] = useState<Stage>('loading');
   const [suggestions, setSuggestions] = useState<TraitSuggestion[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +72,7 @@ export function ImportFlow({ after }: Props) {
     try {
       setResult(await apiPost<DecideResult>('/api/import/suggestions/decide', { decisions }));
       setStage('done');
+      onDecided?.();
     } catch (err) {
       setError(message(err, 'Couldn’t save your choices. Try again.'));
       await load().catch(() => undefined);
