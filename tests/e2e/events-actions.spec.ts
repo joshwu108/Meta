@@ -55,8 +55,10 @@ test("save, invite a group, filter, places and not-found work without errors", a
   await expect(page.getByRole("region", { name: "Saved" }).getByText(event!.title)).toBeVisible({ timeout: 20_000 });
 
   await page.goto("/events?tab=all");
-  await page.getByLabel("Category").first().selectOption({ label: "Food & drink" });
-  await page.getByRole("button", { name: "Apply filters" }).first().click();
+  // The form renders in the right rail and again below the tabs for narrow screens; use the visible one.
+  const filters = page.getByRole("form", { name: "Filter events" }).filter({ visible: true });
+  await filters.getByLabel("Category").selectOption({ label: "Food & drink" });
+  await filters.getByRole("button", { name: "Apply filters" }).click();
   await expect(page).toHaveURL(/category=food_drink/);
   const titles = await page.getByRole("list").getByRole("heading", { level: 3 }).allTextContents();
   const foodTitles = (await openEvents(page)).filter((e) => e.category === "food_drink").map((e) => e.title);
