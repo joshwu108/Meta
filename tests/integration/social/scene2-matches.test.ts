@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { runSeedWith } from '../../../supabase/seed/runner';
-import { applyDemoUserScene1, applyInterimPreferences, seededUserIds } from '../../fixtures/social/preferences';
+import { applyDemoUserScene1, seededUserIds } from '../../fixtures/social/preferences';
 
 vi.mock('server-only', () => ({}));
 
@@ -15,7 +15,6 @@ let demoId: string;
 
 beforeAll(async () => {
   await runSeedWith(admin);
-  await applyInterimPreferences(admin);
   demoId = await applyDemoUserScene1(admin);
   ids = await seededUserIds(admin);
 }, 60_000);

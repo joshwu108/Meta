@@ -1,7 +1,7 @@
 import { expect, test, type Browser } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { config as loadEnv } from 'dotenv';
-import { applyDemoUserScene1, applyInterimPreferences } from '../fixtures/social/preferences';
+import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { CONSUMER, login, reseed } from './helpers';
 
 loadEnv({ path: '.env.local' });
@@ -25,7 +25,6 @@ async function voteAs(browser: Browser, email: string, groupId: string, planId: 
 test('P1: a voted venue idea goes to 04 as a group-originated proposal', async ({ page, browser }) => {
   test.setTimeout(120_000);
   await reseed(page);
-  await applyInterimPreferences(admin());
   await applyDemoUserScene1(admin());
   await login(page, CONSUMER.email);
   const { data: groups } = (await (await page.request.get('/api/groups')).json()) as { data: Array<{ id: string; name: string }> };

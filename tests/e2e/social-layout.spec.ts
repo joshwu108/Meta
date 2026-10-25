@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { config as loadEnv } from 'dotenv';
-import { applyDemoUserScene1, applyInterimPreferences } from '../fixtures/social/preferences';
+import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { CONSUMER, login, reseed } from './helpers';
 
 loadEnv({ path: '.env.local' });
@@ -24,7 +24,6 @@ async function screenPaths(page: Page): Promise<string[]> {
 
 test.beforeEach(async ({ page }) => {
   await reseed(page);
-  await applyInterimPreferences(admin());
   await applyDemoUserScene1(admin());
 });
 

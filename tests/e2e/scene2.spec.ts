@@ -1,7 +1,7 @@
 import { expect, test, type Browser } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { config as loadEnv } from 'dotenv';
-import { applyDemoUserScene1, applyInterimPreferences } from '../fixtures/social/preferences';
+import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { NEW_USER, login, reseed } from './helpers';
 
 loadEnv({ path: '.env.local' });
@@ -46,7 +46,6 @@ test('Scene 2: matches with explanations, connect, create a private group, invit
   test.setTimeout(120_000);
   await reseed(page);
   const admin = adminClient();
-  await applyInterimPreferences(admin);
   await applyDemoUserScene1(admin);
 
   await login(page, NEW_USER.email);

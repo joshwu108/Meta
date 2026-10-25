@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { config as loadEnv } from 'dotenv';
-import { applyDemoUserScene1, applyInterimPreferences } from '../fixtures/social/preferences';
+import { applyDemoUserScene1 } from '../fixtures/social/preferences';
 import { NEW_USER, login, reseed } from './helpers';
 
 loadEnv({ path: '.env.local' });
@@ -11,7 +11,6 @@ const admin = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.
 
 test.beforeEach(async ({ page }) => {
   await reseed(page);
-  await applyInterimPreferences(admin());
   await applyDemoUserScene1(admin());
 });
 
