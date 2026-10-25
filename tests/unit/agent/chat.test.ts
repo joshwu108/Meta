@@ -10,8 +10,10 @@ vi.mock("@/features/core", () => ({
   },
 }));
 vi.mock("@/lib/ai", async () => (await import("./mock-ai")).mockAi);
+// Live suggestion sources (06 events, 03 groups, 01 people) need a database; stand in for them
+// here with rows in the exact shape those features return, including 06's grounded explanation.
 vi.mock("@/features/agent/server/suggestions/events", () => ({
-  suggestEvents: async () => [{ id: "00000000-0000-4000-8000-000000000601", title: "Beginner Pottery & Coffee Night", startsAt: "2026-10-29T19:00:00-07:00", venue: "Kiln & Cup", category: "creative", description: "Throw your first bowl." }],
+  suggestEvents: async () => [{ id: "00000000-0000-4000-8000-000000000601", title: "Beginner Pottery & Coffee Night", startsAt: "2026-10-29T19:00:00-07:00", venue: "Kiln & Cup", category: "creative", description: "Throw your first bowl.", explanation: "Pottery on a Thursday evening, close to you." }],
 }));
 vi.mock("@/features/agent/server/suggestions/groups", () => ({
   suggestGroups: async () => [{ id: "00000000-0000-4000-8000-000000000301", name: "Mission Makers", description: "Pottery on Thursdays.", memberCount: 4 }],
@@ -32,27 +34,6 @@ vi.mock("@/features/events", () => ({
       id: "00000000-0000-4000-8000-000000000601", title: "Beginner Pottery & Coffee Night", startsAt: "2026-10-29T19:00:00-07:00",
       business: { name: "Kiln & Cup" }, category: "creative", description: "Throw your first bowl with coffee on the side.",
     },
-  }],
-}));
-
-// Live suggestion sources (06 events, 03 groups) need a database; stand in for them here with
-// rows in the exact shape those features return, including 06's own grounded explanation.
-vi.mock("@/features/agent/server/suggestions", () => ({
-  suggestEvents: async () => [{
-    id: "00000000-0000-4000-8000-000000000601",
-    title: "Beginner Pottery & Coffee Night",
-    startsAt: "2026-10-29T19:00:00-07:00",
-    venue: "Kiln & Cup",
-    category: "creative",
-    description: "Throw your first bowl with coffee on the side.",
-    explanation: "Pottery on a Thursday evening, close to you.",
-  }],
-  suggestGroups: async () => [{
-    id: "00000000-0000-4000-8000-000000000301",
-    name: "Mission Makers",
-    description: "Pottery, painting and crafts on Thursday evenings.",
-    interests: ["pottery"],
-    memberCount: 4,
   }],
 }));
 
