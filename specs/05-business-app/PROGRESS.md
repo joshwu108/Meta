@@ -415,6 +415,16 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 03:25` — **opened the insights page with real data and found an incoherent
+  stat.** It had never been viewed with 04's `demand_clusters` present. The banded demand
+  renders correctly (Creative/Thursday evenings 6-9, Food & drink 4-5, Games 4-5, no raw
+  count anywhere), but the analytics row read **"Events hosted 0 · People who came 0 · Came
+  back again 5"** — impossible. `countRepeatAttendees` counted across every event the venue
+  owns while the other two stats count only finished ones, so a venue whose *upcoming*
+  events share attendees reported repeat visitors it had never hosted. The caller now passes
+  the scope, which also drops a query since the finished events are already in hand. Third
+  bug in a row found by looking at a screen with real data rather than by a failing test.
+  800 unit, 213 integration, 59 e2e all green.
 - `2026-10-25 02:55` — **closed a gap in my own verification, and moved the merge request
   where integrators actually look.** Every timezone check so far had the browser in a
   foreign zone but the *server* in the venue's — and the dashboard and proposal detail are
