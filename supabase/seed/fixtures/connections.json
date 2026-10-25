@@ -1,0 +1,8 @@
+[
+  { "requester": "maya@commonground.test", "recipient": "leo@commonground.test", "status": "accepted" },
+  { "requester": "yuki@commonground.test", "recipient": "maya@commonground.test", "status": "accepted" },
+  { "requester": "ana@commonground.test", "recipient": "kai@commonground.test", "status": "accepted" },
+  { "requester": "sam@commonground.test", "recipient": "theo@commonground.test", "status": "accepted" },
+  { "requester": "omar@commonground.test", "recipient": "sam@commonground.test", "status": "accepted" },
+  { "requester": "priya@commonground.test", "recipient": "nina@commonground.test", "status": "accepted", "message": "Coffee crawl sometime?" }
+]

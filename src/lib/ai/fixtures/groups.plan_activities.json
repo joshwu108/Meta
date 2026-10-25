@@ -1,0 +1,37 @@
+{
+  "suggestions": [
+    {
+      "kind": "new_activity",
+      "eventId": null,
+      "title": "Beginner wheel-throwing night",
+      "description": "Book a few wheels at a nearby studio and learn the basics together, with coffee on the side.",
+      "category": "creative",
+      "slot": "thu_eve",
+      "estimatedCostCents": 2500,
+      "whyItFits": "Pottery is the interest most of you share, and everyone is free Thursday evenings.",
+      "needsVenue": true
+    },
+    {
+      "kind": "new_activity",
+      "eventId": null,
+      "title": "Sketch and coffee crawl",
+      "description": "Walk between two cafés and sketch the street on the way. Any notebook works.",
+      "category": "food_drink",
+      "slot": "thu_eve",
+      "estimatedCostCents": 1200,
+      "whyItFits": "Coffee and drawing both came up, and it fits a Thursday evening.",
+      "needsVenue": false
+    },
+    {
+      "kind": "new_activity",
+      "eventId": null,
+      "title": "Saturday glaze session",
+      "description": "Glaze bisque pieces at a studio's open session.",
+      "category": "creative",
+      "slot": "sat_day",
+      "estimatedCostCents": 2000,
+      "whyItFits": "A daytime option for Saturdays.",
+      "needsVenue": true
+    }
+  ]
+}
