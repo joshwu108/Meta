@@ -91,7 +91,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 - 2026-10-24: Votes toggle per member and suggestion; a `new_activity` that needs a venue becomes eligible to send to 04 at ≥ 50% of active members.
 
 - 2026-10-24: UI uses 01's primitives and tokens from `@/features/core/components/ui`. `/match` leads with the top match (breakdown open) and lists the rest as compact rows; `/groups` leads with invitations when there are any; on a group page the planner is the lead element. Chips show shared tags when there are any (their categories are implied), otherwise shared categories.
-- 2026-10-24: Client components call routes through `src/lib/api/fetch-json.ts` and `use-api-action.ts` (new, client-safe; the `@/lib/api` index pulls in server-only modules). A missing route (e.g. 04's group venue request before 04 ships) shows "This isn't available yet" instead of a network error.
+- 2026-10-24: Client components call routes through 01's `src/lib/api/client.ts` and 03's `src/lib/api/use-api-action.ts` hook (03's own `fetch-json.ts` was removed once 01 landed). A missing route (e.g. 04's group venue request before 04 ships) shows "This isn't available yet" instead of a network error.
 - 2026-10-24: The invite picker lists accepted connections, people with an open request, then matches; the server re-checks reachability and blocks.
 - 2026-10-24: `tests/fixtures/social/preferences.json` is an interim copy of 02 §8's seed design used by the AC1 integration test and the Scene 2 E2E (applied with the service role after the seed). It is never loaded by `pnpm db:seed`, so it cannot collide with 02's `preferences.json`.
 
@@ -119,6 +119,8 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 2026-10-24: Merged main after 01 landed (27 add/add conflicts). Took main's version of the 19 copied 01 files this branch never edited; kept 03's `/match` and `/groups` pages over 01's placeholders, 03's `groups.json` and seed schemas, and `export { loadGroups } from './social'` in 01's new `domain.ts`; took main's `runner.ts` and registered `connections` and `blocks` in `loaders/registry.ts` `AFTER_ALL` (counts now in `summary.extra`); moved the planner system prompt into `src/lib/ai/prompts/groups.ts` (`GROUPS_PROMPTS`); regenerated `database.types.ts`. `MatchingPreferences` is now just `SharablePreferences` (which carries `interestCategories`), the 02 stand-in uses the shared `ExplainInput`, and client calls go through 01's `src/lib/api/client.ts` (local `fetch-json.ts` removed). 02's `0200_agent.sql` copy stays until 02 reaches main.
 
+- 2026-10-24: `/match` and `/groups/:id` keep the selected tab in `?tab=` (03's `src/lib/use-url-tab.ts`) instead of component state seeded once from the URL. 01's bell opens `payload.href` with a client-side push that keeps the page mounted, so a request notification opened from `/match` used to leave Recommended showing. Tab clicks rewrite the URL in place (no history entry, no server round trip), and the default tab stays out of the URL.
+
 ## Needs from others
 
 - 02: return `interestCategories` from `toSharable` (the shared type now requires it since 01 landed). Until then 03 derives categories from interest tags at runtime.
@@ -129,11 +131,11 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 - 04 (P1 group proposals, answered): `getGroupVenueRequest` is exported from `@/features/groups` with the shape you asked for (see Decisions). The group page's "Request venue" posts `{ source: 'group', groupId, planId, suggestionIndex }` to `POST /api/ai/generate-opportunities` once a `new_activity` that needs a venue has ≥ 50% of active members' votes.
 
-- 01: at 320px the consumer `TopBar` is 27px wider than the viewport on every page (theme toggle, bell, avatar and sign-out next to the wordmark and search), so pages scroll sideways (design-system §3: no horizontal scroll at 320px). 03's own content fits; this one is in `src/features/core/components/app-shell/TopBar.tsx`.
+- ~~01: at 320px the consumer `TopBar` is 27px wider than the viewport~~ fixed on main; every 03 page fits at 320px in both themes.
 
 - 01: design-system §1 promises AA contrast on every token pair, but axe-core finds these under 4.5:1 (in 01's Avatar initials, selected Chip, active nav item, Tabs, primary Button, link color, LoginForm/SignupForm alerts and StatusPill, and in 03's links, chat bubbles and chat error): light brand text on canvas 4.30 and on brand-soft 4.20; dark brand text on surface 4.44, on surface-2 3.25, on brand-soft 3.40; dark white on brand 3.46; danger on danger-soft 3.94 light / 4.01 dark; dark danger on surface 4.21; light success on success-soft 2.89 (every green StatusPill). Values that pass and keep the look: a text-only brand ink `#0659e0` light / `#62a6ff` dark (≥ 4.5 on surface, canvas, surface-2 and brand-soft), dark brand fill `#1a6fe0` (white text 4.78), danger ink `#c8102e` light (5.02 on danger-soft) / `#f76a80` dark (5.11), success ink `#1f7a35` light (4.75). 03 uses the tokens as they are, so it picks up the fix with no 03 change.
 
-- 01: 03's notifications carry `payload.href` (`/match?tab=requests`, `/match?tab=connections`, `/groups/<id>`); `NotificationList` could navigate there after marking read.
+- ~~01: `NotificationList` could follow 03's `payload.href`~~ done on main: the bell marks read, then navigates.
 
 - 02 (when on main): 03 will import `MATCHING_OPT_OUT_EMAILS` from your `tests/fixtures/consent-cases.ts` and assert those seeded users never appear in or see matches (your AC3), and swap the `resolveGroupSchedule` stand-in for your export. Both wait on 02's seed and code reaching main.
 
@@ -141,6 +143,7 @@ Branch: `ws/03-matching`. Spec: [`specs.md`](./specs.md). Shared contracts: [`..
 
 ## Log
 
+- 2026-10-24 19:30 CDT · main moved (01's `@aside` slot, Chip/Switch a11y, `server-only` alias, Node 22 CI). Merged cleanly; 154 unit, 100 integration, 22 E2E green. 01 answered both 03 asks: the bell follows `payload.href`, and every 03 page fits at 320px. Fixed a bug at that seam: opening a request notification while `/match` was open left Recommended showing. Tabs now follow `?tab=`, and Scene 2 opens Maya's request from the bell (that step fails without the fix). 03's spec puts nothing in the right rail for Match or Groups, so both keep 01's default agent strip. Next: watch main.
 - 2026-10-24 19:21 CDT · accessibility pass: axe-core (WCAG 2.1 A/AA + best practice) on `/match` (3 tabs), `/groups`, `/groups/discover` and a group's 3 tabs in light and dark, plus every 03 sheet and menu open at 390 and 1280px. No structural, ARIA or naming violations. Contrast failures trace to 01's tokens (asked above) except three non-actionable labels 03 had colored brand blue against the design system's color rules; those now use neutral text or the neutral StatusPill. The person-card menu now supports arrow keys, Home and End, and returns focus to its trigger on Escape and Tab; the safety E2E covers it. Next: watch main for 01/02/04/05/06.
 - 2026-10-24 19:00 CDT · wakeup: main unchanged. GitHub CI on ws/03-matching (01's workflow, now merged in) is green on all three jobs: lint/typecheck/unit, migrations + generated-types check + integration on a fresh Supabase, Playwright. 01's `@aside` right-rail slot is still on ws/01-core; 03 can add `@aside/match` once it reaches main. Next: watch main.
 - 2026-10-24 18:40 CDT · wakeup: 01 landed on main. Merged main (27 conflicts resolved per plan), adopted 01's prompt and seed registries, shared types and API client. 153 unit, 100 integration, 21 E2E green on the merged tree. Next: watch main for 02/04/05/06; swap stubs as they land.
