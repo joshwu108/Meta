@@ -20,21 +20,22 @@ Branch: `ws/07-import`. Source of truth: the ws07 goal prompt (screenshots first
 
 ## Phase 2: the plan
 
-- [ ] `GET /api/import/plan` from existing contracts only (getSuggestedPeople, getRecommendedEvents, getNearbyBusinesses, listMyGroups)
-- [ ] `import.plan` with refs only; code validator; no-AI fallback; stored in `import_plans`
-- [ ] "Your plan" on `/agent/import` and a card on `/discover`; step buttons deep-link; done state from real data
+- [x] `GET /api/import/plan` from existing contracts only (getSuggestedPeople, getRecommendedEvents, getNearbyBusinesses, listMyGroups); dislikes dropped, loved first
+- [x] `import.plan` with refs only; code validator; no-AI fallback; stored in `import_plans`
+- [x] "Your plan" on `/agent/import` and a card on `/discover`; step links deep-link; done state from connections/RSVPs or a manual Done (`POST /api/import/plan/done`)
 
 ## Phase 3
 
-- [ ] `/agent/import/settings` with "Delete my Instagram data" (Keep / Remove, no default)
-- [ ] Download-your-information JSON in a Web Worker → same pipeline from mapping
+- [x] `/agent/import/settings` with "Delete my Instagram data" (Keep / Remove, no default) via `GET/DELETE /api/import/data`
+- [x] Download-your-information JSON in a Web Worker → `POST /api/import/export` (strict labels only) → same pipeline from mapping
 
 ## Tests
 
 - [x] Unit: alias mapping, sensitive table, validator (off-list, unknown id, injection), confidence golden values and band edges, dedupe, decide planning, image validator, generateStructured image blocks, addConfirmedTraits rules
 - [x] Integration (written; runs in CI): decide union + provenance, not_me suppresses re-import, pending changes nothing in 02/03/04/06, CONFLICT, expiry, RLS owner/other/business, no image bytes in logs or rows
 - [x] E2E (written; runs in CI): Scene 1b, Skip leaves onboarding unchanged
-- [ ] Plan validator unit tests (Phase 2)
+- [x] Plan validator, ranking and prompt-input unit tests; export extraction and schema tests
+- [x] Integration: plan build + manual done; delete keep / remove
 
 ## Decisions
 
@@ -48,6 +49,9 @@ Edits outside `src/features/import`, the import routes/pages, `supabase/migratio
 - `src/features/agent/{index.ts,server/confirmed-traits.ts}`: `addConfirmedTraits(userId, { interests?, activityPrefs? })`, implemented with 02's own `applyPatch` and repo.
 - `src/features/agent/components/onboarding-flow.tsx`, `src/app/(auth)/onboarding/page.tsx`: optional import step. It is opened from Talk with a "Bring in your Instagram taste" button rather than inserted automatically, so "Review my profile" and "Fill in a form instead" still go straight to Review and 02's Scene 1 and AI-fallback e2e tests pass unchanged. The step itself has Skip first.
 - `src/app/(consumer)/agent/preferences/page.tsx`: link to `/agent/import` when the feature is available.
+- `src/features/agent/index.ts`: `getOwnPreferencesForImport` (02's privacy guard forbids other features from reading `user_preferences`) and `removeImportedTraits` (Delete → Remove), both in `server/confirmed-traits.ts` on 02's own rules.
+- `src/features/events/index.ts`: re-export `getNearbyBusinesses` for the plan.
+- `src/app/(consumer)/discover/page.tsx`: the "Your plan" card, rendered only when 07 is available to the viewer.
 
 Other decisions:
 
@@ -58,6 +62,10 @@ Other decisions:
 - 2026-10-25: Current preferences come from a second small 02 export, `getOwnPreferencesForImport(userId)` (spec 07 §20 item 3): 02's privacy guard forbids any other feature from querying `user_preferences`, so the direct RLS read was replaced. The 50-interest cap is checked with it before the atomic decision write.
 - 2026-10-25: A summary mention only strengthens a tag that a topic or tile already showed; it never creates a suggestion on its own.
 - 2026-10-25: Before onboarding is reviewed, an imported value lands in a field 02 marks `ai_inferred`, so on Review it shows 02's per-field "AI inferred" marker like the chat's values. field_sources is per field by design (goal prompt); per-value marking is a request to 02 below.
+
+- 2026-10-25: The export path accepts the extracted `.json` files, not the `.zip`, to avoid a new unzip dependency; the how-to says to unzip first. Ad interests weigh 0.35 (`W_AD_INTEREST`), below a topic's 0.6.
+- 2026-10-25: Delete my Instagram data removes every 07 row including provenance; Keep leaves the values as the user's own, Remove takes them out through 02.
+- 2026-10-25: Plan steps for places link to `/places` (no per-place page exists); `create_group` fits place refs and links to `/groups`.
 
 ## Needs from others
 
@@ -70,4 +78,5 @@ Other decisions:
 
 ## Log
 
+- 2026-10-25 06:30 — Phase 2 (plan) and Phase 3 (settings + delete, export via Web Worker) landed locally; CI on the Phase 2 head: lint/typecheck/unit and migrations/types/integration green, e2e running. 882 unit green; build green. Next: CI result, coverage on import/server.
 - 2026-10-25 05:40 — Phase 1 code complete: migration + types (CI-verified), pipeline core, routes, review UI, onboarding step, 02 addConfirmedTraits; unit 50+ green locally; integration and Scene 1b e2e pushed for CI. Next: CI results, then Phase 2 plan.
