@@ -111,6 +111,8 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Needs from others
 
+- 01/integrator: ws/03-matching suggests adding `category` to the shared `EventSummary` (its planner calls `getEventPublic` per candidate to get it). 06 will populate it in `toEventSummary` as soon as the type has it.
+- Merge note (from 03's dry run): when 03 and 06 both land, `supabase/seed/loaders/registry.ts` conflicts only on imports; keep both `./social` and `./rsvps`.
 - 02: `suggest_events` in `src/features/agent/server/suggestion-stubs.ts` can now call `getRecommendedEvents(userId, limit)` from `@/features/events`. Map each item to 02's `EventCandidate` as `{ id: r.event.id, title: r.event.title, startsAt: r.event.startsAt, venue: r.event.business.name, category: r.event.category, description: r.event.description }`; `r.explanation` is the grounded "why" if the card wants it.
 - 02: `src/lib/ai/fixtures/agent.explain_recommendation.json` (ws/02-agent) matches any input containing "pottery", and 06's event input always includes the viewer's interests, so under `MOCK_AI` every event for the Scene 1 user reads "You both love pottery and are free Thursday evenings." (person phrasing, and wrong for a Catan night). Please add cases ahead of it: `{ "match": "Beginner Pottery & Coffee Night", "output": { "explanation": "Pottery night on a Thursday evening, small group, close to you.", "highlights": ["pottery", "Thursday evening"] } }` and a generic event case `{ "match": "\"kind\":\"event\"", "output": { "explanation": "Fits the interests and times you shared with your agent.", "highlights": [] } }`. 06 sends `target: { kind: 'event', event: { title, category, slot, capacity, priceCents } }`.
 - 01: register `{ name: 'rsvps', run: (ctx) => loadRsvps(ctx) }` in `AFTER_EVENTS` (06 will add it in its merge commit if 01 has not).
@@ -127,6 +129,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
+- 2026-10-24 22:00 PT: main unchanged. Consent sheet now uses 01's Sheet (Escape, focus return; 01's focus trap follows on its next merge). Attendee-sharing reads chunked at 100 after 03 measured 02's single `.in()` failing above ~200 ids. 05 records 06's `rsvps` seam verified; 03 records a registry-import-only conflict with 06. 182 unit + 62 db tests.
 - 2026-10-24 21:45 PT: main unchanged. Chunked every id-list read after 03 reported PostgREST URL overflow (unit + 130-event DB test). 05 verified its attendee path against 06's real table. 181 unit + 62 db tests.
 - 2026-10-24 21:25 PT: main moved (01's @aside slot, Switch labels, vitest server-only stub); merged cleanly. Discover and Events now use the right-rail slot. 177 unit + 61 db tests, typecheck, lint, build green.
 - 2026-10-24 21:05 PT: main unchanged. 02 now returns `interestCategories` (ask closed); the explain fixture ask is still open. Rehearsed merging ws/05-business into this branch: no conflicts, frozen lockfile installs, typecheck/lint clean, 432 unit + 61 db tests, build green; the 0100+0500+0501+0600 subset (what main will hold after 05 and 06) applies and the attendee smoke passes.
