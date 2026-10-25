@@ -139,9 +139,18 @@ describe('getGroupVenueRequest for 04 (P1)', () => {
   });
 });
 
-describe('06 stand-ins on a branch without events tables', () => {
+// Once 05's `events` table is migrated the stand-ins read real (seeded) events instead.
+const eventsMigrated = !(await admin.from('events').select('id').limit(1)).error;
+
+describe.skipIf(eventsMigrated)('06 stand-ins on a branch without events tables', () => {
   it('return nothing instead of failing', async () => {
     expect(await sixStubs.getUpcomingEventsForUser(alice.id)).toEqual([]);
+    expect(await sixStubs.getEventPublic(EVENT_ID)).toBeNull();
+  });
+});
+
+describe.runIf(eventsMigrated)('06 stand-ins once events are migrated', () => {
+  it('return no event for an unknown id', async () => {
     expect(await sixStubs.getEventPublic(EVENT_ID)).toBeNull();
   });
 });

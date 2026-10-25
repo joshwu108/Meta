@@ -56,6 +56,23 @@ async function seedVenue(admin: SupabaseClient, v: (typeof VENUES)[number]): Pro
   return { ...owner, businessId };
 }
 
+/**
+ * Deactivates every other active venue until the returned restore runs. Once 05 is migrated,
+ * `pnpm db:seed` adds venues identical to these three, and a tied score could send a cluster
+ * to the seeded copy instead.
+ */
+export async function onlyTheseVenues(admin: SupabaseClient, keep: readonly string[]): Promise<() => Promise<void>> {
+  const { data, error } = await admin.from('businesses').select('id').eq('is_active', true).not('id', 'in', `(${keep.join(',')})`);
+  if (error) throw new Error(error.message);
+  const others = (data as Array<{ id: string }>).map((row) => row.id);
+  if (others.length === 0) return async () => {};
+  const off = await admin.from('businesses').update({ is_active: false }).in('id', others);
+  if (off.error) throw new Error(off.error.message);
+  return async () => {
+    await admin.from('businesses').update({ is_active: true }).in('id', others);
+  };
+}
+
 /** 14 Scene 3 consumers (one demand opt-out) and the three venues, as itest users. */
 export async function seedScene3(admin: SupabaseClient): Promise<Scene3World> {
   const rows = scene3 as Row[];

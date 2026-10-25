@@ -5,7 +5,7 @@ vi.mock('server-only', () => ({}));
 process.env.MOCK_AI = '1';
 
 const { adminClient, cleanupTestUsers } = await import('../helpers');
-const { applyTestSchema, seedScene3 } = await import('./scene3');
+const { applyTestSchema, onlyTheseVenues, seedScene3 } = await import('./scene3');
 const { supabaseDeps } = await import('@/features/demand/server/wiring');
 const { runPipeline } = await import('@/features/demand/server/pipeline');
 const { reviseRouteDeps } = await import('@/features/demand/server/route-deps');
@@ -16,6 +16,7 @@ vi.mock('next/server', () => ({ after: (task: () => unknown) => task() }));
 const db = (client: unknown) => client as SupabaseClient;
 const admin = adminClient() as unknown as SupabaseClient;
 let world: Awaited<ReturnType<typeof seedScene3>>;
+let restoreVenues: (() => Promise<void>) | undefined;
 let potteryId: string;
 
 async function clearDemandTables(): Promise<void> {
@@ -30,6 +31,7 @@ beforeAll(async () => {
   await cleanupTestUsers(admin as never);
   await clearDemandTables();
   world = await seedScene3(admin);
+  restoreVenues = await onlyTheseVenues(admin, [...world.owners.values()].map((o) => o.businessId));
   await runPipeline(supabaseDeps(admin), { triggeredBy: 'manual' });
   const owner = world.owners.get('Kiln & Cup')!;
   const { data } = await admin.from('event_proposals').select('id').eq('business_id', owner.businessId).eq('status', 'pending').single();
@@ -37,6 +39,7 @@ beforeAll(async () => {
 }, 120_000);
 
 afterAll(async () => {
+  await restoreVenues?.();
   await clearDemandTables();
   await cleanupTestUsers(admin as never);
 });

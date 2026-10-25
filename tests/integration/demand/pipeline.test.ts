@@ -5,7 +5,7 @@ vi.mock('server-only', () => ({}));
 process.env.MOCK_AI = '1';
 
 const { adminClient, cleanupTestUsers } = await import('../helpers');
-const { applyTestSchema, seedScene3 } = await import('./scene3');
+const { applyTestSchema, onlyTheseVenues, seedScene3 } = await import('./scene3');
 const { supabaseDeps } = await import('@/features/demand/server/wiring');
 const { runPipeline, PipelineBusyError } = await import('@/features/demand/server/pipeline');
 
@@ -16,6 +16,7 @@ const db = (client: unknown) => client as SupabaseClient;
 
 const admin = adminClient() as unknown as SupabaseClient;
 let world: World;
+let restoreVenues: (() => Promise<void>) | undefined;
 let firstRun: Awaited<ReturnType<typeof runPipeline>>;
 
 async function clearDemandTables(): Promise<void> {
@@ -28,10 +29,12 @@ beforeAll(async () => {
   await cleanupTestUsers(admin as never);
   await clearDemandTables();
   world = await seedScene3(admin);
+  restoreVenues = await onlyTheseVenues(admin, [...world.owners.values()].map((o) => o.businessId));
   firstRun = await runPipeline(supabaseDeps(admin), { triggeredBy: 'manual' });
 }, 120_000);
 
 afterAll(async () => {
+  await restoreVenues?.();
   await clearDemandTables();
   await cleanupTestUsers(admin as never);
 });
