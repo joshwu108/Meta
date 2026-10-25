@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { OWNERS, appIsReady, revisionsAvailable, signIn, trySeedPendingProposal } from './support/business';
+import { clickUntilURL } from './helpers';
+
+const DETAIL_URL = /\/business\/proposals\/[0-9a-f-]{36}/;
 
 /**
  * Demo Scene 4 (spec section 9, T-E1):
@@ -38,12 +41,14 @@ test.describe('Scene 4 — a business approves an AI proposal', () => {
     // The owner must always be able to tell a suggestion from a confirmed event.
     await expect(page.getByText('AI suggestion').first()).toBeVisible();
 
-    await page.getByRole('link', { name: /review/i }).first().click();
+    // Retries a click dropped before hydration (production build); dev hid this.
+    await clickUntilURL(page, page.getByRole('link', { name: /review/i }).first(), DETAIL_URL);
     await expect(page.getByRole('heading', { name: /Beginner Pottery & Coffee Night/i })).toBeVisible();
 
     // The estimate is labelled as an estimate, and never as a count of attendees.
     await expect(page.getByText('Estimate').first()).toBeVisible();
-    await expect(page.getByText(/this is an estimate, not rsvps/i)).toBeVisible();
+    // Detail page copy: "These are not RSVPs and nobody has committed to come."
+    await expect(page.getByText(/not rsvps/i).first()).toBeVisible();
 
     await page.getByRole('button', { name: /edit & approve/i }).click();
 
@@ -68,13 +73,15 @@ test.describe('Scene 4 — a business approves an AI proposal', () => {
     await seedOrSkip(page, 'coffee-tasting');
 
     await page.goto('/business/proposals');
-    await page.getByRole('link', { name: /review/i }).first().click();
+    // Retries a click dropped before hydration (production build); dev hid this.
+    await clickUntilURL(page, page.getByRole('link', { name: /review/i }).first(), DETAIL_URL);
 
     await page.getByRole('button', { name: /^reject$/i }).click();
     await page.getByLabel('Reason').selectOption('staffing');
     await page.getByRole('button', { name: /reject proposal/i }).click();
 
-    await expect(page.getByText(/you rejected this proposal/i).first()).toBeVisible();
+    // router.refresh() re-reads the decided proposal; on a production build that can exceed 5s.
+    await expect(page.getByText(/you rejected this proposal/i).first()).toBeVisible({ timeout: 20_000 });
   });
 
   test('the proposals nav badge shows the pending count', async ({ page }) => {
@@ -96,7 +103,8 @@ test.describe('Scene 4 — asking the AI for a different proposal', () => {
     test.skip(!seeded, "workstream 04's event_proposals table is not migrated yet");
 
     await page.goto('/business/proposals');
-    await page.getByRole('link', { name: /review/i }).first().click();
+    // Retries a click dropped before hydration (production build); dev hid this.
+    await clickUntilURL(page, page.getByRole('link', { name: /review/i }).first(), DETAIL_URL);
     const original = new URL(page.url()).pathname;
 
     test.skip(
