@@ -108,3 +108,22 @@ test("adding a second screenshot keeps the first preview, and Remove takes one o
   await expect.poll(() => previews.evaluateAll((imgs) => (imgs[0] as HTMLImageElement).naturalWidth > 0)).toBe(true);
 });
 
+test("/agent/import fits every width without sideways scrolling, before and after Send", async ({ page }) => {
+  await login(page, CONSUMER.email);
+  await page.goto("/agent/import");
+  await expect(page.getByRole("button", { name: "Send to my agent" })).toBeVisible();
+  const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  for (const width of [320, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await overflow(), `share step at ${width}px`).toBeLessThanOrEqual(0);
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.locator("#import-files").setInputFiles(SCREENSHOT);
+  await page.getByRole("button", { name: "Send to my agent" }).click();
+  await expect(page.getByRole("heading", { name: "Interests" })).toBeVisible();
+  for (const width of [320, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await overflow(), `review at ${width}px`).toBeLessThanOrEqual(0);
+  }
+});
+
