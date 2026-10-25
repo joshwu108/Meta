@@ -16,7 +16,7 @@ Branch: `ws/07-import`. Source of truth: the ws07 goal prompt (screenshots first
 - [x] `/agent/import`: what to share, how-to, preview, Send, review cards (Love it / Yes / Edit / Not me; Less of this: Keep as a dislike / Ignore), aria-live counter, Done for now
 - [x] Onboarding optional step (Skip first) and link from `/agent/preferences`
 - [x] `IMPORT_ENABLED` + `is_adult_confirmed` gate
-- [x] CI: lint/typecheck/unit, migrations/types/integration (incl. 07's DB tests) and Scene 1b + Skip e2e green; only 05's Scene 4 flake fails (see Blocked)
+- [x] CI: lint/typecheck/unit, migrations/types/integration (incl. 07's DB tests) and Scene 1b + Skip e2e green; fully green since merging main 3937ef8
 
 ## Phase 2: the plan
 
@@ -75,10 +75,11 @@ Other decisions:
 ## Blocked
 
 - No Docker on this machine: integration and e2e run only in CI (push to `ws/07-import`). Local runs: typecheck, lint, unit, build.
-- 05's `scene4-business.spec.ts` (reject / edit & approve, button click timeouts) fails or flakes on this branch and on ws/03-matching's run of 10:19Z, which has no 07 code; ws/02 passed in the same window. Not caused by 07; owner 05 / integrator. 07's Scene 1b and Skip specs pass.
+- ~~05's `scene4-business.spec.ts` flake~~: fixed on main by 3937ef8 (decision date in the venue zone); CI fully green after merging it.
 
 ## Log
 
+- 2026-10-25 07:45 — Merged main (3937ef8, 05's decision-date fix). CI on a0987cd fully green: lint/typecheck/unit, migrations/types/integration, all e2e incl. Scene 1b. Phases 1–3 done. Next: watch main, idle list.
 - 2026-10-25 07:20 — Fixed screenshot previews breaking when a second image is added (+ e2e). CI 9e20f66: unit, integration and 64 e2e green incl. all 07 specs; only 05's Scene 4 reject test fails (known, see Blocked). Next: watch main.
 - 2026-10-25 06:45 — Phase 3 pushed (settings + delete, export Web Worker); mocked unit tests for run/decide/plan/flag bring unit-only coverage on import/server to 82.6% (repo/settings covered by integration). 891 unit green. Next: watch CI and main; polish empty/error states.
 - 2026-10-25 06:30 — Phase 2 (plan) and Phase 3 (settings + delete, export via Web Worker) landed locally; CI on the Phase 2 head: lint/typecheck/unit and migrations/types/integration green, e2e running. 882 unit green; build green. Next: CI result, coverage on import/server.
