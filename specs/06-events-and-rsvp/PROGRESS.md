@@ -43,7 +43,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ### E2E
 - [ ] (written, not yet run) Scene 5: Discover leads with "Beginner Pottery & Coffee Night" + explanation → RSVP with sharing → Activity shows it → group page lists it
-- [ ] (written, not yet run) Scene 6: complete past event → maya adds reconnect to jordan → both see the follow-up suggestion
+- [x] Scene 6 (CI, real Supabase stack, run 40153318378): complete past event → maya adds reconnect to jordan → both see the follow-up suggestion
 
 ## P1
 
@@ -109,6 +109,10 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 - 2026-10-24: Pages render inside 01's AppShell feed column. With 01's `@aside` slot on main, `@aside/discover` (agent strip) and `@aside/events` (filters) fill the right rail at >=1024px; below that the same pieces stay in the feed (`.belowRail`). Discover's page and rail share one ranking per request through `getRecommendedEventsCached` (React `cache`).
 - 2026-10-24: Every `.in(...)` id-list read in 06's repository and Activity goes through `inChunks` (100 ids per request, run in parallel), because PostgREST puts the list in the URL and a few hundred UUIDs overflow it (ws/03-matching hit this). The 06 stand-ins in `stubs/social.ts` are left as is; 03's real exports, which replace them on merge, already chunk.
 - 2026-10-24: ws/03-matching is on main. Merged it (one conflict in `seed/loaders/registry.ts`, both imports kept). `stubs/social.ts` now re-exports 03's real functions; the db test schema copies 03's table DDL from `0300_social.sql`. 0600's deferred FKs (`groups_event_fk`, `invitations_event_fk`) now apply on main's schema.
+- 2026-10-24: ws/04-demand and ws/05-business are on main (`4529588`); merged cleanly into 06 (`cf22a94`). On CI, `supabase start` now applies every migration including 0600; the only failing step is "Generated types are committed and current" until `database.types.ts` carries 06's tables.
+- 2026-10-24: Flow audit fixes: event cards show the event's end state (cancelled/completed) ahead of the viewer's RSVP; the invite picker offers only groups where the viewer is active (03's list also has invited-only groups, which invite-group rejects); Activity keeps venue-cancelled upcoming events and hides invitations already answered by an RSVP; Activity's "Respond" opens 03's `/match?tab=requests`; Discover, Events, Activity and Places have loading and error boundaries and an unknown event renders an in-app not-found.
+- 2026-10-24: `database.types.ts` regenerated from CI's own `pnpm db:types` output (run 40153318378, real Supabase with all migrations through 0600), applied verbatim since Docker stays off here.
+- 2026-10-24: CI Playwright on the merged branch: 42 passed, 2 failed. Scene 6 passed end to end. Fixed: 01's shell test expects 01's agent card in the right rail on /discover and /events, so 06's rail pages render it first; Scene 5 no longer assumes Scenes 1 and 4 already ran.
 
 ## Needs from others
 
@@ -122,14 +126,14 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Blocked
 
-- CI's "migrations, types, integration" job on PR #2 cannot pass until ws/05-business is on main: 0600 references 05's `events`/`businesses`. As of 2026-10-24 22:30 PT, 05 is staged on the integrator's `ws/integrate-05` (`7784635`, main + 04 + 05) but not on `origin/main`; per the owner, 06 waits for main rather than merging the integration branch.
-- `src/lib/supabase/database.types.ts` must be regenerated with 06's tables (`pnpm db:types`) after the 05 merge, and the Supabase integration tests and Playwright scenes need a local stack. Docker Desktop is installed but stopped and the disk has 3.7 GiB free; the owner chose not to start Docker on this machine, so these run in CI or on another machine.
-- E2E scenes 5 and 6 are written (`tests/e2e/`) but need 01's `/login` page and seed runner plus a running Supabase stack. Scene 5 runs as `demo.new@commonground.test`, the Scene 1 user (override with `E2E_DEMO_EMAIL`) and that Scene 4 published "Beginner Pottery & Coffee Night".
+- Scene 5's pottery-night lead needs 02's preference seed (02 not on main) and 05's Scene 4 publish; on a fresh CI seed the scene asserts the lead card and the RSVP flow on seeded events, and the pottery title only when that event exists.
 - P1 list/map toggle: needs a static map tile provider decision (OpenStreetMap static tiles, Mapbox with a key, etc.) and 01's CSP to allow its `img-src`. Everything else on the page works without it.
 - Supabase CLI and Docker are not available here, so `pnpm db:reset`, `pnpm db:seed`, requests through real PostgREST/GoTrue, and Playwright scenes cannot run on this machine. SQL, RLS (as a non-superuser role), services and routes are covered on plain Postgres. Needs a machine with `supabase start` to finish the stack checks.
 
 ## Log
 
+- 2026-10-24 23:40 PT: regenerated database types from CI's db:types diff; first CI run with 05 on main: Supabase applies all migrations, seed (incl. loadRsvps) succeeds, 42/44 e2e pass incl. Scene 6; fixed the 2 failures (01 shell rail test, Scene 5 fresh-seed assumptions). Pushing for a full CI rerun.
+- 2026-10-24 23:10 PT: 05 (and 04) landed on main; merged (clean), 643 unit + 63 db tests, typecheck, lint, build green; pushed `cf22a94`. CI: Supabase applies all migrations incl. 0600; only the generated-types check fails. Flow audit: fixed card end states, invite picker groups, Activity cancelled events and answered invitations, Respond link; added loading/error/not-found states.
 - 2026-10-24 22:30 PT: asked to integrate 05, but `origin/main` (`e88e93f`) has no 0500/0501; 05 is on `ws/integrate-05` (`7784635`). Rehearsed merging that branch into 06: no conflicts, frozen lockfile, typecheck/lint clean, 635 unit + 62 db tests, `next build` green; all 13 migrations (0100–0600) apply and the attendee smoke passes. Waiting for main per the owner; Docker stays off (3.7 GiB free disk).
 - 2026-10-24 22:15 PT: 03 landed on main; merged (registry imports), swapped every 03 stub for the real export, test schema now uses 03's real tables. 257 unit + 62 db tests, typecheck, lint, build green. Main still lacks 05 (and 02, 04).
 - 2026-10-24 22:00 PT: main unchanged. Consent sheet now uses 01's Sheet (Escape, focus return; 01's focus trap follows on its next merge). Attendee-sharing reads chunked at 100 after 03 measured 02's single `.in()` failing above ~200 ids. 05 records 06's `rsvps` seam verified; 03 records a registry-import-only conflict with 06. 182 unit + 62 db tests.

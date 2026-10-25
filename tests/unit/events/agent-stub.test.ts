@@ -44,7 +44,7 @@ describe("suggestFollowUp stub (02's signature)", () => {
   it("prefers a shared daytime slot and logs one agent action per person", async () => {
     const out = await suggestFollowUp({ a: prefs("a", ["thu_eve", "sat_day"]), b: prefs("b", ["sat_day", "thu_eve"]), event: completed });
 
-    expect(out).toMatchObject({ suggestedSlot: "sat_day", title: "Coffee, Saturday morning", suggestedBusinessCategory: "food_drink" });
+    expect(out).toMatchObject({ suggestedSlot: "sat_day", title: "Coffee catch-up", suggestedBusinessCategory: "food_drink" });
     expect(out.description).toContain("Latte Art");
     expect(logAgentAction.mock.calls.map(([input]) => input.userId)).toEqual(["a", "b"]);
     expect(logAgentAction.mock.calls[0]![0]).toMatchObject({ actor: "personal_agent", action: "follow_up_suggestion" });

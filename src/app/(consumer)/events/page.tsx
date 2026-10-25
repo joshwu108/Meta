@@ -46,7 +46,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
           </Link>
         ))}
       </nav>
-      {filters.tab === "for-you" ? null : <div className={s.belowRail}><EventFilters values={filters} /></div>}
+      {filters.tab === "for-you" ? null : <div className={s.belowRail}><EventFilters idPrefix="inline" values={filters} /></div>}
       {items.length === 0 ? (
         <div className={s.card}><EmptyState icon={<CalendarX size={20} aria-hidden />} title="Nothing scheduled here yet." /></div>
       ) : (
