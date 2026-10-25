@@ -1,9 +1,13 @@
+import Link from 'next/link';
 import { Bot } from 'lucide-react';
 import { AiRing } from '../ui/AiRing';
 import { AiTag } from '../ui/AiTag';
 import { Card } from '../ui/Card';
 
-/** Default right-rail content: the user's agent strip. Workstream 02 replaces it with live suggestions. */
+/**
+ * Default right-rail content: the user's agent strip. The consumer layout only renders for
+ * onboarded users, so the agent already knows their interests; point them at it.
+ */
 export function AgentAside({ displayName }: { displayName: string }) {
   return (
     <Card className="mx-2">
@@ -18,8 +22,11 @@ export function AgentAside({ displayName }: { displayName: string }) {
           <p className="text-[length:var(--text-sm)] text-text-2">Working for {displayName}</p>
         </div>
       </div>
-      <p className="mt-3 text-[length:var(--text-sm)] text-text-2">Suggestions appear here once your agent knows your interests and free evenings.</p>
-      <AiTag className="mt-3" />
+      <p className="mt-3 text-[length:var(--text-sm)] text-text-2">Knows your interests and free evenings. Ask it to change them, or see what it has shared.</p>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <Link href="/agent" className="text-[length:var(--text-sm)] font-semibold">Open your agent</Link>
+        <AiTag />
+      </div>
     </Card>
   );
 }
