@@ -183,6 +183,12 @@ guardrail doing its job on a merge it was written before.
 - The seed is not concurrency-safe: two seeds at once fail on a foreign key against
   `user_preferences`. It only bites when something reseeds while the e2e suite is running, which is
   what three "failures" in an intermediate run turned out to be.
+- The e2e suite has a residual flake that moves. Across full runs a different spec fails each time
+  — `graph`, `messaging`, `scene2`, `business-events` have each done it once — and every one of
+  them passes when run alone, immediately afterwards. Three causes of this shape were fixed here
+  (specs that never reseeded), so what remains is something else: most likely timing against a
+  shared dev server over a nine-minute run. Worth a dedicated pass; it is not a product defect, but
+  it does mean a red CI run needs a second look before it is believed.
 - Chrome writes a `style` attribute onto form fields before React hydrates, which React reports as
   a hydration mismatch on an input our markup never styles. Bundled Chromium is clean across every
   spec, so this is the browser editing the page rather than our HTML disagreeing with itself. The
