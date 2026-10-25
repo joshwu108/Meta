@@ -49,18 +49,18 @@ export function eventSmsText(
   switch (type) {
     case "rsvp_confirmed":
       return payload.promotedFromWaitlist === true
-        ? `CommonGround: a spot opened up. You're in for ${title}.${link}`
-        : `CommonGround: you're going to ${title}.${link}`;
+        ? `Weave: a spot opened up. You're in for ${title}.${link}`
+        : `Weave: you're going to ${title}.${link}`;
     case "event_updated":
-      return `CommonGround: ${title} changed. Please reconfirm your spot.${link}`;
+      return `Weave: ${title} changed. Please reconfirm your spot.${link}`;
     case "event_cancelled": {
       const reason = str(payload.reason);
-      return `CommonGround: ${title} was cancelled${reason ? `: ${reason}` : "."}${link}`;
+      return `Weave: ${title} was cancelled${reason ? `: ${reason}` : "."}${link}`;
     }
     case "reconnect_suggestion":
       return payload.accepted === true
-        ? `CommonGround: you're both in for a follow-up.${link}`
-        : `CommonGround: your agents found a follow-up with someone from ${title}.${link}`;
+        ? `Weave: you're both in for a follow-up.${link}`
+        : `Weave: your agents found a follow-up with someone from ${title}.${link}`;
     default:
       return null;
   }

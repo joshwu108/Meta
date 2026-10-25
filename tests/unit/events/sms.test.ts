@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-const users = new Map<string, string>([["maya", "maya@commonground.test"], ["leo", "leo@commonground.test"]]);
+const users = new Map<string, string>([["maya", "maya@weave.test"], ["leo", "leo@weave.test"]]);
 const titles = new Map<string, string>([["e1", "Beginner Pottery & Coffee Night"]]);
 vi.mock("@/features/events/server/stubs/clients", () => ({
   createAdminClient: () => ({
@@ -23,7 +23,7 @@ vi.mock("@/lib/log", () => ({
 
 const { eventSmsText, smsConfig, textEventNotification, withEventSms } = await import("@/features/events/server/sms");
 
-const ENV = { SMS_DEMO_TO: "+14155550123", SMS_DEMO_USER_EMAIL: "Maya@CommonGround.test", NEXT_PUBLIC_SITE_URL: "https://cg.example/" };
+const ENV = { SMS_DEMO_TO: "+14155550123", SMS_DEMO_USER_EMAIL: "Maya@Weave.test", NEXT_PUBLIC_SITE_URL: "https://cg.example/" };
 const KEYS = { TWILIO_ACCOUNT_SID: "AC123", TWILIO_AUTH_TOKEN: "secret", TWILIO_FROM: "+14155550100" };
 
 beforeEach(() => {
@@ -45,7 +45,7 @@ describe("smsConfig", () => {
   });
 
   it("logs instead of sending until every Twilio key is present", () => {
-    expect(smsConfig(ENV)).toEqual({ to: "+14155550123", userEmail: "maya@commonground.test", siteUrl: "https://cg.example", twilio: null });
+    expect(smsConfig(ENV)).toEqual({ to: "+14155550123", userEmail: "maya@weave.test", siteUrl: "https://cg.example", twilio: null });
     expect(smsConfig({ ...ENV, TWILIO_ACCOUNT_SID: "AC123" })?.twilio).toBeNull();
     expect(smsConfig({ ...ENV, ...KEYS })?.twilio).toEqual({ accountSid: "AC123", authToken: "secret", from: "+14155550100" });
   });
@@ -56,15 +56,15 @@ describe("eventSmsText", () => {
 
   it("words each event notification with a link back to the app", () => {
     expect(eventSmsText("rsvp_confirmed", { href: "/events/e1" }, "Pottery Night", site))
-      .toBe("CommonGround: you're going to Pottery Night. https://cg.example/events/e1");
+      .toBe("Weave: you're going to Pottery Night. https://cg.example/events/e1");
     expect(eventSmsText("rsvp_confirmed", { promotedFromWaitlist: true }, "Pottery Night", null))
-      .toBe("CommonGround: a spot opened up. You're in for Pottery Night.");
-    expect(eventSmsText("event_updated", {}, "Pottery Night", null)).toBe("CommonGround: Pottery Night changed. Please reconfirm your spot.");
+      .toBe("Weave: a spot opened up. You're in for Pottery Night.");
+    expect(eventSmsText("event_updated", {}, "Pottery Night", null)).toBe("Weave: Pottery Night changed. Please reconfirm your spot.");
     expect(eventSmsText("event_cancelled", { reason: "Kiln broke" }, "Pottery Night", null))
-      .toBe("CommonGround: Pottery Night was cancelled: Kiln broke");
+      .toBe("Weave: Pottery Night was cancelled: Kiln broke");
     expect(eventSmsText("reconnect_suggestion", { href: "/activity" }, "Pottery Night", site))
-      .toBe("CommonGround: your agents found a follow-up with someone from Pottery Night. https://cg.example/activity");
-    expect(eventSmsText("reconnect_suggestion", { accepted: true }, null, null)).toBe("CommonGround: you're both in for a follow-up.");
+      .toBe("Weave: your agents found a follow-up with someone from Pottery Night. https://cg.example/activity");
+    expect(eventSmsText("reconnect_suggestion", { accepted: true }, null, null)).toBe("Weave: you're both in for a follow-up.");
   });
 
   it("never texts other notification types", () => {
@@ -88,7 +88,7 @@ describe("textEventNotification", () => {
     await textEventNotification("maya", "rsvp_confirmed", { eventId: "e1", href: "/events/e1" }, smsConfig(ENV));
     expect(logs).toEqual([{
       msg: "sms.console",
-      fields: { userId: "maya", type: "rsvp_confirmed", text: "CommonGround: you're going to Beginner Pottery & Coffee Night. https://cg.example/events/e1" },
+      fields: { userId: "maya", type: "rsvp_confirmed", text: "Weave: you're going to Beginner Pottery & Coffee Night. https://cg.example/events/e1" },
     }]);
   });
 
@@ -101,7 +101,7 @@ describe("textEventNotification", () => {
     expect(url).toBe("https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json");
     expect((init.headers as Record<string, string>).Authorization).toBe(`Basic ${Buffer.from("AC123:secret").toString("base64")}`);
     expect(Object.fromEntries(init.body as URLSearchParams)).toEqual({
-      To: "+14155550123", From: "+14155550100", Body: "CommonGround: Pottery Night was cancelled: Kiln broke",
+      To: "+14155550123", From: "+14155550100", Body: "Weave: Pottery Night was cancelled: Kiln broke",
     });
     expect(logs).toEqual([{ msg: "sms.sent", fields: { userId: "maya", type: "event_cancelled" } }]);
   });
