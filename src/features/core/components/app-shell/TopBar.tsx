@@ -17,7 +17,7 @@ export type TopBarProps = {
 /** 56px top bar: wordmark (text only, no logo), search, bell, theme, avatar. */
 export function TopBar({ homeHref, user, initialUnread, switchLink, trailing }: TopBarProps) {
   return (
-    <header className="sticky top-0 z-40 h-[var(--topbar-height)] overflow-hidden bg-surface shadow-[var(--shadow-1)]">
+    <header className="sticky top-0 z-40 h-[var(--topbar-height)] overflow-x-clip bg-surface shadow-[var(--shadow-1)]">
       <div className="mx-auto flex h-full max-w-[1400px] min-w-0 items-center gap-2 px-4 sm:gap-3">
         <Link href={homeHref} className="shrink-0 text-[length:var(--text-md)] font-bold text-text no-underline hover:no-underline sm:text-[length:var(--text-lg)]">
           CommonGround
