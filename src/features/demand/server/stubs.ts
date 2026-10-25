@@ -1,18 +1,14 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AvailabilitySlot, EventCategory } from '@/shared/enums';
-import type { BusinessMatch, VenueCriteria } from '@/shared/types';
-import { haversineKm } from './geo';
+import type { BusinessMatch } from '@/shared/types';
 import type { Venue } from './venue';
 
 /**
  * Stand-ins for exports owned by other workstreams (README §5 "Stubs", spec §11).
  * Delete each when the real export reaches main:
- * - getSharableBatch      → 02 `getSharablePreferencesBatch(ids, 'demand')` from '@/features/agent'
- * - findCandidates        → 05 `findCandidateBusinesses(criteria)` from '@/features/business'
  * - loadVenue             → 05 venue/capabilities export (requested in PROGRESS "Needs from others")
- * These read other workstreams' tables with the service role only because their contracts
- * have not landed; they apply the same consent rule 02 does.
+ * It reads 05's tables with the service role only because 05 has no capabilities export yet.
  */
 
 type VenueRow = {
@@ -47,24 +43,4 @@ export async function stubLoadVenue(admin: SupabaseClient, match: BusinessMatch)
   const { data, error } = await admin.from('businesses').select(VENUE_SELECT).eq('id', match.businessId).maybeSingle();
   if (error) throw new Error(`venue lookup failed: ${error.message}`);
   return data ? toVenue(data as unknown as VenueRow, match) : null;
-}
-
-/** Stub of 05's prefilter + 04 §5.6 weighting. */
-export async function stubFindCandidates(admin: SupabaseClient, criteria: VenueCriteria): Promise<BusinessMatch[]> {
-  const { data, error } = await admin.from('businesses').select(VENUE_SELECT).eq('is_active', true);
-  if (error) throw new Error(`candidate lookup failed: ${error.message}`);
-  const center = { lat: criteria.centerLat, lng: criteria.centerLng };
-  return (data as unknown as VenueRow[])
-    .flatMap((row) => {
-      const c = row.business_capabilities;
-      if (!c || !c.accepts_ai_proposals || !c.event_categories.includes(criteria.category) || c.capacity < criteria.cohortSize) return [];
-      const distance = haversineKm(center, { lat: Number(row.lat), lng: Number(row.lng) });
-      if (distance > criteria.radiusKm) return [];
-      const priceOverlap = criteria.budgetMax == null || c.min_price_cents == null || c.min_price_cents <= criteria.budgetMax ? 1 : 0;
-      const score = 0.4 * Math.min(1, criteria.cohortSize / c.capacity) + 0.3 * (c.hosting_slots.includes(criteria.slot) ? 1 : 0)
-        + 0.2 * (1 - distance / criteria.radiusKm) + 0.1 * priceOverlap;
-      return [{ businessId: row.id, name: row.name, score: Math.round(score * 1000) / 1000, reasons: [] }];
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
 }

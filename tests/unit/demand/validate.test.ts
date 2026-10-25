@@ -67,11 +67,47 @@ describe('findForbiddenPhrases', () => {
 describe('nextSlotStart', () => {
   it('is at least 5 days out, on the slot weekday, at venue-local time', () => {
     const start = nextSlotStart('thu_eve', '18:00', NOW, 5);
-    expect(start.getTime() - NOW.getTime()).toBeGreaterThanOrEqual(5 * 86_400_000 - 86_400_000);
+    expect(start.getTime() - NOW.getTime()).toBeGreaterThanOrEqual(5 * 86_400_000);
     expect(weekdayInZone(start)).toBe(4);
     expect(localTimeInZone(start)).toBe('18:00');
     // Thu 5 Nov 18:00 PST (DST ended 1 Nov) = 02:00Z on the 6th
     expect(start.toISOString()).toBe('2026-11-06T02:00:00.000Z');
+  });
+
+  it('never gives less than 5 full days of lead time (Saturday-evening run)', () => {
+    // Sat 24 Oct 19:30 PDT. Thu 29 Oct 18:00 is 5 calendar days away but only 4d 22.5h.
+    const now = new Date('2026-10-25T02:30:00Z');
+    const start = nextSlotStart('thu_eve', '18:00', now, 5);
+    expect(start.getTime() - now.getTime()).toBeGreaterThanOrEqual(5 * 86_400_000);
+    expect(start.toISOString()).toBe('2026-11-06T02:00:00.000Z');
+  });
+
+  it('keeps a slot exactly 5 days and some hours out', () => {
+    // Sat 24 Oct 10:00 PDT → Thu 29 Oct 18:00 PDT is 5d 8h away.
+    expect(nextSlotStart('thu_eve', '18:00', new Date('2026-10-24T17:00:00Z'), 5).toISOString()).toBe('2026-10-30T01:00:00.000Z');
+  });
+
+  it.each([
+    ['fall-back (1 Nov 2026)', '2026-10-20T00:00:00Z', '2026-11-03T00:00:00Z'],
+    ['spring-forward (8 Mar 2026)', '2026-02-28T00:00:00Z', '2026-03-12T00:00:00Z'],
+  ])('finds every slot from any hour around %s', (_label, from, to) => {
+    const slots = ['mon_eve', 'tue_eve', 'wed_eve', 'thu_eve', 'fri_eve', 'sat_day', 'sat_eve', 'sun_day', 'sun_eve'] as const;
+    const weekday = { mon_eve: 1, tue_eve: 2, wed_eve: 3, thu_eve: 4, fri_eve: 5, sat_day: 6, sat_eve: 6, sun_day: 0, sun_eve: 0 } as const;
+    for (let t = Date.parse(from); t < Date.parse(to); t += 3 * 3_600_000 + 17 * 60_000) {
+      const now = new Date(t);
+      for (const slot of slots) {
+        const start = nextSlotStart(slot, '18:00', now, 5);
+        const lead = start.getTime() - t;
+        expect(weekdayInZone(start), `${slot} from ${now.toISOString()}`).toBe(weekday[slot]);
+        expect(localTimeInZone(start)).toBe('18:00');
+        expect(lead).toBeGreaterThanOrEqual(5 * 86_400_000);
+        expect(lead).toBeLessThan(12 * 86_400_000 + 3_600_000);
+      }
+    }
+  });
+
+  it('works today (05 report: threw for thu_eve on 2026-10-25)', () => {
+    expect(() => nextSlotStart('thu_eve', '18:00', new Date('2026-10-25T07:30:00Z'), 5)).not.toThrow();
   });
 
   it('handles weekend day slots and DST', () => {

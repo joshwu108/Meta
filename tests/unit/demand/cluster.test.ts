@@ -45,6 +45,7 @@ describe('clusterUsers', () => {
 
   it('puts each user in at most one cluster per (category, slot)', () => {
     const clusters = clusterUsers(filterUsers(consentingUsers()), cfg);
+    expect(clusters.length).toBeGreaterThan(0);
     for (const c of clusters) {
       const others = clusters.filter((o) => o !== c && o.category === c.category && o.slot === c.slot);
       const ids = new Set(c.members.map((m) => m.userId));

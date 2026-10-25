@@ -13,7 +13,8 @@ import { loadRevisable, revisionSaver } from './store-revise';
 import { getGroupVenueRequest } from '@/features/groups';
 import { groupProposalSaver, hasPendingGroupProposal, isActiveGroupMember } from './store-group';
 import { logActions, notifyOwner } from './core-adapters';
-import { stubFindCandidates, stubLoadVenue } from './stubs';
+import { findCandidateBusinesses } from '@/features/business';
+import { stubLoadVenue } from './stubs';
 import { supabaseDeps } from './wiring';
 
 const admin = () => createAdminClient() as unknown as SupabaseClient;
@@ -38,7 +39,7 @@ function groupRouteDeps(): GroupRouteDeps {
       return {
         config: DEMAND_CONFIG,
         now: () => new Date(),
-        findCandidates: (criteria) => stubFindCandidates(client, criteria),
+        findCandidates: (criteria) => findCandidateBusinesses(criteria, client),
         loadVenue: (match) => stubLoadVenue(client, match),
         generate: generateProposal,
         notify: notifyOwner,

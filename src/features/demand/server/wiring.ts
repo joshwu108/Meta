@@ -7,9 +7,10 @@ import { generateProposal } from './generate';
 import * as store from './store-supabase';
 import { logActions, notifyOwner } from './core-adapters';
 import { getSharablePreferencesBatch } from '@/features/agent';
-import { stubFindCandidates, stubLoadVenue } from './stubs';
+import { findCandidateBusinesses } from '@/features/business';
+import { stubLoadVenue } from './stubs';
 
-/** Production dependencies: service-role Supabase, the real prompt, and stubs for unmerged contracts. */
+/** Production dependencies: service-role Supabase, the real prompt, other workstreams' exports, and the venue stub. */
 export function supabaseDeps(admin: SupabaseClient = createAdminClient() as unknown as SupabaseClient): PipelineDeps {
   return {
     config: DEMAND_CONFIG,
@@ -19,7 +20,7 @@ export function supabaseDeps(admin: SupabaseClient = createAdminClient() as unkn
     listEligibleUserIds: () => store.listEligibleUserIds(admin, DEMAND_CONFIG.pageSize),
     getSharableBatch: (ids) => getSharablePreferencesBatch(ids, 'demand'),
     logActions,
-    findCandidates: (criteria) => stubFindCandidates(admin, criteria),
+    findCandidates: (criteria) => findCandidateBusinesses(criteria, admin),
     loadVenue: (match) => stubLoadVenue(admin, match),
     hasRecentPendingProposal: (sig, since) => store.hasRecentPendingProposal(admin, sig, since),
     generate: generateProposal,
