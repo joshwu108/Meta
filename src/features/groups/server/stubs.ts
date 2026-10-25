@@ -49,7 +49,7 @@ async function businessCards(ids: readonly string[]): Promise<Map<string, Busine
 const unknownBusiness = (id: string): BusinessPublicCard => ({ id, name: 'Local venue', category: 'community', neighborhood: '', address: '', description: '', imageUrl: null });
 
 function toSummary(row: EventRow, business: BusinessPublicCard, rsvpStatus: RsvpStatus | null): EventSummary {
-  return { id: row.id, title: row.title, startsAt: row.starts_at, status: row.status as EventStatus, business, rsvpStatus };
+  return { id: row.id, title: row.title, category: row.category as EventCategory, startsAt: row.starts_at, status: row.status as EventStatus, business, rsvpStatus };
 }
 
 export async function getUpcomingEventsForUser(userId: string): Promise<EventSummary[]> {

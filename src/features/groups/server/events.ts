@@ -36,7 +36,7 @@ export async function getGroupUpcomingEvents(groupId: string, activeMemberIds: r
   const fetched = await Promise.all(missing.map((id) => getEventPublic(id)));
   for (const event of fetched) {
     if (event && LIVE.has(event.status) && new Date(event.startsAt).getTime() > Date.now()) {
-      byId.set(event.id, { event: { id: event.id, title: event.title, startsAt: event.startsAt, status: event.status, business: event.business, rsvpStatus: null }, going: 0 });
+      byId.set(event.id, { event: { id: event.id, title: event.title, category: event.category, startsAt: event.startsAt, status: event.status, business: event.business, rsvpStatus: null }, going: 0 });
     }
   }
   return [...byId.values()]
