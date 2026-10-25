@@ -16,7 +16,9 @@ export type GroupSchedule = {
  * `getSharablePreferences(id, 'group_plan')`; members who did not consent are
  * simply absent and never counted.
  */
-export function resolveGroupSchedule(members: readonly SharablePreferences[], maxOptions = 3): GroupSchedule {
+export function resolveGroupSchedule(input: readonly SharablePreferences[], maxOptions = 3): GroupSchedule {
+  // A member listed twice must not count twice toward a slot.
+  const members = input.filter((m, i) => input.findIndex((x) => x.userId === m.userId) === i);
   if (members.length === 0) return { options: [], unanimous: null, budgetMaxCents: null };
   const options = AVAILABILITY_SLOT.map((slot) => {
     const available = members.filter((m) => m.availabilitySlots.includes(slot)).map((m) => m.userId);

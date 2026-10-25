@@ -26,6 +26,12 @@ describe("resolveGroupSchedule", () => {
     expect(resolveGroupSchedule([m("a", [])]).budgetMaxCents).toBeNull();
   });
 
+  it("counts a member listed twice only once", () => {
+    const out = resolveGroupSchedule([m("a", ["fri_eve"]), m("a", ["fri_eve"]), m("b", ["thu_eve"]), m("c", ["thu_eve"])]);
+    expect(out.options[0]).toEqual({ slot: "thu_eve", available: ["b", "c"], missing: ["a"] });
+    expect(out.options[1]).toEqual({ slot: "fri_eve", available: ["a"], missing: ["b", "c"] });
+  });
+
   it("handles an empty group and caps options", () => {
     expect(resolveGroupSchedule([])).toEqual({ options: [], unanimous: null, budgetMaxCents: null });
     const all = resolveGroupSchedule([m("a", ["mon_eve", "tue_eve", "wed_eve", "thu_eve"])], 2);
