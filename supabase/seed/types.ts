@@ -24,6 +24,20 @@ export const seedBusinessSchema = z.object({
   lng: z.number(),
   capacity: z.number().int().positive(),
   owner: z.object({ email: z.string().email(), display_name: z.string() }),
+  /** Workstream 05 venue detail. Optional so a base fixture still loads. */
+  hours: z.record(z.string(), z.array(z.tuple([z.string(), z.string()]))).optional(),
+  capabilities: z
+    .object({
+      event_categories: z.array(eventCategorySchema).optional(),
+      min_price_cents: z.number().int().nullable().optional(),
+      max_price_cents: z.number().int().nullable().optional(),
+      hosting_slots: z.array(z.string()).optional(),
+      equipment_tags: z.array(z.string()).optional(),
+      formats: z.array(z.string()).optional(),
+      notes: z.string().nullable().optional(),
+      accepts_ai_proposals: z.boolean().optional(),
+    })
+    .optional(),
 });
 export type SeedBusiness = z.infer<typeof seedBusinessSchema>;
 
