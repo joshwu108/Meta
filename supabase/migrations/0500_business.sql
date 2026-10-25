@@ -27,7 +27,12 @@ create table businesses (
   name text not null check (char_length(name) between 2 and 80),
   slug text not null unique,
   description text check (char_length(description) <= 1000),
-  category text not null,                       -- primary EVENT_CATEGORY, e.g. 'creative'
+  -- Primary EVENT_CATEGORY (specs/README.md §2). Constrained here, not just in the API:
+  -- workstream 06 parses this column with z.enum(EVENT_CATEGORY) when listing nearby
+  -- venues, so an unexpected value would throw there rather than fail at the write.
+  category text not null check (
+    category in ('creative','food_drink','games','outdoors','fitness','learning','music','community')
+  ),
   address text not null,
   neighborhood text,
   lat numeric(9,6) not null,                    -- exact venue location is public information
@@ -47,10 +52,16 @@ create trigger businesses_updated_at before update on businesses
 create table business_capabilities (
   business_id uuid primary key references businesses(id) on delete cascade,
   event_categories text[] not null default '{}',  -- EVENT_CATEGORY values it can host
+  constraint capabilities_categories_valid check (
+    event_categories <@ array['creative','food_drink','games','outdoors','fitness','learning','music','community']::text[]
+  ),
   capacity int not null check (capacity between 1 and 500),
   min_price_cents int check (min_price_cents >= 0),
   max_price_cents int check (max_price_cents >= 0),
   hosting_slots text[] not null default '{}',     -- AVAILABILITY_SLOT values
+  constraint capabilities_slots_valid check (
+    hosting_slots <@ array['mon_eve','tue_eve','wed_eve','thu_eve','fri_eve','sat_day','sat_eve','sun_day','sun_eve']::text[]
+  ),
   equipment_tags text[] not null default '{}',    -- 'pottery-wheels','kiln','board-game-library','espresso-bar'
   formats text[] not null default '{}',           -- 'workshop','social-mixer','tournament','tasting'
   notes text check (char_length(notes) <= 500),
@@ -73,7 +84,10 @@ create table events (
   source text not null check (source in ('ai_proposal','business_manual','group_request')),
   title text not null check (char_length(title) between 4 and 80),
   description text not null check (char_length(description) <= 1500),
-  category text not null,
+  -- Same reasoning as businesses.category: 06 parses it as an enum when it renders an event.
+  category text not null check (
+    category in ('creative','food_drink','games','outdoors','fitness','learning','music','community')
+  ),
   format text,
   starts_at timestamptz not null,
   ends_at timestamptz not null,
