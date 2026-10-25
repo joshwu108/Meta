@@ -169,4 +169,28 @@ describe('decideProposal', () => {
     await decideProposal(deps, businessId, venue, orphan, { decision: 'approve', publish: true });
     expect(deps.notifications).toEqual([]);
   });
+
+    /**
+     * `agent_action_log.user_id` references `profiles(id)`. Passing a business id there is
+     * rejected by the foreign key, and 01's helper logs and returns rather than throwing, so
+     * every audit row was being dropped silently.
+     */
+    it('records the signed-in owner, never the business id', async () => {
+      const withActor = { ...deps, actorUserId: 'owner-1' };
+      await decideProposal(withActor, businessId, venue, proposalId, {
+        decision: 'approve',
+        publish: true,
+      });
+
+      expect(withActor.actions.length).toBeGreaterThan(0);
+      for (const action of withActor.actions) {
+        expect(action.userId, `${action.action} logged a non-user id`).not.toBe(businessId);
+        expect(action.userId).toBe('owner-1');
+      }
+    });
+
+    it('logs a null user rather than a business id when nobody is signed in', async () => {
+      await decideProposal(deps, businessId, venue, proposalId, { decision: 'approve', publish: false });
+      for (const action of deps.actions) expect(action.userId).toBeNull();
+    });
 });

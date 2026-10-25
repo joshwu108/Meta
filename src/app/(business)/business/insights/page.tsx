@@ -3,6 +3,7 @@ import { AiTag, CapacityMeter, Card, CardHeader, EmptyState } from '@/features/c
 import { EstimatePopover } from '@/features/business/components/EstimatePopover';
 import { formatDay } from '@/features/business/format';
 import { BAND_LABEL, CATEGORY_LABEL, SLOT_LABEL } from '@/features/business/labels';
+import { InsightsGrid } from '@/features/business/components/InsightsGrid';
 import { StatRow } from '@/features/business/components/StatRow';
 import { getBusinessAnalytics } from '@/features/business/server/analytics';
 import { getBusinessInsights } from '@/features/business/server/insights';
@@ -47,7 +48,12 @@ export default async function BusinessInsightsPage() {
       {insights.cells.length === 0 ? (
         <EmptyState icon={<Lightbulb aria-hidden size={24} strokeWidth={1.75} />} title="Not enough opted-in interest nearby to show a range yet. Small groups are never shown, to protect the people in them." />
       ) : (
-        <div className="flex flex-col gap-3">
+        <>
+        {/* Desktop reads the whole week at once; the phone keeps the per-category list. */}
+        <Card className="hidden overflow-x-auto p-3 xl:block">
+          <InsightsGrid cells={insights.cells} />
+        </Card>
+        <div className="flex flex-col gap-3 xl:hidden">
           {[...byCategory.entries()].map(([category, cells]) => (
             <Card key={category}>
               <CardHeader title={CATEGORY_LABEL[category as keyof typeof CATEGORY_LABEL]} />
@@ -69,6 +75,7 @@ export default async function BusinessInsightsPage() {
             </Card>
           ))}
         </div>
+        </>
       )}
 
       {/* P1 analytics: how the venue's own past events went. Counts only. */}

@@ -306,12 +306,8 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
       return (await rsvpRows(eventId)).filter((r) => r.status === 'confirmed').map((r) => r.user_id);
     },
 
-    async countRepeatAttendees(businessId) {
+    async countRepeatAttendees(eventIds) {
       // Service role: the ids are counted here and discarded. `rsvps` belongs to 06.
-      const events = await db.from('events').select('id').eq('business_id', businessId);
-      if (events.error) throw toApiError(events.error, 'could not read the events');
-
-      const eventIds = (events.data ?? []).map((row) => (row as { id: string }).id);
       if (eventIds.length === 0) return 0;
 
       const service = serviceRole('the repeat attendee count');
@@ -320,7 +316,7 @@ export function createSupabaseStore(db: SupabaseClient, admin: () => SupabaseCli
       const { data, error } = await service
         .from('rsvps')
         .select('user_id')
-        .in('event_id', eventIds)
+        .in('event_id', [...eventIds])
         .eq('status', 'confirmed');
 
       if (error) {

@@ -115,7 +115,7 @@ suite('business platform against the real database', () => {
   });
 
   it('hides one owner capabilities notes from being written by another owner', async () => {
-    const { error } = await meeple.client
+    const { data, error } = await meeple.client
       .from('business_capabilities')
       .update({ capacity: 500 })
       .eq('business_id', kilnId)
@@ -126,8 +126,12 @@ suite('business platform against the real database', () => {
       .eq('business_id', kilnId)
       .single();
 
+    // RLS filters the row out rather than erroring, so the update matches nothing and the
+    // stored capacity is untouched. (The previous assertion here could not fail: a
+    // PostgrestError always carries a code.)
     expect((after.data as { capacity: number }).capacity).toBe(12);
-    expect(error === null || error.code !== undefined).toBe(true);
+    expect(error).toBeNull();
+    expect(data ?? []).toEqual([]);
   });
 
   /** T-I6 */

@@ -252,12 +252,23 @@ suite('proposal decisions against the real database', () => {
   });
 
   it.skipIf(!hasNotificationsTable)('writes notifications as the service role only', async () => {
+    // 01 gives `notifications` a select and an update policy but no insert policy, so with
+    // RLS on, any authenticated insert is refused. That is the property 05 relies on: its
+    // fan-out on publish and cancel goes through the service role, and nothing a signed-in
+    // owner can do puts a row in someone else's feed.
     const { error } = await owner.client
       .from('notifications')
       .insert({ user_id: owner.userId, type: 'event_published', payload: {} })
       .select('id');
-    // 01 owns the policy; an owner must not be able to notify another user. Either the
-    // insert is refused, or it is scoped to themselves.
-    expect(error === null || error.code !== undefined).toBe(true);
+
+    expect(error).not.toBeNull();
+    expect(error?.code).toBe('42501');
+
+    // The service role still can, which is how notify() delivers.
+    const asService = await live.admin
+      .from('notifications')
+      .insert({ user_id: owner.userId, type: 'event_published', payload: {} })
+      .select('id');
+    expect(asService.error).toBeNull();
   });
 });

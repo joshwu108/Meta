@@ -12,6 +12,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // Without this, env(safe-area-inset-*) resolves to 0 and the bottom tab bar sits under
+  // the iPhone home indicator. Required for the --safe-bottom token to do anything.
+  viewportFit: 'cover',
   // Browser chrome color; mirrors --color-canvas in tokens.css (meta tags cannot read CSS vars).
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#F0F2F5' },

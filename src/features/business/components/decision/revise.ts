@@ -1,6 +1,7 @@
 import type { AvailabilitySlot } from '@/shared/enums';
 import type { ErrorCode } from '@/lib/api';
 import { priceToCents } from '../event-draft';
+import { submitErrorMessage } from '../submit-error';
 
 /**
  * "Ask AI to revise" (spec §3, P1). Workstream 04 owns the endpoint:
@@ -72,6 +73,9 @@ export function reviseErrorMessage(code: ErrorCode, fallback: string): string {
     case 'VALIDATION':
       return fallback;
     default:
-      return fallback;
+      // Everything else shares the wording every other business form uses, rather than
+      // falling through to the server's own text: an INTERNAL failure reads "Something went
+      // wrong (request <uuid>)", and a venue owner was being shown that request id.
+      return submitErrorMessage(code, fallback);
   }
 }

@@ -89,6 +89,28 @@ describe('business analytics', () => {
     expect(analytics.totalAttendance).toBe(1);
   });
 
+  it('counts repeat attendees only across events that have finished', async () => {
+    // "Events hosted 0 · People who came 0 · Came back again 5" is not a thing that can be
+    // true. The repeat count has to share the scope of the other two stats.
+    const upcoming = seed(
+      { title: 'Still to come', starts_at: '2026-11-20T18:00:00.000Z', ends_at: '2026-11-20T20:00:00.000Z' },
+      'published',
+    );
+    store.seedRsvp(upcoming.id, { user_id: 'user-a' });
+    store.seedRsvp(upcoming.id, { user_id: 'user-b' });
+    const alsoUpcoming = seed(
+      { title: 'Also to come', starts_at: '2026-11-21T18:00:00.000Z', ends_at: '2026-11-21T20:00:00.000Z' },
+      'published',
+    );
+    store.seedRsvp(alsoUpcoming.id, { user_id: 'user-a' });
+    store.seedRsvp(alsoUpcoming.id, { user_id: 'user-b' });
+
+    const analytics = await getBusinessAnalytics(deps, businessId);
+    expect(analytics.pastEvents).toBe(0);
+    expect(analytics.totalAttendance).toBe(0);
+    expect(analytics.repeatAttendees).toBe(0);
+  });
+
   it('counts repeat attendees without naming anyone', async () => {
     const first = seed({ title: 'First' });
     const second = seed({ title: 'Second' });

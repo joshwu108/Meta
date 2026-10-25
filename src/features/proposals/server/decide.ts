@@ -49,7 +49,7 @@ export async function decideProposal(
     });
     await deps.logAgentAction({
       actor: 'planning_agent',
-    userId: businessId,
+    userId: deps.actorUserId,
       action: 'reject_proposal',
       permissionsUsed: [],
       result: `${row.proposal.title} (${body.reason ?? 'other'})`,
@@ -92,7 +92,7 @@ export async function decideProposal(
 
   await deps.logAgentAction({
     actor: 'planning_agent',
-    userId: businessId,
+    userId: deps.actorUserId,
     action: body.decision === 'approve' ? 'approve_proposal' : 'modify_proposal',
     permissionsUsed: [],
     result: fields.title,
