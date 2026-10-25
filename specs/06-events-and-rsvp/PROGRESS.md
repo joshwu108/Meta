@@ -127,7 +127,7 @@ Branch: `ws/06-events`. Spec: [`specs.md`](./specs.md).
 
 ## Log
 
-- 2026-10-24 21:45 PT: main unchanged. Chunked every id-list read after 03 reported PostgREST URL overflow (unit + 130-event DB test). 05 verified its attendee path against 06's real table. 182 unit + 62 db tests.
+- 2026-10-24 21:45 PT: main unchanged. Chunked every id-list read after 03 reported PostgREST URL overflow (unit + 130-event DB test). 05 verified its attendee path against 06's real table. 181 unit + 62 db tests.
 - 2026-10-24 21:25 PT: main moved (01's @aside slot, Switch labels, vitest server-only stub); merged cleanly. Discover and Events now use the right-rail slot. 177 unit + 61 db tests, typecheck, lint, build green.
 - 2026-10-24 21:05 PT: main unchanged. 02 now returns `interestCategories` (ask closed); the explain fixture ask is still open. Rehearsed merging ws/05-business into this branch: no conflicts, frozen lockfile installs, typecheck/lint clean, 432 unit + 61 db tests, build green; the 0100+0500+0501+0600 subset (what main will hold after 05 and 06) applies and the attendee smoke passes.
 - 2026-10-24 20:50 PT: main unchanged. 01 built the `@aside` slot 06 asked for (not on main yet; adding 06's rail pages before 01's `@aside/default.tsx` is on main would 404 hard loads). 03, 04, 05 have merged main; nothing in their changes touches 06.
