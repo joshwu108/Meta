@@ -77,7 +77,7 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - [x] **T-I3** approve creates `approved_draft` event linked to proposal
 - [~] **T-I4** publish notifies cluster members without exposing ids — written; the
   cohort half needs 04's `demand_cluster_members`, so it skips until 04 merges
-- [~] **T-I5** cancel notifies RSVPs — written; self-skips until 06 merges `rsvps`
+- [~] **T-I5** cancel notifies RSVPs — rewritten against 06's real table; skips until 06 merges `rsvps`
 - [x] **T-I6** public can read only published/full/completed events
 - [x] **T-I7** `proposals_business_fk` exists after a full reset (spec §12)
 
@@ -100,6 +100,21 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 ---
 
 ## Decisions
+
+- **2026-10-24 — Verified the attendee path against workstream 06's branch.** 06's `rsvps`
+  carries exactly the columns 05 reads, and its policy is `auth.uid() = user_id` — so a
+  venue reading its own attendee list *as itself* gets nothing. That confirms the earlier
+  service-role fix was necessary, not tidying: without it `confirmedCount` and every
+  attendee list would have been empty once 06 merged.
+  06 also handles 05's status guard properly: `sync_event_capacity_status()` derives
+  `published` ⇄ `full` from the confirmed count and sets `commonground.status_rpc` itself,
+  rather than calling `transition_event_status()`, because that function trusts only the
+  venue owner or the service role and an RSVP comes from an attendee. The outcome is
+  derived rather than chosen by the caller, and the function is revoked from `public`, so
+  the guard's intent holds.
+  While doing this I found **T-I5 could never have run**: it depended on 06's table but sat
+  inside the proposal suite, which skips wholesale on 04's table, and it only asserted the
+  RPC half, ending on a no-op expectation. Rewritten in the suite that is not gated on 04.
 
 - **2026-10-24 — P1-3 built and verified against 04's branch.** 04 had already shipped the
   revise endpoint I asked for, so rather than stub it I grafted their branch locally
@@ -307,6 +322,16 @@ Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../RE
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-24 21:20` — **verified the last unchecked cross-workstream seam: 06's `rsvps`.**
+  Grafted 06's migration locally (never committed). Their table matches what 05 reads and
+  their RLS is `auth.uid() = user_id`, which proves the earlier service-role fix was
+  load-bearing — without it every attendee list and confirmed count would have come back
+  empty once 06 merged. Their capacity flip also respects 05's status guard in a sound way.
+  Found and fixed a dead test on my side: **T-I5 could never have run**, because it depended
+  on 06's table while sitting behind 04's gate, and it only asserted the RPC half anyway.
+  Rewritten where it can run, and made to skip visibly rather than return early and read as
+  a pass. With 06 grafted: **30 integration**; without: 29 with 9 skipped. 349 unit and
+  30 e2e green either way; typecheck, lint and build clean.
 - `2026-10-24 20:50` — **P1-3 shipped; the checklist is now complete.** 04's branch already
   had the revise endpoint, so I grafted their feature locally (never committed) and built
   "Ask AI to revise" against the real contract rather than a guess: a note plus optional
