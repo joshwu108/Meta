@@ -2,6 +2,7 @@ import { AGENT_PROMPTS } from './agent';
 import { DEMAND_PROMPTS } from './demand';
 import { EVENTS_PROMPTS } from './events';
 import { GROUPS_PROMPTS } from './groups';
+import { IMPORT_PROMPTS } from './import';
 
 /**
  * Prompt registry. Every workstream appends its prompt ids here and ships a fixture at
@@ -25,6 +26,10 @@ export const PROMPT_IDS = [
   'demand.revise_proposal',
   // 06 events
   'events.reconnect_followup',
+  // 07 import
+  'import.read_screens',
+  'import.map_labels',
+  'import.plan',
 ] as const;
 
 export type PromptId = (typeof PROMPT_IDS)[number];
@@ -52,6 +57,7 @@ export const PROMPTS: Partial<Record<PromptId, PromptDefinition>> = {
   ...GROUPS_PROMPTS,
   ...DEMAND_PROMPTS,
   ...EVENTS_PROMPTS,
+  ...IMPORT_PROMPTS,
 };
 
 export function isPromptId(value: string): value is PromptId {

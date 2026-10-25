@@ -1,0 +1,19 @@
+{
+  "cards": [
+    {
+      "title": "Get your hands in clay",
+      "why": "You loved ceramics, and there's a beginner wheel class nearby in a slot you're free.",
+      "steps": [{ "ref": "event:0", "action": "rsvp", "label": "Save a spot" }]
+    },
+    {
+      "title": "Meet someone who shares ceramics",
+      "why": "You both list ceramics, so a first hello has something easy to talk about.",
+      "steps": [{ "ref": "person:0", "action": "connect", "label": "Say hello" }]
+    },
+    {
+      "title": "Drop by a studio",
+      "why": "A studio near you hosts the kind of hands-on sessions you said yes to.",
+      "steps": [{ "ref": "place:0", "action": "open_place", "label": "See the studio" }]
+    }
+  ]
+}
