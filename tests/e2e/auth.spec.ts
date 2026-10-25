@@ -31,12 +31,12 @@ test('login as a seeded consumer lands on discover with the consumer shell', asy
   await expect(page.getByRole('img', { name: CONSUMER.name })).toBeVisible();
 });
 
-test('a user without onboarding is sent to /onboarding and can continue', async ({ page }) => {
+test('a user without onboarding is sent to /onboarding and sees the agent onboarding', async ({ page }) => {
   await reseed(page);
   await login(page, NEW_USER.email);
   await expect(page).toHaveURL(/\/onboarding$/);
-  await page.getByRole('button', { name: 'Continue to Discover' }).click();
-  await page.waitForURL('**/discover');
+  // ws02's onboarding replaced 01's placeholder skip button; finishing it is covered by agent-scene1.spec.ts.
+  await expect(page.getByRole('heading', { name: `Hi ${NEW_USER.name}, welcome to CommonGround` })).toBeVisible();
 });
 
 test('a seeded business owner is routed to the business side', async ({ page }) => {

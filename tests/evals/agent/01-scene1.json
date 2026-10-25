@@ -1,0 +1,20 @@
+{
+  "id": "01-scene1",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "I just moved here, I like pottery and coffee shops, free Thursday evenings, small groups."
+    }
+  ],
+  "expected": {
+    "interests": [
+      "pottery",
+      "coffee"
+    ],
+    "availabilitySlots": [
+      "thu_eve"
+    ],
+    "groupSizePref": "small",
+    "budgetMaxCents": null
+  }
+}

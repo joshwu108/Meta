@@ -1,0 +1,37 @@
+{
+  "completedEvent": {
+    "venue": "Ritual Grounds",
+    "title": "Latte Art & Conversation",
+    "description": "A relaxed latte-art lesson with plenty of time to chat. Beginners welcome.",
+    "category": "food_drink",
+    "format": "workshop",
+    "daysAgo": 3,
+    "startHourLocal": 18,
+    "durationHours": 2,
+    "capacity": 10,
+    "priceCents": 1500,
+    "attendees": [
+      "maya@commonground.test",
+      "jordan@commonground.test",
+      "sam@commonground.test",
+      "priya@commonground.test",
+      "theo@commonground.test",
+      "nina@commonground.test"
+    ],
+    "reconnect": {
+      "from": "maya@commonground.test",
+      "to": "jordan@commonground.test"
+    }
+  },
+  "excludeFromRsvps": [
+    "demo.new@commonground.test"
+  ],
+  "excludePrefixes": [
+    "demo",
+    "owner."
+  ],
+  "rsvpsPerEvent": {
+    "min": 3,
+    "max": 8
+  }
+}

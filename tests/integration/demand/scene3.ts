@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { PipelineDeps } from '@/features/demand/server/deps';
 import { createTestUser, type TestUser } from '../helpers';
 import scene3 from '../../fixtures/demand/users-scene3.json';
 
@@ -71,6 +72,16 @@ export async function onlyTheseVenues(admin: SupabaseClient, keep: readonly stri
   return async () => {
     await admin.from('businesses').update({ is_active: true }).in('id', others);
   };
+}
+
+/**
+ * Production deps with the user scan limited to this world's consumers. With 02 merged, db:seed
+ * gives the same Scene 3 demo users real consent, which would double every cohort. Consent is
+ * still decided by 02's getSharablePreferencesBatch, so the opted-out user stays excluded.
+ */
+export function sceneDeps(deps: PipelineDeps, world: Scene3World): PipelineDeps {
+  const ids = [...world.consumers.values()].map((u) => u.id);
+  return { ...deps, listEligibleUserIds: async () => ids };
 }
 
 /** 14 Scene 3 consumers (one demand opt-out) and the three venues, as itest users. */

@@ -1,0 +1,53 @@
+{
+  "reply": "Here are a few people nearby who share your interests, and an event this week that fits.",
+  "capabilities": [
+    {
+      "name": "suggest_people"
+    },
+    {
+      "name": "suggest_events"
+    }
+  ],
+  "cases": [
+    {
+      "match": "some people",
+      "output": {
+        "reply": "Here are a few people nearby who share your interests and are free when you are.",
+        "capabilities": [
+          {
+            "name": "suggest_people"
+          }
+        ]
+      }
+    },
+    {
+      "match": "group to join",
+      "output": {
+        "reply": "These groups meet at times that fit your week.",
+        "capabilities": [
+          {
+            "name": "suggest_groups"
+          }
+        ]
+      }
+    },
+    {
+      "match": "free on weekends",
+      "output": {
+        "reply": "Want me to add weekend afternoons to your availability? Tap Apply to confirm.",
+        "capabilities": [
+          {
+            "name": "update_preference",
+            "patch": {
+              "availabilitySlots": [
+                "thu_eve",
+                "sat_day",
+                "sun_day"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

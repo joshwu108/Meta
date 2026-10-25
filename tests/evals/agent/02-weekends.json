@@ -1,0 +1,23 @@
+{
+  "id": "02-weekends",
+  "transcript": [
+    {
+      "role": "user",
+      "content": "Weekends are my only free time. I'm into hiking and photography, happy in a medium-sized group."
+    }
+  ],
+  "expected": {
+    "interests": [
+      "hiking",
+      "photography"
+    ],
+    "availabilitySlots": [
+      "sat_day",
+      "sat_eve",
+      "sun_day",
+      "sun_eve"
+    ],
+    "groupSizePref": "medium",
+    "budgetMaxCents": null
+  }
+}

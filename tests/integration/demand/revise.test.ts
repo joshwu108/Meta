@@ -6,7 +6,7 @@ vi.mock('server-only', () => ({}));
 process.env.MOCK_AI = '1';
 
 const { adminClient, cleanupTestUsers } = await import('../helpers');
-const { applyTestSchema, onlyTheseVenues, seedScene3 } = await import('./scene3');
+const { applyTestSchema, onlyTheseVenues, sceneDeps, seedScene3 } = await import('./scene3');
 const { supabaseDeps } = await import('@/features/demand/server/wiring');
 const { runPipeline } = await import('@/features/demand/server/pipeline');
 const { reviseRouteDeps } = await import('@/features/demand/server/route-deps');
@@ -36,7 +36,7 @@ beforeAll(async () => {
   await clearDemandTables();
   world = await seedScene3(admin);
   restoreVenues = await onlyTheseVenues(admin, [...world.owners.values()].map((o) => o.businessId));
-  await runPipeline(supabaseDeps(admin), { triggeredBy: 'manual' });
+  await runPipeline(sceneDeps(supabaseDeps(admin), world), { triggeredBy: 'manual' });
   const owner = world.owners.get('Kiln & Cup')!;
   // Kiln also hosts food_drink, so it can get more than one proposal; take the Scene 3 pottery one.
   const { data } = await admin.from('event_proposals').select('id').eq('business_id', owner.businessId).eq('status', 'pending')
