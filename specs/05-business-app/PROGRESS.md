@@ -432,6 +432,36 @@ either side of 04. Both were confirmed present in the 13-migration run.
   applied: `vitest.config.ts` is a shared contract. 05 worked around it by extracting the
   logic under test into a plain module.
 
+- **01 — two mobile-correctness bugs in files 05 does not own.** Both are invisible on a
+  desktop browser and in Playwright, and both affect every workstream's screens:
+  1. **Nothing handles the iPhone home indicator.** `env(safe-area-inset-bottom)` appears
+     nowhere in `src/`. The bottom tab bar in `AppShell.tsx` is a fixed
+     `h-[var(--tabbar-height)]` = 56px strip, so on a notched iPhone the bottom row of tabs
+     sits partly under the system gesture bar. Fix: add
+     `pb-[env(safe-area-inset-bottom)]` to that nav (and to any sticky bottom action bar).
+  2. **iOS Safari zooms the page on every input.** `--text-base` is `0.9375rem` (15px) in
+     `tokens.css`, and Safari zooms the viewport whenever a focused input is under 16px —
+     the page jumps and does not zoom back. Measured at 15px on the business event editor
+     and the consumer signup form. The narrow fix is 16px on form controls only
+     (`input`, `select`, `textarea`), which kills the zoom without reflowing body copy
+     anywhere in the product; raising `--text-base` itself shifts type everywhere and should
+     be a deliberate design call rather than a side effect.
+
+- **01 / design system — "Contrast AA on all text" (design-system.md §7) does not hold for the
+  brand tokens.** Measured with a WCAG contrast pass over six business screens in both themes
+  (computed colours, blended against the first opaque ancestor, large-text rule applied at
+  ≥24px or ≥18.66px bold):
+  - Primary button, white on `--color-brand`: **4.82:1 light** (passes) but **3.46:1 dark**
+    (`#ffffff` on `#2d88ff`) — fails AA for 15px text.
+  - Active nav item, brand on brand-soft: **4.20:1 light** (`#0866ff` on `#e7f0ff`) and
+    **3.40:1 dark** (`#2d88ff` on `#263951`) — fails AA in both themes.
+  - Notification badge and avatar initials land at 3.4-3.65:1.
+  These are design tokens, not 05 files, and the spec deliberately specifies Facebook's blue,
+  so this is a judgement call for whoever owns the palette: darken `--color-brand` for text
+  use, lift the dark-theme `brand-soft`, or state the exception in §7. 05 changed nothing.
+  The pairs above are the whole finding; the method was a computed-style sweep, not a
+  screenshot eyeball.
+
 ## Blocked
 
 - ~~Git identity not configured in this clone.~~ **Resolved 2026-10-24 15:58**: the owner
