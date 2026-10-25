@@ -59,15 +59,20 @@ suite('proposal decisions against the real database', () => {
     return (data as { id: string }).id;
   };
 
+  /**
+   * The same keys `createSupabaseStore().decideProposal()` sends: the `events` column
+   * names. Writing them differently here is what let a camelCase/snake_case mismatch
+   * between the store and the RPC pass the suite and fail in the browser.
+   */
   const eventPayload = (over: Record<string, unknown> = {}) => ({
     title: 'Beginner Pottery & Coffee Night',
     description: 'A guided wheel-throwing session for complete beginners, then coffee.',
     category: 'creative',
     format: 'Guided session',
-    startsAt: '2026-10-29T18:30:00Z',
-    endsAt: '2026-10-29T20:15:00Z',
+    starts_at: '2026-10-29T18:30:00Z',
+    ends_at: '2026-10-29T20:15:00Z',
     capacity: 8,
-    priceCents: 2500,
+    price_cents: 2500,
     ...over,
   });
 

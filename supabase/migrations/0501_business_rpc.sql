@@ -109,9 +109,10 @@ $$;
 -- marked decided. Any failure rolls all of it back, so a proposal can never end up
 -- 'approved' without the event it points at (spec section 9, integration test T-I2).
 --
--- p_event carries the already-merged and already-validated event fields
--- (proposal document + business edits), resolved in decideProposal() so the capability
--- checks stay unit-testable in TypeScript.
+-- p_event carries the already-merged and already-validated event fields (proposal document
+-- + business edits), resolved in decideProposal() so the capability checks stay
+-- unit-testable in TypeScript. Its keys are the `events` column names, so the object the
+-- TypeScript store builds can be passed straight through without a second spelling.
 
 create or replace function decide_proposal(
   p_proposal_id uuid,
@@ -149,6 +150,12 @@ begin
     raise exception 'VALIDATION: approving a proposal requires resolved event fields'
       using errcode = 'check_violation';
   end if;
+  -- Fail loudly on a key the caller spelled differently, rather than inserting a null and
+  -- surfacing a not-null violation from three layers down.
+  if p_event ->> 'starts_at' is null or p_event ->> 'ends_at' is null then
+    raise exception 'VALIDATION: p_event needs starts_at and ends_at (events column names)'
+      using errcode = 'check_violation';
+  end if;
 
   insert into events (
     business_id, proposal_id, source, title, description, category, format,
@@ -157,9 +164,9 @@ begin
     v_proposal.business_id, p_proposal_id, 'ai_proposal',
     p_event ->> 'title', p_event ->> 'description', p_event ->> 'category',
     nullif(p_event ->> 'format', ''),
-    (p_event ->> 'startsAt')::timestamptz, (p_event ->> 'endsAt')::timestamptz,
+    (p_event ->> 'starts_at')::timestamptz, (p_event ->> 'ends_at')::timestamptz,
     (p_event ->> 'capacity')::int,
-    case when p_event ->> 'priceCents' is null then null else (p_event ->> 'priceCents')::int end,
+    case when p_event ->> 'price_cents' is null then null else (p_event ->> 'price_cents')::int end,
     'approved_draft'
   ) returning id into v_event_id;
 
