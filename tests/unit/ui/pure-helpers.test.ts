@@ -2,12 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { capacityRatio } from '@/features/core/components/ui/CapacityMeter';
 import { statusLabel, statusTone } from '@/features/core/components/ui/StatusPill';
 import { cn } from '@/features/core/components/ui/cn';
+import { removeLabel } from '@/features/core/components/ui/Chip';
 import { isNavActive } from '@/features/core/components/app-shell/nav';
 import { notificationBody, notificationHref, notificationTitle, relativeTime } from '@/features/core/components/notifications/NotificationList';
 
 describe('ui helpers', () => {
   it('cn joins truthy classes', () => {
     expect(cn('a', false, null, undefined, 'b')).toBe('a b');
+  });
+  it('removeLabel gives each chip a distinct accessible name', () => {
+    expect(removeLabel('Pottery', 'Pottery')).toBe('Remove Pottery');
+    expect(removeLabel(undefined, 'Coffee')).toBe('Remove Coffee');
+    expect(removeLabel(undefined, 3)).toBe('Remove 3');
+    expect(removeLabel(undefined, null)).toBe('Remove');
   });
   it('capacityRatio clamps to [0,1] and treats zero capacity as full', () => {
     expect(capacityRatio(5, 10)).toBe(0.5);

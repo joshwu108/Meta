@@ -2,15 +2,15 @@ import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 
 const alias = { '@': path.resolve(__dirname, 'src') };
+/** `server-only` throws outside a React Server environment; every project stubs it. */
+const serverAlias = { ...alias, 'server-only': path.resolve(__dirname, 'tests/support/server-only.ts') };
 
 export default defineConfig({
   resolve: { alias },
   test: {
     projects: [
       {
-        // `server-only` throws when imported outside an RSC graph; 05's domain modules
-        // import it and the unit project runs them in plain Node.
-        resolve: { alias: { ...alias, 'server-only': path.resolve(__dirname, 'tests/support/server-only.ts') } },
+        resolve: { alias: serverAlias },
         test: {
           name: 'unit',
           include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.tsx'],
@@ -19,11 +19,12 @@ export default defineConfig({
         },
       },
       {
-        resolve: { alias },
+        resolve: { alias: serverAlias },
         test: {
           name: 'integration',
           include: ['tests/integration/**/*.test.ts'],
           environment: 'node',
+          env: { MOCK_AI: '1' },
           setupFiles: ['tests/integration/setup.ts'],
           testTimeout: 30_000,
           hookTimeout: 60_000,
@@ -33,7 +34,7 @@ export default defineConfig({
         },
       },
       {
-        resolve: { alias: { ...alias, 'server-only': path.resolve(__dirname, 'tests/support/server-only.ts') } },
+        resolve: { alias: serverAlias },
         test: {
           name: 'db',
           include: ['tests/db/**/*.test.ts'],
