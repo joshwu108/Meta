@@ -70,3 +70,17 @@ export const SF_NEIGHBORHOODS: ReadonlyArray<{ name: string; lat: number; lng: n
   { name: "Dogpatch", lat: 37.76, lng: -122.39 },
   { name: "Glen Park", lat: 37.73, lng: -122.43 },
 ];
+
+/**
+ * Neighborhood typed in onboarding: an exact name, or a unique prefix of at least 3 letters
+ * ("mission" → Mission District). Returns null when nothing or several names match.
+ */
+export function matchNeighborhood(input: string): (typeof SF_NEIGHBORHOODS)[number] | null {
+  const q = input.trim().toLowerCase();
+  if (!q) return null;
+  const exact = SF_NEIGHBORHOODS.find((n) => n.name.toLowerCase() === q);
+  if (exact) return exact;
+  if (q.length < 3) return null;
+  const prefixed = SF_NEIGHBORHOODS.filter((n) => n.name.toLowerCase().startsWith(q));
+  return prefixed.length === 1 ? (prefixed[0] ?? null) : null;
+}

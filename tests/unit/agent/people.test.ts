@@ -12,12 +12,21 @@ const viewer = { userId: "me", interests: ["pottery", "coffee"], availabilitySlo
 
 function deps(cards: { id: string; display_name: string; neighborhood: string | null }[], shared: SharablePreferences[]) {
   return {
+    viewerAllowsMatching: vi.fn(async () => true),
     publicCards: vi.fn(async () => cards),
     sharable: vi.fn(async (ids: readonly string[]) => new Map(shared.filter((p) => ids.includes(p.userId)).map((p) => [p.userId, p]))),
   };
 }
 
 describe("suggestPeopleFrom", () => {
+  it("shows nobody to a viewer who has not allowed matching, and reads no one (AC3)", async () => {
+    const d = { ...deps([{ id: "a", display_name: "Ana", neighborhood: null }], [prefs("a", ["pottery"])]), viewerAllowsMatching: vi.fn(async () => false) };
+    expect(await suggestPeopleFrom(d, viewer)).toEqual([]);
+    expect(d.viewerAllowsMatching).toHaveBeenCalledWith("me");
+    expect(d.publicCards).not.toHaveBeenCalled();
+    expect(d.sharable).not.toHaveBeenCalled();
+  });
+
   it("returns real consented people ranked by shared interests then slots", async () => {
     const d = deps(
       [

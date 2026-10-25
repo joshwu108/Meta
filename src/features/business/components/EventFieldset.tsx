@@ -4,6 +4,7 @@ import { Input } from '@/features/core/components/ui';
 import { EVENT_CATEGORY, type EventCategory } from '@/shared/enums';
 import { CATEGORY_LABEL } from '../labels';
 import { Select, Textarea } from './form';
+import { timezoneLabel } from '../format';
 import type { EventDraft } from './event-draft';
 
 export { centsToPrice, priceToCents, type EventDraft } from './event-draft';
@@ -27,6 +28,8 @@ export function EventFieldset({
   lockCategory?: boolean;
   capacityCeiling: number;
 }) {
+  // Times are the venue's wall clock, not the owner's, so say which zone they are in.
+  const zone = timezoneLabel();
   const set = <K extends keyof EventDraft>(key: K, value: EventDraft[K]) =>
     onChange({ ...draft, [key]: value });
 
@@ -81,6 +84,7 @@ export function EventFieldset({
           id="event-starts"
           label="Starts"
           type="datetime-local"
+          hint={`Venue time (${zone})`}
           error={errors.startsAt}
           value={draft.startsAtLocal}
           onChange={(event) => set('startsAtLocal', event.target.value)}
@@ -89,6 +93,7 @@ export function EventFieldset({
           id="event-ends"
           label="Ends"
           type="datetime-local"
+          hint={`Venue time (${zone})`}
           error={errors.endsAt}
           value={draft.endsAtLocal}
           onChange={(event) => set('endsAtLocal', event.target.value)}
