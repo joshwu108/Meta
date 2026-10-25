@@ -18,7 +18,7 @@ const { runOpportunityPipeline } = await import('@/features/demand');
 const { aiRateLimiter } = await import('@/lib/api');
 const { setLogSink } = await import('@/lib/log');
 const { buildPlan, readPlan, markStepDone } = await import('@/features/import/server/plan');
-const { deleteImportData, getImportSettings } = await import('@/features/import/server/settings');
+const { IMPORT_TABLES, deleteImportData, getImportSettings } = await import('@/features/import/server/settings');
 
 setTestOrigin('import');
 const admin = adminClient();
@@ -220,12 +220,21 @@ describe('Delete my Instagram data', () => {
     (await admin.from('user_preferences').select('interests').eq('user_id', u.id).single()).data!.interests;
   const rowsLeft = async (u: TestUser) => {
     const counts = await Promise.all(
-      (['import_runs', 'trait_suggestions', 'trait_provenance', 'taste_dislikes', 'import_plans'] as const).map(
-        async (t) => (await admin.from(t).select('user_id').eq('user_id', u.id)).data?.length ?? 0,
-      ),
+      IMPORT_TABLES.map(async (t) => (await admin.from(t).select('user_id').eq('user_id', u.id)).data?.length ?? 0),
     );
     return counts.reduce((a, b) => a + b, 0);
   };
+
+  it('knows about every table 0703 gives a member rows in', async () => {
+    const { readFileSync } = await import('node:fs');
+    const migration = readFileSync('supabase/migrations/0703_import.sql', 'utf8');
+    // A table that stores `user_id` holds this member's data, so a deletion has to empty it.
+    const owning = [...migration.matchAll(/create table ([a-z_]+) \(([\s\S]*?)\n\);/g)]
+      .filter(([, , body]) => /^\s*user_id uuid/m.test(body!))
+      .map(([, name]) => name!);
+    expect(owning.length).toBeGreaterThan(0);
+    expect([...IMPORT_TABLES].sort()).toEqual(owning.sort());
+  });
 
   it('keep: deletes every 07 row and leaves the added values as the user\'s own', async () => {
     await addOne(peer, 'pottery');

@@ -33,6 +33,20 @@ export async function getImportSettings(userId: string): Promise<ImportSettings>
 }
 
 /**
+ * Every table 07 keeps a member's data in. A "delete my data" request has to empty all of them, so
+ * the list is exported and `tests/integration/import/import.test.ts` holds it against the tables
+ * `0703_import.sql` actually creates — add a table to the migration without adding it here and
+ * that test fails, rather than the row quietly surviving a deletion request.
+ */
+export const IMPORT_TABLES = [
+  'trait_suggestions',
+  'trait_provenance',
+  'taste_dislikes',
+  'import_plans',
+  'import_runs',
+] as const;
+
+/**
  * "Delete my Instagram data": suggestions, dislikes, plans, runs and provenance go. The traits the
  * user added stay as their own (`keep`) or are removed from the profile too (`remove`).
  */
@@ -47,7 +61,7 @@ export async function deleteImportData(userId: string, acceptedTraits: 'keep' | 
     invalidateMatches(userId);
   }
   const suggestions = check(await admin.from('trait_suggestions').delete().eq('user_id', userId).select('id'), 'delete suggestions') ?? [];
-  for (const table of ['trait_provenance', 'taste_dislikes', 'import_plans', 'import_runs'] as const) {
+  for (const table of IMPORT_TABLES.filter((name) => name !== 'trait_suggestions')) {
     check(await admin.from(table).delete().eq('user_id', userId), `delete ${table}`);
   }
   const result = {

@@ -137,6 +137,12 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 - **The consent boundary holds.** No feature outside `src/features/agent/` reads 02's tables
   directly, and all six cross-user paths — matching, group planning, venue requests, event
   recommendations, follow-ups, demand — go through `getSharablePreferences*` with a purpose.
+- **"Delete my Instagram data" empties everything, and will keep doing so.** 07's own integration
+  test already asserted zero rows left rather than trusting the counts the call reports, which is
+  the right way round. The one weakness was that the list of tables lived in two places by hand, so
+  a sixth table could be missed in both and survive a deletion request. The deletion now exports
+  `IMPORT_TABLES` and the test holds it against the tables `0703_import.sql` actually creates.
+  Checked that the guardrail fails when a table is dropped from the list.
 - **The loop the product is built on joins up.** `tests/integration/demand/demand-to-feed.test.ts`
   walks it in one test: demand people expressed becomes a cluster, the cluster becomes a proposal,
   a venue approves and publishes it through its own routes, and the event comes back to one of the
@@ -164,7 +170,7 @@ fixture and no caller — 03 and 06 ask 02 for explanations and follow-ups. Remo
 | Suite | Result |
 |---|---|
 | `pnpm test` (unit) | 1095 passed |
-| `pnpm test:integration` (integration + db) | 290 passed |
+| `pnpm test:integration` (integration + db) | 291 passed |
 | `pnpm test:e2e:prod` (Playwright, production build) | 90 passed in 2.9 min |
 | `tests/audit/core-flows-chrome.ts` (real Chrome) | 8/8 steps |
 
