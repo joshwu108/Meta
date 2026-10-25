@@ -2,7 +2,7 @@
 
 Branch: `ws/05-business` · Spec: [`specs.md`](./specs.md) · Contracts: [`../README.md`](../README.md)
 
-## Status: ready to merge
+## Status: merged into main (2026-10-24)
 
 Every P0 and P1 item below is ticked. Verified **2026-10-24 21:50** against every other
 workstream's branch at once — all 13 migrations (0100, 0200, 0300–0303, 0400–0404, 0500,
@@ -292,6 +292,10 @@ either side of 04. Both were confirmed present in the 13-migration run.
   "profile update for demo.new@… failed: Database client error. Retrying the connection."
   Re-running `pnpm db:seed` succeeds. A short wait or a retry around the first write would
   save the next person thinking they have a regression; it briefly looked like one here.
+- **01** — `agent_action_log.user_id` references `profiles(id)`, so a failed insert is only
+  visible in the server log (the helper logs and returns). 05 was silently dropping every
+  audit row for weeks because of it. A one-line note in the helper's doc comment, or
+  surfacing the count somewhere, would make the next workstream's mistake findable.
 - **01 / integrator** — **regenerate `src/lib/supabase/database.types.ts` after 05 merges.**
   It was generated before 05 existed, so the typed client does not know `businesses`,
   `business_capabilities` or `events`. 05's store takes an untyped `SupabaseClient` and is
@@ -354,6 +358,24 @@ either side of 04. Both were confirmed present in the 13-migration run.
 - `2026-10-24 15:20` — session start. Read README, spec, design-system. Wakeup cron
   `7,27,47 * * * *` created. Derived this checklist. Next: scaffold (F1) and the
   `0500_business.sql` migration (F2), which unblocks 04 and 06.
+- `2026-10-25 00:05` — **05 is merged into main (with 04), and verifying the integrated
+  state found two real bugs of mine.** Main now carries 01–05; **532 unit, 134 integration
+  (1 skipped, waiting on 06) and 42 e2e pass with nothing else skipped** — Scene 4, the AI
+  revision and 04's Scene 3 all run for real rather than against a graft.
+  The integrator had pinned the browser timezone in two of 05's e2e specs to get them green
+  on CI. That was a symptom, not the cause: the event editor rendered and parsed its
+  `datetime-local` fields in the **browser's** zone while the server checks opening hours in
+  `VENUE_TIMEZONE`, so any owner whose machine was not in the venue's zone saw times shifted
+  by hours and had plausible entries rejected. Fixed at the source — the wall-clock helpers
+  moved to a module both sides import, both conversions name the zone, and the two fields
+  now say which zone they are in. The specs pin the browser to **UTC** instead, so they
+  prove the app is zone-independent rather than hiding the dependency.
+  The e2e server log then showed `agent_log.insert_failed … 23503`: **05 was passing a
+  business id where `agent_action_log.user_id` references `profiles(id)`**, so every publish
+  and proposal decision had been failing its audit insert since the day it was written. 01's
+  helper logs and returns rather than throwing, so nothing ever surfaced. The acting user
+  now travels in the dependency bundle and is null for a worker run; a publish records
+  Rosa Delgado of Kiln & Cup where it previously recorded nothing.
 - `2026-10-24 23:15` — **re-ran the six-way check against the new main; 05 is clean, and it
   surfaced a 03↔06 collision.** With 01+02+03 now on main, grafted 04's and 06's migrations
   so all 13 applied together again. **05's own suites pass completely**: `business-rls`
