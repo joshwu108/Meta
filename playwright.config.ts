@@ -22,10 +22,13 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: `pnpm dev -p ${port}`,
+    // CI runs the production server, as the demo does: `next dev` compiles routes on first
+    // request and intermittently crashes renders in its dev-only RSC runtime (`frame.join is
+    // not a function`), which made the suite flaky without a product fault.
+    command: process.env.CI ? `pnpm build && pnpm start -p ${port}` : `pnpm dev -p ${port}`,
     url: `${baseURL}/api/health`,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: process.env.CI ? 300_000 : 120_000,
     // ENABLE_DEV_ROUTES lets 05's suite seed a fixture proposal; the route refuses
     // without it and on any production deployment.
     env: { MOCK_AI: '1', DEMO_MODE: '1', NEXT_PUBLIC_SITE_URL: baseURL, ENABLE_DEV_ROUTES: '1' },

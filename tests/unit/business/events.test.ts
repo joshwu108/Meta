@@ -232,7 +232,13 @@ describe('business events', () => {
         {
           userId: 'user-a',
           type: 'event_cancelled',
-          payload: { eventId: event.id, title: MANUAL.title, reason: 'Kiln broke' },
+          payload: {
+            eventId: event.id,
+            title: MANUAL.title,
+            body: 'Cancelled: Kiln broke',
+            href: `/events/${event.id}`,
+            reason: 'Kiln broke',
+          },
         },
       ]);
     });

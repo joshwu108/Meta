@@ -1,5 +1,6 @@
 import { loadFixture, requireUser, skipIfForeignSchema, type SeedContext } from '../context';
 import { seedBusinessSchema, seedEventSchema, type SeedBusiness } from '../types';
+import { seedEventTimes } from '../venue-time';
 
 /**
  * Businesses, events and groups live in tables owned by workstreams 05, 06 and 03. The loaders
@@ -63,24 +64,23 @@ async function loadCapabilities(ctx: SeedContext, businessId: string, business: 
   }
 }
 
-function eventTimes(daysFromNow: number, startHour: number, durationHours: number): { startsAt: string; endsAt: string } {
-  const start = new Date();
-  start.setDate(start.getDate() + daysFromNow);
-  start.setHours(startHour, 0, 0, 0);
-  const end = new Date(start.getTime() + durationHours * 3_600_000);
-  return { startsAt: start.toISOString(), endsAt: end.toISOString() };
-}
-
 export async function loadEvents(ctx: SeedContext): Promise<number> {
   if (ctx.businessesBySlug.size === 0) {
     ctx.log('no businesses seeded; skipping events');
     return 0;
   }
   const events = await loadFixture('events', seedEventSchema);
+  const businesses = await loadFixture('businesses', seedBusinessSchema);
+  const hoursBySlug = new Map(businesses.map((b) => [b.slug, b.hours]));
   const rows = events.map((event) => {
     const businessId = ctx.businessesBySlug.get(event.business);
     if (!businessId) throw new Error(`event ${event.slug} references unknown business ${event.business}`);
-    const { startsAt, endsAt } = eventTimes(event.days_from_now, event.start_hour, event.duration_hours);
+    const { startsAt, endsAt } = seedEventTimes({
+      daysFromNow: event.days_from_now,
+      startHour: event.start_hour,
+      durationHours: event.duration_hours,
+      hours: hoursBySlug.get(event.business),
+    });
     return {
       business_id: businessId,
       title: event.title,
