@@ -4,7 +4,6 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { AVAILABILITY_SLOT, EVENT_CATEGORY, GROUP_SIZE_PREF, SOCIAL_GOAL } from '@/shared/enums';
 import { SLOT_PHRASES } from '@/shared/labels';
 import type { AvailabilitySlot, EventCategory, ExplainInput, GroupSizePref, SocialGoal } from '@/shared/types';
-import { chunk } from './async';
 import type { MatchingPreferences } from './score';
 
 /**
@@ -21,9 +20,6 @@ const CONSENT_FLAG: Record<SharingPurpose, string> = {
   demand: 'allow_demand_aggregation',
   group_plan: 'allow_group_planning',
 };
-
-/** Ids per `in.(...)` filter, so 500 candidates never build an oversized URL. */
-const ID_BATCH = 100;
 
 type PrefsRow = {
   user_id: string;
@@ -81,20 +77,17 @@ async function loadRows(db: SupabaseClient, ids: readonly string[]) {
   };
 }
 
-/** Consent-gated preferences for many users; users who have not consented are absent. */
+/**
+ * Consent-gated preferences for many users; users who have not consented are absent. Like 02's,
+ * one read per table with every id in a single filter, so callers chunk long id lists.
+ */
 export async function getSharablePreferencesBatch(
   userIds: readonly string[],
   purpose: SharingPurpose,
 ): Promise<Map<string, MatchingPreferences>> {
   const ids = [...new Set(userIds)];
   if (ids.length === 0) return new Map();
-  const db = createAdminClient() as unknown as SupabaseClient;
-  const batches = await Promise.all(chunk(ids, ID_BATCH).map((batch) => loadRows(db, batch)));
-  const rows = {
-    prefs: batches.flatMap((b) => b.prefs),
-    consent: new Map(batches.flatMap((b) => [...b.consent])),
-    profiles: new Map(batches.flatMap((b) => [...b.profiles])),
-  };
+  const rows = await loadRows(createAdminClient() as unknown as SupabaseClient, ids);
   const shared = rows.prefs.flatMap((prefs) => {
     const profile = rows.profiles.get(prefs.user_id);
     if (!profile || rows.consent.get(prefs.user_id)?.[CONSENT_FLAG[purpose]] !== true) return [];

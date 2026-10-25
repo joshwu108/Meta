@@ -4,13 +4,14 @@ import type { MatchingPreferences } from '@/features/matching/server/score';
 vi.mock('server-only', () => ({}));
 vi.mock('@/features/core', () => ({ logAgentAction: vi.fn(), notify: vi.fn() }));
 const explainRecommendation = vi.fn<(input: unknown) => Promise<string>>();
+const getSharablePreferencesBatch = vi.fn<(ids: readonly string[], purpose: string) => Promise<Map<string, MatchingPreferences>>>();
 vi.mock('@/features/matching/server/stubs', () => ({
   explainRecommendation: (input: unknown) => explainRecommendation(input),
   getSharablePreferences: vi.fn(),
-  getSharablePreferencesBatch: vi.fn(),
+  getSharablePreferencesBatch: (ids: readonly string[], purpose: string) => getSharablePreferencesBatch(ids, purpose),
 }));
 
-const { rankCandidates } = await import('@/features/matching/server/matches');
+const { rankCandidates, loadSharedCandidates } = await import('@/features/matching/server/matches');
 const { explainMatch, clearExplanationCache, groundingTerms, isGrounded, templateExplanation, unsharedTerms } = await import('@/features/matching/server/explain');
 const { getCompatibilityScore } = await import('@/features/matching/server/score');
 const { createTtlCache } = await import('@/features/matching/server/cache');
@@ -67,6 +68,22 @@ describe('rankCandidates', () => {
   it('breaks score ties by shared interests, then id', () => {
     const tied = [prefs('z'), prefs('y')];
     expect(rankCandidates(viewer, tied, { exclude: new Set(), limit: 5 }).map((r) => r.prefs.userId)).toEqual(['y', 'z']);
+  });
+});
+
+describe('loadSharedCandidates', () => {
+  it('reads consent-gated preferences 100 ids at a time (the gateway rejects ~250 in one filter)', async () => {
+    getSharablePreferencesBatch.mockReset();
+    getSharablePreferencesBatch.mockImplementation(async (ids) => new Map(ids.filter((id) => id !== 'u7').map((id) => [id, prefs(id)])));
+    const ids = Array.from({ length: 250 }, (_, i) => `u${i}`);
+    const shared = await loadSharedCandidates(ids);
+    expect(getSharablePreferencesBatch.mock.calls.map(([batch, purpose]) => [batch.length, purpose])).toEqual([
+      [100, 'matching'],
+      [100, 'matching'],
+      [50, 'matching'],
+    ]);
+    expect(shared).toHaveLength(249);
+    expect(shared.some((p) => p.userId === 'u7')).toBe(false);
   });
 });
 

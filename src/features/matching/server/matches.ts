@@ -3,7 +3,7 @@ import { logAgentAction } from '@/features/core';
 import type { EventCategory, SocialGoal } from '@/shared/enums';
 import type { MatchesQuery } from '@/shared/schemas/social';
 import type { AvailabilitySlot, CompatibilityResult } from '@/shared/types';
-import { mapLimit } from './async';
+import { chunk, mapLimit } from './async';
 import { createTtlCache } from './cache';
 import { loadCandidateIds } from './candidates';
 import { getPublicCards, unknownCard, type PublicCard } from './cards';
@@ -74,6 +74,18 @@ export function rankCandidates(
 /** Explanation calls in flight at once on a cache miss (each may be a model call). */
 const EXPLAIN_CONCURRENCY = 5;
 
+/**
+ * Ids per consent-gated read. 02's batch read puts every id in one `in.(...)` filter and the
+ * gateway answers 414 above about 200 uuids, while the candidate pool goes up to 500.
+ */
+const SHARE_BATCH = 100;
+
+/** Consent-gated preferences of every candidate who shares them for matching, read in chunks. */
+export async function loadSharedCandidates(ids: readonly string[]): Promise<MatchingPreferences[]> {
+  const maps = await Promise.all(chunk(ids, SHARE_BATCH).map((batch) => getSharablePreferencesBatch(batch, 'matching')));
+  return maps.flatMap((map) => [...map.values()]);
+}
+
 const cache = createTtlCache<MatchesResult>({ ttlMs: MATCH_LIMITS.cacheTtlMs, maxEntries: 2000 });
 
 /** Drop cached match lists for these viewers (after a connection, block or preference change). */
@@ -104,8 +116,8 @@ async function computeMatches(viewerId: string, query: MatchesQuery): Promise<Ma
     getEdgeUserIds(viewerId),
   ]);
   const exclude = new Set([...blocked, ...edges]);
-  const shared = await getSharablePreferencesBatch(candidateIds.filter((id) => !exclude.has(id)), 'matching');
-  const ranked = rankCandidates(viewer, [...shared.values()], { exclude, interest: query.interest, goal: query.goal, limit: query.limit });
+  const shared = await loadSharedCandidates(candidateIds.filter((id) => !exclude.has(id)));
+  const ranked = rankCandidates(viewer, shared, { exclude, interest: query.interest, goal: query.goal, limit: query.limit });
   if (ranked.length === 0) return { status: 'no_candidates', matches: [] };
   const matches = await toMatchCards(viewer, ranked);
   await logAgentAction({
